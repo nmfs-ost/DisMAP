@@ -4,6 +4,5 @@ The NOAA Fisheries Distribution Mapping and Analysis Portal (DisMAP) provides ea
   * Center of biomass
   * Range limits
 
-This repository provides the data processing and analysis code used to develop the spatial distribution and indicators presented in the portal. For more information and to launch the portal visit: https://apps-st.fisheries.noaa.gov/dismap/index.html. 
-
+This repository provides the data processing and analysis code used to develop the spatial distribution and indicators presented in the portal. 
 
