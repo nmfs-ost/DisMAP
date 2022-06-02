@@ -1,0 +1,1 @@
+This is the Folder where the regional cleaned data will go into as .csv file format which will be used in the next step of creating the interpolated biomass distribution layer. 
