@@ -7678,7 +7678,7 @@ if __name__ == '__main__':
 
     # ###--->>> Compact Project GDB Start
 
-        CompactProjectGDB = False
+        CompactProjectGDB = True
 
         if CompactProjectGDB:
 
