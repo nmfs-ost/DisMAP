@@ -1,0 +1,21 @@
+# Ignore everything
+/*
+
+# Except the following:
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/Metadata.md
+!/Metadata.doc
+
+# And except the following Python scripts
+!/Alaska Bathymetry GeoProcessing.py
+!/Create DisMAP Datasets.py
+!/Fun with Metadata.py
+!/GEBCO GeoProcessing.py
+
+# Versions
+#!/March 1 2021/Fish Data March 1 2021
+#!/February 1 2021/Fish Data February 1 2022
+#!/March 1 2022/Fish Data March 1 2022
+#!/March 7 2022/Fish Data March 7 2022
