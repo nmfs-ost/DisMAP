@@ -1600,7 +1600,7 @@ if __name__ == '__main__':
 
     #updateSurveyLocationsMetadata()
 
-    updateRasterMosaicMetadata()
+    #updateRasterMosaicMetadata()
 
     # Pretty Format all XML files in a folder
     folderPrettyXML(ARCGIS_METADATA_DIRECTORY)

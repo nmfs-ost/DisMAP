@@ -4682,6 +4682,23 @@ def populateIndicatorsTable():
         logFile(log_file, msg); del msg
 
 
+        msg = '>-> Adding field index in the Indicators Table'
+        logFile(log_file, msg)
+
+        try:
+            arcpy.RemoveIndex_management(indicators, ["IndicatorsTableSpeciesIndex"])
+        except:
+            pass
+
+        # Add Attribute Index
+        arcpy.management.AddIndex(indicators, ['Species', 'CommonName', 'SpeciesCommonName', 'Year'], "IndicatorsTableSpeciesIndex", "NON_UNIQUE", "NON_ASCENDING")
+
+        msg = arcpy.GetMessages()
+        msg = ">->->-> {0}".format(msg.replace('\n', '\n>->->-> '))
+        logFile(log_file, msg); del msg
+
+
+
         #geographic_regions[region_abb]
         indicators_md = md.Metadata(indicators)
         indicators_md.synchronize('ACCESSED', 1)
@@ -7678,7 +7695,7 @@ if __name__ == '__main__':
 
     # ###--->>> Compact Project GDB Start
 
-        CompactProjectGDB = True
+        CompactProjectGDB = False
 
         if CompactProjectGDB:
 
