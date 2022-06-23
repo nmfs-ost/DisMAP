@@ -9,10 +9,26 @@
 !/Metadata.doc
 
 # And except the following Python scripts
+
+# Alaska Bathymetry GeoProcessing
 !/Alaska Bathymetry GeoProcessing.py
+!/Alaska Bathymetry GeoProcessing 20220307.py
+!/Alaska Bathymetry GeoProcessing 20220516.py
+
+# Create DisMAP Datasets
 !/Create DisMAP Datasets.py
+!/Create DisMAP Datasets 20220307.py
+!/Create DisMAP Datasets 20220516.py
+
+# Fun with Metadata
 !/Fun with Metadata.py
+!/Fun with Metadata 20220307.py
+!/Fun with Metadata 20220516.py
+
+# GEBCO GeoProcessing
 !/GEBCO GeoProcessing.py
+!/GEBCO GeoProcessing 20220307.py
+!/GEBCO GeoProcessing 20220516.py
 
 # Versions
 #!/March 1 2021/Fish Data March 1 2021

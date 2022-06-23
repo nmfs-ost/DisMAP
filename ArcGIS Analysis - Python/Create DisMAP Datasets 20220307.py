@@ -12,7 +12,6 @@
 from __future__ import print_function
 import os
 import arcpy
-from arcpy import metadata as md
 import pandas as pd
 import numpy as np
 import scipy
@@ -23,17 +22,6 @@ import shutil
 from math import copysign
 import math
 
-import inspect
-myself = lambda: inspect.stack()[1][3]
-
-def what_is_my_name():
-    #print(inspect.stack()[0][0].f_code.co_name)
-    #print(inspect.stack()[0][3])
-    #print(inspect.currentframe().f_code.co_name)
-    #print(sys._getframe().f_code.co_name)
-    print(myself())
-    print(inspect.stack()[0].function)
-    print("%s/%s" %(sys._getframe().f_code.co_filename, sys._getframe().f_code.co_name))
 
 def main():
     try:
@@ -53,12 +41,8 @@ def main():
         tbinfo = traceback.format_tb(tb)[0]
         # Concatenate information together concerning the error into a message string
         pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
-        arcpy.AddMessage(pymsg)
-        arcpy.AddMessage(msgs)
-        del tb, tbinfo, pymsg, msgs
+        print(pymsg)
+        del pymsg, tb, tbinfo
 
 def projectSetup():
     import sys, platform
@@ -164,8 +148,6 @@ def projectSetup():
 
                 if not os.path.exists( ProjectGIS ) or ReplaceProject:
                     aprx.defaultGeodatabase = ProjectGDB
-                    aprx.homeFolder = BASE_DIRECTORY
-                    #aprx.defaultToolbox = ProjectToolBox
                     aprx.saveACopy(ProjectGIS)
 
                 del aprx, template_project
@@ -1622,14 +1604,14 @@ def createSnapRasterBathymetryLatitudeLongitude():
             del region_fish_net, region_fish_net_label, region_extent
             #del region_fish_net_bathy
 
-            #environments = arcpy.ListEnvironments()
+            environments = arcpy.ListEnvironments()
             # Sort the environment names
-            #environments.sort()
-            #for environment in environments:
-            #    # Format and print each environment and its current setting.
-            #    # (The environments are accessed by key from arcpy.env.)
-            #    print("{0:<30}: {1}".format(environment, arcpy.env[environment]))
-            #del environment, environments
+            environments.sort()
+            for environment in environments:
+                # Format and print each environment and its current setting.
+                # (The environments are accessed by key from arcpy.env.)
+                print("{0:<30}: {1}".format(environment, arcpy.env[environment]))
+            del environment, environments
 
             arcpy.ResetEnvironments()
             #arcpy.ClearEnvironment("XYTolerance")
@@ -3444,14 +3426,14 @@ def tablesAndFieldsReport():
         print(msg); del msg
 
         items = {
-                 #'ai_csv' : "CSV Table",
-                 #'DataSeries' : "Table",
-                 #'SpeciesRegionSeason' : "Table",
+                 'ai_csv' : "CSV Table",
+                 'DataSeries' : "Table",
+                 'SpeciesRegionSeason' : "Table",
                  'Indicators' : "Table",
-                 #'DisMAP_Regions' : "Feature Class",
-                 #'Aleutian_Islands_Survey_Locations' : "Feature Class",
-                 #'AI_Shape' : "Feature Class",
-                 #'AI' : "Mosaic",
+                 'DisMAP_Regions' : "Feature Class",
+                 'Aleutian_Islands_Survey_Locations' : "Feature Class",
+                 'AI_Shape' : "Feature Class",
+                 'AI' : "Mosaic",
                  }
 
 ##        items = []
@@ -4203,14 +4185,7 @@ def populateIndicatorsTable():
                                 #del masked_longitude_raster
 
                                 # Longitude
-                                # Doesn't work for International Date Line
-                                #longitudeArray = arcpy.RasterToNumPyArray(region_longitude, nodata_to_value=np.nan)
-                                #longitudeArray[np.isnan(biomassArray)] = np.nan
-
-                                # For issue of international date line
-                                # Added/Modified by JFK June 15, 2022
                                 longitudeArray = arcpy.RasterToNumPyArray(region_longitude, nodata_to_value=np.nan)
-                                longitudeArray = np.mod(longitudeArray, 360.0)
                                 longitudeArray[np.isnan(biomassArray)] = np.nan
 
                                 #msg = ">->->->-> longitudeArray non-nan count: {0}".format(np.count_nonzero(~np.isnan(longitudeArray)))
@@ -4296,12 +4271,6 @@ def populateIndicatorsTable():
 
                                 del weightedLongitudeArrayVariance, weightedLongitudeArrayCount
 
-                                # Convert 360 back to 180
-                                # Added/Modified by JFK June 15, 2022
-                                CenterOfGravityLongitude = np.mod(CenterOfGravityLongitude - 180.0, 360.0) - 180.0
-                                MinimumLongitude = np.mod(MinimumLongitude - 180.0, 360.0) - 180.0
-                                MaximumLongitude = np.mod(MaximumLongitude - 180.0, 360.0) - 180.0
-
                                 #msg = ">->->->-> Sum Weighted Longitude: {0}".format(sumWeightedLongitudeArray)
                                 #logFile(log_file, msg)
                                 #del msg
@@ -4310,10 +4279,6 @@ def populateIndicatorsTable():
                                 msg = ">->->->-> Center of Gravity Longitude: {0}".format(CenterOfGravityLongitude)
                                 logFile(log_file, msg)
                                 del msg
-
-                                #msg = ">->->->-> Center of Gravity Longitude: {0}".format(np.mod(CenterOfGravityLongitude - 180.0, 360.0) -180.0)
-                                #logFile(log_file, msg)
-                                #del msg
 
                                 msg = ">->->->-> Minimum Longitude (5th Percentile): {0}".format(MinimumLongitude)
                                 logFile(log_file, msg)
@@ -4503,7 +4468,7 @@ def populateIndicatorsTable():
                                 # cellArea = 2000 x 2000 (... or 2 x 2 to for square km)
                                 #cellArea = cell_size * cell_size
                                 #cell_size = 2000
-                                #cellArea = cell_size/1000 * cell_size/1000
+                                cellArea = cell_size/1000 * cell_size/1000
 
                                 # medianBiomass = median of biomassArray (use numpy.median?)
                                 # medianBiomass = np.nanmedian(biomassArray)
@@ -4531,8 +4496,7 @@ def populateIndicatorsTable():
                                 #logFile(log_file, msg)
                                 #del msg
 
-                                #del cellArea
-                                del biomassGTMedianArray
+                                del biomassGTMedianArray, cellArea
                                 del countValues, biomassRaster, biomassArray, sumBiomassArray
                             # ###--->>> Core Habitat Area End
 
@@ -4671,35 +4635,8 @@ def populateIndicatorsTable():
 
                 del fields
 
-                # Make XY Event  Layer
-                my_events = arcpy.management.MakeXYEventLayer(region_indicators, "CenterOfGravityLongitude", "CenterOfGravityLatitude", "my_events","#","#")
-
-                # Make it a feature class and output it to the local hard disk drive (for usage and debugging purposes)
-                arcpy.FeatureClassToFeatureClass_conversion(in_features=my_events, out_path=ProjectGDB, out_name= "{0}_Indicators_COG".format(region_abb),
-                                                            where_clause='',
-                                                            field_mapping='',
-                                                            #field_mapping="""Field1 "Field1" true true false 50 Text 0 0 ,First,#,my_events,Field1,-1,-1;region "region" true true false 50 Text 0 0 ,First,#,my_events,region,-1,-1;haulid "haulid" true true false 255 Text 0 0 ,First,#,my_events,haulid,-1,-1;year "year" true true false 4 Long 0 0 ,First,#,my_events,year,-1,-1;spp "spp" true true false 50 Text 0 0 ,First,#,my_events,spp,-1,-1;wtcpue "wtcpue" true true false 8 Double 10 20 ,First,#,my_events,wtcpue,-1,-1;common "common" true true false 50 Text 0 0 ,First,#,my_events,common,-1,-1;lat "lat" true true false 8 Double 10 20 ,First,#,my_events,lat,-1,-1;stratum "stratum" true true false 50 Text 0 0 ,First,#,my_events,stratum,-1,-1;stratumare "stratumare" true true false 50 Text 0 0 ,First,#,my_events,stratumarea,-1,-1;lon "lon" true true false 8 Double 10 20 ,First,#,my_events,lon,-1,-1;depth "depth" true true false 50 Text 0 0 ,First,#,my_events,depth,-1,-1""",
-                                                            config_keyword="")
-                #arcpy.conversion.FeatureClassToFeatureClass("neusf_csv_XYTableToPoint", r"C:\Users\jfken\Documents\GitHub\DisMap\Default.gdb", "neusf_csv_XY", '', 'csv_id "csv_id" true true false 4 Long 0 0,First,#,neusf_csv_XYTableToPoint,csv_id,-1,-1;region "region" true true false 34 Text 0 0,First,#,neusf_csv_XYTableToPoint,region,0,34;haulid "haulid" true true false 30 Text 0 0,First,#,neusf_csv_XYTableToPoint,haulid,0,30;year "year" true true false 4 Long 0 0,First,#,neusf_csv_XYTableToPoint,year,-1,-1;spp "spp" true true false 64 Text 0 0,First,#,neusf_csv_XYTableToPoint,spp,0,64;wtcpue "wtcpue" true true false 8 Double 0 0,First,#,neusf_csv_XYTableToPoint,wtcpue,-1,-1;wtc_cube "wtc_cube" true true false 8 Double 0 0,First,#,neusf_csv_XYTableToPoint,wtc_cube,-1,-1;common "common" true true false 64 Text 0 0,First,#,neusf_csv_XYTableToPoint,common,0,64;stratum "stratum" true true false 4 Long 0 0,First,#,neusf_csv_XYTableToPoint,stratum,-1,-1;stratumarea "stratumarea" true true false 8 Double 0 0,First,#,neusf_csv_XYTableToPoint,stratumarea,-1,-1;lat "lat" true true false 8 Double 0 0,First,#,neusf_csv_XYTableToPoint,lat,-1,-1;lon "lon" true true false 8 Double 0 0,First,#,neusf_csv_XYTableToPoint,lon,-1,-1;depth "depth" true true false 8 Double 0 0,First,#,neusf_csv_XYTableToPoint,depth,-1,-1', '')
-
-                # Clear the XY Event Layer from memory.
-                arcpy.management.Delete("my_events")
-                del my_events
-
-
-
                 # Append Region Indicators to Indicators Table
                 arcpy.management.Append(inputs=region_indicators, target=indicators, schema_type="TEST", field_mapping="", subtype="")
-
-                # Add some metadata
-                years_md = unique_years(region_indicators)
-
-                region_indicators_md = md.Metadata(region_indicators)
-                region_indicators_md.synchronize('ACCESSED', 1)
-                region_indicators_md.title = "{0} Indicators {1}".format(region.replace('-',' to '), DateCode)
-                region_indicators_md.tags = "{0}, {1} to {2}".format(geographic_regions[region_abb], min(years_md), max(years_md))
-                region_indicators_md.save()
-                del region_indicators_md, years_md
 
                 del input_folder, biomassRasters, species_folder
 
@@ -4730,32 +4667,6 @@ def populateIndicatorsTable():
         msg = arcpy.GetMessages()
         msg = ">-> {0}\n".format(msg.replace('\n', '\n>-> '))
         logFile(log_file, msg); del msg
-
-
-        msg = '>-> Adding field index in the Indicators Table'
-        logFile(log_file, msg)
-
-        try:
-            arcpy.RemoveIndex_management(indicators, ["IndicatorsTableSpeciesIndex"])
-        except:
-            pass
-
-        # Add Attribute Index
-        arcpy.management.AddIndex(indicators, ['Species', 'CommonName', 'SpeciesCommonName', 'Year'], "IndicatorsTableSpeciesIndex", "NON_UNIQUE", "NON_ASCENDING")
-
-        msg = arcpy.GetMessages()
-        msg = ">->->-> {0}".format(msg.replace('\n', '\n>->->-> '))
-        logFile(log_file, msg); del msg
-
-
-
-        #geographic_regions[region_abb]
-        indicators_md = md.Metadata(indicators)
-        indicators_md.synchronize('ACCESSED', 1)
-        indicators_md.title = "Indicators {0}".format(DateCode)
-        #indicators_md.tags = "{0}, {1} to {2}".format(geographic_regions[region_abb], min(years), max(years))
-        indicators_md.save()
-        del indicators_md
 
         del indicators, indicators_template, region_snap_raster
         del DisMapSeasonCodeDict, fields
@@ -5201,27 +5112,12 @@ def generateMosaics():
             msg = '>-> Adding field index in the {0} Feature Class'.format(region)
             logFile(log_file, msg)
 
-            try:
-                arcpy.RemoveIndex_management(region_mosaic, ["{0}_MosaicSpeciesIndex".format(region_abb)])
-            except:
-                pass
-
             # Add Attribute Index
             arcpy.management.AddIndex(region_mosaic, ['Species', 'CommonName', 'SpeciesCommonName', 'Year'], "{0}_MosaicSpeciesIndex".format(region_abb), "NON_UNIQUE", "NON_ASCENDING")
 
             msg = arcpy.GetMessages()
             msg = ">->->-> {0}".format(msg.replace('\n', '\n>->->-> '))
             logFile(log_file, msg); del msg
-
-            # Add metadata
-            years_md = unique_years(region_mosaic)
-
-            region_mosaic_md = md.Metadata(region_mosaic)
-            region_mosaic_md.synchronize('ACCESSED', 1)
-            region_mosaic_md.title = "{0} {1}".format(region.replace('-',' to '), DateCode)
-            region_mosaic_md.tags = "{0}, {1} to {2}".format(geographic_regions[region_abb], min(years_md), max(years_md))
-            region_mosaic_md.save()
-            del region_mosaic_md, years_md
 
             # Cleanup
             del region_mosaic
@@ -6015,14 +5911,6 @@ def createSpeciesRichnessRasters():
 
                     arcpy.management.CalculateStatistics(region_year_richness)
 
-                    # Add metadata
-                    region_year_richness_md = md.Metadata(region_year_richness)
-                    region_year_richness_md.synchronize('ACCESSED', 1)
-                    region_year_richness_md.title = "{0} {1}".format(region.replace('-',' to '), DateCode)
-                    region_year_richness_md.tags = "{0}, {1}, Species Richness".format(geographic_regions[region_abb], year)
-                    region_year_richness_md.save()
-                    del region_year_richness_md
-
                     # ###--->>>
 
                     tmp_workspace = arcpy.env.workspace
@@ -6407,14 +6295,6 @@ def createCoreSpeciesRichnessRasters():
                     del rasters
 
                     arcpy.management.CalculateStatistics(region_year_richness)
-
-                    # Add metadata
-                    region_year_richness_md = md.Metadata(region_year_richness)
-                    region_year_richness_md.synchronize('ACCESSED', 1)
-                    region_year_richness_md.title = "{0} {1}".format(region.replace('-',' to '), DateCode)
-                    region_year_richness_md.tags = "{0}, {1}, Core Species Richness".format(geographic_regions[region_abb], year)
-                    region_year_richness_md.save()
-                    del region_year_richness_md
 
                     # ###--->>>
 
@@ -6887,8 +6767,7 @@ def createCloudRasterFormatExport():
             logFile(log_file, msg); del msg
 
             # Copy Raster to CRF
-            #crf = os.path.join( MOSAIC_DIRECTORY, "{0} {1}.crf".format(region.replace('-',' to '), DateCode))
-            crf = os.path.join( MOSAIC_DIRECTORY, "{0} {1}.crf".format(region_abb, DateCode))
+            crf = os.path.join( MOSAIC_DIRECTORY, "{0} {1}.crf".format(region.replace('-',' to '), DateCode))
             #print(crf)
             #print(region_mosaic)
 
@@ -6919,16 +6798,6 @@ def createCloudRasterFormatExport():
             msg = arcpy.GetMessages()
             msg = ">->-> {0}".format(msg.replace('\n', '\n>->-> '))
             logFile(log_file, msg); del msg
-
-            # Add some metadata
-            years_md = unique_years(region_mosaic)
-
-            crf_md = md.Metadata(crf)
-            crf_md.synchronize('ACCESSED', 1)
-            crf_md.title = "{0} {1}".format(region.replace('-',' to '), DateCode)
-            crf_md.tags = "{0}, {1} to {2}".format(geographic_regions[region_abb], min(years_md), max(years_md))
-            crf_md.save()
-            del crf_md, years_md
 
             del crf
             del table_name, region_abb, region, region_mosaic
@@ -6975,7 +6844,7 @@ def importEPU():
         msg = "#-> STARTING {0} ON {1}".format(function, strftime("%a %b %d %I:%M:%S %p", localtime()))
         print(msg); del msg
 
-        epu_shape_path = os.path.join(MAP_DIRECTORY, 'EPU_shape', 'EPU_NOESTUARIES')
+        epu_shape_path = os.path.join(BASE_DIRECTORY, 'EPU_shape', 'EPU_NOESTUARIES')
 
         arcpy.management.CopyFeatures(epu_shape_path, 'EPU_NOESTUARIES')
 
@@ -7111,13 +6980,13 @@ if __name__ == '__main__':
 
         # Project related items
 
-        # May 16 2022
-        Version = "May 16 2022"
-        DateCode = "20220516"
+        # May 4 2022
+        #Version = "May 4 2022"
+        #DateCode = "20220504"
 
         # March 7 2022
-        #Version = "March 7 2022"
-        #DateCode = "20220307"
+        Version = "March 7 2022"
+        DateCode = "20220307"
 
         # March 1 2022
         #Version = "March 1 2022"
@@ -7135,9 +7004,9 @@ if __name__ == '__main__':
 
         # ###--->>> Software Environment Level
         #SoftwareEnvironmentLevel = ""
-        #SoftwareEnvironmentLevel = "Dev" # Local laptop
-        SoftwareEnvironmentLevel = "Test" # Local laptop and Windows Instance
-        # SoftwareEnvironmentLevel = "Prod" # Windows Instance
+        SoftwareEnvironmentLevel = "Dev"
+        #SoftwareEnvironmentLevel = "Test"
+        # SoftwareEnvironmentLevel = "Prod"
 
         # The directory this script is in.
         # cwd = os.getcwd()
@@ -7171,7 +7040,6 @@ if __name__ == '__main__':
         ARCGIS_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "ArcGIS Metadata {0} {1}".format(Version, SoftwareEnvironmentLevel))
         INPORT_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "InPort Metadata {0} {1}".format(Version, SoftwareEnvironmentLevel))
         ProjectGIS = os.path.join(BASE_DIRECTORY, "{0}.aprx".format(ProjectName + " " + SoftwareEnvironmentLevel))
-        ProjectToolBox = os.path.join(BASE_DIRECTORY, "{0}.tbx".format(ProjectName + " " + SoftwareEnvironmentLevel))
         #DefaultGDB = os.path.join(BASE_DIRECTORY, "Default.gdb")
         ProjectGDB = os.path.join(BASE_DIRECTORY, "{0}.gdb".format(ProjectName + " " + SoftwareEnvironmentLevel))
         BathymetryGDB = os.path.join(BASE_DIRECTORY, "Bathymetry.gdb")
@@ -7285,47 +7153,16 @@ if __name__ == '__main__':
 ##        Spatial Reference: PROJCS["WGS_1984_Albers_NMSDD",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",180.0],PARAMETER["standard_parallel_1",-2.0],PARAMETER["standard_parallel_2",49.0],PARAMETER["latitude_of_origin",25.5],UNIT["Meter",1.0]]
 
 
-        geographic_regions = {
-                            'AI'        : 'Aleutian Islands',
-                            'EBS'       : 'Eastern Bering Sea, Bering Sea',
-                            'GOA'       : 'Gulf of Alaska',
-                            'GOM'       : 'Gulf of Mexico',
-                            'GMEX'      : 'Gulf of Mexico',
-                            'NEUS_F'    : 'Northeast US, East Coast',
-                            'NEUSF'     : 'Northeast US, East Coast',
-                            'NEUS_S'    : 'Northeast US, East Coast',
-                            'NEUS'    : 'Northeast US, East Coast',
-                            'SEUS_SPR'  : 'Southeast US, East Coast',
-                            'SEUS_SUM'  : 'Southeast US, East Coast',
-                            'SEUS_FALL' : 'Southeast US, East Coast',
-                            'SEUS_FAL'  : 'Southeast US, East Coast',
-                            'WC_ANN'    : 'West Coast',
-                            'WCANN'     : 'West Coast',
-                            'WC_TRI'    : 'West Coast',
-                            'WCTRI'     : 'West Coast',
-                            'Aleutian_Islands'    : 'Aleutian Islands',
-                            'Eastern_Bering_Sea'  : 'Eastern Bering Sea, Bering Sea',
-                            'Gulf_of_Alaska'      : 'Gulf of Alaska',
-                            'Gulf_of_Mexico'      : 'Gulf of Mexico',
-                            #'Northeast_US_Fall'   : 'Northeast US, East Coast',
-                            'Northeast_US'   : 'Northeast US, East Coast',
-                            #'Northeast_US_Spring' : 'Northeast US, East Coast',
-                            'Southeast_US'        : 'Southeast US, East Coast',
-                            #'Southeast_US_Summer' : 'Southeast US, East Coast',
-                            'West_Coast'          : 'West Coast',
-
-                          }
         # Set to True if we want to filter on certian one or more regions, else
         # False to process all regions
         FilterRegions = False
 
-        if not FilterRegions:
-            # ###--->>> Use a list to filter on regions.
-            # Below are lists used to
-            # test different regions
-            selected_regions = ['AI', 'EBS', 'GOA', 'GOM', 'NEUS_F', 'NEUS_S', 'SEUS_FALL', 'SEUS_SPR', 'SEUS_SUM', 'WC_ANN', 'WC_TRI',]
-        else:
-            selected_regions = ['AI']
+        # ###--->>> Use a list to filter on regions.
+        # Below are lists used to
+        # test different regions
+        selected_regions = ['AI', 'EBS', 'GOA', 'GOM', 'NEUS_F', 'NEUS_S', 'SEUS_FALL', 'SEUS_SPR', 'SEUS_SUM', 'WC_ANN', 'WC_TRI',]
+
+        #selected_regions = ['GOM', 'NEUS_F', 'WC_ANN',]
 
 
         # Test if we are filtering on regions. If so, a new table_names list is
@@ -7338,69 +7175,41 @@ if __name__ == '__main__':
 
         # Set to True if we want to filter on certian species, else False to
         # process all species
-        if SoftwareEnvironmentLevel in  ["Dev", "Test"]:
+        if SoftwareEnvironmentLevel == "Dev":
             FilterSpecies = True
-            if SoftwareEnvironmentLevel == "Dev":
-                # TODO: Consider using sets instead
-                selected_species = {
-                                    # 'AI', 'Aleutian Islands'
-                                    # 'EBS', 'Eastern Bering Sea'
-                                    # 'GOA', 'Gulf of Alaska'
-                                    # 'WC_ANN', 'West Coast Annual (2003-present)'
-                                    # 'WC_TRI', 'West Coast Triennial (1977-2004)',
-                                    'Anthopleura xanthogrammica' : 'Giant green anemone',
-                                    'Acesta sphoni' : 'Limid clam sp.',
-                                    'Gadus chalcogrammus' : 'Walleye Pollock',
-                                    'Citharichthys sordidus' : 'Pacific sanddab',
-                                    'Doryteuthis (Loligo) opalescens' : 'California market squid',
-
-                                    # 'GOM', 'Gulf of Mexico'
-                                    # 'NEUS_F', 'Northeast US Fall'
-                                    # 'NEUS_S', 'Northeast US Spring'
-                                    # 'SEUS_SPR', 'Southeast US Spring'
-                                    # 'SEUS_SUM', 'Southeast US Summer'
-                                    # 'SEUS_FALL', 'Southeast US Fall'
-                                    'Centropristis striata' : 'black sea bass',
-                                   }
-            if SoftwareEnvironmentLevel == "Test":
-                # TODO: Consider using sets instead
-                selected_species = {
-                                    # 'AI', 'Aleutian Islands'
-                                    # 'EBS', 'Eastern Bering Sea'
-                                    # 'GOA', 'Gulf of Alaska'
-                                    # 'WC_ANN', 'West Coast Annual (2003-present)'
-                                    # 'WC_TRI', 'West Coast Triennial (1977-2004)',
-                                    'Acesta sphoni' : 'Limid clam sp.',
-                                    'Calinaticina oldroydii' : "Oldroyd's Fragile Moon Snail",
-                                    'Citharichthys sordidus' : 'Pacific sanddab',
-                                    'Doryteuthis (Loligo) opalescens' : 'California market squid',
-                                    'Gadus chalcogrammus' : 'Walleye Pollock',
-                                    'Gadus macrocephalus' : 'Pacific Cod',
-                                    'Hippoglossus stenolepis' : 'Pacific Halibut',
-                                    'Limanda aspera' : 'yellowfin sole',
-                                    # 'GOM', 'Gulf of Mexico'
-                                    'Ancylopsetta dilecta' : 'three-eye flounder',
-                                    'Ancylopsetta ommata': 'ocellated flounder',
-                                    'Chicoreus florifer-dilectus' : '',
-                                    'Lutjanus campechanus' : 'red snapper',
-                                    'Scomberomorus maculatus' : 'Spanish Mackerel',
-                                    # 'NEUS_F', 'Northeast US Fall'
-                                    # 'NEUS_S', 'Northeast US Spring'
-                                    'Centropristis striata' : 'black sea bass',
-                                    'Geryon (Chaceon) quinquedens' : 'Red Deep Sea Crab',
-                                    'Homarus americanus' : 'American Lobster',
-                                    # 'SEUS_SPR', 'Southeast US Spring'
-                                    # 'SEUS_SUM', 'Southeast US Summer'
-                                    # 'SEUS_FALL', 'Southeast US Fall'
-                                    'Brevoortia tyrannus' : 'Atlantic menhaden',
-                                    'Micropogonias undulatus' : 'Atlantic croaker',
-                                    'Rachycentron canadum' : 'Cobia',
-                                   }
         else:
             FilterSpecies = False
-            selected_species = {}
 
-
+        # TODO: Consider using sets instead
+        selected_species = {
+                            # 'AI', 'Aleutian Islands'
+                            # 'EBS', 'Eastern Bering Sea'
+                            # 'GOA', 'Gulf of Alaska'
+                            # 'WC_ANN', 'West Coast Annual (2003-present)'
+                            # 'WC_TRI', 'West Coast Triennial (1977-2004)',
+                            'Calinaticina oldroydii' : "Oldroyd's Fragile Moon Snail",
+                            'Gadus chalcogrammus' : 'Walleye Pollock',
+                            'Gadus macrocephalus' : 'Pacific Cod',
+                            'Hippoglossus stenolepis' : 'Pacific Halibut',
+                            'Limanda aspera' : 'yellowfin sole',
+                            # 'GOM', 'Gulf of Mexico'
+                            'Ancylopsetta dilecta' : 'three-eye flounder',
+                            'Ancylopsetta ommata': 'ocellated flounder',
+                            'Chicoreus florifer-dilectus' : '',
+                            'Lutjanus campechanus' : 'red snapper',
+                            'Scomberomorus maculatus' : 'Spanish Mackerel',
+                            # 'NEUS_F', 'Northeast US Fall'
+                            # 'NEUS_S', 'Northeast US Spring'
+                            'Centropristis striata' : 'black sea bass',
+                            'Geryon (Chaceon) quinquedens' : 'Red Deep Sea Crab',
+                            'Homarus americanus' : 'American Lobster',
+                            # 'SEUS_SPR', 'Southeast US Spring'
+                            # 'SEUS_SUM', 'Southeast US Summer'
+                            # 'SEUS_FALL', 'Southeast US Fall'
+                            'Brevoortia tyrannus' : 'Atlantic menhaden',
+                            'Micropogonias undulatus' : 'Atlantic croaker',
+                            'Rachycentron canadum' : 'Cobia',
+                           }
 ##    Ancylopsetta dilecta
 ##    Ancylopsetta ommata
 ##    Brevoortia tyrannus
@@ -7440,7 +7249,7 @@ if __name__ == '__main__':
     # ###--->>> Project Setup Start
         # Project Setup True or False
         ProjectSetup = False
-        ReplaceProject = True
+        ReplaceProject = False
         # Project Setup -- Needs to run first to create folders and stuff
         if ProjectSetup:
             projectSetup()
@@ -7485,10 +7294,9 @@ if __name__ == '__main__':
 
         del CreateSnapRasterBathymetryLatitudeLongitude, createSnapRasterBathymetryLatitudeLongitude
 
-        #CreateRowColumnCountReport = False
-        #if CreateRowColumnCountReport: GetRowColumnCountReport()
-        #del GetRowColumnCountReport, CreateRowColumnCountReport
-        del GetRowColumnCountReport
+        CreateRowColumnCountReport = False
+        if CreateRowColumnCountReport: GetRowColumnCountReport()
+        del GetRowColumnCountReport, CreateRowColumnCountReport
 
     # ###--->>> Create Snap Raster, Bathymetry, Latitude, Longitude End
 
@@ -7609,7 +7417,7 @@ if __name__ == '__main__':
         ReplaceRegionIndicatorTable = True
 
         # Replace Indicator Datasets True or False
-        ReplaceIndicatorTable = False
+        ReplaceIndicatorTable = True
 
         if PopulateIndicatorsTable:
             populateIndicatorsTable()
@@ -7640,7 +7448,7 @@ if __name__ == '__main__':
         GenerateMosaics = False
 
         # Overwrite Mosaic Datasets
-        ReplaceMosaicDatasets = True
+        ReplaceMosaicDatasets = False
 
         # Generate Mosaics -- Needs to run next so that ??? can be
         # created for the following step.
@@ -7777,13 +7585,13 @@ if __name__ == '__main__':
 
         # Clean up
         del table_names, srs
-        del selected_regions, ProjectName, ProjectGIS, ProjectGDB, ProjectToolBox
+        del selected_regions, ProjectName, ProjectGIS, ProjectGDB
         #del DefaultGDB
         del BASE_DIRECTORY, ANALYSIS_DIRECTORY, CSV_DIRECTORY, MAP_DIRECTORY
         #del PICTURE_FOLDER
         del MOSAIC_DIRECTORY, LOG_DIRECTORY, logFile
-        del DEBUG_OUTPUT, unique_field, unique_fish, unique_year, selected_species
-        del select_by_fish, select_by_fish_no_years, DEBUG_LEVEL
+        del DEBUG_OUTPUT, unique_field, unique_fish, unique_year
+        del select_by_fish, select_by_fish_no_years, DEBUG_LEVEL, selected_species
         del FilterRegions, FilterSpecies, FilterYears, selected_years
         del ClearLogDirectory, ProductName, ProductVersion, ProductLicenseLevel
         del print_function, reorder_fields, generateRasters
@@ -7802,13 +7610,8 @@ if __name__ == '__main__':
         del BathymetryGDB
         del unique_values, CreateCoreSpeciesRichnessRasters
         del Version, DateCode
-        del md
-        del geographic_regions
         #del generateMaps
         #del convertRastersToPoints
-        del inspect, myself, what_is_my_name
-
-        del EXPORT_METADATA_DIRECTORY, ARCGIS_METADATA_DIRECTORY, INPORT_METADATA_DIRECTORY
 
         arcpy.env.workspace = tmp_workspace; del tmp_workspace
 

@@ -14,32 +14,15 @@ from arcpy import metadata as md
 from time import time, localtime, strftime, sleep, gmtime
 import xml.dom.minidom
 
-import inspect
-myself = lambda: inspect.stack()[1][3]
-
-def what_is_my_name():
-    #print(inspect.stack()[0][0].f_code.co_name)
-    #print(inspect.stack()[0][3])
-    #print(inspect.currentframe().f_code.co_name)
-    #print(sys._getframe().f_code.co_name)
-    print(myself())
-    print(inspect.stack()[0].function)
-    print("%s/%s" %(sys._getframe().f_code.co_filename, sys._getframe().f_code.co_name))
 
 def unique_values(table, field):  ##uses list comprehension
     with arcpy.da.SearchCursor(table, [field]) as cursor:
         return sorted({row[0] for row in cursor})
 
-def unique_years(table):
-    arcpy.management.SelectLayerByAttribute( table, "CLEAR_SELECTION" )
-    arcpy.management.SelectLayerByAttribute( table, "NEW_SELECTION", "Year IS NOT NULL")
-    with arcpy.da.SearchCursor(table, ["Year"]) as cursor:
-        return sorted({row[0] for row in cursor})
 
 def main():
     try:
-        # Uses the inspect module and a lamda to find name of this function
-        function = myself()
+        function = "main()"
         print(function)
 
         localKeys =  [key for key in locals().keys() if "function" not in key]
@@ -56,12 +39,8 @@ def main():
         tbinfo = traceback.format_tb(tb)[0]
         # Concatenate information together concerning the error into a message string
         pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
-        arcpy.AddMessage(pymsg)
-        arcpy.AddMessage(msgs)
-        del tb, tbinfo, pymsg, msgs
+        print(pymsg)
+        del pymsg, tb, tbinfo
 
 def prettyXML(metadata):
     try:
@@ -92,51 +71,10 @@ def prettyXML(metadata):
         tbinfo = traceback.format_tb(tb)[0]
         # Concatenate information together concerning the error into a message string
         pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
-        arcpy.AddMessage(pymsg)
-        arcpy.AddMessage(msgs)
-        del tb, tbinfo, pymsg, msgs
+        print(pymsg)
+        del pymsg, tb, tbinfo
 
-
-def folderPrettyXML(folder):
-    try:
-        # Uses the inspect module and a lamda to find name of this function
-        function = myself()
-        print(function)
-
-        os.chdir(folder)
-        xmls = [f for f in os.listdir(folder) if f.endswith("xml")]
-        for xml in xmls:
-            print("\t{0}".format(xml))
-            prettyXML(xml)
-            del xml
-
-        del folder, xmls
-
-        localKeys =  [key for key in locals().keys() if "function" not in key]
-
-        if localKeys:
-            msg = "Local Keys: {0} in {1}".format(u", ".join(localKeys), function)
-            print(msg); del msg
-        del localKeys, function
-
-    except:
-        import sys, traceback
-        # Get the traceback object
-        tb = sys.exc_info()[2]
-        tbinfo = traceback.format_tb(tb)[0]
-        # Concatenate information together concerning the error into a message string
-        pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
-        arcpy.AddMessage(pymsg)
-        arcpy.AddMessage(msgs)
-        del tb, tbinfo, pymsg, msgs
-
-
+##
 ##def prettyXMLasString():
 ##    try:
 ##        print("prettyXMLasString()")
@@ -196,19 +134,14 @@ def folderPrettyXML(folder):
 ##        tbinfo = traceback.format_tb(tb)[0]
 ##        # Concatenate information together concerning the error into a message string
 ##        pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-##        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-##        arcpy.AddError(pymsg)
-##        arcpy.AddError(msgs)
-##        arcpy.AddMessage(pymsg)
-##        arcpy.AddMessage(msgs)
-##        del tb, tbinfo, pymsg, msgs
+##        print(pymsg)
+##        del pymsg, tb, tbinfo
 
 
 def exportSelectedMetadata():
     try:
-        # Uses the inspect module and a lamda to find name of this function
-        function = myself()
-        print(function)
+        function = "exportSelectedMetadata()"
+        print("{0}".format(function))
 
         datasets = {
                      'AI' : 'DisMAP Interpolated Biomass Metadata.xml',
@@ -251,19 +184,14 @@ def exportSelectedMetadata():
         tbinfo = traceback.format_tb(tb)[0]
         # Concatenate information together concerning the error into a message string
         pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
-        arcpy.AddMessage(pymsg)
-        arcpy.AddMessage(msgs)
-        del tb, tbinfo, pymsg, msgs
+        print(pymsg)
+        del pymsg, tb, tbinfo
 
 
 def exportMetadata():
     try:
-        # Uses the inspect module and a lamda to find name of this function
-        function = myself()
-        print(function)
+        function = "exportMetadata()"
+        print("{0}".format(function))
 
         arcpy.env.workspace = ProjectGDB
 
@@ -295,8 +223,8 @@ def exportMetadata():
             #dataset_md.synchronize('NOT_CREATED', 1)
             #dataset_md.synchronize('OVERWRITE')
             #dataset_md.synchronize('SELECTIVE')
-            #dataset_md.save()
-            #dataset_md.reload()
+            dataset_md.save()
+            dataset_md.reload()
 
             if dataset_md.title:
                 #dataset_md_title = dataset_md.title.replace('_', ' ')
@@ -321,28 +249,24 @@ def exportMetadata():
             msg = "\t\t Credits: {0}".format(dataset_md.credits)
             print(msg); del msg
 
+            # Delete all geoprocessing history and any thumbnails from the item's metadata
+            if not dataset_md.isReadOnly:
+                dataset_md.deleteContent('GPHISTORY')
+                #dataset_md.deleteContent('THUMBNAIL')
+                dataset_md.save()
+                dataset_md.reload()
+
             #dataset_md.synchronize('ALWAYS')
             #dataset_md.synchronize('SELECTIVE')
             #dataset_md.saveAsXML(metadata, 'REMOVE_ALL_SENSITIVE_INFO')
-            dataset_md.saveAsXML(metadata, 'REMOVE_MACHINE_NAMES')
-            #dataset_md.saveAsXML(metadata)
+            #dataset_md.saveAsXML(metadata, 'REMOVE_MACHINE_NAMES')
+            dataset_md.saveAsXML(metadata)
             #dataset_md.exportMetadata(metadata,
             #                 metadata_removal_option='REMOVE_ALL_SENSITIVE_INFO')
 
-            del dataset_md
-
-            metadata_md = md.Metadata(metadata)
-            # Delete all geoprocessing history and any thumbnails from the item's metadata
-            if not metadata_md.isReadOnly:
-                metadata_md.deleteContent('GPHISTORY')
-                #metadata_md.deleteContent('THUMBNAIL')
-                metadata_md.save()
-                metadata_md.reload()
-                metadata_md.saveAsXML(metadata)
-
             prettyXML(metadata)
 
-            del metadata, metadata_md
+            del metadata, dataset_md
 
         del datasets, dataset
 
@@ -360,28 +284,13 @@ def exportMetadata():
         tbinfo = traceback.format_tb(tb)[0]
         # Concatenate information together concerning the error into a message string
         pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
-        arcpy.AddMessage(pymsg)
-        arcpy.AddMessage(msgs)
-        del tb, tbinfo, pymsg, msgs
-
-
-def findGeographicRegion(dataset):
-    for geographic_region in geographic_regions:
-        if geographic_region.lower() in dataset.lower():
-            #print(geographic_region)
-            geographic_region = geographic_regions[geographic_region]
-            #print(geographic_region)
-            return geographic_region
-
+        print(pymsg)
+        del pymsg, tb, tbinfo
 
 def updateMetadata():
     try:
-        # Uses the inspect module and a lamda to find name of this function
-        function = myself()
-        print(function)
+        function = "updateMetadata()"
+        print("{0}".format(function))
 
         arcpy.env.workspace = ProjectGDB
 
@@ -398,92 +307,17 @@ def updateMetadata():
                         #set(arcpy.ListTables("*"))
                         set(arcpy.ListFeatureClasses("*Survey_Locations"))
                        )
-        empty_xml = os.path.join(ARCGIS_METADATA_DIRECTORY, "empty.xml")
-
-        #metadataForAllDatasets = os.path.join(ARCGIS_METADATA_DIRECTORY, "Metadata for all Datasets.xml")
-        survey_locations_template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, "Survey Locations Template 20220516.xml")
-
-        prettyXML(survey_locations_template_metadata)
 
         for dataset in sorted(datasets):
             msg = "\t {0}".format(dataset)
             print(msg); del msg
 
-            geographic_region = findGeographicRegion(dataset)
-            if not geographic_region:
-                #geographic_region = 'Aleutian Islands, Eastern Bering Sea, Bering Sea, Gulf of Alaska, Gulf of Mexico, Northeast US, Southeast US, East Coast, West Coast'
-                geographic_region = ', '.join(sorted(list(set(', '.join(geographic_regions.values()).split(', ')))))
-            #else:
-            #    geographic_region = 'Aleutian Islands, Eastern Bering Sea, Bering Sea, Gulf of Alaska, Gulf of Mexico, Northeast US, Southeast US, East Coast, West Coast'
-            print('\t\t' + geographic_region+'\n')
-            #print("'{}',".format(geographic_region))
-            #del geographic_region
+            metadata = os.path.join(EXPORT_METADATA_DIRECTORY, "{0}.xml".format(dataset))
+            dataset_md = md.Metadata(metadata)
 
-##            metadata = os.path.join(EXPORT_METADATA_DIRECTORY, "{0}.xml".format(dataset))
-##            #dataset_md = md.Metadata(metadata)
-##
 ##            dataset_md = md.Metadata(dataset)
-##
-##            #dataset_md.importMetadata(empty_xml, 'ARCGIS_METADATA')
-##            dataset_md.importMetadata(empty_xml)
-##            #dataset_md.synchronize('OVERWRITE')
-##            dataset_md.save()
-##            dataset_md.reload()
-##
-##            #dataset_md.synchronize('ACCESSED', 1)
-##            #dataset_md.synchronize('ALWAYS', 1)
-##            #dataset_md.synchronize('CREATED', 1)
-##            #dataset_md.synchronize('NOT_CREATED', 1)
-##            #dataset_md.synchronize('OVERWRITE')
-##            dataset_md.synchronize('SELECTIVE')
-##            dataset_md.importMetadata(survey_locations_template_metadata, 'ARCGIS_METADATA')
-##            #dataset_md.importMetadata(DisMAPSurveyLocationsMetadata, 'ARCGIS_METADATA')
-##            #del DisMAPSurveyLocationsMetadata
-##
-##            dataset_md.save()
-##            dataset_md.reload()
-##
-##            if not dataset_md.isReadOnly:
-##                dataset_md.synchronize('OVERWRITE')
-##                fields = [f.name for f in arcpy.ListFields(dataset)]
-##                if 'Year' in fields:
-##                    years_md = unique_years(dataset)
-##                    if years_md:
-##                        tags = "{0}, {1} to {2}".format(geographic_region, min(years_md), max(years_md))
-##                    else:
-##                        tags = "{0}".format(geographic_region)
-##                    del years_md
-##                else:
-##                    tags = "{0}".format(geographic_region)
-##
-##                del fields
-##
-##                #dataset_md_title = dataset_md.title.replace('_', ' ')
-##                dataset_md.title = "{0} {1}".format(dataset.replace('_', ' '), DateCode)
-##                # dataset_md.tags = "{0}, {1} to {2}".format(geographic_regions[region_abb], min(years_md), max(years_md))
-##                dataset_md.tags = tags + ', ' + dataset_md.tags
-##                dataset_md.save()
-##                dataset_md.reload()
-##                del tags
-##
-##
-##            msg = "\t\t Title: {0}".format(dataset_md.title)
-##            print(msg); del msg
-##
-##            msg = "\t\t Tags: {0}".format(dataset_md.tags)
-##            print(msg); del msg
-##
-##            msg = "\t\t Summary: {0}".format(dataset_md.summary)
-##            print(msg); del msg
-##
-##            msg = "\t\t Description: {0}".format(dataset_md.description)
-##            print(msg); del msg
-##
-##            msg = "\t\t Credits: {0}".format(dataset_md.credits)
-##            print(msg); del msg
-##
-##            #dataset_md.synchronize('ACCESSED', 1)
-##            dataset_md.synchronize('ALWAYS', 1)
+##            dataset_md.synchronize('ACCESSED', 1)
+##            #dataset_md.synchronize('ALWAYS')
 ##            #dataset_md.synchronize('CREATED', 1)
 ##            #dataset_md.synchronize('NOT_CREATED', 1)
 ##            #dataset_md.synchronize('OVERWRITE')
@@ -491,186 +325,69 @@ def updateMetadata():
 ##            dataset_md.save()
 ##            dataset_md.reload()
 ##
-##            dataset_md.saveAsXML(metadata, 'REMOVE_ALL_SENSITIVE_INFO')
-##            #dataset_md.saveAsXML(metadata, 'REMOVE_MACHINE_NAMES')
-##
-##            del dataset_md
-##
-##            # Read in metadata record and then remove geoprocessing history
-##            metadata_md = md.Metadata(metadata)
-##
+##            if dataset_md.title:
+##                #dataset_md_title = dataset_md.title.replace('_', ' ')
+##                dataset_md_title = "{0} {1}".format(dataset.replace('_', ' '), DateCode)
+##                dataset_md.title = dataset_md_title
+##                dataset_md.save()
+##                dataset_md.reload()
+##                del dataset_md_title
+
+            msg = "\t\t Title: {0}".format(dataset_md.title)
+            print(msg); del msg
+
+            msg = "\t\t Tags: {0}".format(dataset_md.tags)
+            print(msg); del msg
+
+            msg = "\t\t Summary: {0}".format(dataset_md.summary)
+            print(msg); del msg
+
+            msg = "\t\t Description: {0}".format(dataset_md.description)
+            print(msg); del msg
+
+            msg = "\t\t Credits: {0}".format(dataset_md.credits)
+            print(msg); del msg
+
 ##            # Delete all geoprocessing history and any thumbnails from the item's metadata
-##            if not metadata_md.isReadOnly:
-##                metadata_md.deleteContent('GPHISTORY')
-##                metadata_md.save()
-##                metadata_md.reload()
-##                metadata_md.saveAsXML(metadata)
-##
-##
-##            prettyXML(metadata)
-##
-##            del metadata, metadata_md, geographic_region
+##            if not dataset_md.isReadOnly:
+##                dataset_md.deleteContent('GPHISTORY')
+##                #dataset_md.deleteContent('THUMBNAIL')
+##                dataset_md.save()
+##                dataset_md.reload()
 
-
-
-        del dataset, datasets, empty_xml, survey_locations_template_metadata
-
-        localKeys =  [key for key in locals().keys() if 'function' not in key]
-
-        if localKeys:
-            msg = "Local Keys: {0} in {1}()".format(u", ".join(localKeys), function)
-            print(msg); del msg
-        del localKeys, function
-
-    except:
-        import sys, traceback
-        # Get the traceback object
-        tb = sys.exc_info()[2]
-        tbinfo = traceback.format_tb(tb)[0]
-        # Concatenate information together concerning the error into a message string
-        pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
-        arcpy.AddMessage(pymsg)
-        arcpy.AddMessage(msgs)
-        del tb, tbinfo, pymsg, msgs
-
-
-def updateSurveyLocationsMetadata():
-    try:
-        # Uses the inspect module and a lamda to find name of this function
-        function = myself()
-        print(function)
-
-        arcpy.env.workspace = ProjectGDB
-
-##        datasets = list(set(arcpy.ListDatasets("*{0}*".format(data_source_name))) |
-##                        set(arcpy.ListFeatureClasses("*{0}*".format(data_source_name))) |
-##                        set(arcpy.ListRasters("*{0}*".format(data_source_name))) |
-##                        set(arcpy.ListTables("*{0}*".format(data_source_name))) |
-##                        set(arcpy.ListFiles("*{0}*".format(data_source_name)))
-##                        )
-        datasets = list(
-                        #set(arcpy.ListDatasets("*")) |
-                        #set(arcpy.ListFeatureClasses("*")) |
-                        #set(arcpy.ListRasters("*")) |
-                        #set(arcpy.ListTables("*"))
-                        set(arcpy.ListFeatureClasses("*Survey_Locations"))
-                       )
-        empty_xml = os.path.join(ARCGIS_METADATA_DIRECTORY, "empty.xml")
-
-        #metadataForAllDatasets = os.path.join(ARCGIS_METADATA_DIRECTORY, "Metadata for all Datasets.xml")
-        template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, "Survey Locations Template 20220516.xml")
-
-        prettyXML(template_metadata)
-
-        for dataset in sorted(datasets):
-            msg = "\t {0}".format(dataset)
-            print(msg); del msg
-
-            geographic_region = findGeographicRegion(dataset)
-            if not geographic_region:
-                #geographic_region = 'Aleutian Islands, Eastern Bering Sea, Bering Sea, Gulf of Alaska, Gulf of Mexico, Northeast US, Southeast US, East Coast, West Coast'
-                geographic_region = ', '.join(sorted(list(set(', '.join(geographic_regions.values()).split(', ')))))
-            #else:
-            #    geographic_region = 'Aleutian Islands, Eastern Bering Sea, Bering Sea, Gulf of Alaska, Gulf of Mexico, Northeast US, Southeast US, East Coast, West Coast'
-            print('\t\t' + geographic_region+'\n')
-            #print("'{}',".format(geographic_region))
-            #del geographic_region
-
-            metadata = os.path.join(EXPORT_METADATA_DIRECTORY, "{0}.xml".format(dataset))
-            #dataset_md = md.Metadata(metadata)
-
-            dataset_md = md.Metadata(dataset)
-
-            #dataset_md.importMetadata(empty_xml, 'ARCGIS_METADATA')
-            dataset_md.importMetadata(empty_xml)
-            #dataset_md.synchronize('OVERWRITE')
-            dataset_md.save()
-            dataset_md.reload()
-
-            #dataset_md.synchronize('ACCESSED', 1)
-            #dataset_md.synchronize('ALWAYS', 1)
-            #dataset_md.synchronize('CREATED', 1)
-            #dataset_md.synchronize('NOT_CREATED', 1)
-            #dataset_md.synchronize('OVERWRITE')
-            dataset_md.synchronize('SELECTIVE')
-            dataset_md.importMetadata(template_metadata, 'ARCGIS_METADATA')
-            #dataset_md.importMetadata(DisMAPSurveyLocationsMetadata, 'ARCGIS_METADATA')
-            #del DisMAPSurveyLocationsMetadata
-
-            dataset_md.save()
-            dataset_md.reload()
-
-            if not dataset_md.isReadOnly:
-                dataset_md.synchronize('OVERWRITE')
-                fields = [f.name for f in arcpy.ListFields(dataset)]
-                if 'Year' in fields:
-                    years_md = unique_years(dataset)
-                    if years_md:
-                        tags = "{0}, {1} to {2}".format(geographic_region, min(years_md), max(years_md))
-                    else:
-                        tags = "{0}".format(geographic_region)
-                    del years_md
-                else:
-                    tags = "{0}".format(geographic_region)
-
-                del fields
-
-                #dataset_md_title = dataset_md.title.replace('_', ' ')
-                dataset_md.title = "{0} {1}".format(dataset.replace('_', ' '), DateCode)
-                # dataset_md.tags = "{0}, {1} to {2}".format(geographic_regions[region_abb], min(years_md), max(years_md))
-                dataset_md.tags = tags + ', ' + dataset_md.tags
-                dataset_md.save()
-                dataset_md.reload()
-                del tags
-
-
-            msg = "\t\t Title: {0}".format(dataset_md.title)
-            print(msg); del msg
-
-            msg = "\t\t Tags: {0}".format(dataset_md.tags)
-            print(msg); del msg
-
-            msg = "\t\t Summary: {0}".format(dataset_md.summary)
-            print(msg); del msg
-
-            msg = "\t\t Description: {0}".format(dataset_md.description)
-            print(msg); del msg
-
-            msg = "\t\t Credits: {0}".format(dataset_md.credits)
-            print(msg); del msg
-
-            #dataset_md.synchronize('ACCESSED', 1)
-            dataset_md.synchronize('ALWAYS', 1)
-            #dataset_md.synchronize('CREATED', 1)
-            #dataset_md.synchronize('NOT_CREATED', 1)
-            #dataset_md.synchronize('OVERWRITE')
+            #dataset_md.synchronize('ALWAYS')
             #dataset_md.synchronize('SELECTIVE')
-            dataset_md.save()
-            dataset_md.reload()
-
-            dataset_md.saveAsXML(metadata, 'REMOVE_ALL_SENSITIVE_INFO')
+            #dataset_md.saveAsXML(metadata, 'REMOVE_ALL_SENSITIVE_INFO')
             #dataset_md.saveAsXML(metadata, 'REMOVE_MACHINE_NAMES')
+            #dataset_md.saveAsXML(metadata)
 
-            del dataset_md
 
-            # Read in metadata record and then remove geoprocessing history
-            metadata_md = md.Metadata(metadata)
+            selective_metadata = os.path.join(EXPORT_METADATA_DIRECTORY, "{0} SELECTIVE.xml".format(dataset))
 
-            # Delete all geoprocessing history and any thumbnails from the item's metadata
-            if not metadata_md.isReadOnly:
-                metadata_md.deleteContent('GPHISTORY')
-                metadata_md.save()
-                metadata_md.reload()
-                metadata_md.saveAsXML(metadata)
+            dataset_md.saveAsXML(selective_metadata)
 
-            prettyXML(metadata)
+            del metadata, dataset_md
 
-            del metadata, metadata_md, geographic_region
+            selective_md = md.Metadata(selective_metadata)
 
-        del dataset, datasets, empty_xml, template_metadata
+
+            #selective_md.synchronize('ACCESSED', 1)
+            #selective_md.synchronize('ALWAYS')
+            selective_md.synchronize('CREATED', 1)
+            #selective_md.synchronize('NOT_CREATED', 1)
+            #selective_md.synchronize('OVERWRITE')
+            #selective_md.synchronize('SELECTIVE')
+
+            import_selective_metadata = r'C:\Users\john.f.kennedy\Documents\GitHub\DisMap\ArcGIS Analysis\March 7 2022\ArcGIS Metadata March 7 2022 Dev\Survey Locations Metadata.xml'
+            selective_md.importMetadata(import_selective_metadata)
+            selective_md.save()
+
+
+            prettyXML(selective_metadata)
+
+            del selective_metadata, selective_md, import_selective_metadata
+
+        del datasets, dataset
 
         localKeys =  [key for key in locals().keys() if 'function' not in key]
 
@@ -686,200 +403,22 @@ def updateSurveyLocationsMetadata():
         tbinfo = traceback.format_tb(tb)[0]
         # Concatenate information together concerning the error into a message string
         pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
-        arcpy.AddMessage(pymsg)
-        arcpy.AddMessage(msgs)
-        del tb, tbinfo, pymsg, msgs
-
-def updateRasterMosaicMetadata(workspace):
-    try:
-        # Uses the inspect module and a lamda to find name of this function
-        function = myself()
-        print(function)
-
-        arcpy.env.workspace = workspace
-
-        # Describe importMetadataPath
-        desc = arcpy.Describe(workspace)
-
-        # Get Workspace Path Type
-        print(desc.workspaceType)
-
-        if desc.workspaceType == "FileSystem":
-            datasets = arcpy.ListRasters("*")
-        if desc.workspaceType == "LocalDatabase":
-            datasets = arcpy.ListDatasets("*", feature_type = 'Mosaic')
-
-        #print(datasets)
-
-        del desc, workspace
-
-##        datasets = list(
-##                        #set(arcpy.ListDatasets("*", feature_type = 'Mosaic'))
-##                        set(arcpy.ListRasters("*"))
-##                       )
-
-        empty_xml = os.path.join(ARCGIS_METADATA_DIRECTORY, "empty.xml")
-
-        #metadataForAllDatasets = os.path.join(ARCGIS_METADATA_DIRECTORY, "Metadata for all Datasets.xml")
-        #template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, "Survey Locations Template 20220516.xml")
-        template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, f"Raster Mosaics Template {DateCode}.xml")
-
-        prettyXML(template_metadata)
-
-        for dataset in sorted(datasets):
-            msg = "\t {0}".format(dataset)
-            print(msg); del msg
-            region = regions[dataset.replace(f" {DateCode}", "").replace('.crf', '')]
-            #print(region.replace('-', ' to ') + f" {DateCode}")
-
-            geographic_region = findGeographicRegion(dataset)
-            if not geographic_region:
-                #geographic_region = 'Aleutian Islands, Eastern Bering Sea, Bering Sea, Gulf of Alaska, Gulf of Mexico, Northeast US, Southeast US, East Coast, West Coast'
-                geographic_region = ', '.join(sorted(list(set(', '.join(geographic_regions.values()).split(', ')))))
-            #else:
-            #    geographic_region = 'Aleutian Islands, Eastern Bering Sea, Bering Sea, Gulf of Alaska, Gulf of Mexico, Northeast US, Southeast US, East Coast, West Coast'
-            print('\t\t' + geographic_region+'\n')
-            #print("'{}',".format(geographic_region))
-            #del geographic_region
-
-            metadata = os.path.join(EXPORT_METADATA_DIRECTORY, "{0}.xml".format(dataset))
-            #dataset_md = md.Metadata(metadata)
-
-            dataset_md = md.Metadata(dataset)
-
-            #dataset_md.importMetadata(empty_xml, 'ARCGIS_METADATA')
-            dataset_md.importMetadata(empty_xml)
-            #dataset_md.synchronize('OVERWRITE')
-            dataset_md.save()
-            dataset_md.reload()
-
-            #dataset_md.synchronize('ACCESSED', 1)
-            #dataset_md.synchronize('ALWAYS', 1)
-            #dataset_md.synchronize('CREATED', 1)
-            #dataset_md.synchronize('NOT_CREATED', 1)
-            #dataset_md.synchronize('OVERWRITE')
-            dataset_md.synchronize('SELECTIVE')
-            dataset_md.importMetadata(template_metadata, 'ARCGIS_METADATA')
-            #dataset_md.importMetadata(DisMAPSurveyLocationsMetadata, 'ARCGIS_METADATA')
-            #del DisMAPSurveyLocationsMetadata
-
-            dataset_md.save()
-            dataset_md.reload()
-
-            if not dataset_md.isReadOnly:
-                dataset_md.synchronize('OVERWRITE')
-                fields = [f.name for f in arcpy.ListFields(dataset)]
-                if 'Year' in fields:
-                    years_md = unique_years(dataset)
-                    if years_md:
-                        tags = "{0}, {1} to {2}".format(geographic_region, min(years_md), max(years_md))
-                    else:
-                        tags = "{0}".format(geographic_region)
-                    del years_md
-                else:
-                    tags = "{0}".format(geographic_region)
-
-                del fields
-
-                #dataset_md_title = dataset_md.title.replace('_', ' ')
-                #dataset_md.title = "{0} {1}".format(dataset.replace('_', ' ').replace('.crf', ''), DateCode)
-                #dataset_md.title = "{0}".format(dataset.replace('_', ' ').replace('.crf', ''))
-                dataset_md.title = region.replace('-', ' to ') + f" {DateCode}"
-                # dataset_md.tags = "{0}, {1} to {2}".format(geographic_regions[region_abb], min(years_md), max(years_md))
-                dataset_md.tags = tags + ', ' + dataset_md.tags
-                dataset_md.save()
-                dataset_md.reload()
-                del tags
-
-
-            msg = "\t\t Title: {0}".format(dataset_md.title)
-            print(msg); del msg
-
-            msg = "\t\t Tags: {0}".format(dataset_md.tags)
-            print(msg); del msg
-
-            msg = "\t\t Summary: {0}".format(dataset_md.summary)
-            print(msg); del msg
-
-            msg = "\t\t Description: {0}".format(dataset_md.description)
-            print(msg); del msg
-
-            msg = "\t\t Credits: {0}".format(dataset_md.credits)
-            print(msg); del msg
-
-            #dataset_md.synchronize('ACCESSED', 1)
-            dataset_md.synchronize('ALWAYS', 1)
-            #dataset_md.synchronize('CREATED', 1)
-            #dataset_md.synchronize('NOT_CREATED', 1)
-            #dataset_md.synchronize('OVERWRITE')
-            #dataset_md.synchronize('SELECTIVE')
-            dataset_md.save()
-            dataset_md.reload()
-
-            dataset_md.saveAsXML(metadata, 'REMOVE_ALL_SENSITIVE_INFO')
-            #dataset_md.saveAsXML(metadata, 'REMOVE_MACHINE_NAMES')
-
-            del dataset_md
-
-            # Read in metadata record and then remove geoprocessing history
-            metadata_md = md.Metadata(metadata)
-
-            # Delete all geoprocessing history and any thumbnails from the item's metadata
-            if not metadata_md.isReadOnly:
-                metadata_md.deleteContent('GPHISTORY')
-                metadata_md.save()
-                metadata_md.reload()
-                metadata_md.saveAsXML(metadata)
-
-
-            prettyXML(metadata)
-
-            del metadata, metadata_md, geographic_region, region, dataset
-
-        del datasets, empty_xml, template_metadata
-
-        localKeys =  [key for key in locals().keys() if 'function' not in key]
-
-        if localKeys:
-            msg = "Local Keys: {0} in {1}()".format(u", ".join(localKeys), function)
-            print(msg); del msg
-        del localKeys, function
-
-    except:
-        import sys, traceback
-        # Get the traceback object
-        tb = sys.exc_info()[2]
-        tbinfo = traceback.format_tb(tb)[0]
-        # Concatenate information together concerning the error into a message string
-        pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
-        arcpy.AddMessage(pymsg)
-        arcpy.AddMessage(msgs)
-        del tb, tbinfo, pymsg, msgs
+        print(pymsg)
+        del pymsg, tb, tbinfo
 
 
 def createEmptyTempMetadataXML():
     try:
-        # Uses the inspect module and a lamda to find name of this function
-        function = myself()
+        function = "createEmptyTempMetadataXML()"
         print(function)
 
-        empty_xml = os.path.join(ARCGIS_METADATA_DIRECTORY, "empty.xml")
-        temp_xml = os.path.join(ARCGIS_METADATA_DIRECTORY, "temp.xml")
-        #temp_project_xml = os.path.join(ARCGIS_METADATA_DIRECTORY, "temp_project.xml")
-        #temp_group_dataset_xml = os.path.join(ARCGIS_METADATA_DIRECTORY, "temp_group_dataset.xml")
+        empty_xml = os.path.join(EXPORT_METADATA_DIRECTORY, "empty.xml")
+        temp_xml = os.path.join(EXPORT_METADATA_DIRECTORY, "temp.xml")
 
         # Create a new Metadata object and add some content to it
         new_md = md.Metadata()
         # Empty XML Files
         new_md.saveAsXML(empty_xml)
-        #new_md.saveAsXML(temp_project_xml)
-        #new_md.saveAsXML(temp_group_dataset_xml)
 
         # Temp XML File
         new_md.title = 'My Title'
@@ -899,12 +438,8 @@ def createEmptyTempMetadataXML():
 
         prettyXML(empty_xml)
         prettyXML(temp_xml)
-        #prettyXML(temp_project_xml)
-        #prettyXML(temp_group_dataset_xml)
-
 
         del empty_xml, temp_xml, new_md
-        #del temp_project_xml, temp_group_dataset_xml
 
         localKeys =  [key for key in locals().keys() if "function" not in key]
 
@@ -920,18 +455,13 @@ def createEmptyTempMetadataXML():
         tbinfo = traceback.format_tb(tb)[0]
         # Concatenate information together concerning the error into a message string
         pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
-        arcpy.AddMessage(pymsg)
-        arcpy.AddMessage(msgs)
-        del tb, tbinfo, pymsg, msgs
+        print(pymsg)
+        del pymsg, tb, tbinfo
+
 
 def exportInportMetadata():
     try:
-        # Uses the inspect module and a lamda to find name of this function
-        function = myself()
-        print(function)
+        print("exportInportMetadata()")
 
         # make sure the name of the xsl style sheet is up-to-date
         mainXslFilename = "ArcGIS2InportV07.xsl"
@@ -1038,12 +568,12 @@ def exportInportMetadata():
 
         del  datasets, dataset, mainXslFilename
 
-        localKeys =  [key for key in locals().keys() if "function" not in key]
+        localKeys =  [key for key in locals().keys()]
 
         if localKeys:
-            msg = "Local Keys: {0} in {1}".format(u", ".join(localKeys), function)
+            msg = "Local Keys: {0}".format(u", ".join(localKeys))
             print(msg); del msg
-        del localKeys, function
+        del localKeys
 
     except:
         import sys, traceback
@@ -1052,19 +582,13 @@ def exportInportMetadata():
         tbinfo = traceback.format_tb(tb)[0]
         # Concatenate information together concerning the error into a message string
         pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
-        arcpy.AddMessage(pymsg)
-        arcpy.AddMessage(msgs)
-        del tb, tbinfo, pymsg, msgs
+        print(pymsg)
+        del pymsg, tb, tbinfo
 
 
 def exportInportEntityMetadata():
     try:
-        # Uses the inspect module and a lamda to find name of this function
-        function = myself()
-        print(function)
+        print("exportInportEntityMetadata()")
 
         # make sure the name of the xsl style sheet is up-to-date
         entityXslFilename = "ArcGIS2InPort_entityV02.xsl"
@@ -1149,12 +673,12 @@ def exportInportEntityMetadata():
 
         del  datasets, dataset, entityXslFilename
 
-        localKeys =  [key for key in locals().keys() if "function" not in key]
+        localKeys =  [key for key in locals().keys()]
 
         if localKeys:
-            msg = "Local Keys: {0} in {1}".format(u", ".join(localKeys), function)
+            msg = "Local Keys: {0}".format(u", ".join(localKeys))
             print(msg); del msg
-        del localKeys, function
+        del localKeys
 
     except:
         import sys, traceback
@@ -1163,12 +687,8 @@ def exportInportEntityMetadata():
         tbinfo = traceback.format_tb(tb)[0]
         # Concatenate information together concerning the error into a message string
         pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
-        arcpy.AddMessage(pymsg)
-        arcpy.AddMessage(msgs)
-        del tb, tbinfo, pymsg, msgs
+        print(pymsg)
+        del pymsg, tb, tbinfo
 
 
 ##def saveInportTemplateMetadata():
@@ -1271,20 +791,13 @@ def exportInportEntityMetadata():
 ##        tbinfo = traceback.format_tb(tb)[0]
 ##        # Concatenate information together concerning the error into a message string
 ##        pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-##        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-##        arcpy.AddError(pymsg)
-##        arcpy.AddError(msgs)
-##        arcpy.AddMessage(pymsg)
-##        arcpy.AddMessage(msgs)
-##        del tb, tbinfo, pymsg, msgs
+##        print(pymsg)
+##        del pymsg, tb, tbinfo
 
 
 def importTemplateMetadata():
     try:
-        # Uses the inspect module and a lamda to find name of this function
-        function = myself()
-        print(function)
-
+        print("importTemplateMetadata()")
         # Set a start time so that we can see how log things take
         start_time = time()
 
@@ -1420,12 +933,12 @@ def importTemplateMetadata():
 
         del mosaic_template_path, survey_locations_template_path
 
-        localKeys =  [key for key in locals().keys() if "function" not in key]
+        localKeys =  [key for key in locals().keys()]
 
         if localKeys:
-            msg = "Local Keys: {0} in {1}".format(u", ".join(localKeys), function)
+            msg = "Local Keys: {0}".format(u", ".join(localKeys))
             print(msg); del msg
-        del localKeys, function
+        del localKeys
 
     except:
         import sys, traceback
@@ -1434,119 +947,108 @@ def importTemplateMetadata():
         tbinfo = traceback.format_tb(tb)[0]
         # Concatenate information together concerning the error into a message string
         pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
-        arcpy.AddMessage(pymsg)
-        arcpy.AddMessage(msgs)
-        del tb, tbinfo, pymsg, msgs
+        print(pymsg)
+        del pymsg, tb, tbinfo
 
 
-##def importCrfMetadata():
-##    try:
-##        # Uses the inspect module and a lamda to find name of this function
-##        function = myself()
-##        print(function)
-##
-##        # Set a start time so that we can see how log things take
-##        start_time = time()
-##
-##        # Set Workspace
-##        #arcpy.env.workspace = ProjectGDB
-##        # Set Scratch Workspace
-##        #arcpy.env.scratchWorkspace = ScratchGDB
-##
-##        mosaic_template_path = os.path.join(BASE_DIRECTORY, 'DisMAP Interpolated Biomass Metadata.xml')
-##
-##        arcpy.env.workspace = MOSAIC_DIRECTORY
-##
-##        crfs = arcpy.ListRasters()
-##
-##        for crf in crfs:
-##
-##            tmp_metadata = os.path.join(MOSAIC_DIRECTORY, "tmp_metadata.xml")
-##            empty_metadata = os.path.join(BASE_DIRECTORY, 'DisMap Empty.xml')
+def importCrfMetadata():
+    try:
+        print("importCrfMetadata()")
+        # Set a start time so that we can see how log things take
+        start_time = time()
+
+        # Set Workspace
+        #arcpy.env.workspace = ProjectGDB
+        # Set Scratch Workspace
+        #arcpy.env.scratchWorkspace = ScratchGDB
+
+        mosaic_template_path = os.path.join(BASE_DIRECTORY, 'DisMAP Interpolated Biomass Metadata.xml')
+
+        arcpy.env.workspace = MOSAIC_DIRECTORY
+
+        crfs = arcpy.ListRasters()
+
+        for crf in crfs:
+
+            tmp_metadata = os.path.join(MOSAIC_DIRECTORY, "tmp_metadata.xml")
+            empty_metadata = os.path.join(BASE_DIRECTORY, 'DisMap Empty.xml')
+
+            mosaic_md = md.Metadata(crf)
+
+            msg = "\t Metadata Title: {0}".format(mosaic_md.title)
+            print(msg); del msg
+
+            mosaic_md.saveAsXML(tmp_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
+
+            prettyXML(tmp_metadata)
+
+            # Import the standard-format metadata content to the target item
+            if not mosaic_md.isReadOnly:
+                # Synchronize the item's metadata now
+                mosaic_md.synchronize('ALWAYS')
+                mosaic_md.save()
+                mosaic_md.reload()
+                msg = "\t Metadata Title: {0}".format(mosaic_md.title)
+                print(msg); del msg
+                #mosaic_md.synchronize('OVERWRITE')
+                #mosaic_md.synchronize('SELECTIVE')
+                mosaic_md.importMetadata(empty_metadata)
+                mosaic_md.save()
+                mosaic_md.synchronize('SELECTIVE')
+                mosaic_md.importMetadata(tmp_metadata)
+                mosaic_md.save()
+                mosaic_md.synchronize('SELECTIVE')
+                mosaic_md.importMetadata(mosaic_template_path)
+                msg = "\t Metadata Title: {0}".format(mosaic_md.title)
+                print(msg); del msg
+                mosaic_md.synchronize('ALWAYS')
+                msg = "\t Metadata Title: {0}".format(mosaic_md.title)
+                print(msg); del msg
+                mosaic_md.save()
+
+##            del mosaic_md
 ##
 ##            mosaic_md = md.Metadata(crf)
-##
-##            msg = "\t Metadata Title: {0}".format(mosaic_md.title)
-##            print(msg); del msg
-##
-##            mosaic_md.saveAsXML(tmp_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
-##
-##            prettyXML(tmp_metadata)
 ##
 ##            # Import the standard-format metadata content to the target item
 ##            if not mosaic_md.isReadOnly:
 ##                # Synchronize the item's metadata now
 ##                mosaic_md.synchronize('ALWAYS')
-##                mosaic_md.save()
-##                mosaic_md.reload()
-##                msg = "\t Metadata Title: {0}".format(mosaic_md.title)
-##                print(msg); del msg
 ##                #mosaic_md.synchronize('OVERWRITE')
 ##                #mosaic_md.synchronize('SELECTIVE')
-##                mosaic_md.importMetadata(empty_metadata)
-##                mosaic_md.save()
-##                mosaic_md.synchronize('SELECTIVE')
-##                mosaic_md.importMetadata(tmp_metadata)
-##                mosaic_md.save()
-##                mosaic_md.synchronize('SELECTIVE')
 ##                mosaic_md.importMetadata(mosaic_template_path)
-##                msg = "\t Metadata Title: {0}".format(mosaic_md.title)
-##                print(msg); del msg
-##                mosaic_md.synchronize('ALWAYS')
-##                msg = "\t Metadata Title: {0}".format(mosaic_md.title)
-##                print(msg); del msg
 ##                mosaic_md.save()
-##
-####            del mosaic_md
-####
-####            mosaic_md = md.Metadata(crf)
-####
-####            # Import the standard-format metadata content to the target item
-####            if not mosaic_md.isReadOnly:
-####                # Synchronize the item's metadata now
-####                mosaic_md.synchronize('ALWAYS')
-####                #mosaic_md.synchronize('OVERWRITE')
-####                #mosaic_md.synchronize('SELECTIVE')
-####                mosaic_md.importMetadata(mosaic_template_path)
-####                mosaic_md.save()
-##
-##            #if os.path.isfile(tmp_metadata) or os.path.islink(tmp_metadata):
-##            #    os.unlink(tmp_metadata)
-##
-##            del mosaic_md, crf, tmp_metadata
-##
-##        del crfs, mosaic_template_path
-##
-##        # Elapsed time
-##        end_time = time()
-##        elapse_time =  end_time - start_time
-##        msg = u"Elapsed Time {0} (H:M:S)\n".format(strftime("%H:%M:%S", gmtime(elapse_time)))
-##        print(msg); del msg
-##        del start_time, end_time, elapse_time
-##
-##        localKeys =  [key for key in locals().keys() if "function" not in key]
-##
-##        if localKeys:
-##            msg = "Local Keys: {0} in {1}".format(u", ".join(localKeys), function)
-##            print(msg); del msg
-##        del localKeys, function
-##
-##    except:
-##        import sys, traceback
-##        # Get the traceback object
-##        tb = sys.exc_info()[2]
-##        tbinfo = traceback.format_tb(tb)[0]
-##        # Concatenate information together concerning the error into a message string
-##        pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-##        msgs = "Arcpy Errors:\n" + arcpy.GetMessages(2) + "\n"
-##        arcpy.AddError(pymsg)
-##        arcpy.AddError(msgs)
-##        arcpy.AddMessage(pymsg)
-##        arcpy.AddMessage(msgs)
-##        del tb, tbinfo, pymsg, msgs
+
+            #if os.path.isfile(tmp_metadata) or os.path.islink(tmp_metadata):
+            #    os.unlink(tmp_metadata)
+
+            del mosaic_md, crf, tmp_metadata
+
+        del crfs, mosaic_template_path
+
+        # Elapsed time
+        end_time = time()
+        elapse_time =  end_time - start_time
+        msg = u"Elapsed Time {0} (H:M:S)\n".format(strftime("%H:%M:%S", gmtime(elapse_time)))
+        print(msg); del msg
+        del start_time, end_time, elapse_time
+
+        localKeys =  [key for key in locals().keys()]
+
+        if localKeys:
+            msg = "Local Keys: {0}".format(u", ".join(localKeys))
+            print(msg); del msg
+        del localKeys
+
+    except:
+        import sys, traceback
+        # Get the traceback object
+        tb = sys.exc_info()[2]
+        tbinfo = traceback.format_tb(tb)[0]
+        # Concatenate information together concerning the error into a message string
+        pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
+        print(pymsg)
+        del pymsg, tb, tbinfo
 
 
 if __name__ == '__main__':
@@ -1557,13 +1059,13 @@ if __name__ == '__main__':
 
     # Project related items
 
-    # May 16 2022
-    Version = "May 16 2022"
-    DateCode = "20220516"
+    # May 4 2022
+    #Version = "May 4 2022"
+    #DateCode = "20220504"
 
     # March 7 2022
-    #Version = "March 7 2022"
-    #DateCode = "20220307"
+    Version = "March 7 2022"
+    DateCode = "20220307"
 
     # March 1 2022
     #Version = "March 1 2022"
@@ -1585,9 +1087,8 @@ if __name__ == '__main__':
 
     # ###--->>> Software Environment Level
     #SoftwareEnvironmentLevel = ""
-    #SoftwareEnvironmentLevel = "Dev"
+    SoftwareEnvironmentLevel = "Dev"
     #SoftwareEnvironmentLevel = "Test"
-    SoftwareEnvironmentLevel = "Prod"
 
     ProjectGDB = os.path.join(BASE_DIRECTORY, "{0}.gdb".format(ProjectName + " " + SoftwareEnvironmentLevel))
     ANALYSIS_DIRECTORY = os.path.join(BASE_DIRECTORY, "Analysis Folder {0} {1}".format(Version, SoftwareEnvironmentLevel))
@@ -1625,51 +1126,6 @@ if __name__ == '__main__':
                    [ 'WC_Tri_Shape', 'WC_Tri_Boundary','WC_TRI', 'West Coast Triennial 1977-2004', 'wctri_csv', 'NAD_1983_2011_UTM_Zone_10N', 'contour_wc']
                   ]
 
-    geographic_regions = {
-                            'AI'        : 'Aleutian Islands',
-                            'EBS'       : 'Eastern Bering Sea, Bering Sea',
-                            'GOA'       : 'Gulf of Alaska',
-                            'GOM'       : 'Gulf of Mexico',
-                            'GMEX'      : 'Gulf of Mexico',
-                            'NEUS_F'    : 'Northeast US, East Coast',
-                            'NEUSF'     : 'Northeast US, East Coast',
-                            'NEUS_S'    : 'Northeast US, East Coast',
-                            'NEUS'      : 'Northeast US, East Coast',
-                            'SEUS_SPR'  : 'Southeast US, East Coast',
-                            'SEUS_SUM'  : 'Southeast US, East Coast',
-                            'SEUS_FALL' : 'Southeast US, East Coast',
-                            'SEUS_FAL'  : 'Southeast US, East Coast',
-                            'WC_ANN'    : 'West Coast',
-                            'WCANN'     : 'West Coast',
-                            'WC_TRI'    : 'West Coast',
-                            'WCTRI'     : 'West Coast',
-                            'Aleutian_Islands'    : 'Aleutian Islands',
-                            'Eastern_Bering_Sea'  : 'Eastern Bering Sea, Bering Sea',
-                            'Gulf_of_Alaska'      : 'Gulf of Alaska',
-                            'Gulf_of_Mexico'      : 'Gulf of Mexico',
-                            #'Northeast_US_Fall'   : 'Northeast US, East Coast',
-                            'Northeast_US'   : 'Northeast US, East Coast',
-                            #'Northeast_US_Spring' : 'Northeast US, East Coast',
-                            'Southeast_US'        : 'Southeast US, East Coast',
-                            #'Southeast_US_Summer' : 'Southeast US, East Coast',
-                            'West_Coast'          : 'West Coast',
-
-                          }
-    regions = {
-                'AI' : 'Aleutian Islands',
-                'EBS' : 'Eastern Bering Sea',
-                'GOA' : 'Gulf of Alaska',
-                'GOM' : 'Gulf of Mexico',
-                'NEUS_F' : 'Northeast US Fall',
-                'NEUS_S' : 'Northeast US Spring',
-                'SEUS_FALL' : 'Southeast US Fall',
-                'SEUS_SPR' : 'Southeast US Spring',
-                'SEUS_SUM' : 'Southeast US Summer',
-                'WC_ANN' : 'West Coast Annual 2003-Present',
-                'WC_TRI' : 'West Coast Triennial 1977-2004'
-               }
-
-
     #regions = ['Aleutian Islands', 'Eastern Bering Sea', 'Gulf of Alaska', 'Gulf of Mexico', 'Northeast US Fall',
     #           'Southeast US Fall', 'Northeast US Spring', 'Southeast US Spring', 'Southeast US Summer',
     #           'West Coast Annual 2003-Present', 'West Coast Triennial 1977-2004']
@@ -1678,13 +1134,12 @@ if __name__ == '__main__':
     # False to process all regions
     FilterRegions = False
 
-    if not FilterRegions:
-        # ###--->>> Use a list to filter on regions.
-        # Below are lists used to
-        # test different regions
-        selected_regions = ['AI', 'EBS', 'GOA', 'GOM', 'NEUS_F', 'NEUS_S', 'SEUS_FALL', 'SEUS_SPR', 'SEUS_SUM', 'WC_ANN', 'WC_TRI',]
-    else:
-        selected_regions = ['AI']
+    # ###--->>> Use a list to filter on regions.
+    # Below are lists used to
+    # test different regions
+    #selected_regions = ['AI', 'EBS', 'GOA', 'GOM', 'NEUS_F', 'NEUS_S', 'SEUS_FALL', 'SEUS_SPR', 'SEUS_SUM', 'WC_ANN', 'WC_TRI',]
+
+    selected_regions = ['AI',]
 
     # Test if we are filtering on regions. If so, a new table_names list is
     # created with the selected regions remaining in the list
@@ -1697,24 +1152,12 @@ if __name__ == '__main__':
     # https://pro.arcgis.com/en/pro-app/latest/arcpy/metadata/metadata-class.htm
 
     # Create Metadata XML function
-    #createEmptyTempMetadataXML()
+    createEmptyTempMetadataXML()
 
     # Export Metadata Import Metadata
     #exportMetadata()
 
     #updateMetadata()
-
-    #updateSurveyLocationsMetadata()
-
-    # Specify Workspace. Can be Raster Mosaics or CRF
-    # ProjectGDB or MOSAIC_DIRECTORY
-    updateRasterMosaicMetadata(MOSAIC_DIRECTORY)
-
-    # Pretty Format all XML files in a folder
-    # folderPrettyXML(ARCGIS_METADATA_DIRECTORY)
-    # folderPrettyXML(EXPORT_METADATA_DIRECTORY)
-    #print(os.path.join(BASE_DIRECTORY, 'DisMAP ArcGIS Metadata March 7 2022 Dev'))
-    # folderPrettyXML(os.path.join(BASE_DIRECTORY, 'DisMAP ArcGIS Metadata March 7 2022 Dev'))
 
     #empty_metadata = os.path.join(BASE_DIRECTORY, 'DisMap Empty.xml')
     #prettyXML(empty_metadata)
@@ -1727,8 +1170,8 @@ if __name__ == '__main__':
     # Import Template Metadata XML files
     # importTemplateMetadata()
 
-    ## Import Metadata to CRF datasets
-    ## importCrfMetadata()
+    # Import Metadata to CRF datasets
+    # importCrfMetadata()
 
     # Export a copy of the Metadata, using REMOVE_ALL_SENSITIVE_INFO
     # exportSelectedMetadata()
