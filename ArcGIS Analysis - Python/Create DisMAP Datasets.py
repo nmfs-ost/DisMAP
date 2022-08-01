@@ -587,6 +587,8 @@ def generateTables():
                 df = pd.read_csv(input_csv_file,
                                  index_col = 0,
                                  encoding="utf-8",
+                                 #encoding = "ISO-8859-1",
+                                 #engine='python',
                                  delimiter = ',',
                                  #dtype = None,
                                  dtype = {
@@ -621,8 +623,7 @@ def generateTables():
                 # The original column names from the CSV files are not very
                 # reader friendly, so we are making some changes here
                 #df.columns = [u'OARegion', u'HUALID', u'Year', u'Species', u'WTCPUE', u'CommonName', u'Stratum', u'StratumArea', u'Latitude', u'Longitude', u'Depth']
-                df.columns = [u'OARegion', u'HUALID', u'Year', u'Species', u'WTCPUE', u'CommonName', u'Stratum', u'StratumArea', u'Latitude', u'Longitude', u'Depth']
-
+                df.columns = ['OARegion', 'HUALID', 'Year', 'Species', 'WTCPUE', 'CommonName', 'Stratum', 'StratumArea', 'Latitude', 'Longitude', 'Depth']
 
                 # Test if we are filtering on species. If so, a new species list is
                 # created with the selected species remaining in the list
@@ -642,9 +643,9 @@ def generateTables():
                 # with missing data, it asigns that cell with a Null or nan
                 # value. So, we are changing that value to an empty string of ''.
                 # Seems to be realivent for Species and CommonName only
-                df.Species = df.Species.fillna('')
+                df.Species    = df.Species.fillna('')
                 df.CommonName = df.CommonName.fillna('')
-                df.Species = df.Species.replace('Na', '')
+                df.Species    = df.Species.replace('Na', '')
                 df.CommonName = df.CommonName.replace('Na', '')
                 #msg = '>->->  Droping row where Species have an empty string.'
                 #logFile(log_file, msg)
@@ -655,19 +656,19 @@ def generateTables():
                 msg = '>->->  Adding SpeciesCommonName and setting it to "Species (CommonName)".'
                 logFile(log_file, msg)
                 # Insert column
-                df.insert(df.columns.get_loc(u'CommonName')+1, u'SpeciesCommonName', df[u'Species'] + ' (' + df[u'CommonName'] + ')')
+                df.insert(df.columns.get_loc('CommonName')+1, 'SpeciesCommonName', df['Species'] + ' (' + df['CommonName'] + ')')
 
                 #-->> CommonNameSpecies
                 msg = '>->->  Adding CommonNameSpecies and setting it to "CommonName (Species)".'
                 logFile(log_file, msg)
                 # Insert column
-                df.insert(df.columns.get_loc(u'SpeciesCommonName')+1, u'CommonNameSpecies', df[u'CommonName'] + ' (' + df[u'Species'] + ')')
+                df.insert(df.columns.get_loc('SpeciesCommonName')+1, 'CommonNameSpecies', df['CommonName'] + ' (' + df['Species'] + ')')
 
                 #-->> CoreSpecies
                 msg = '>->->  Adding CoreSpecies and setting it to "No".'
                 logFile(log_file, msg)
                 # Insert column
-                df.insert(df.columns.get_loc(u'CommonNameSpecies')+1, u'CoreSpecies', "No")
+                df.insert(df.columns.get_loc('CommonNameSpecies')+1, 'CoreSpecies', "No")
 
                 # ###-->> Depth
                 # msg = '>->->  Setting the Depth to float16.'
@@ -689,7 +690,7 @@ def generateTables():
                 msg = '>->->  Adding the WTCPUECubeRoot column and calculating values.'
                 logFile(log_file, msg)
                 # Insert a column to the right of a column and then do a calculation
-                df.insert(df.columns.get_loc(u'WTCPUE')+1, u'WTCPUECubeRoot', df[u'WTCPUE'].pow((1.0/3.0)))
+                df.insert(df.columns.get_loc('WTCPUE')+1, 'WTCPUECubeRoot', df['WTCPUE'].pow((1.0/3.0)))
 
                 msg = '>-> Creating the {0} Geodatabase Table'.format(region)
                 logFile(log_file, msg)
@@ -744,9 +745,13 @@ def generateTables():
                 #print(column_names)
                 # https://www.tutorialsandyou.com/python/numpy-data-types-66.html
                 # column_formats = [u'S50', u'S20', 'u2', u'S50', 'f4', 'f4', u'S50', u'S100', u'S25', 'f4', 'f4', 'f4', 'f4']
-                column_formats = ['S50', 'S20', '<i4', 'S50', '<f8', '<f8', 'S50', 'S100', 'S100', 'S5', 'S25', '<f8', '<f8', '<f8', '<f8']
+                #column_formats = ['S50', 'S20', '<i4', 'S50', '<f8', '<f8', 'S50', 'S100', 'S100', 'S5', 'S25', '<f8', '<f8', '<f8', '<f8']
+                column_formats = ['S50', 'S20', '<i4', 'S50', '<f8', '<f8', 'U50', 'U100', 'U100', 'S5', 'S25', '<f8', '<f8', '<f8', '<f8']
                 dtypes = list(zip(column_names, column_formats))
 
+                df['CommonName'] = df['CommonName'].astype('unicode')
+
+                #print(df)
                 try:
                     array = np.array(np.rec.fromrecords(df.values), dtype = dtypes)
                 except:
@@ -769,12 +774,24 @@ def generateTables():
 
                 try:
                     arcpy.da.NumPyArrayToTable(array, tmp_table)
-                except IOError:
-                    print("Something went wrong")
-                except:
-                    print("Something went wrong")
+                    del array
+                    #print(column_names)
+                    #arcpy.da.NumPyArrayToTable(records, tmp_table, column_names)
 
-                del array
+                except IOError:
+                    print("Something went wrong: IOError")
+                except:
+                    import sys, traceback
+                    # Get the traceback object
+                    tb = sys.exc_info()[2]
+                    #tb = sys.exc_info()
+                    tbinfo = traceback.format_tb(tb)[0]
+                    # Concatenate information together concerning the error into a message string
+                    pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
+                    print(pymsg)
+                    del pymsg, tb, tbinfo
+
+                #del array
 
                 if region_abb in ['WC_ANN', 'WC_TRI',]:
                     msg = '>-> Updating the Region Field for {0}'.format(region)
@@ -808,6 +825,7 @@ def generateTables():
                                                     'Eastern Bering Sea' : [1, 1, 0, 0, 0, 'US/Alaska'],
                                                     'Gulf of Alaska' : [1, 1, 0, 0, 0, 'US/Alaska'],
                                                     'Gulf of Mexico' : [1, 1, 0, 0, 0, 'US/Central'],
+                                                    'Hawaii' : [1, 1, 0, 0, 0, 'US/Hawaii'],
                                                     'Northeast US Fall' : [1, 1, 0, 0, 0, 'US/Eastern'],
                                                     'Northeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
                                                     'Southeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
@@ -832,8 +850,8 @@ def generateTables():
                 arcpy.management.CalculateField(tmp_table, "StdTime", expression="getDate( !OARegion!, !Year! )", expression_type="PYTHON", code_block=codeBlock)
                 del codeBlock
 
-                ##new_field_order = ["field2", "field3", "field1"]
-                ##reorder_fields(in_fc, out_fc, new_field_order)
+                # new_field_order = ["field2", "field3", "field1"]
+                # reorder_fields(in_fc, out_fc, new_field_order)
 
                 # A new order of fields that put like things together
                 # new_field_order = ['OBJECTID', 'CSVFILEID', 'OARegion', 'HUALID', 'Species', 'CommonName', 'Year', 'WTCPUE', 'WTCPUECubeRoot', 'Stratum', 'StratumArea', 'Depth', 'Latitude', 'Longitude', 'StdTime']
@@ -1167,6 +1185,7 @@ def createSnapRasterBathymetryLatitudeLongitude():
             # csv_file = table_name[4]
             region_georef = table_name[5]
             # region_contours = table_name[6]
+            cell_size = table_name[7]
             del table_name
 # ###--->>> Variables from list of lists
 
@@ -1338,7 +1357,7 @@ def createSnapRasterBathymetryLatitudeLongitude():
             arcpy.management.CopyFeatures(features, snap_feature_class)
             arcpy.management.Delete(features); del features
 
-            arcpy.conversion.PolygonToRaster(in_features=snap_feature_class, value_field="OBJECTID", out_rasterdataset=region_snap_raster, cell_assignment="CELL_CENTER", priority_field="NONE", cellsize="2000")
+            arcpy.conversion.PolygonToRaster(in_features=snap_feature_class, value_field="OBJECTID", out_rasterdataset=region_snap_raster, cell_assignment="CELL_CENTER", priority_field="NONE", cellsize=cell_size)
             arcpy.management.Delete(snap_feature_class); del snap_feature_class
             arcpy.env.snapRaster = region_snap_raster
 
@@ -1450,8 +1469,14 @@ def createSnapRasterBathymetryLatitudeLongitude():
             msg = "> FeatureToRaster_conversion to create Raster Mask"
             logFile(log_file, msg)
             # Change mask to the region shape to create the raster mask
-            arcpy.env.mask = region_shape
-            arcpy.conversion.FeatureToRaster(region_shape,"Id", region_raster_mask, cell_size)
+            region_shape_buffer = os.path.join(ProjectGDB, '{0}_Buffers'.format(region_abb))
+            arcpy.analysis.Buffer(region_shape, region_shape_buffer, cell_size)
+            arcpy.env.mask = region_shape_buffer
+            #arcpy.env.mask = region_shape
+            #arcpy.conversion.FeatureToRaster(region_shape,"Id", region_raster_mask, cell_size)
+            arcpy.conversion.FeatureToRaster(region_shape_buffer,"Id", region_raster_mask, cell_size)
+            #arcpy.management.Delete(region_shape_buffer)
+            #del region_shape_buffer
 
             # Get Extent
             extent = arcpy.Describe(region_fish_net).extent
@@ -1605,9 +1630,10 @@ def createSnapRasterBathymetryLatitudeLongitude():
             msg = "> FeatureToRaster_conversion to create Bathymetry Temp"
             logFile(log_file, msg); del msg
             # Change mask to the region shape to create the raster mask
-            arcpy.env.mask = region_shape
-            #arcpy.conversion.FeatureToRaster(region_fish_net, "MEDIAN", region_bathymetry+"_tmp", cell_size)
-            arcpy.conversion.FeatureToRaster(region_fish_net, "MEAN", region_bathymetry+"_tmp", cell_size)
+            #arcpy.env.mask = region_shape
+            arcpy.env.mask = region_shape_buffer
+            arcpy.conversion.FeatureToRaster(region_fish_net, "MEDIAN", region_bathymetry+"_tmp", cell_size)
+            #arcpy.conversion.FeatureToRaster(region_fish_net, "MEAN", region_bathymetry+"_tmp", cell_size)
 
             msg = "> FeatureToRaster_conversion to create Bathymetry"
             logFile(log_file, msg); del msg
@@ -1659,6 +1685,7 @@ def createSnapRasterBathymetryLatitudeLongitude():
 ##            del environment, environments
 
         #del dismap_regions
+        del cell_size
 
         # Elapsed time
         end_time = time()
@@ -1788,6 +1815,7 @@ def generateRasters():
             csv_file = table_name[4]
             region_georef = table_name[5]
             region_contours = table_name[6]
+            cell_size = table_name[7]
 
             region_shape = os.path.join(ProjectGDB, region_abb+"_Shape")
             region_snap_raster = os.path.join(ProjectGDB, region_abb+"_Snap_Raster")
@@ -2006,6 +2034,9 @@ def generateRasters():
                         if arcpy.Exists(tmp_raster):
                             arcpy.management.Delete(tmp_raster)
 
+
+                        tmp_cellSize = arcpy.env.cellSize
+                        arcpy.env.cellSize = cell_size
                         # https://www.esri.com/arcgis-blog/products/product/mapping/choosing-an-appropriate-cell-size-when-interpolating-raster-data/
                         # https://www.sciencedirect.com/science/article/pii/S0098300405002657?via%3Dihub
                         # Set local variables
@@ -2030,6 +2061,7 @@ def generateRasters():
                                                                                minNeighbors, sectorType)
 
                         del majSemiaxis, minSemiaxis, angle, maxNeighbors, minNeighbors, sectorType
+                        #del cell_size
 
                         # Check out the ArcGIS Geostatistical Analyst extension license
                         arcpy.CheckOutExtension("GeoStats")
@@ -2049,6 +2081,16 @@ def generateRasters():
 
                         del zField, cellSize, power, searchNeighbourhood, weightField
 
+                        # environments = arcpy.ListEnvironments()
+                        # Sort the environment names
+                        # environments.sort()
+                        # for environment in environments:
+                        #     # Format and print each environment and its current setting.
+                        #     # (The environments are accessed by key from arcpy.env.)
+                        #     print("{0:<30}: {1}".format(environment, arcpy.env[environment]))
+                        #     del environment
+                        # del environments
+
                         #out_idw.save(tmp_raster)
                         #arcpy.management.Delete(out_idw)
                         #del out_idw
@@ -2059,6 +2101,9 @@ def generateRasters():
                             out_cube.save(my_fish_raster)
                             #arcpy.management.Delete(out_cube)
                             del out_cube
+
+                        arcpy.env.cellSize = tmp_cellSize
+                        del tmp_cellSize
 
                         #arcpy.management.Delete(out_idw)
                         #del out_idw
@@ -2113,6 +2158,7 @@ def generateRasters():
         del table_name, region_shape, region_boundary, region_abb
         del region_georef, region_contours, region_name, log_file
         del fish_dir, my_unique_years, region_snap_raster, region_raster_mask
+        del cell_size
 
         localKeys =  [key for key in locals().keys()]
 
@@ -6111,6 +6157,7 @@ def createSpeciesRichnessRasters():
                                                 'Eastern Bering Sea' : [1, 1, 0, 0, 0, 'US/Alaska'],
                                                 'Gulf of Alaska' : [1, 1, 0, 0, 0, 'US/Alaska'],
                                                 'Gulf of Mexico' : [1, 1, 0, 0, 0, 'US/Central'],
+                                                'Hawaii' : [1, 1, 0, 0, 0, 'US/Hawaii'],
                                                 'Northeast US Fall' : [1, 1, 0, 0, 0, 'US/Eastern'],
                                                 'Northeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
                                                 'Southeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
@@ -6505,6 +6552,7 @@ def createCoreSpeciesRichnessRasters():
                                                 'Eastern Bering Sea' : [1, 1, 0, 0, 0, 'US/Alaska'],
                                                 'Gulf of Alaska' : [1, 1, 0, 0, 0, 'US/Alaska'],
                                                 'Gulf of Mexico' : [1, 1, 0, 0, 0, 'US/Central'],
+                                                'Hawaii' : [1, 1, 0, 0, 0, 'US/Hawaii'],
                                                 'Northeast US Fall' : [1, 1, 0, 0, 0, 'US/Eastern'],
                                                 'Northeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
                                                 'Southeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
@@ -7111,9 +7159,13 @@ if __name__ == '__main__':
 
         # Project related items
 
+        # July 17 2022
+        Version = "July 17 2022"
+        DateCode = "20220717"
+
         # May 16 2022
-        Version = "May 16 2022"
-        DateCode = "20220516"
+        #Version = "May 16 2022"
+        #DateCode = "20220516"
 
         # March 7 2022
         #Version = "March 7 2022"
@@ -7230,22 +7282,23 @@ if __name__ == '__main__':
 
         # In order to automate generating raster files and pictures for the Ocean Adapt website, This array of information was used to allow controlled and regulated so all regions are treated the exact same way.
         table_names = [
-                       [ 'AI_Shape', 'AI_Boundary','AI', 'Aleutian Islands', 'ai_csv', 'NAD_1983_2011_UTM_Zone_1N', 'contour_ai'],
-                       [ 'EBS_Shape', 'EBS_Boundary','EBS', 'Eastern Bering Sea', 'ebs_csv', 'NAD_1983_2011_UTM_Zone_3N', 'contour_ebs'],
-                       [ 'GOA_Shape', 'GOA_Boundary','GOA', 'Gulf of Alaska', 'goa_csv', 'NAD_1983_2011_UTM_Zone_5N', 'contour_goa'],
+                       [ 'AI_Shape', 'AI_Boundary','AI', 'Aleutian Islands', 'ai_csv', 'NAD_1983_2011_UTM_Zone_1N', 'contour_ai', 2000],
+                       [ 'EBS_Shape', 'EBS_Boundary','EBS', 'Eastern Bering Sea', 'ebs_csv', 'NAD_1983_2011_UTM_Zone_3N', 'contour_ebs', 2000],
+                       [ 'GOA_Shape', 'GOA_Boundary','GOA', 'Gulf of Alaska', 'goa_csv', 'NAD_1983_2011_UTM_Zone_5N', 'contour_goa', 2000],
 
-                       [ 'GOM_Shape', 'GOM_Boundary','GOM', 'Gulf of Mexico', 'gmex_csv', 'NAD_1983_2011_UTM_Zone_15N', 'contour_gom'],
+                       [ 'GOM_Shape', 'GOM_Boundary','GOM', 'Gulf of Mexico', 'gmex_csv', 'NAD_1983_2011_UTM_Zone_15N', 'contour_gom', 2000],
 
-                       [ 'NEUS_Fall_Shape', 'NEUS_Fall_Boundary','NEUS_F', 'Northeast US Fall', 'neusf_csv', 'NAD_1983_2011_UTM_Zone_18N', 'contour_neus'],
-                       [ 'NEUS_Spring_Shape', 'NEUS_Spring_Boundary','NEUS_S', 'Northeast US Spring', 'neus_csv', 'NAD_1983_2011_UTM_Zone_18N', 'contour_neus'],
+                       [ 'HI_Shape', 'HI_Boundary','HI', 'Hawaii', 'hi_csv', 'WGS_1984_UTM_Zone_4N', 'contour_hi', 500],
 
+                       [ 'NEUS_Fall_Shape', 'NEUS_Fall_Boundary','NEUS_F', 'Northeast US Fall', 'neusf_csv', 'NAD_1983_2011_UTM_Zone_18N', 'contour_neus', 2000],
+                       [ 'NEUS_Spring_Shape', 'NEUS_Spring_Boundary','NEUS_S', 'Northeast US Spring', 'neus_csv', 'NAD_1983_2011_UTM_Zone_18N', 'contour_neus', 2000],
 
-                       [ 'SEUS_Shape', 'SEUS_Boundary','SEUS_SPR', 'Southeast US Spring', 'seus_spr_csv', 'NAD_1983_2011_UTM_Zone_17N', 'contour_seus'],
-                       [ 'SEUS_Shape', 'SEUS_Boundary','SEUS_SUM', 'Southeast US Summer', 'seus_sum_csv', 'NAD_1983_2011_UTM_Zone_17N', 'contour_seus'],
-                       [ 'SEUS_Shape', 'SEUS_Boundary','SEUS_FALL', 'Southeast US Fall', 'seus_fal_csv', 'NAD_1983_2011_UTM_Zone_17N', 'contour_seus'],
+                       [ 'SEUS_Shape', 'SEUS_Boundary','SEUS_SPR', 'Southeast US Spring', 'seus_spr_csv', 'NAD_1983_2011_UTM_Zone_17N', 'contour_seus', 2000],
+                       [ 'SEUS_Shape', 'SEUS_Boundary','SEUS_SUM', 'Southeast US Summer', 'seus_sum_csv', 'NAD_1983_2011_UTM_Zone_17N', 'contour_seus', 2000],
+                       [ 'SEUS_Shape', 'SEUS_Boundary','SEUS_FALL', 'Southeast US Fall', 'seus_fal_csv', 'NAD_1983_2011_UTM_Zone_17N', 'contour_seus', 2000],
 
-                       [ 'WC_Ann_Shape', 'WC_Ann_Boundary','WC_ANN', 'West Coast Annual 2003-Present', 'wcann_csv', 'NAD_1983_2011_UTM_Zone_10N', 'contour_wc'],
-                       [ 'WC_Tri_Shape', 'WC_Tri_Boundary','WC_TRI', 'West Coast Triennial 1977-2004', 'wctri_csv', 'NAD_1983_2011_UTM_Zone_10N', 'contour_wc']
+                       [ 'WC_Ann_Shape', 'WC_Ann_Boundary','WC_ANN', 'West Coast Annual 2003-Present', 'wcann_csv', 'NAD_1983_2011_UTM_Zone_10N', 'contour_wc', 2000],
+                       [ 'WC_Tri_Shape', 'WC_Tri_Boundary','WC_TRI', 'West Coast Triennial 1977-2004', 'wctri_csv', 'NAD_1983_2011_UTM_Zone_10N', 'contour_wc', 2000]
                       ]
 
         # ###--->>> Spatial Reference Dictionary
@@ -7253,6 +7306,7 @@ if __name__ == '__main__':
                u'NAD_1983_2011_UTM_Zone_3N'  : 'PROJCS["WGS_1984_Albers",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-78.0],PARAMETER["standard_parallel_1",27.33333333333333],PARAMETER["standard_parallel_2",40.66666666666666],PARAMETER["latitude_of_origin",34.0],UNIT["Meter",1.0]]', # Eastern Bering Sea
                u'NAD_1983_2011_UTM_Zone_5N'  : 'PROJCS["WGS_1984_Albers",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-78.0],PARAMETER["standard_parallel_1",27.33333333333333],PARAMETER["standard_parallel_2",40.66666666666666],PARAMETER["latitude_of_origin",34.0],UNIT["Meter",1.0]]', # Gulf of Alaska
                u'NAD_1983_2011_UTM_Zone_10N' : 'PROJCS["WGS_1984_Albers",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-78.0],PARAMETER["standard_parallel_1",27.33333333333333],PARAMETER["standard_parallel_2",40.66666666666666],PARAMETER["latitude_of_origin",34.0],UNIT["Meter",1.0]]', # West Coast
+               u'WGS_1984_UTM_Zone_4N'       : 'PROJCS["WGS_1984_Albers",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-78.0],PARAMETER["standard_parallel_1",27.33333333333333],PARAMETER["standard_parallel_2",40.66666666666666],PARAMETER["latitude_of_origin",34.0],UNIT["Meter",1.0]]', # Hawaii
                u'NAD_1983_2011_UTM_Zone_15N' : 'PROJCS["WGS_1984_Albers_NMSDD",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",180.0],PARAMETER["standard_parallel_1",-2.0],PARAMETER["standard_parallel_2",49.0],PARAMETER["latitude_of_origin",25.5],UNIT["Meter",1.0]]', # Gulf of Mexico
                u'NAD_1983_2011_UTM_Zone_17N' : 'PROJCS["WGS_1984_Albers_NMSDD",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",180.0],PARAMETER["standard_parallel_1",-2.0],PARAMETER["standard_parallel_2",49.0],PARAMETER["latitude_of_origin",25.5],UNIT["Meter",1.0]]', # Southeast US
                u'NAD_1983_2011_UTM_Zone_18N' : 'PROJCS["WGS_1984_Albers_NMSDD",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",180.0],PARAMETER["standard_parallel_1",-2.0],PARAMETER["standard_parallel_2",49.0],PARAMETER["latitude_of_origin",25.5],UNIT["Meter",1.0]]', # Northeast US
@@ -7291,10 +7345,11 @@ if __name__ == '__main__':
                             'GOA'       : 'Gulf of Alaska',
                             'GOM'       : 'Gulf of Mexico',
                             'GMEX'      : 'Gulf of Mexico',
+                            'HI'        : 'Hawaii',
                             'NEUS_F'    : 'Northeast US, East Coast',
                             'NEUSF'     : 'Northeast US, East Coast',
                             'NEUS_S'    : 'Northeast US, East Coast',
-                            'NEUS'    : 'Northeast US, East Coast',
+                            'NEUS'      : 'Northeast US, East Coast',
                             'SEUS_SPR'  : 'Southeast US, East Coast',
                             'SEUS_SUM'  : 'Southeast US, East Coast',
                             'SEUS_FALL' : 'Southeast US, East Coast',
@@ -7317,7 +7372,7 @@ if __name__ == '__main__':
                           }
         # Set to True if we want to filter on certian one or more regions, else
         # False to process all regions
-        FilterRegions = False
+        FilterRegions = True
 
         if not FilterRegions:
             # ###--->>> Use a list to filter on regions.
@@ -7325,7 +7380,7 @@ if __name__ == '__main__':
             # test different regions
             selected_regions = ['AI', 'EBS', 'GOA', 'GOM', 'NEUS_F', 'NEUS_S', 'SEUS_FALL', 'SEUS_SPR', 'SEUS_SUM', 'WC_ANN', 'WC_TRI',]
         else:
-            selected_regions = ['AI']
+            selected_regions = ['HI',]
 
 
         # Test if we are filtering on regions. If so, a new table_names list is
@@ -7353,8 +7408,10 @@ if __name__ == '__main__':
                                     'Gadus chalcogrammus' : 'Walleye Pollock',
                                     'Citharichthys sordidus' : 'Pacific sanddab',
                                     'Doryteuthis (Loligo) opalescens' : 'California market squid',
-
                                     # 'GOM', 'Gulf of Mexico'
+                                    # 'HI', 'Hawaii'
+                                    'Etelis coruscans' : 'Onaga',
+                                    'Hyporthodus quernus' : 'HapuÊ»upuÊ»u',
                                     # 'NEUS_F', 'Northeast US Fall'
                                     # 'NEUS_S', 'Northeast US Spring'
                                     # 'SEUS_SPR', 'Southeast US Spring'
@@ -7384,6 +7441,14 @@ if __name__ == '__main__':
                                     'Chicoreus florifer-dilectus' : '',
                                     'Lutjanus campechanus' : 'red snapper',
                                     'Scomberomorus maculatus' : 'Spanish Mackerel',
+                                    # 'HI', 'Hawaii'
+                                    'Aphareus rutilans' : 'Lehi',
+                                    'Etelis carbunculus' : 'Ehu',
+                                    'Etelis coruscans' : 'Onaga',
+                                    'Hyporthodus quernus' : 'HapuÊ»upuÊ»u',
+                                    'Pristipomoides filamentosus' : 'ÅŒpakapaka',
+                                    'Pristipomoides sieboldii' : 'Kalekale',
+                                    'Pristipomoides zonatus' : 'Gindai',
                                     # 'NEUS_F', 'Northeast US Fall'
                                     # 'NEUS_S', 'Northeast US Spring'
                                     'Centropristis striata' : 'black sea bass',
@@ -7512,7 +7577,7 @@ if __name__ == '__main__':
         idw_field = "WTCPUECubeRoot"
 
         # Set ReplaceRaster to True or False
-        ReplaceRaster = False
+        ReplaceRaster = True
 
         # Set ReplaceLayer to True or False
         ReplaceLayer = True
@@ -7609,7 +7674,7 @@ if __name__ == '__main__':
         ReplaceRegionIndicatorTable = True
 
         # Replace Indicator Datasets True or False
-        ReplaceIndicatorTable = False
+        ReplaceIndicatorTable = True
 
         if PopulateIndicatorsTable:
             populateIndicatorsTable()
@@ -7680,7 +7745,7 @@ if __name__ == '__main__':
 
     # ###--->>>  Set Mosaic Dataset Properties Start
 
-        SetMosaicDatasetProperties = False
+        SetMosaicDatasetProperties = True
 
         if SetMosaicDatasetProperties:
             setMosaicDatasetProperties()
@@ -7691,7 +7756,7 @@ if __name__ == '__main__':
 
     # ###--->>> BuildMultidimensionalInfo Start
 
-        BuildMultidimensionalInfo = False
+        BuildMultidimensionalInfo = True
 
         if BuildMultidimensionalInfo:
             buildMultidimensionalInfo()
@@ -7702,7 +7767,7 @@ if __name__ == '__main__':
 
     # ###--->>> AnalyzeMosaicDataset Start
 
-        AnalyzeMosaicDataset = False
+        AnalyzeMosaicDataset = True
 
         if AnalyzeMosaicDataset:
             analyzeMosaicDataset()

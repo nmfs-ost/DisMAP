@@ -40,7 +40,7 @@ def main():
     try:
         # Uses the inspect module and a lamda to find name of this function
         function = myself()
-        print(function)
+        arcpy.AddMessage(function)
 
         localKeys =  [key for key in locals().keys() if "function" not in key]
 
