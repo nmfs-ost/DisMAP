@@ -561,7 +561,8 @@ def updateSurveyLocationsMetadata():
         empty_xml = os.path.join(ARCGIS_METADATA_DIRECTORY, "empty.xml")
 
         #metadataForAllDatasets = os.path.join(ARCGIS_METADATA_DIRECTORY, "Metadata for all Datasets.xml")
-        template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, "Survey Locations Template 20220516.xml")
+        #template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, "Survey Locations Template 20220516.xml")
+        template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, "Survey Locations Template.xml")
 
         prettyXML(template_metadata)
 
@@ -725,7 +726,8 @@ def updateRasterMosaicMetadata(workspace):
 
         #metadataForAllDatasets = os.path.join(ARCGIS_METADATA_DIRECTORY, "Metadata for all Datasets.xml")
         #template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, "Survey Locations Template 20220516.xml")
-        template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, f"Raster Mosaics Template {DateCode}.xml")
+        #template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, f"Raster Mosaics Template {DateCode}.xml")
+        template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, f"Raster Mosaics Template.xml")
 
         prettyXML(template_metadata)
 
@@ -1557,9 +1559,25 @@ if __name__ == '__main__':
 
     # Project related items
 
+    # October 1 2022
+    Version = "October 1 2022"
+    DateCode = "20221001"
+
+    # Agust 9 2022
+    # Version = "August 9 2022"
+    # DateCode = "20220809"
+
+    # Agust 2 2022
+    #Version = "August 2 2022"
+    #DateCode = "20220802"
+
+    # July 17 2022
+    #Version = "July 17 2022"
+    #DateCode = "20220717"
+
     # May 16 2022
-    Version = "May 16 2022"
-    DateCode = "20220516"
+    #Version = "May 16 2022"
+    #DateCode = "20220516"
 
     # March 7 2022
     #Version = "March 7 2022"
@@ -1586,25 +1604,19 @@ if __name__ == '__main__':
     # ###--->>> Software Environment Level
     #SoftwareEnvironmentLevel = ""
     #SoftwareEnvironmentLevel = "Dev"
-    #SoftwareEnvironmentLevel = "Test"
-    SoftwareEnvironmentLevel = "Prod"
+    SoftwareEnvironmentLevel = "Test"
+    #SoftwareEnvironmentLevel = "Prod"
 
     ProjectGDB = os.path.join(BASE_DIRECTORY, "{0}.gdb".format(ProjectName + " " + SoftwareEnvironmentLevel))
     ANALYSIS_DIRECTORY = os.path.join(BASE_DIRECTORY, "Analysis Folder {0} {1}".format(Version, SoftwareEnvironmentLevel))
     MOSAIC_DIRECTORY = os.path.join(BASE_DIRECTORY, "Mosaic Folder {0} {1}".format(Version, SoftwareEnvironmentLevel))
-    EXPORT_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "Export Metadata {0} {1}".format(Version, SoftwareEnvironmentLevel))
-    ARCGIS_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "ArcGIS Metadata {0} {1}".format(Version, SoftwareEnvironmentLevel))
-    INPORT_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "InPort Metadata {0} {1}".format(Version, SoftwareEnvironmentLevel))
+
     ScratchGDB = os.path.join(BASE_DIRECTORY, "Scratch {0} {1}".format(Version, SoftwareEnvironmentLevel), "scratch.gdb")
     ScratchFolder = os.path.join(BASE_DIRECTORY, "Scratch {0} {1}".format(Version, SoftwareEnvironmentLevel))
 
-    if not os.path.isdir(EXPORT_METADATA_DIRECTORY): os.makedirs(EXPORT_METADATA_DIRECTORY)
-
-    if not os.path.isdir(ARCGIS_METADATA_DIRECTORY): os.makedirs(ARCGIS_METADATA_DIRECTORY)
-
-    if not os.path.isdir(INPORT_METADATA_DIRECTORY): os.makedirs(INPORT_METADATA_DIRECTORY)
-
-    arcpy.env.scratchWorkspace = ScratchGDB
+    EXPORT_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "Export Metadata")
+    ARCGIS_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "ArcGIS Metadata")
+    INPORT_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "InPort Metadata")
 
     table_names = [
                    [ 'AI_Shape', 'AI_Boundary','AI', 'Aleutian Islands', 'ai_csv', 'NAD_1983_2011_UTM_Zone_1N', 'contour_ai'],
@@ -1631,6 +1643,7 @@ if __name__ == '__main__':
                             'GOA'       : 'Gulf of Alaska',
                             'GOM'       : 'Gulf of Mexico',
                             'GMEX'      : 'Gulf of Mexico',
+                            'HI'        : 'Hawaii Islands',
                             'NEUS_F'    : 'Northeast US, East Coast',
                             'NEUSF'     : 'Northeast US, East Coast',
                             'NEUS_S'    : 'Northeast US, East Coast',
@@ -1647,6 +1660,7 @@ if __name__ == '__main__':
                             'Eastern_Bering_Sea'  : 'Eastern Bering Sea, Bering Sea',
                             'Gulf_of_Alaska'      : 'Gulf of Alaska',
                             'Gulf_of_Mexico'      : 'Gulf of Mexico',
+                            'Hawaii_Islands'        : 'Hawaii Islands',
                             #'Northeast_US_Fall'   : 'Northeast US, East Coast',
                             'Northeast_US'   : 'Northeast US, East Coast',
                             #'Northeast_US_Spring' : 'Northeast US, East Coast',
@@ -1660,6 +1674,7 @@ if __name__ == '__main__':
                 'EBS' : 'Eastern Bering Sea',
                 'GOA' : 'Gulf of Alaska',
                 'GOM' : 'Gulf of Mexico',
+                'HI' : 'Hawaii Islands',
                 'NEUS_F' : 'Northeast US Fall',
                 'NEUS_S' : 'Northeast US Spring',
                 'SEUS_FALL' : 'Southeast US Fall',
@@ -1682,7 +1697,7 @@ if __name__ == '__main__':
         # ###--->>> Use a list to filter on regions.
         # Below are lists used to
         # test different regions
-        selected_regions = ['AI', 'EBS', 'GOA', 'GOM', 'NEUS_F', 'NEUS_S', 'SEUS_FALL', 'SEUS_SPR', 'SEUS_SUM', 'WC_ANN', 'WC_TRI',]
+        selected_regions = ['AI', 'EBS', 'GOA', 'GOM', 'HI', 'NEUS_F', 'NEUS_S', 'SEUS_FALL', 'SEUS_SPR', 'SEUS_SUM', 'WC_ANN', 'WC_TRI',]
     else:
         selected_regions = ['AI']
 
@@ -1692,7 +1707,7 @@ if __name__ == '__main__':
         # New table_names list of lists #-> https://stackoverflow.com/questions/21507319/python-list-comprehension-list-of-lists
         table_names = [[r for r in group] for group in table_names if group[2] in selected_regions]
     else:
-        selected_regions = ['AI', 'EBS', 'GOA', 'GOM', 'NEUS_F', 'NEUS_S', 'SEUS_FALL', 'SEUS_SPR', 'SEUS_SUM', 'WC_ANN', 'WC_TRI',]
+        selected_regions = ['AI', 'EBS', 'GOA', 'GOM', 'HI', 'NEUS_F', 'NEUS_S', 'SEUS_FALL', 'SEUS_SPR', 'SEUS_SUM', 'WC_ANN', 'WC_TRI',]
 
     # https://pro.arcgis.com/en/pro-app/latest/arcpy/metadata/metadata-class.htm
 
@@ -1704,10 +1719,11 @@ if __name__ == '__main__':
 
     #updateMetadata()
 
-    #updateSurveyLocationsMetadata()
+    updateSurveyLocationsMetadata()
 
     # Specify Workspace. Can be Raster Mosaics or CRF
     # ProjectGDB or MOSAIC_DIRECTORY
+    updateRasterMosaicMetadata(ProjectGDB)
     updateRasterMosaicMetadata(MOSAIC_DIRECTORY)
 
     # Pretty Format all XML files in a folder

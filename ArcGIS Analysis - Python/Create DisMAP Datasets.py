@@ -23,28 +23,32 @@ import shutil
 from math import copysign
 import math
 
+# Get the name of the running fuction
 import inspect
-myself = lambda: inspect.stack()[1][3]
+function_name = lambda: inspect.stack()[1][3]
 
-def what_is_my_name():
+def functionName():
     #print(inspect.stack()[0][0].f_code.co_name)
     #print(inspect.stack()[0][3])
     #print(inspect.currentframe().f_code.co_name)
     #print(sys._getframe().f_code.co_name)
-    print(myself())
+    print(function_name())
     print(inspect.stack()[0].function)
     print("%s/%s" %(sys._getframe().f_code.co_filename, sys._getframe().f_code.co_name))
 
 def main():
     try:
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        arcpy.AddMessage(function)
 
-        localKeys =  [key for key in locals().keys()]
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "Local Keys in main(): {0}".format(u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
-        del localKeys
+        del localKeys, function
 
     except:
         import sys, traceback
@@ -63,6 +67,43 @@ def main():
 def projectSetup():
     import sys, platform
     try:
+        function = function_name()
+        # Get ArcGIS Product Information
+        # print(arcpy.GetInstallInfo()['Version'])
+        # ## Use the dictionary iteritems to iterate through
+        # ##   the key/value pairs from GetInstallInfo
+        # #d = arcpy.GetInstallInfo()
+        # #for key, value in list(d.items()):
+        # #    # Print a formatted string of the install key and its value
+        # #    #
+        # #    print("{:<13} : {}".format(key, value))
+
+        ProductName = arcpy.GetInstallInfo()['ProductName']
+        ProductVersion = arcpy.GetInstallInfo()['Version']
+        # Now we need to test what license level
+        if ProductName == "ArcGISPro":
+            # Get the Product License Level
+            ProductLicenseLevel = arcpy.GetInstallInfo()['LicenseLevel']
+            #if not ProductLicenseLevel in ['Advanced', '']
+            #if ProductLicenseLevel in []
+
+        elif ProductName == "Desktop":
+            # Testing Product License Level
+            #print("Advanced: {}".format(arcpy.CheckProduct("arcinfo")))
+            #print("Standard: {}".format(arcpy.CheckProduct("arceditor")))
+
+            if arcpy.CheckProduct("arcinfo") == "Available":
+                ProductLicenseLevel = "Advance"
+            elif arcpy.CheckProduct("arceditor") == "Available":
+                ProductLicenseLevel = "Standard"
+            elif arcpy.CheckProduct("arcview") == "Available":
+                ProductLicenseLevel = "Basic"
+            else:
+                pass
+        else:
+            #print("")
+            pass
+
         # This prints out a list of items related to this project.
         print("Project related items")
         # Print out the variables that are set
@@ -81,6 +122,41 @@ def projectSetup():
         print('\t ArcGIS Product:       {0} {1}'.format(ProductName, ProductVersion))
         print('\t ArcGIS License Level: {0}'.format(ProductLicenseLevel))
 
+        # If the Base_Folder is missing, create the folder
+        if not os.path.exists( BASE_DIRECTORY ) and not os.path.isdir( BASE_DIRECTORY ):
+            print("The Base Folder is the output location for project folders")
+            print("\t missing and will be created")
+            os.makedirs( BASE_DIRECTORY )
+
+        # If the ProjectGDB is missing, create the folder
+        if not arcpy.Exists(ProjectGDB):
+            print("The ProjectGDB is the output location for data")
+            print("\t missing and will be created")
+            arcpy.management.CreateFileGDB(BASE_DIRECTORY, ProjectName + " " + SoftwareEnvironmentLevel)
+
+        # If the BathymetryGDB is missing, create the folder
+        if not arcpy.Exists(BathymetryGDB):
+            print("The BathymetryGDB is the output location for data")
+            print("\t missing and will be created")
+            arcpy.management.CreateFileGDB(BASE_DIRECTORY, "Bathymetry")
+
+        # If the ScratchFolder is missing, create the folder
+        if not os.path.exists( ScratchFolder ) and not os.path.isdir( ScratchFolder ):
+            print("The ScratchFolder is the output location for scratch data")
+            print("\t missing and will be created")
+            os.makedirs( ScratchFolder )
+            #if not arcpy.Exists(ScratchGDB):
+            #    arcpy.management.CreateFileGDB(ScratchFolder, "sratch")
+
+            arcpy.env.scratchWorkspace = ScratchGDB
+            msg = arcpy.env.scratchWorkspace
+            arcpy.AddMessage(msg)
+            # If the scratch workspace is missing, referencing the env will create the workspace
+            msg = arcpy.env.scratchGDB
+            arcpy.AddMessage(msg)
+            msg = arcpy.env.scratchFolder
+            arcpy.AddMessage(msg)
+            del msg
 
         # Test if a folder exists, if not then create what is missing
         # If the Analysis_Folder is missing, create the folder
@@ -104,23 +180,29 @@ def projectSetup():
             print("\t Source data was provided in the original download file")
             os.makedirs( MAP_DIRECTORY )
 
-        # If the Analysis_Folder is missing, create the folder
-        #if not os.path.exists( ANALYSIS_DIRECTORY ) and not os.path.isdir( ANALYSIS_DIRECTORY ):
-        #    print("The Analysis Folder is the output location for raster images")
-        #    print("\t missing and will be created")
-        #    os.makedirs( ANALYSIS_DIRECTORY )
-
-        # If the Map_Picture_Collection is missing, create the folder
-        #if not os.path.exists( PICTURE_FOLDER ) and not os.path.isdir( PICTURE_FOLDER ):
-        #    print("The Picture Folder is the output location for maps created")
-        #    print("\t using this script")
-        #    os.makedirs( PICTURE_FOLDER )
-
         # If Raster_Folder is missing, create the folder
         if not os.path.exists( MOSAIC_DIRECTORY ) and not os.path.isdir( MOSAIC_DIRECTORY ):
             print("The Mosaic Folder is the output location for raster mosaics")
             print("\t created using this script")
             os.makedirs( MOSAIC_DIRECTORY )
+
+        # If EXPORT_METADATA_DIRECTORY is missing, create the folder
+        if not os.path.exists( EXPORT_METADATA_DIRECTORY ) and not os.path.isdir( EXPORT_METADATA_DIRECTORY ):
+            print("The EXPORT_METADATA_DIRECTORY Folder is the output location for export metadata")
+            print("\t created using this script")
+            os.makedirs( EXPORT_METADATA_DIRECTORY )
+
+        # If ARCGIS_METADATA_DIRECTORY is missing, create the folder
+        if not os.path.exists( ARCGIS_METADATA_DIRECTORY ) and not os.path.isdir( ARCGIS_METADATA_DIRECTORY ):
+            print("The ARCGIS_METADATA_DIRECTORY Folder is the output location for ArcGIS metadata")
+            print("\t created using this script")
+            os.makedirs( ARCGIS_METADATA_DIRECTORY )
+
+        # If INPORT_METADATA_DIRECTORY is missing, create the folder
+        if not os.path.exists( INPORT_METADATA_DIRECTORY ) and not os.path.isdir( INPORT_METADATA_DIRECTORY ):
+            print("The INPORT_METADATA_DIRECTORY Folder is the output location for InPort metadata")
+            print("\t created using this script")
+            os.makedirs( INPORT_METADATA_DIRECTORY )
 
         # If Raster_Folder is missing, create the folder
         if not os.path.exists( LOG_DIRECTORY ) and not os.path.isdir( LOG_DIRECTORY ):
@@ -183,19 +265,6 @@ def projectSetup():
         elif ProductName == "Desktop":
             #print("Testing Desktop")
             print("This script requires ArcGIS Pro")
-##            try:
-##                if not os.path.exists( DefaultGDB ) and not os.path.isdir( DefaultGDB ):
-##                    arcpy.management.CreateFileGDB(BASE_DIRECTORY, "Default")
-##                else:
-##                    print("\t Default.gdb Exists")
-##                if not os.path.exists( ProjectGDB ) and not os.path.isdir( ProjectGDB ):
-##                    arcpy.management.CreateFileGDB(BASE_DIRECTORY, ProjectName)
-##                else:
-##                    print("\t {0}.gdb Exists".format(ProjectName))
-##            except IOError:
-##                print("IOError")
-##            except:
-##                print("except")
         else:
             print("ArcGIS Needs to be installed and available for use")
             return
@@ -211,14 +280,15 @@ def projectSetup():
             return
 
         del sys, platform
+        del ProductName, ProductVersion, ProductLicenseLevel
 
-        localKeys =  [key for key in locals().keys()]
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "Local Keys in projectSetup(): {0}".format(u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
-        del localKeys
+        del localKeys, function
 
     except:
         import sys, traceback
@@ -508,8 +578,17 @@ def reorder_fields(table, out_table, field_order, add_missing=True):
 
 def generateTables():
     try:
-        # Get the current workspace and save it to temp_workspace
-        temp_workspace = arcpy.env.workspace
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        # arcpy.AddMessage(function)
+
+        # Set the workspace to the ProjectGDB
+        tmp_workspace = arcpy.env.workspace
+        arcpy.env.workspace = ProjectGDB
+
+        # Set the scratch workspace to the ScratchGDB
+        tmp_scratchWorkspace = arcpy.env.scratchWorkspace
+        arcpy.env.scratchWorkspace = ScratchGDB
 
         # Start looping over the table_name array as we go region by region.
         for table_name in table_names:
@@ -825,7 +904,7 @@ def generateTables():
                                                     'Eastern Bering Sea' : [1, 1, 0, 0, 0, 'US/Alaska'],
                                                     'Gulf of Alaska' : [1, 1, 0, 0, 0, 'US/Alaska'],
                                                     'Gulf of Mexico' : [1, 1, 0, 0, 0, 'US/Central'],
-                                                    'Hawaii' : [1, 1, 0, 0, 0, 'US/Hawaii'],
+                                                    'Hawaii Islands' : [1, 1, 0, 0, 0, 'US/Hawaii'],
                                                     'Northeast US Fall' : [1, 1, 0, 0, 0, 'US/Eastern'],
                                                     'Northeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
                                                     'Southeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
@@ -942,6 +1021,8 @@ def generateTables():
                         arcpy.management.AlterField(out_table, field.name, new_field_alias = field.aliasName.replace('_', ' '))
                 del field, fields
 
+                addMetadata(out_table)
+
                 msg = '> Generating {0} Table complete ON {1}'.format(region, strftime("%a %b %d %I:%M:%S %p", localtime()))
                 logFile(log_file, msg)
 
@@ -966,21 +1047,24 @@ def generateTables():
             msg = u"Elapsed Time {0} (H:M:S)\n".format(strftime("%H:%M:%S", gmtime(elapse_time)))
             logFile(log_file, msg)
 
-        arcpy.env.workspace = temp_workspace
-        del temp_workspace
-
         # Clean up
         del msg, table_name, region_abb, region, csv_file, region_georef
         del log_file, start_time, end_time, elapse_time
         del region_shape, region_boundary, region_contours, region_name
 
-        localKeys =  [key for key in locals().keys()]
+        # Set the workspace to the tmp_workspace
+        arcpy.env.workspace = tmp_workspace
+        # Set the scratch workspace to the tmp_scratchWorkspace
+        arcpy.env.scratchWorkspace = tmp_scratchWorkspace
+        del tmp_workspace, tmp_scratchWorkspace
+
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "Local Keys in generateTable(): {0}".format(u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
-        del localKeys
+        del localKeys, function
 
     except:
         import sys, traceback
@@ -995,7 +1079,17 @@ def generateTables():
 
 def generatePointFeatureClasses():
     try:
-        temp_workspace = arcpy.env.workspace
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        # arcpy.AddMessage(function)
+
+        # Set the workspace to the ProjectGDB
+        tmp_workspace = arcpy.env.workspace
+        arcpy.env.workspace = ProjectGDB
+
+        # Set the scratch workspace to the ScratchGDB
+        tmp_scratchWorkspace = arcpy.env.scratchWorkspace
+        arcpy.env.scratchWorkspace = ScratchGDB
 
         # Start looping over the table_name array as we go region by region.
         for table_name in table_names:
@@ -1104,7 +1198,11 @@ def generatePointFeatureClasses():
                 result = arcpy.management.GetCount(in_fc)
                 msg = '>-> {} has {} records'.format("{0}_Survey_Locations".format(region_name), result[0])
                 logFile(log_file, msg)
-                del result, in_fc
+                del result
+
+                #
+                addMetadata(in_fc)
+                del in_fc
 
                 msg = '> Generating {0} Feature Class completed ON {1}'.format(region, strftime("%a %b %d %I:%M:%S %p", localtime()))
                 logFile(log_file, msg)
@@ -1123,21 +1221,24 @@ def generatePointFeatureClasses():
             msg = u"Elapsed Time {0} (H:M:S)\n".format(strftime("%H:%M:%S", gmtime(elapse_time)))
             logFile(log_file, msg)
 
-        arcpy.env.workspace = temp_workspace
-        del temp_workspace
-
         # Clean up
         del msg, table_name, region_abb, region, csv_file, region_georef
         del log_file, start_time, end_time, elapse_time
         del region_shape, region_boundary, region_contours, region_name
 
-        localKeys =  [key for key in locals().keys()]
+        # Set the workspace to the tmp_workspace
+        arcpy.env.workspace = tmp_workspace
+        # Set the scratch workspace to the tmp_scratchWorkspace
+        arcpy.env.scratchWorkspace = tmp_scratchWorkspace
+        del tmp_workspace, tmp_scratchWorkspace
+
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "Local Keys in generatePointFeatures(): {0}".format(u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
-        del localKeys
+        del localKeys, function
 
     except:
         import sys, traceback
@@ -1152,8 +1253,21 @@ def generatePointFeatureClasses():
 
 def createSnapRasterBathymetryLatitudeLongitude():
     try:
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        # arcpy.AddMessage(function)
+
+        # Set the workspace to the ProjectGDB
+        tmp_workspace = arcpy.env.workspace
+        arcpy.env.workspace = ProjectGDB
+
+        # Set the scratch workspace to the ScratchGDB
+        tmp_scratchWorkspace = arcpy.env.scratchWorkspace
+        arcpy.env.scratchWorkspace = ScratchGDB
+
         # Set a start time so that we can see how log things take
         start_time = time()
+
 ##        arcpy.ClearEnvironment("XYTolerance")
 ##        arcpy.ClearEnvironment("cellAlignment")
 ##        arcpy.ClearEnvironment("cellSize")
@@ -1469,12 +1583,12 @@ def createSnapRasterBathymetryLatitudeLongitude():
             msg = "> FeatureToRaster_conversion to create Raster Mask"
             logFile(log_file, msg)
             # Change mask to the region shape to create the raster mask
-            region_shape_buffer = os.path.join(ProjectGDB, '{0}_Buffers'.format(region_abb))
-            arcpy.analysis.Buffer(region_shape, region_shape_buffer, cell_size)
-            arcpy.env.mask = region_shape_buffer
-            #arcpy.env.mask = region_shape
-            #arcpy.conversion.FeatureToRaster(region_shape,"Id", region_raster_mask, cell_size)
-            arcpy.conversion.FeatureToRaster(region_shape_buffer,"Id", region_raster_mask, cell_size)
+            #region_shape_buffer = os.path.join(ProjectGDB, '{0}_Buffers'.format(region_abb))
+            #arcpy.analysis.Buffer(region_shape, region_shape_buffer, cell_size)
+            #arcpy.env.mask = region_shape_buffer
+            arcpy.env.mask = region_shape
+            arcpy.conversion.FeatureToRaster(region_shape,"Id", region_raster_mask, cell_size)
+            #arcpy.conversion.FeatureToRaster(region_shape_buffer,"Id", region_raster_mask, cell_size)
             #arcpy.management.Delete(region_shape_buffer)
             #del region_shape_buffer
 
@@ -1483,7 +1597,7 @@ def createSnapRasterBathymetryLatitudeLongitude():
             New_X_Min, New_Y_Min, New_X_Max, New_Y_Max = extent.XMin, extent.YMin, extent.XMax, extent.YMax
             print("New_X_Min: {0}, New_Y_Min: {1}, New_X_Max: {2}, New_Y_Max: {3}\n".format(New_X_Min, New_Y_Min, New_X_Max, New_Y_Max))
             del extent, New_X_Min, New_Y_Min, New_X_Max, New_Y_Max
-            del region_raster_mask
+            #del region_raster_mask
 
             msg = "> arcpy.management.DeleteField Value"
             logFile(log_file, msg)
@@ -1630,8 +1744,8 @@ def createSnapRasterBathymetryLatitudeLongitude():
             msg = "> FeatureToRaster_conversion to create Bathymetry Temp"
             logFile(log_file, msg); del msg
             # Change mask to the region shape to create the raster mask
-            #arcpy.env.mask = region_shape
-            arcpy.env.mask = region_shape_buffer
+            arcpy.env.mask = region_shape
+            #arcpy.env.mask = region_shape_buffer
             arcpy.conversion.FeatureToRaster(region_fish_net, "MEDIAN", region_bathymetry+"_tmp", cell_size)
             #arcpy.conversion.FeatureToRaster(region_fish_net, "MEAN", region_bathymetry+"_tmp", cell_size)
 
@@ -1642,10 +1756,21 @@ def createSnapRasterBathymetryLatitudeLongitude():
             arcpy.management.Delete(region_bathymetry+"_tmp")
             del region_bathymetry_tmp
 
+            addMetadata(region_bathymetry)
+            addMetadata(region_fish_net)
+            addMetadata(region_lat_long)
+            addMetadata(region_latitude)
+            addMetadata(region_longitude)
+            addMetadata(region_raster_mask)
+            addMetadata(region_shape)
+            addMetadata(region_shape_line)
+            addMetadata(region_snap_raster)
+
             del region_shape, region_shape_line, region_boundary, region_abb, region_georef
             del region_snap_raster, region_bathymetry, region_bathymetry_sample
             del region_lat_long, region_latitude, region_longitude, bathymetry
-            del region_fish_net, region_fish_net_label, region_extent
+            del region_fish_net, region_fish_net_label, region_extent, region_raster_mask
+
             #del region_fish_net_bathy
 
             #environments = arcpy.ListEnvironments()
@@ -1694,13 +1819,19 @@ def createSnapRasterBathymetryLatitudeLongitude():
         logFile(log_file, msg)
         del msg, start_time, end_time, elapse_time, log_file
 
-        localKeys =  [key for key in locals().keys()]
+        # Set the workspace to the tmp_workspace
+        arcpy.env.workspace = tmp_workspace
+        # Set the scratch workspace to the tmp_scratchWorkspace
+        arcpy.env.scratchWorkspace = tmp_scratchWorkspace
+        del tmp_workspace, tmp_scratchWorkspace
+
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "Local Keys in createSnapRasterBathymetryLatitudeLongitude(): {0}".format(u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
-        del localKeys
+        del localKeys, function
 
     except:
         import sys, traceback
@@ -1715,6 +1846,18 @@ def createSnapRasterBathymetryLatitudeLongitude():
 
 def CreateDisMapRegions():
     try:
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        # arcpy.AddMessage(function)
+
+        # Set the workspace to the ProjectGDB
+        tmp_workspace = arcpy.env.workspace
+        arcpy.env.workspace = ProjectGDB
+
+        # Set the scratch workspace to the ScratchGDB
+        tmp_scratchWorkspace = arcpy.env.scratchWorkspace
+        arcpy.env.scratchWorkspace = ScratchGDB
+
 # ###--->>> DisMAP Regions
         dismap_regions = os.path.join(ProjectGDB, u"DisMAP_Regions")
         if not arcpy.Exists(dismap_regions) or ReplaceDisMapRegions:
@@ -1776,15 +1919,24 @@ def CreateDisMapRegions():
                                          xy_tolerance="",
                                          z_tolerance="0")
 
+        #
+        addMetadata(dismap_regions)
+
         del dismap_regions, table_name, region_abb, region_shape, region_shape_line, msg
 
-        localKeys =  [key for key in locals().keys()]
+        # Set the workspace to the tmp_workspace
+        arcpy.env.workspace = tmp_workspace
+        # Set the scratch workspace to the tmp_scratchWorkspace
+        arcpy.env.scratchWorkspace = tmp_scratchWorkspace
+        del tmp_workspace, tmp_scratchWorkspace
+
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "Local Keys in CreateDisMapRegions(): {0}".format(u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
-        del localKeys
+        del localKeys, function
 
     except:
         import sys, traceback
@@ -1799,8 +1951,32 @@ def CreateDisMapRegions():
 
 def generateRasters():
     try:
-        temp_workspace = arcpy.env.workspace
-        arcpy.env.scratchWorkspace = ScratchGDB
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        # arcpy.AddMessage(function)
+
+        # Set the workspace to the ProjectGDB
+        tmp_workspace = arcpy.env.workspace
+        arcpy.env.workspace = ProjectGDB
+
+        # Set the scratch workspace to the ScratchGDB
+        tmp_scratchWorkspace = arcpy.env.scratchWorkspace
+        #print(os.path.abspath(ScratchGDB))
+        #arcpy.env.scratchWorkspace = os.path.abspath(ScratchGDB)
+        arcpy.env.scratchWorkspace = os.path.abspath(r'{0}'.format(ScratchGDB))
+        print(arcpy.env.scratchWorkspace)
+        print(arcpy.env.scratchGDB)
+        print(arcpy.env.scratchFolder)
+
+##        # If the scratch workspace is missing, referencing the env will create the workspace
+##        msg = arcpy.env.scratchWorkspace
+##        arcpy.AddMessage(msg)
+##        msg = arcpy.env.scratchGDB
+##        arcpy.AddMessage(msg)
+##        msg = arcpy.env.scratchFolder
+##        arcpy.AddMessage(msg)
+##        del msg
+
         arcpy.env.overwriteOutput = True
         # Set the compression environment to LZ77
         arcpy.env.compression = "LZ77"
@@ -1998,9 +2174,8 @@ def generateRasters():
                             result = arcpy.management.Delete(my_fish_raster)
                             msg = arcpy.GetMessages()
                             msg = ">->->-> {0}".format(msg.replace('\n', '\n>->->-> '))
-                            logFile(log_file, msg)
-                            del msg
-                            del result
+                            logFile(log_file, msg); del msg, result
+
                         else:
                             msg = ">->->-> ReplaceRaster set to True, but {0} image is missing".format(fish_year_raster)
                             logFile(log_file, msg)
@@ -2113,6 +2288,20 @@ def generateRasters():
                         arcpy.management.Delete(outLayer)
                         del tmp_raster, outRaster, outLayer, inPointFeatures
 
+                        # Add Metadata
+                        addMetadata(my_fish_raster)
+
+##                        # Add some metadata
+##                        years_md = unique_years(region_mosaic)
+##
+##                        crf_md = md.Metadata(crf)
+##                        crf_md.synchronize('ACCESSED', 1)
+##                        crf_md.title = "{0} {1}".format(region.replace('-',' to '), DateCode)
+##                        crf_md.tags = "{0}, {1} to {2}".format(geographic_regions[region_abb], min(years_md), max(years_md))
+##                        crf_md.save()
+##                        del crf_md, years_md
+
+
                         # Check In Spatial Extension
                         # arcpy.CheckInExtension("Spatial")
 
@@ -2151,22 +2340,25 @@ def generateRasters():
             logFile(log_file, msg)
             del msg, start_time, end_time, elapse_time
 
-
-        arcpy.env.workspace = temp_workspace
-        del temp_workspace
         #Clean up
         del table_name, region_shape, region_boundary, region_abb
         del region_georef, region_contours, region_name, log_file
         del fish_dir, my_unique_years, region_snap_raster, region_raster_mask
         del cell_size
 
-        localKeys =  [key for key in locals().keys()]
+        # Set the workspace to the tmp_workspace
+        arcpy.env.workspace = tmp_workspace
+        # Set the scratch workspace to the tmp_scratchWorkspace
+        arcpy.env.scratchWorkspace = tmp_scratchWorkspace
+        del tmp_workspace, tmp_scratchWorkspace
+
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "Local Keys in generateRasters(): {0}".format(u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
-        del localKeys
+        del localKeys, function
 
     except:
         import sys, traceback
@@ -2179,374 +2371,20 @@ def generateRasters():
         del pymsg, tb, tbinfo
 
 
-##def generateMaps():
-##    try:
-##        temp_workspace = arcpy.env.workspace
-##
-##        # Start looping over the table_name array as we go region by region.
-##        for table_name in table_names:
-##            # Assigning variables from items in the chosen table list
-##            region_shape = table_name[0]
-##            region_boundary = table_name[1]
-##            region_abb = table_name[2]
-##            region = table_name[3]
-##            csv_file = table_name[4]
-##            region_georef = table_name[5]
-##            region_contours = table_name[6]
-##
-##            # region abbreviated path
-##            #region_abb_folder = os.path.join(PICTURE_FOLDER, region_abb)
-##
-##            # Create folders
-##            if not os.path.exists( region_abb_folder ) and not os.path.isdir( region_abb_folder ):
-##                os.makedirs( region_abb_folder )
-##
-##            del region_abb_folder
-##
-##            # Make Geodatabase friendly name
-##            region_name = region.replace('(','').replace(')','').replace('-','_to_').replace(' ', '_')
-##
-##            # For benchmarking.
-##            log_file = os.path.join(LOG_DIRECTORY, region + ".log")
-##            # Start with removing the log file if it exists
-##            #if os.path.isfile(log_file):
-##            #    os.remove(log_file)
-##
-##            # Set a start time so that we can see how log things take
-##            start_time = time()
-##
-##            # Write a message to the log file
-##            msg = "STARTING REGION {} ON {}".format(region, strftime("%a %b %d %I:%M:%S %p", localtime()))
-##            logFile(log_file, msg)
-##
-##
-##            # Set the output coordinate system to what is available for us.
-##            region_sr = srs[region_georef]
-##            arcpy.env.outputCoordinateSystem = region_sr
-##            del region_sr
-##
-##            # Prepare the points layer
-##            in_fc = os.path.join(ProjectGDB, region_name)
-##            my_points = arcpy.management.MakeFeatureLayer(in_fc, "my_points")
-##            del in_fc
-##
-##            # The shapefile used to create the extent and mask for the environment variable
-##            #my_shape = arcpy.management.MakeFeatureLayer(MAP_DIRECTORY+"\\"+region_abb+"\\" + region_shape + ".shp", "my_shape")
-##            my_shape = arcpy.management.MakeFeatureLayer(region_shape, "my_shape")
-##
-##            # The boundaries used by the sa.Idw to create the raster tif files.
-##            my_bounds = arcpy.management.MakeFeatureLayer(MAP_DIRECTORY+"\\"+region_abb+"\\" + region_boundary + ".shp", "my_bounds")
-##
-##            # we need to set the mask and extent of the environment, or the raster and items may not come out correctly.
-##            arcpy.env.extent = arcpy.Describe(my_shape).extent
-##            arcpy.env.mask = MAP_DIRECTORY+"\\"+region_abb+"\\" + region_shape + ".shp"
-##
-##            # Clean up
-##            arcpy.management.Delete("my_shape")
-##            del my_shape
-##            arcpy.management.Delete("my_bounds")
-##            del my_bounds
-##
-##            result = arcpy.management.GetCount(my_points)
-##            msg = '>-> {} has {} records'.format(region, result[0])
-##            logFile(log_file, msg)
-##            del result
-##
-##            my_unique_fish = unique_fish( my_points )
-##
-##            # Test if we are filtering on species. If so, a new species list is
-##            # created with the selected species remaining in the list
-##            if FilterSpecies:
-##                # Get a shorter list
-##                my_unique_fish = [f for f in my_unique_fish if f in selected_species.keys()]
-##            else:
-##                pass
-##
-##            # Finally we will start looping of the uniquely identified fish in this csv.
-##            for this_fish in my_unique_fish:
-##                # We prepare a place so that we can place fish data relevant to the fish species we're looking at.
-##                my_fish_dir = this_fish.replace("'","")
-##                my_fish_dir = my_fish_dir.replace(".","")
-##                my_fish_dir = my_fish_dir.replace("/","and")
-##                my_fish_dir = my_fish_dir.replace("-"," ")
-##                my_fish_dir = my_fish_dir.replace("(","")
-##                my_fish_dir = my_fish_dir.replace(")","")
-##
-##                msg = ">-> Creating Map Files in directory {}".format(my_fish_dir)
-##                logFile(log_file, msg)
-##
-##                # Create a special folder for them
-##                fish_dir = os.path.join(ANALYSIS_DIRECTORY, region_abb, my_fish_dir)
-##                if not os.path.exists( fish_dir  ) and not os.path.isdir( fish_dir ):
-##                    os.makedirs( fish_dir )
-##
-##                #if not os.path.exists( PICTURE_FOLDER + "\\" + region_abb + "\\" + my_fish_dir ) and not os.path.isdir( PICTURE_FOLDER + "\\" + region_abb + "\\" + my_fish_dir ):
-##                #    os.makedirs( PICTURE_FOLDER + "\\" + region_abb + "\\" + my_fish_dir )
-##
-##                #
-##                arcpy.env.workspace = fish_dir
-##
-##                # if not os.path.exists( PICTURE_FOLDER + "\\" + region_abb + "\\" + my_fish_dir ) and not os.path.isdir( PICTURE_FOLDER + "\\" + region_abb + "\\" + my_fish_dir ):
-##                #     os.makedirs( PICTURE_FOLDER + "\\" + region_abb + "\\" + my_fish_dir )
-##
-##                # We are pretty much going to set min to 0, max to STD(OVER YEARS)*2+AVG(OVER YEARS), and the other two shouldn't matter, but we'll set those anyways.
-##                select_by_fish_no_years(my_points, this_fish.replace("'","''") )
-##
-##                # Function: output_pictures
-##                #       Generates pictures to be uploaded to the website.
-##                # @params follow the variables described above with some extra items.
-##                # @return integer 1: returns 1 on complete
-##                ##
-##                #def output_pictures(MAP_DIRECTORY, ANALYSIS_DIRECTORY, PICTURE_FOLDER, region_abb, this_fish, first_raster, stat_min, stat_max, stat_mean, stat_std, region_contours, mid_val):
-##
-##                if ProductName == "ArcGISPro":
-##                    print("Testing ArcGISPro")
-##
-##                elif ProductName == "Desktop":
-##                    region_map_document = ANALYSIS_DIRECTORY + "\\" + region_abb + "\\" + my_fish_dir + "\\" + my_fish_dir + ".mxd"
-##                    if not arcpy.Exists(region_map_document) or ReplaceMapDocument:
-##                        #Opens a precreated mapping document for the region_abb.
-##                        map_document = os.path.join(MAP_DIRECTORY, region_abb, region_abb + ".mxd")
-##
-##                        msg = ">-> Processing Map Document: {}".format(map_document)
-##                        logFile(log_file, msg)
-##
-##                        mxd = arcpy.mapping.MapDocument( map_document )
-##                        del map_document
-##                		#prepares the dataframe
-##                        df = arcpy.mapping.ListDataFrames( mxd )[0]
-##
-##                		#The mxd must have a legend item so we can do some On-The-Fly manipulating.
-##                		#Also we disable autoadding items to the legend so we can control exactly what layers are supposed to be seen.
-##                        my_legend = arcpy.mapping.ListLayoutElements (mxd, "LEGEND_ELEMENT")[0]
-##                        my_legend.autoAdd = False
-##
-##                        msg = ">-> Processing Layer Files"
-##                        logFile(log_file, msg)
-##
-##                		#Add all of the layers in the species folder for a specific region
-##                        for layer_file in reversed( os.listdir(ANALYSIS_DIRECTORY + "\\" + region_abb + "\\" + my_fish_dir + "\\") ):
-##                            if layer_file.endswith(".lyr"):
-##                                this_layer = arcpy.mapping.Layer(ANALYSIS_DIRECTORY + "\\" + region_abb + "\\" + my_fish_dir + "\\" + layer_file)
-##                                this_layer.visible = False
-##                                arcpy.mapping.AddLayer(df, this_layer )
-##                                msg = ">->-> Processing Layer File: {}".format(this_layer.name)
-##                                logFile(log_file, msg)
-##                                #msg = ">->-> Processing Layer Data Source: {}".format(this_layer.dataSource)
-##                                #logFile(log_file, msg)
-##                                # Replaces first_raster with layer_file to find the last file in the list
-##                                first_raster = ANALYSIS_DIRECTORY + "\\" + region_abb + "\\" + my_fish_dir + "\\" + layer_file
-##                                del layer_file, this_layer
-##
-##                        msg = ">-> Adding Contours"
-##                        logFile(log_file, msg)
-##
-##                        ##Also add the region_contours lines to display on the map.
-##                        contour_lines = arcpy.mapping.Layer(MAP_DIRECTORY + "\\" + region_abb + "\\" + region_contours + ".lyr")
-##
-##                        ##Make sure region_contours lines is pointing to the right space, since the layer might not be pointing at the correct path due to being absolutely pathing.
-##                        contour_lines.replaceDataSource(MAP_DIRECTORY + "\\" + region_abb + "\\", "NONE", region_contours )
-##                        arcpy.mapping.AddLayer(df, contour_lines )
-##
-##                        msg = ">-> Adding Survey Locations"
-##                        logFile(log_file, msg)
-##
-##
-##                        # Add the generaic Survey Locations Layer file
-##                        survey_locations = arcpy.mapping.Layer(os.path.join(MAP_DIRECTORY, "Survey Locations.lyr"))
-##                        # Update the data source for the layer
-##                        survey_locations.replaceDataSource(ProjectGDB, "NONE", region_name)
-##                        survey_locations.definitionQuery = "Species = '{}'".format(this_fish)
-##                        my_legend.autoAdd = False
-##                        survey_locations.visible = True
-##                        survey_locations.name = 'Survey Locations'
-##                		#Add it and put it on the bottom.
-##                        arcpy.mapping.AddLayer(df, survey_locations, "TOP")
-##
-##
-##                        msg = ">-> Updating the Legend"
-##                        logFile(log_file, msg)
-##
-##                        #now add the earliest layer under EVERYthing so it is never seen.
-##                		# This is so the legend will only display the first year's information and is never visible.
-##                		#Since other items are not added to the legend, and it's under the basemap and other layers, the legend will be static.
-##                        first_raster = arcpy.mapping.Layer(first_raster)
-##                        my_legend.autoAdd = True
-##                        first_raster.visible = True
-##                        first_raster.name = ''
-##                		#Add it and put it on the bottom.
-##                        arcpy.mapping.AddLayer(df, first_raster, "BOTTOM")
-##
-##
-##                		#If there is already a saved debugging MXD file, delete it so we can save the MXD for viewing at a later time.
-##                        arcpy.management.Delete(ANALYSIS_DIRECTORY + "\\" + region_name + "\\" + my_fish_dir + "\\" + my_fish_dir + ".mxd")
-##                        arcpy.RefreshActiveView()
-##
-##                		#Any layers that should not be looped on for outputting to pictures should be placed here.
-##                		#If you have a specific name for your layer, add it here, otherwise it will be included during picture generation
-##                        my_layer_exclusion_list = ['', 'contour_ai','contour_ebs',   'contour_neus',    'contour_seus',    'contour_gom',  'contour_wc',  'contour_goa', 'reference','canvas/world_light_gray_reference','light gray canvas reference','basemap','canvas/world_light_gray_base','light gray canvas base']
-##
-##                        # Add the region to the list
-##                        my_layer_exclusion_list.append(region_name)
-##                        my_layer_exclusion_list.append('survey locations')
-##
-##                        individualDataFrameList = arcpy.mapping.ListDataFrames(mxd)
-##
-##                        msg = ">-> Processing Text Elements"
-##                        logFile(log_file, msg)
-##
-##                		#The year_txt is an absolutely named item in the original Map Document so we can specifically place the year of the current raster
-##                		#The mid_txt is an absolutely named item in the original Map Document so we can specifically place the mid value there
-##                        #The title_txt is an absolutely named item in the original Map Document so we can specifically place the title value there
-##                		#	Otherwise we would only see the MIN and MAX values on the legend.
-##                        #Update mid val text box "Mid : #.#####"
-##                        year_txt = ''
-##                        title_txt = ''
-##                        for textElement in arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT"):
-##                            #if textElement.name == "mid_txt":
-##                            #    textElement.text = "Mid : " + str(mid_val)
-##                            #elif textElement.name == "year_txt":
-##                            if textElement.name == "year_txt":
-##                                year_txt = textElement
-##                            elif textElement.name == "title_txt":
-##                                title_txt = textElement
-##                        arcpy.RefreshActiveView()
-##
-##                        #all layers should have been added to the map and turned off, we will loop on the data frame to export to png
-##
-##                		#This loop goes through each of the layers in the Map Document to:
-##                		#	Make them visible
-##                		#	Update year_txt to currently selected year
-##                		#	Temporarily removes the name of the layer so it doesn't interfere with the legend element
-##                		#	refresh view just incase,
-##                		#	export the picture to the proper folder
-##                		#	rehide layer
-##                		# 	and finally restore it's name.
-##                        for individualDataFrame in individualDataFrameList:
-##                            individualLayerList = arcpy.mapping.ListLayers(mxd, "", individualDataFrame)
-##                            for individualLayer in individualLayerList:
-##                                if individualLayer.name.lower() not in my_layer_exclusion_list:
-##                                    #arcpy.management.SetRasterProperties(individualLayer, data_type="", statistics="1 "+ str(stat_min) +" "+ str(stat_max) +" "+ str(stat_mean)+ " "+ str(stat_std), stats_file="", nodata="", key_properties="")
-##                                    #individualLayer.save()
-##                                    my_name = individualLayer.name
-##
-##                                    #filename, file_extension = os.path.splitext( individualLayer.name )
-##                                    #filename = filename.replace("(","").replace(")","")
-##                                    # The layer name contains the species and the
-##                                    # year, so we are splitting the name first, then
-##                                    # slicing to get the year
-##                                    # year_txt.text = "- " + my_name.split(".")[0][-5:-1]
-##                                    year_txt.text = "- " + my_name[-5:-1]
-##                                    title_txt.text = "{0}".format(my_name)
-##                                    # title_txt.text = my_name.split(".")[0][:-7]
-##                                    # idw_feild is either 'WTCPUECubeRoot' or 'WTCPUE'
-##                                    #title_txt.text = "{0} '{1}'".format(my_name.split(".")[0][:-7], idw_field)
-##                                    #title_txt.text = "{0} '{1}'".format(my_name, idw_field)
-##
-##                                    # Use year to create updated definition query
-##                                    #year = int(my_name.split(".")[0][-5:-1])
-##                                    year = int(my_name[-5:-1])
-##                                    year_low = year-2
-##                                    year_high = year+2
-##                                    dq = "Species = '{0}' AND Year >= {1} AND Year <= {2}".format(this_fish, year_low, year_high)
-##                                    #print(dq)
-##                                    survey_locations = arcpy.mapping.ListLayers(mxd, "Survey Locations", individualDataFrame)[0]
-##                                    survey_locations.definitionQuery = dq
-##                                    #print(survey_locations.definitionQuery)
-##                                    survey_locations.save
-##                                    arcpy.RefreshActiveView()
-##
-##                                    individualLayer.name = ''
-##                                    individualLayer.visible = True
-##                                    arcpy.RefreshActiveView()
-##                                    #png_file = os.path.join(PICTURE_FOLDER, region_abb, my_fish_dir, "picture_"+ filename.lower() +".png")
-##                                    png_file = os.path.join(PICTURE_FOLDER, region_abb, my_fish_dir, "picture_"+ my_name.lower() +".png")
-##                                    #arcpy.mapping.ExportToPNG(mxd, PICTURE_FOLDER + "\\" + region_abb + "\\" + this_fish + "\\picture_"+ filename.lower() +".png")
-##                                    msg = ">->-> Exporting PNG File: {}".format("picture_"+ my_name.lower() +".png")
-##                                    logFile(log_file, msg)
-##                                    arcpy.mapping.ExportToPNG(mxd, png_file)
-##                                    individualLayer.visible = False
-##                                    individualLayer.name = my_name
-##                                    del my_name, year_low, year, year_high, dq
-##
-##                                    #arcpy.AddMessage('[FUNC output_pictures] Layer Name: `'+ individualLayer.name.lower() +'`')
-##                            del individualLayerList #, filename, file_extension
-##                            del png_file, my_layer_exclusion_list
-##                		#Just for debugging or looking at the data as it is supposed to after processing.
-##                        #mxd.saveACopy(ANALYSIS_DIRECTORY + "\\" + region_abb + "\\" + this_fish + "\\" + this_fish + ".mxd" )
-##                        mxd.saveACopy(region_map_document)
-##
-##                        DEBUG_OUTPUT(2, "A MXD file was saved to [ "+ANALYSIS_DIRECTORY + "\\" + region_abb + "\\" + my_fish_dir + "\\" + my_fish_dir + ".mxd"+" ]")
-##
-##                        msg = ">-> MXD Saved"
-##                        logFile(log_file, msg)
-##
-##                		#memory management and closing loose ends.
-##                        del my_legend
-##                        del df
-##                        del year_txt, title_txt
-##                        del individualDataFrameList
-##                        del individualDataFrame
-##                        del individualLayer
-##                        del textElement
-##                        del contour_lines
-##                        del first_raster
-##                        del mxd
-##                        #del mid_val
-##                        del survey_locations
-##
-##                    else:
-##                        msg = '>-> {0} Map Document Exists'.format(region)
-##                        logFile(log_file, msg)
-##
-##                    del region_map_document
-##                else:
-##                    pint("ArcGIS Needs to be installed and available for use")
-##
-##                del my_fish_dir, fish_dir, this_fish
-##
-##            del region_shape, region_boundary, region_georef, region_abb
-##            del table_name, region_name, region_contours, my_points
-##            del my_unique_fish
-##
-##            #Final benchmark for the region.
-##            msg = "ENDING REGION {} COMPLETED ON {}".format(region, strftime("%a %b %d %I:%M:%S %p", localtime()))
-##            logFile(log_file, msg)
-##
-##            # Elapsed time
-##            end_time = time()
-##            elapse_time =  end_time - start_time
-##            msg = u"Elapsed Time {0} (H:M:S)\n".format(strftime("%H:%M:%S", gmtime(elapse_time)))
-##            logFile(log_file, msg)
-##            del msg, start_time, end_time, elapse_time
-##
-##            del log_file, region
-##
-##        arcpy.env.workspace = temp_workspace
-##        del temp_workspace
-##        #Clean up
-##
-##        localKeys =  [key for key in locals().keys()]
-##
-##        if localKeys:
-##            msg = "Local Keys in generateMaps(): {0}".format(u", ".join(localKeys))
-##            print(msg)
-##            del msg
-##        del localKeys
-##
-##    except:
-##        import sys, traceback
-##        # Get the traceback object
-##        tb = sys.exc_info()[2]
-##        tbinfo = traceback.format_tb(tb)[0]
-##        # Concatenate information together concerning the error into a message string
-##        pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-##        print(pymsg)
-##        del pymsg, tb, tbinfo
-
-
 def createTemplateTables():
     try:
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        #arcpy.AddMessage(function)
+
+        # Set the workspace to the ProjectGDB
+        tmp_workspace = arcpy.env.workspace
+        arcpy.env.workspace = ProjectGDB
+
+        # Set the scratch workspace to the ScratchGDB
+        tmp_scratchWorkspace = arcpy.env.scratchWorkspace
+        arcpy.env.scratchWorkspace = ScratchGDB
+
         # Table Field dictionary
         # geomTypes: "Polygon", "PolyLine", "Point", "Table"
         tb_dict = {
@@ -2788,69 +2626,7 @@ def createTemplateTables():
                                                                                                    "scale" : "",
                                                                                                    "length" : "",
                                                                                                    "aliasName" : "Center of Gravity Depth Standard Error"}},
-##                                                      23 : {"EffectiveAreaOccupied" : {"type" : "DOUBLE",
-##                                                                                       "precision" : "",
-##                                                                                       "scale" : "",
-##                                                                                       "length" : "",
-##                                                                                       "aliasName" : "Effective Area Occupied"}},
-##                                                      24 : {"CoreHabitatArea" : {"type" : "DOUBLE",
-##                                                                                 "precision" : "",
-##                                                                                 "scale" : "",
-##                                                                                 "length" : "",
-##                                                                                 "aliasName" : "Core Habitat Area"}},
                                                       }},
-##                    "AreaAnalysis_Template" : {"Table" : {1 : {"Species" : {"type" : "TEXT",
-##                                                                            "precision" : "",
-##                                                                            "scale" : "",
-##                                                                            "length" : 50,
-##                                                                            "aliasName" : "Species"}},
-##                                                          2 : {"DisMapRegionCode": {"type" : "TEXT",
-##                                                                                    "precision" : "",
-##                                                                                    "scale" : "",
-##                                                                                    "length" : 50,
-##                                                                                    "aliasName" : "DisMAP Region Code"}},
-##                                                          3 : {"DisMapSeasonCode": {"type" : "TEXT",
-##                                                                                    "precision" : "",
-##                                                                                    "scale" : "",
-##                                                                                    "length" : 10,
-##                                                                                    "aliasName" : "DisMAP Season Code"}},
-##                                                          4 : {"AreaID" : {"type" : "TEXT",
-##                                                                           "precision" : "",
-##                                                                           "scale" : "",
-##                                                                           "length" : 4,
-##                                                                           "aliasName" : "Area ID"}},
-##                                                          5 : {"AreaCoverageProportion" : {"type" : "DOUBLE",
-##                                                                                           "precision" : "",
-##                                                                                           "scale" : "",
-##                                                                                           "length" : "",
-##                                                                                           "aliasName" : "Area Coverage Proportion"}},
-##                                                          6 : {"RangeCoverageProportion" : {"type" : "DOUBLE",
-##                                                                                           "precision" : "",
-##                                                                                           "scale" : "",
-##                                                                                           "length" : "",
-##                                                                                           "aliasName" : "Range Coverage Proportion"}},
-##                                                         }},
-##                   "Areas_Template" : {"Table" : {1 : {"AreaID" : {"type" : "LONG",
-##                                                                   "precision" : "",
-##                                                                   "scale" : "",
-##                                                                   "length" : "",
-##                                                                   "aliasName" : "Area ID"}},
-##                                                  2 : {"UserID" : {"type" : "LONG",
-##                                                                   "precision" : "",
-##                                                                   "scale" : "",
-##                                                                   "length" : "",
-##                                                                    "aliasName" : "User ID"}},
-##                                                  3 : {"LayerName" : {"type" : "TEXT",
-##                                                                      "precision" : "",
-##                                                                      "scale" : "",
-##                                                                      "length" : 255,
-##                                                                      "aliasName" : "Layer Name"}},
-##                                                  4 : {"LayerAreaID": {"type" : "LONG",
-##                                                                       "precision" : "",
-##                                                                       "scale" : "",
-##                                                                       "length" : "",
-##                                                                       "aliasName" : "Layer Area ID"}},
-##                                                 }},
                   }
 
         # Filter the table dictionary, if needed. Needs a list of table to filter
@@ -2929,17 +2705,24 @@ def createTemplateTables():
                             del fieldAliasName
                         del id, fields
                     del ids
+            # Add Metadata
+            addMetadata(tb)
         #
         del tb_dict, tb, msg, geomTypes, geomType
 
+        # Set the workspace to the tmp_workspace
+        arcpy.env.workspace = tmp_workspace
+        # Set the scratch workspace to the tmp_scratchWorkspace
+        arcpy.env.scratchWorkspace = tmp_scratchWorkspace
+        del tmp_workspace, tmp_scratchWorkspace
 
-        localKeys =  [key for key in locals().keys()]
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "Local Keys in createTables(): {0}".format(u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
-        del localKeys
+        del localKeys, function
 
     except:
         import sys, traceback
@@ -2951,234 +2734,20 @@ def createTemplateTables():
         print(pymsg)
         del pymsg, tb, tbinfo
 
-
-##def populateDataSeriesTable():
-##    try:
-##        # From: Data Dictionary
-##        # OARegionCode	(e.g. GOA, GOM, SEUS, NEUS)
-##        # DisMapRegionCode	(e.g. gulf_of_alaska, gulf_of_mexico, southeast_us, Northeast_US)
-##        # RegionText	(e.g. Gulf of Mexico)
-##        # OASeasonCode	(e.g. s, f, spr, sum, fal)
-##        # DisMapSeasonCode	(e.g. Spring, Fall)
-##        # ServiceName	Northeast_US_Fall
-##
-##        # For calculating feild length
-##        # RegionCodeMax = 0
-##        # DisMapRegionCodeMax = 0
-##        # OARegionTextMax = 0
-##        # OASeasonCodeMax = 0
-##        # DisMapSeasonCodeMax = 0
-##        # ServiceNameMax = 0
-##
-##        # This is s dictionary that maps 'season' codes used as part of the CSV
-##        # file names. An R script, created by OceanAdap (ref?), parses a data-
-##        # table to create a set of CSV files that indivdually  contains data
-##        # for a region/season
-##        DisMapSeasonCodeDict = {"F" : "Fall",
-##                                "S" : "Spring",
-##                                "SPR" : "Spring",
-##                                "SUM" : "Summer",
-##                                "FALL" : "Fall",
-##                                "ANN" : "Annual",
-##                                "TRI" : "Triennial",
-##                                "Spring" : "Spring",
-##                                "Summer" : "Summer",
-##                                "Fall" : "Fall",
-##                                "Winter" : "Winter",
-##                                "Annual" : "Annual",
-##                                "Triennial" : "Triennial",
-##                                None : None,
-##                                '' : ''}
-##
-##        data_series_template = os.path.join(ProjectGDB, 'DataSeries_Template')
-##        data_series = os.path.join(ProjectGDB, 'DataSeries')
-##
-##        if PopulateDataSeriesTable:
-##            arcpy.management.Delete(data_series)
-##            arcpy.management.CreateTable(ProjectGDB, 'DataSeries', data_series_template)
-##
-##        # This gets a list of fields in the table
-##        fields = [f.name for f in arcpy.ListFields(data_series) if f.name != 'OBJECTID']
-##        # print(fields)
-##
-##        # Artifact of testing
-##        #fields = ['OARegionCode', 'DisMapRegionCode', 'RegionText', 'OASeasonCode',
-##        #          'DisMapSeasonCode', 'ServiceName',]
-##
-##        # Create an empty list to gather tuples
-##        row_values = []
-##
-##        # Start looping over the table_name array as we go region by region.
-##        for table_name in table_names:
-##            # Assigning variables from items in the chosen table list
-##            # region_shape = table_name[0] # not used in this function
-##            # region_boundary = table_name[1] # not used in this function
-##            region_abb = table_name[2]
-##            region = table_name[3]
-##            # csv_file = table_name[4] # not used in this function
-##            # region_georef = table_name[5] # not used in this function
-##            # region_contours = table_name[6] # not used in this function
-##
-##
-##            OARegionCode = region_abb
-##            OARegion = region[:region.find("(")].strip() if "(" in region else region
-##            DisMapRegionCode = region.replace('(','').replace(')','').replace('-','_to_').replace(' ', '_').lower()
-##            RegionText = region
-##            OASeasonCode = region_abb[region_abb.find('_')+1:] if '_' in region_abb else None
-##            DisMapSeasonCode = DisMapSeasonCodeDict[OASeasonCode]
-##            ServiceName = region.replace('(','').replace(')','').replace('-','_to_').replace(' ', '_')
-##
-##            msg = "{}, {}, {}, {}, {}, {}".format(OARegionCode, OARegion, DisMapRegionCode, RegionText, OASeasonCode, DisMapSeasonCode, ServiceName)
-##            print(msg)
-##            del msg
-##
-##            # Gather the tuple
-##            row = (OARegionCode, OARegion, DisMapRegionCode, RegionText, OASeasonCode, DisMapSeasonCode, ServiceName)
-##
-##            # Append to list
-##            row_values.append(row)
-##            del row
-##
-##            # Clean up
-##            del table_name, region_abb, region
-##            del OARegionCode, OARegion, DisMapRegionCode, RegionText, OASeasonCode
-##            del DisMapSeasonCode, ServiceName
-##
-##        msg = "Inserting records into the table"
-##        print(msg)
-##        del msg
-##
-##        # Open an InsertCursor
-##        cursor = arcpy.da.InsertCursor(data_series, fields)
-##        del fields
-##
-##        # Insert new rows into the table
-##        for row in row_values:
-##            cursor.insertRow(row)
-##            del row
-##
-##        # Delete cursor object
-##        del cursor, row_values
-##
-##        del DisMapSeasonCodeDict, data_series, data_series_template
-##
-##        localKeys =  [key for key in locals().keys()]
-##
-##        if localKeys:
-##            msg = "Local Keys in populateDataSeriesTable(): {0}".format(u", ".join(localKeys))
-##            print(msg)
-##            del msg
-##        del localKeys
-##
-##    except:
-##        import sys, traceback
-##        # Get the traceback object
-##        tb = sys.exc_info()[2]
-##        tbinfo = traceback.format_tb(tb)[0]
-##        # Concatenate information together concerning the error into a message string
-##        pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-##        print(pymsg)
-##        del pymsg, tb, tbinfo
-##
-##
-##def populateSpeciesRegionSeason():
-##    try:
-##        # From: Data Dictionary
-##        # OARegion	(e.g. West Coast Triennial)
-##        # Species	Some scientific name
-##        # Common_Name	Common Name of the species
-##        # SpeciesCommonName	Centropristis striata (black sea bass)
-##        # DisMapRegionCode	GOM
-##        # DisMapSeasonCode	NULL
-##
-##        arcpy.env.workspace = ProjectGDB
-##        species_region_season_template = os.path.join(ProjectGDB, 'SpeciesRegionSeason_Template')
-##        species_region_season = os.path.join(ProjectGDB, 'SpeciesRegionSeason')
-##
-##        if PopulateSpeciesRegionSeason:
-##            arcpy.management.Delete(species_region_season)
-##            arcpy.management.CreateTable(ProjectGDB, 'SpeciesRegionSeason', species_region_season_template)
-##
-##        # This gets a list of fields in the table
-##        fields = [f.name for f in arcpy.ListFields(species_region_season) if f.name != 'OBJECTID']
-##        msg = "{0} Fields: {1}\n".format( species_region_season, ', '.join(fields))
-##        print(msg)
-##        del msg
-##        del fields
-##
-##        tbs = arcpy.ListTables("*_csv")
-##        for tb in tbs:
-##            # Get a record count to see if data is present; we don't want to add data
-##            tb_count = int(arcpy.management.GetCount(tb)[0])
-##            msg = '\t {} has {} records\n'.format(tb, tb_count)
-##            print(msg)
-##            del msg
-##
-##            # Execute Statistics to get unique set of records
-##            tb_tmp = tb+"_tmp"
-##            statsFields = [["Species", "COUNT"]]
-##            caseFields = ['OARegion', 'Species', 'CommonName', 'SpeciesCommonName', 'CommonNameSpecies', 'CoreSpecies']
-##            stat_tb = arcpy.Statistics_analysis(tb, tb_tmp, statsFields, caseFields)
-##            del statsFields, caseFields
-##
-##            # Get a record count to see if data is present; we don't want to add data
-##            stat_tb_count = int(arcpy.management.GetCount(stat_tb)[0])
-##            msg = '\t\t {} has {} records\n'.format(tb_tmp, stat_tb_count)
-##            print(msg)
-##            del msg
-##
-##            msg = '\t\t Joining {} to DataSeries table\n'.format(tb_tmp)
-##            print(msg)
-##            del msg
-##
-##            # Replace a layer/table view name with a path to a dataset (which can be a layer file) or create the layer/table view within the script
-##            # The following inputs are layers or table views: "ebs_csv_tmp", "DataSeries"
-##            arcpy.management.JoinField(in_data = tb_tmp, in_field = "OARegion", join_table = "DataSeries", join_field = "OARegion", fields = "OARegion;DisMapRegionCode;DisMapSeasonCode")
-##            msg = arcpy.GetMessages()
-##            print("\t\t {0}\n".format(msg.replace('\n', '\n\t\t ')))
-##            del msg
-##
-##            #
-##            arcpy.management.Append(inputs = tb_tmp, target="SpeciesRegionSeason", schema_type="NO_TEST", field_mapping="", subtype="")
-##            msg = arcpy.GetMessages()
-##            print("\t\t {0}\n".format(msg.replace('\n', '\n\t\t ')))
-##            del msg
-##
-##            # Remove temporary table
-##            arcpy.management.Delete(stat_tb)
-##
-##            msg = arcpy.GetMessages()
-##            print("\t\t {0}\n".format(msg.replace('\n', '\n\t\t ')))
-##            del msg
-##
-##            del tb_tmp, stat_tb, tb, tb_count, stat_tb_count
-##        #
-##        del tbs
-##
-##        del species_region_season, species_region_season_template
-##
-##
-##        localKeys =  [key for key in locals().keys()]
-##
-##        if localKeys:
-##            msg = "Local Keys in populateSpeciesRegionSeason(): {0}".format(u", ".join(localKeys))
-##            print(msg)
-##            del msg
-##        del localKeys
-##
-##    except:
-##        import sys, traceback
-##        # Get the traceback object
-##        tb = sys.exc_info()[2]
-##        tbinfo = traceback.format_tb(tb)[0]
-##        # Concatenate information together concerning the error into a message string
-##        pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-##        print(pymsg)
-##        del pymsg, tb, tbinfo
-
-
 def populateRegionSpeciesYearImageName():
     try:
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        #arcpy.AddMessage(function)
+
+        # Set the workspace to the ProjectGDB
+        tmp_workspace = arcpy.env.workspace
+        arcpy.env.workspace = ProjectGDB
+
+        # Set the scratch workspace to the ScratchGDB
+        tmp_scratchWorkspace = arcpy.env.scratchWorkspace
+        arcpy.env.scratchWorkspace = ScratchGDB
+
         # From: Data Dictionary
         # OARegion	(e.g. West Coast Triennial)
         # Species	Some scientific name
@@ -3303,7 +2872,10 @@ def populateRegionSpeciesYearImageName():
             del tb_tmp, stat_tb, tb_count, stat_tb_count
         #
 
+        #
+        addMetadata(region_species_image_name)
 
+        #
         msg = '\t\t arcpy.analysis.Statistics RegionSpeciesYearImageName table\n'
         print(msg);del msg
 
@@ -3313,7 +2885,7 @@ def populateRegionSpeciesYearImageName():
 
         arcpy.management.DeleteField(in_table="_Species", drop_field="FREQUENCY;COUNT_Species")
 
-        arcpy.TableToTable_conversion(in_rows="_Species", out_path=BASE_DIRECTORY, out_name="Species.csv", where_clause="", field_mapping='', config_keyword="")
+        arcpy.TableToTable_conversion(in_rows="_Species", out_path=BASE_DIRECTORY, out_name=f"Species{SoftwareEnvironmentLevel}.csv", where_clause="", field_mapping='', config_keyword="")
 
         msg = '\t\t arcpy.analysis.Statistics RegionSpeciesYearImageName table\n'
         print(msg);del msg
@@ -3324,19 +2896,24 @@ def populateRegionSpeciesYearImageName():
 
         arcpy.management.DeleteField(in_table="_CoreSpecies", drop_field="FREQUENCY;COUNT_Species")
 
-        arcpy.TableToTable_conversion(in_rows="_CoreSpecies", out_path=BASE_DIRECTORY, out_name="CoreSpecies.csv", where_clause="", field_mapping='', config_keyword="")
+        arcpy.TableToTable_conversion(in_rows="_CoreSpecies", out_path=BASE_DIRECTORY, out_name=f"CoreSpecies{SoftwareEnvironmentLevel}.csv", where_clause="", field_mapping='', config_keyword="")
 
         del region_species_image_name, region_species_image_name_template
         del region_abb, table_name, region, csv_file
 
+        # Set the workspace to the tmp_workspace
+        arcpy.env.workspace = tmp_workspace
+        # Set the scratch workspace to the tmp_scratchWorkspace
+        arcpy.env.scratchWorkspace = tmp_scratchWorkspace
+        del tmp_workspace, tmp_scratchWorkspace
 
-        localKeys =  [key for key in locals().keys()]
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "Local Keys in populateSpeciesRegionSeason(): {0}".format(u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
-        del localKeys
+        del localKeys, function
 
     except:
         import sys, traceback
@@ -3871,7 +3448,7 @@ def populateIndicatorsTable():
             # Region Snap Raster
             region_raster_mask = os.path.join(ProjectGDB, "{0}_Raster_Mask".format(region_abb))
 
-            arcpy.env.scratchWorkspace = ScratchGDB
+            #arcpy.env.scratchWorkspace = ScratchGDB
             arcpy.env.overwriteOutput = True
             arcpy.env.snapRaster = region_snap_raster
             arcpy.env.extent = arcpy.Describe(region_snap_raster).extent
@@ -4988,6 +4565,10 @@ def populateIndicatorsTable():
 
 def generateMosaics():
     try:
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        #arcpy.AddMessage(function)
+
         # Set a start time so that we can see how log things take
         start_time = time()
 
@@ -5030,6 +4611,7 @@ def generateMosaics():
             csv_file = table_name[4]
             region_georef = table_name[5]
             # region_contours = table_name[6]
+            cell_size = table_name[7]
 
             del table_name
 
@@ -5274,7 +4856,7 @@ def generateMosaics():
             del species_common_name_dict, species_folders
             del csv_file, region_name
             del region_abb_folder
-            del region_sr, region_abb
+            del region_sr, region_abb, cell_size
 
             #Final benchmark for the region.
             msg = "ENDING REGION {} COMPLETED ON {}".format(region, strftime("%a %b %d %I:%M:%S %p", localtime()))
@@ -5312,542 +4894,27 @@ def generateMosaics():
         del pymsg, tb, tbinfo
 
 
-##def convertRastersToPoints():
-##    try:
-##        temp_workspace = arcpy.env.workspace
-##
-##        # Set a start time so that we can see how log things take
-##        start_time = time()
-##
-####        - getting the test CenterOfGravityLat and CenterOfGravityDepth into the Indicators table
-####        - working on new procedures for calculating CenterOfGravityLat and CenterOfGravityDepth:
-####           - ensuring that the interpolated biomass, latitude, and depth rasters all share the same grid (via a snap raster??)
-####           - develop latitude raster
-####           - develop depth raster
-####           - pseudo code for CenterOfGravityLat
-####             for each region
-####                 for each season
-####                     for each species
-####                         for each year
-####                             sumWtCpue = sum of all wtcpue values (get this from raster stats??)
-####                             weightedLat = wtcpue raster * latitude raster
-####                             sumWeightedLat = sum of all weightedLat values
-####                             CenterOfGravityLatitude = sumWeightedLat/sumWtCpue
-####
-####        - pseudo code for CenterOfGravityDepth
-####
-####             same as CenterOfGravityLat except you'll be weighting depth by wtcpue
-##
-##        # This is s dictionary that maps 'season' codes used as part of the CSV
-##        # file names. An R script, created by OceanAdap (ref?), parses a data-
-##        # table to create a set of CSV files that indivdually  contains data
-##        # for a region/season
-##        DisMapSeasonCodeDict = {"F" : "Fall",
-##                                "S" : "Spring",
-##                                "SPR" : "Spring",
-##                                "SUM" : "Summer",
-##                                "FALL" : "Fall",
-##                                "ANN" : "Annual",
-##                                "TRI" : "Triennial",
-##                                "Spring" : "Spring",
-##                                "Summer" : "Summer",
-##                                "Fall" : "Fall",
-##                                "Winter" : "Winter",
-##                                "Annual" : "Annual",
-##                                "Triennial" : "Triennial",
-##                                None : None,
-##                                '' : ''}
-##
-##        # Create an empty list to gather tuples
-##        # row_values = []
-##
-##        # Start looping over the table_name array as we go region by region.
-##        for table_name in table_names:
-##            # Assigning variables from items in the chosen table list
-##            # region_shape = table_name[0]
-##            # region_boundary = table_name[1]
-##            region_abb = table_name[2]
-##            region = table_name[3]
-##            csv_file = table_name[4]
-##            region_georef = table_name[5]
-##            # region_contours = table_name[6]
-##
-##            del table_name
-##
-##            # Start with empty row_values list of list
-##            # row_values = []
-##
-##            # Make Geodatabase friendly name
-##            region_name = region.replace('(','').replace(')','').replace('-','_to_').replace(' ', '_')
-##
-##            # List of varaibles for the table
-##            # OARegionCode = region_abb
-##            OARegion = region[:region.find("(")].strip() if "(" in region else region
-##            Species = ''
-##            CommonName = ''
-##            DisMapRegionCode = region.replace('(','').replace(')','').replace('-','_to_').replace(' ', '_').lower()
-##            #RegionText = region
-##            OASeasonCode = region_abb[region_abb.find('_')+1:] if '_' in region_abb else None
-##            DisMapSeasonCode = DisMapSeasonCodeDict[OASeasonCode]
-##
-##            # Clean up
-##            del OASeasonCode
-##
-##            # For benchmarking.
-##            log_file = os.path.join(LOG_DIRECTORY, region + ".log")
-##            # Start with removing the log file if it exists
-##            #if os.path.isfile(log_file):
-##            #    os.remove(log_file)
-##
-##            # Write a message to the log file
-##            msg = "STARTING REGION {} ON {}".format(region, strftime("%a %b %d %I:%M:%S %p", localtime()))
-##            logFile(log_file, msg)
-##
-##            # Set the output coordinate system to what is available for us.
-##            region_sr = srs[region_georef]
-##            arcpy.env.outputCoordinateSystem = region_sr
-##            #del region_sr
-##
-##            # region abbreviated path
-##            region_abb_folder = os.path.join(ANALYSIS_DIRECTORY, region_abb)
-##
-##            # Region Raster Points
-##            region_raster_points = os.path.join(ProjectGDB, "{0}_Raster_Points".format(region_abb))
-##
-##            # Region Latitude, Longitude, Depth
-##            region_lat_long = os.path.join(ProjectGDB, "{0}_Lat_Long".format(region_abb))
-##
-##            # Region Snap Raster
-##            region_snap_raster = os.path.join(ProjectGDB, "{0}_Snap_Raster".format(region_abb))
-##
-##            # Region Raster Mask
-##            region_raster_mask = os.path.join(ProjectGDB, "{0}_Raster_Mask".format(region_abb))
-##
-##            # Region Shape
-##            region_shape = os.path.join(ProjectGDB, "{0}_Shape".format(region_abb))
-##
-##            arcpy.env.scratchWorkspace = ScratchGDB
-##            arcpy.env.overwriteOutput = True
-##            arcpy.env.snapRaster = region_snap_raster
-##            arcpy.env.extent = arcpy.Describe(region_snap_raster).extent
-##            arcpy.env.mask = region_raster_mask
-##
-##
-##            region_lat_long_layer = arcpy.management.MakeFeatureLayer(region_lat_long, "region_lat_long")
-##            region_shape_layer = arcpy.management.MakeFeatureLayer(region_shape, "region_shape")
-##
-##            arcpy.management.SelectLayerByLocation(region_lat_long_layer, "INTERSECT", region_shape_layer, 0, "NEW_SELECTION", "NOT_INVERT")
-##
-##            # Tests if the abbreviated region folder exists and if it is in
-##            # selected regions
-##            if os.path.isdir(region_abb_folder):
-##                # msg = ">-> Region (abb): {0}\n\t Region:  {1}\n\t CSV File: {2}\n\t Geo Reference: {3}"\
-##                #      .format(region_abb, region, csv_file, region_sr)
-##                msg = ">-> Region (abb): {0}\n\t Region:  {1}\n\t CSV File: {2}"\
-##                     .format(region_abb, region, csv_file)
-##                logFile(log_file, msg)
-##                # List of folders in the region dictory
-##                species_folders = [d for d in os.listdir(region_abb_folder) if \
-##                               os.path.isdir(os.path.join(region_abb_folder, d))]
-##                if species_folders:
-##                    msg = '>-> There are {0} species folders for the {1} region folder.'.format(len(species_folders), region)
-##                    logFile(log_file, msg)
-##                    if FilterSpecies:
-##                        # Convert the selected species list to matcv the species
-##                        # folder name by removing haphens and periods
-##                        #selected_species_keys = [ss.replace("'","").replace(".","") for ss in selected_species.keys()]
-##                        selected_species_keys = [ss.replace(".","").replace("-"," ").replace("(","").replace(")","").replace("/","and") for ss in selected_species.keys()]
-##                        # Find the intersection between the list of specie folders and the filtered list
-##                        selected_species_folders = list(set(species_folders) & set(selected_species_keys))
-##                        del selected_species_keys
-##                        # Sort the list
-##                        selected_species_folders.sort()
-##                        if selected_species_folders:
-##                            # Replace the list
-##                            species_folders = selected_species_folders[:]
-##                            msg = '>-> There are {0} selected species in the {1} region folder to process.'.format(len(species_folders), region)
-##                            logFile(log_file, msg)
-##                        else:
-##                            msg = '>-> There are no selected species in the {0} region folder to process.'.format(region)
-##                            logFile(log_file, msg)
-##                            msg = '>-> Need to change the selected species list for this region.'
-##                            logFile(log_file, msg)
-##                            return
-##                        del selected_species_folders
-##
-##                    # Get a disctionary of species and common names from the
-##                    # CVS Table in the Project GDB
-##                    csv_file_table = os.path.join(ProjectGDB, csv_file)
-##                    # Dictionary of species and common names that are in the tables
-##                    species_common_name_dict = unique_fish_dict(csv_file_table)
-##                    #print( species_common_name_dict )
-##                    #print("Is the")
-##
-##                    # Clean up
-##                    del csv_file_table
-##                else:
-##                    msg = '>-> There are no species folders in the region ({0}) folder.'.format(region)
-##                    logFile(log_file, msg)
-##                    msg = '>-> Need to run generateRasters to create images.'
-##                    logFile(log_file, msg)
-##                    return
-##            else:
-##                msg = '>-> The folder for this region ({0}) is missing from the Analysis Folder and needs to be created.'.format(region)
-##                logFile(log_file, msg)
-##                return
-##
-##            # Cleanup
-##            del region_georef
-##
-##            # Creating the region indicator table to be used. We output this to the file system in the appropriate folder.
-##            msg = '> Creating the {} Raster Points Feature Class. This may take a while... Please wait...'.format(region)
-##            logFile(log_file, msg)
-##
-##            if not arcpy.Exists( region_raster_points ) or ReplaceRegionRasterPoints:
-##                # If v is True:
-##                if ReplaceRegionRasterPoints and arcpy.Exists(region_raster_points):
-##                    msg = '>-> Removing the {0} Region Raster Points Feature Class'.format(region)
-##                    logFile(log_file, msg)
-##
-##                    # Geoprocessing tools return a result object of the derived
-##                    # output dataset.
-##                    result = arcpy.management.Delete(region_raster_points)
-##                    msg = arcpy.GetMessages()
-##                    msg = ">->-> {0}\n".format(msg.replace('\n', '\n>->-> '))
-##                    logFile(log_file, msg)
-##                    del msg
-##                    del result
-##
-##                else:
-##                    msg = ">-> Replace Region Raster Points Feature Class set to True, but {0} Indicator Dataset is missing".format(region)
-##                    logFile(log_file, msg)
-##
-##                msg = '>-> Creating the {} Region Raster Points Feature Class'.format(region)
-##                logFile(log_file, msg)
-##
-##                # Set local variables
-##                out_path = ProjectGDB
-##                out_name = "{0}_Raster_Points".format(region_abb)
-##                geometry_type = "POINT"
-##                template = region_lat_long
-##                config_keyword = ""
-##                has_m = "DISABLED"
-##                has_z = "DISABLED"
-##
-##                # Use Describe to get a SpatialReference object
-##                spatial_ref = arcpy.Describe(region_lat_long).spatialReference
-##
-##                # Execute CreateFeatureclass
-##                arcpy.management.CreateFeatureclass(out_path, out_name, geometry_type, template,
-##                                                    has_m, has_z, spatial_ref)
-##
-##                msg = arcpy.GetMessages()
-##                msg = ">->-> {0}".format(msg.replace('\n', '\n>->->-> '))
-##                logFile(log_file, msg)
-##
-##                del out_path, out_name, template, config_keyword, geometry_type
-##                del has_m, has_z, spatial_ref
-##
-##                # Loading images into the Mosaic.
-##                # msg = '> Loading the {} Indicator Dataset. This may take a while... Please wait...'.format(region)
-##                # logFile(log_file, msg)
-##
-##                # Loop through dictionary
-##                for Species in species_common_name_dict:
-##                    # Speices folders do not include the '.' that can be a part
-##                    # of the name, so remove
-##                    #species_folder = Species.replace('.','')
-##                    species_folder = species.replace(".","").replace("-"," ").replace("(","").replace(")","").replace("/","and")
-##                    # The common name is the value in the dictionary
-##                    CommonName = species_common_name_dict[Species][0]
-##                    CoreSpecies = species_common_name_dict[Species][1]
-##                    # Create an item for multidimensional variable list
-##                    #speciesCommonName = "'{0}' '{1}' #".format(species, common)
-##                    # print("\t\t '{0}'".format(speciesCommonName))
-##                    # 'Centropristis striata' 'Centropristis striata' #
-##                    # Append that item to speciesCommonNameRegionList
-##                    #speciesCommonNameRegionList.append(speciesCommonName)
-##                    #del speciesCommonName
-##
-##                    # Test of the speices folder name from the dictionary is in
-##                    # the list of folders in the region folder. The species
-##                    # folder may not have been created, so need to test
-##                    # if species_folder in species_folders first, then as a filter see
-##                    # if species is in a shorter list. Will need to change this later
-##
-##                    # This test is species is in selected species
-##
-##                    if species_folder in species_folders: # and species_folder in selected_species.keys():
-##                        # Test if there a corresponding folder in RASTER DIRECTORY, if
-##                        # not create the folder
-##                        #out_species_folder = os.path.join(MOSAIC_DIRECTORY, region_abb, species_folder)
-##                        # Make the speices folder in the raster directory if missing
-##                        #if not os.path.isdir(out_species_folder):
-##                        #    os.makedirs(out_species_folder)
-##                        msg = ">->-> Species: {0}, Common Name: {1}".format(Species, CommonName)
-##                        logFile(log_file, msg)
-##
-##                        # Set local variables
-##                        out_path = ScratchGDB
-##                        out_name = "{0}_Raster_Points".format(Species.replace('.','').replace(' ','_'))
-##                        geometry_type = "POINT"
-##                        template = region_lat_long
-##                        config_keyword = ""
-##                        has_m = "DISABLED"
-##                        has_z = "DISABLED"
-##
-##                        # Use Describe to get a SpatialReference object
-##                        spatial_ref = arcpy.Describe(region_lat_long).spatialReference
-##
-##                        # Execute CreateFeatureclass
-##                        arcpy.management.CreateFeatureclass(out_path, out_name, geometry_type, template,
-##                                                            has_m, has_z, spatial_ref)
-##
-##                        species_raster_points = os.path.join(ScratchGDB, out_name)
-##
-##                        del out_path, out_name, geometry_type, template
-##                        del config_keyword, has_m, has_z
-##
-##                        input_folder = os.path.join(region_abb_folder, species_folder)
-##
-##                        msg = ">->-> Processing Biomass Rasters"
-##                        logFile(log_file, msg)
-##
-##                        arcpy.env.workspace = input_folder
-##                        biomassRasters = arcpy.ListRasters("*.tif")
-##                        #print(biomassRasters)
-##                        #print(selected_years)
-##                        # Test if we are filtering on years. If so, a new year list is
-##                        # created with the selected years remaining in the list
-##                        if FilterYears:
-##                            # Get a shorter list
-##                            #biomassRasters = [r for r in biomassRasters if int(r.replace(".tif", "")) in selected_years]
-##                            biomassRasters = [r for r in biomassRasters if int(r[-8:-4]) in selected_years]
-##                        else:
-##                            pass
-##                        #print(biomassRasters)
-##
-##                        for biomassRaster in biomassRasters:
-##                            # Get year from raster name
-##                            Year = int(biomassRaster[-8:-4])
-##
-##                            msg = ">->->-> Processing {0} Biomass Raster".format(biomassRaster)
-##                            logFile(log_file, msg)
-##
-##                            msg = ">->->-> Extracting Points from {0} Biomass Raster".format(biomassRaster)
-##                            logFile(log_file, msg)
-##
-##                            tmp_points = os.path.join(ScratchGDB, biomassRaster[:-4])
-##
-##                            arcpy.gp.ExtractValuesToPoints_sa(region_lat_long_layer, biomassRaster, tmp_points, "NONE", "ALL")
-##
-##                            msg = ">->->-> Calculate Year for {0} Biomass Raster Points".format(biomassRaster)
-##                            logFile(log_file, msg)
-##                            # Process: Calculate Year Field
-##                            arcpy.management.CalculateField(tmp_points, "Year", expression="{0}".format(Year), expression_type="PYTHON", code_block="")
-##
-##                            msg = ">->->-> Calculate WTCPUE for {0} Biomass Raster Points".format(biomassRaster)
-##                            logFile(log_file, msg)
-##
-##                            arcpy.management.CalculateField(in_table=tmp_points, field="WTCPUE", expression="!RASTERVALU!", expression_type="PYTHON", code_block="")
-##
-##                            msg = ">->->-> Delete RASTERVALU from {0} Biomass Raster Points".format(biomassRaster)
-##                            logFile(log_file, msg)
-##
-##                            arcpy.management.DeleteField(in_table=tmp_points, drop_field="RASTERVALU")
-##
-##                            msg = ">->->-> Appending {0} Biomass Raster Points".format(biomassRaster)
-##                            logFile(log_file, msg)
-##
-##                            # Append Region Raster Points to Region Raster PointsTable
-##                            arcpy.management.Append(inputs=tmp_points, target=species_raster_points, schema_type="NO_TEST", field_mapping="", subtype="")
-##
-##                            # Cleanup
-##                            arcpy.management.Delete(tmp_points)
-##                            del tmp_points
-##
-##                            del Year
-##
-##                        msg = ">->->-> Inserting records into the Feature Class"
-##                        print(msg)
-##                        del msg
-##
-##                        # arcpy.management.MakeFeatureLayer
-##                        arcpy.management.MakeFeatureLayer(species_raster_points, "species_raster_points")
-##
-##                        result = arcpy.management.GetCount("species_raster_points")
-##                        msg = '>-> {} Raster Points has {} total records'.format(Species, result[0])
-##                        logFile(log_file, msg)
-##                        del result, msg
-##
-##                        arcpy.management.SelectLayerByAttribute("species_raster_points", "NEW_SELECTION", "WTCPUE IS NOT NULL")
-##
-##                        result = arcpy.management.GetCount("species_raster_points")
-##                        msg = '>-> {} Raster Points has {} records with values'.format(Species, result[0])
-##                        logFile(log_file, msg)
-##                        del result, msg
-##
-##                        arcpy.management.SelectLayerByAttribute("species_raster_points", "SWITCH_SELECTION")
-##
-##                        result = arcpy.management.GetCount("species_raster_points")
-##                        msg = '>-> {} has {} records without values'.format(biomassRaster[:-4], result[0])
-##                        logFile(log_file, msg)
-##                        del result, msg
-##
-##                        msg = ">->->-> Removing rows from the {0} Biomass Raster Points".format(Species)
-##                        logFile(log_file, msg)
-##                        arcpy.management.DeleteRows("species_raster_points")
-##
-##                        # Cleanup
-##                        arcpy.management.Delete("species_raster_points")
-##
-##                        msg = ">-> arcpy.management.CalculateField Region"
-##                        logFile(log_file, msg)
-##                        arcpy.management.CalculateField(species_raster_points, "OARegion", "'{0}'".format(OARegion), "PYTHON", "")
-##
-##                        msg = ">-> arcpy.management.CalculateField Species"
-##                        logFile(log_file, msg)
-##                        # Process: Calculate Species Field
-##                        arcpy.management.CalculateField(species_raster_points, "Species", "'{0}'".format(Species), "PYTHON", "")
-##
-##                        msg = ">-> arcpy.management.CalculateField CommonName"
-##                        logFile(log_file, msg)
-##                        # Process: Calculate Common Name Field
-##                        arcpy.management.CalculateField(species_raster_points, "CommonName", "'{0}'".format(CommonName), "PYTHON", "")
-##
-##                        msg = ">-> arcpy.management.CalculateField SpeciesCommonName"
-##                        logFile(log_file, msg)
-##                        # Process: Calculate Common Name Field
-##                        arcpy.management.CalculateField(species_raster_points, "SpeciesCommonName", "'{0} ({1})' ".format(Species, CommonName), "PYTHON", "")
-##
-##                        msg = ">-> arcpy.management.CalculateField StdTime"
-##                        logFile(log_file, msg)
-##                        codeBlock = """def getDate(region, year):
-##                                          from datetime import datetime
-##                                          import pytz
-##                                          regionDateDict = {# Region : Month, Day, Time Zone
-##                                                            'Aleutian Islands'   : [1, 1, 0, 0, 0, 'US/Alaska'],
-##                                                            'Eastern Bering Sea' : [1, 1, 0, 0, 0, 'US/Alaska'],
-##                                                            'Gulf of Alaska' : [1, 1, 0, 0, 0, 'US/Alaska'],
-##                                                            'Gulf of Mexico' : [1, 1, 0, 0, 0, 'US/Central'],
-##                                                            'Northeast US Fall' : [1, 1, 0, 0, 0, 'US/Eastern'],
-##                                                            'Northeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
-##                                                            'Southeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
-##                                                            'Southeast US Summer' : [1, 1, 0, 0, 0, 'US/Eastern'],
-##                                                            'Southeast US Fall' : [1, 1, 0, 0, 0, 'US/Eastern'],
-##                                                            'West Coast Annual' : [1, 1, 0, 0, 0, 'US/Pacific'],
-##                                                            'West Coast Triennial' : [1, 1, 0, 0, 0, 'US/Pacific'],
-##                                                            'West Coast Annual 2003-Present' : [1, 1, 0, 0, 0, 'US/Pacific'],
-##                                                            'West Coast Triennial 1977-2004' : [1, 1, 0, 0, 0, 'US/Pacific'],
-##                                                            'West Coast Annual (2003-Present)' : [1, 1, 0, 0, 0, 'US/Pacific'],
-##                                                            'West Coast Triennial (1977-2004)' : [1, 1, 0, 0, 0, 'US/Pacific'],}
-##                                          month, day, hour, min, sec, timeZone = regionDateDict[region]
-##                                          fmt = "%m/%d/%Y %H:%M:%S"
-##                                          local = pytz.timezone(timeZone)
-##                                          naive = datetime.strptime("{0}/{1}/{2} {3}:{4}:{5}".format(month, day, year, hour, min, sec), fmt)
-##                                          #local_dt = local.localize(naive, is_dst=True)
-##                                          local_dt = local.localize(naive, is_dst=False)
-##                                          utc_dt = local_dt.astimezone(pytz.utc)
-##                                          #return utc_dt.strftime(fmt)
-##                                          return utc_dt"""
-##                        arcpy.management.CalculateField(species_raster_points, "StdTime", expression="getDate( !OARegion!, !Year! )", expression_type="PYTHON", code_block=codeBlock)
-##                        del codeBlock
-##
-##                        msg = ">-> arcpy.management.Append Records"
-##                        logFile(log_file, msg)
-##                        # Append Region Raster Points to Region Raster PointsTable
-##                        arcpy.management.Append(inputs=species_raster_points, target=region_raster_points, schema_type="NO_TEST", field_mapping="", subtype="")
-##
-##                        arcpy.management.Delete(species_raster_points)
-##                        del species_raster_points
-##
-##                    else:
-##                        pass
-##                        #msg = "###--->>> Species: {0} does not have a folder, Common Name: {1}".format(Species, CommonName)
-##                        #logFile(log_file, msg)
-##                        #del msg
-##
-##                del species_folders, species_folder
-##                del Species, CommonName, OARegion, region_raster_points
-##
-##                del DisMapRegionCode, DisMapSeasonCode
-##                del input_folder, biomassRasters
-##            else:
-##                print("Region folder {0} is missing and perhaps not created".format(region_abb))
-##
-##            arcpy.management.Delete(region_lat_long_layer)
-##            del region_lat_long_layer
-##            arcpy.management.Delete(region_shape_layer)
-##            del region_shape_layer
-##
-##            #Final benchmark for the region.
-##            msg = "ENDING REGION {} COMPLETED ON {}".format(region, strftime("%a %b %d %I:%M:%S %p", localtime()))
-##            logFile(log_file, msg)
-##            del msg
-##
-##            # Clean up
-##            del csv_file, region_name
-##            del region_abb_folder
-##            del region, region_sr, region_abb
-##            del region_snap_raster
-##            del region_raster_mask, region_shape, spatial_ref, biomassRaster
-##            del region_lat_long
-##
-##        del DisMapSeasonCodeDict, species_common_name_dict
-##
-##        arcpy.env.workspace = temp_workspace
-##        del temp_workspace
-##
-##        # Elapsed time
-##        end_time = time()
-##        elapse_time =  end_time - start_time
-##        msg = u"Elapsed Time {0} (H:M:S)\n".format(strftime("%H:%M:%S", gmtime(elapse_time)))
-##        logFile(log_file, msg)
-##        del msg, start_time, end_time, elapse_time, log_file
-##
-##        localKeys =  [key for key in locals().keys()]
-##
-##        if localKeys:
-##            msg = "Local Keys in populateIndicatorsTable(): {0}".format(u", ".join(localKeys))
-##            print(msg)
-##            del msg
-##        del localKeys
-##
-##    except:
-##        import sys, traceback
-##        # Get the traceback object
-##        tb = sys.exc_info()[2]
-##        tbinfo = traceback.format_tb(tb)[0]
-##        # Concatenate information together concerning the error into a message string
-##        pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-##        print(pymsg)
-##        del pymsg, tb, tbinfo
-
-
 def createSpeciesRichnessRasters():
     try:
-        function = "createSpeciesRichnessRasters"
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        # arcpy.AddMessage(function)
+
         # Set a start time so that we can see how log things take
         start_time = time()
 
-        #ProjectFolder = r'C:\Users\john.f.kennedy\Documents\GitHub\DisMap\Test'
-        #ProjectGDB = os.path.join(ProjectFolder, u'DisMap.gdb')
-        #ScratchGDB = os.path.join(ProjectFolder, r'scratch\scratch.gdb')
-        #ANALYSIS_DIRECTORY = os.path.join(ProjectFolder, "Analysis_Folder")
-        #MOSAIC_DIRECTORY = os.path.join(ProjectFolder, "Raster_Folder")
         arcpy.env.overwriteOutput = True
-        arcpy.env.scratchWorkspace = ScratchGDB
+
         arcpy.env.rasterStatistics = u'STATISTICS 1 1'
         arcpy.env.buildStatsAndRATForTempRaster = True
 
+        # Clean Scatch workspace -- Start
         tmp_workspace = arcpy.env.workspace
-
         arcpy.env.workspace = ScratchGDB
         # This removes the saved rasters in the ScratchGDB
         for raster in arcpy.ListRasters("*"): arcpy.management.Delete(raster)
         arcpy.management.Compact(ScratchGDB)
         #del raster
-
         arcpy.env.workspace = ScratchFolder
         # This removes the saved rasters in the ScratchGDB
         for raster in [r for r in arcpy.ListRasters("*")]: arcpy.management.Delete(raster)
@@ -5855,6 +4922,16 @@ def createSpeciesRichnessRasters():
 
         arcpy.env.workspace = tmp_workspace
         del tmp_workspace
+        # Clean Scatch workspace -- End
+
+##        # Set the workspace to the ProjectGDB
+##        tmp_workspace = arcpy.env.workspace
+##        arcpy.env.workspace = ProjectGDB
+##
+##        # Set the scratch workspace to the ScratchGDB
+##        tmp_scratchWorkspace = arcpy.env.scratchWorkspace
+##        arcpy.env.scratchWorkspace = ScratchGDB
+
 
         for table_name in table_names:
             # Assigning variables from items in the chosen table list
@@ -5865,6 +4942,7 @@ def createSpeciesRichnessRasters():
             csv_file = table_name[4]
             region_georef = table_name[5]
             #region_contours = table_name[6]
+            cell_size = table_name[7]
 
             # Set the output coordinate system to what is available for us.
             region_sr = srs[region_georef]
@@ -6157,7 +5235,7 @@ def createSpeciesRichnessRasters():
                                                 'Eastern Bering Sea' : [1, 1, 0, 0, 0, 'US/Alaska'],
                                                 'Gulf of Alaska' : [1, 1, 0, 0, 0, 'US/Alaska'],
                                                 'Gulf of Mexico' : [1, 1, 0, 0, 0, 'US/Central'],
-                                                'Hawaii' : [1, 1, 0, 0, 0, 'US/Hawaii'],
+                                                'Hawaii Islands' : [1, 1, 0, 0, 0, 'US/Hawaii'],
                                                 'Northeast US Fall' : [1, 1, 0, 0, 0, 'US/Eastern'],
                                                 'Northeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
                                                 'Southeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
@@ -6198,7 +5276,7 @@ def createSpeciesRichnessRasters():
             del table_name, csv_file, region_year_base_name
             del region, region_sr
             del rowCount, columnCount
-            del region_snap_raster, region_raster_mask
+            del region_snap_raster, region_raster_mask, cell_size
 
         # Cleanup
         del log_file
@@ -6210,10 +5288,10 @@ def createSpeciesRichnessRasters():
         print(msg)
         del msg, start_time, end_time, elapse_time
 
-        localKeys =  [key for key in locals().keys() if key not in ['function']]
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "#-> Local Keys in function {0}: {1}".format(function, u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
         del localKeys, function
@@ -6231,7 +5309,10 @@ def createSpeciesRichnessRasters():
 
 def createCoreSpeciesRichnessRasters():
     try:
-        function = "createCoreSpeciesRichnessRasters"
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        #arcpy.AddMessage(function)
+
         # Set a start time so that we can see how log things take
         start_time = time()
 
@@ -6270,6 +5351,7 @@ def createCoreSpeciesRichnessRasters():
             csv_file = table_name[4]
             region_georef = table_name[5]
             #region_contours = table_name[6]
+            cell_size = table_name[7]
 
             # Set the output coordinate system to what is available for us.
             region_sr = srs[region_georef]
@@ -6552,7 +5634,7 @@ def createCoreSpeciesRichnessRasters():
                                                 'Eastern Bering Sea' : [1, 1, 0, 0, 0, 'US/Alaska'],
                                                 'Gulf of Alaska' : [1, 1, 0, 0, 0, 'US/Alaska'],
                                                 'Gulf of Mexico' : [1, 1, 0, 0, 0, 'US/Central'],
-                                                'Hawaii' : [1, 1, 0, 0, 0, 'US/Hawaii'],
+                                                'Hawaii Islands' : [1, 1, 0, 0, 0, 'US/Hawaii'],
                                                 'Northeast US Fall' : [1, 1, 0, 0, 0, 'US/Eastern'],
                                                 'Northeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
                                                 'Southeast US Spring' : [1, 1, 0, 0, 0, 'US/Eastern'],
@@ -6592,7 +5674,7 @@ def createCoreSpeciesRichnessRasters():
             del table_name, csv_file, region_year_base_name
             del region, region_sr
             del rowCount, columnCount
-            del region_snap_raster, region_raster_mask
+            del region_snap_raster, region_raster_mask, cell_size
 
         # Cleanup
         del log_file
@@ -6604,10 +5686,10 @@ def createCoreSpeciesRichnessRasters():
         print(msg)
         del msg, start_time, end_time, elapse_time
 
-        localKeys =  [key for key in locals().keys() if key not in ['function']]
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "#-> Local Keys in function {0}: {1}".format(function, u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
         del localKeys, function
@@ -6623,10 +5705,12 @@ def createCoreSpeciesRichnessRasters():
         del pymsg, tb, tbinfo
 
 
-
 def analyzeMosaicDataset():
     try:
-        function = "analyzeMosaicDataset"
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        #arcpy.AddMessage(function)
+
         # Set a start time so that we can see how log things take
         start_time = time()
 
@@ -6681,10 +5765,10 @@ def analyzeMosaicDataset():
         print(msg)
         del msg, start_time, end_time, elapse_time
 
-        localKeys =  [key for key in locals().keys() if key not in ['function']]
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "#-> Local Keys in function {0}: {1}".format(function, u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
         del localKeys, function
@@ -6699,11 +5783,15 @@ def analyzeMosaicDataset():
         print(pymsg)
         del pymsg, tb, tbinfo
 
+
 def setMosaicDatasetProperties():
     try:
         # https://desktop.arcgis.com/en/arcmap/latest/manage-data/raster-and-images/wkfl-create-a-multidimensional-mosaic-dataset-from-a-set-of-time-series-images.htm
 
-        function = "setMosaicDatasetProperties"
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        #arcpy.AddMessage(function)
+
         # Set a start time so that we can see how log things take
         start_time = time()
 
@@ -6795,10 +5883,10 @@ def setMosaicDatasetProperties():
         print(msg)
         del msg, start_time, end_time, elapse_time
 
-        localKeys =  [key for key in locals().keys() if key not in ['function']]
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "#-> Local Keys in function {0}: {1}".format(function, u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
         del localKeys, function
@@ -6815,7 +5903,10 @@ def setMosaicDatasetProperties():
 
 def buildMultidimensionalInfo():
     try:
-        function = "updateStdTimeAndBuildMultidimensional"
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        #arcpy.AddMessage(function)
+
         # Set a start time so that we can see how log things take
         start_time = time()
 
@@ -6878,10 +5969,10 @@ def buildMultidimensionalInfo():
         print(msg)
         del msg, start_time, end_time, elapse_time
 
-        localKeys =  [key for key in locals().keys() if key not in ['function']]
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "#-> Local Keys in function {0}: {1}".format(function, u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
         del localKeys, function
@@ -6899,7 +5990,10 @@ def buildMultidimensionalInfo():
 
 def createCloudRasterFormatExport():
     try:
-        function = "createCloudRasterFormatExport"
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        #arcpy.AddMessage(function)
+
         # Set a start time so that we can see how log things take
         start_time = time()
 
@@ -6916,6 +6010,7 @@ def createCloudRasterFormatExport():
             #csv_file = table_name[4]
             #region_georef = table_name[5]
             #region_contours = table_name[6]
+            cell_size = table_name[7]
 
             # For benchmarking.
             log_file = os.path.join(LOG_DIRECTORY, region + ".log")
@@ -6979,7 +6074,7 @@ def createCloudRasterFormatExport():
             del crf_md, years_md
 
             del crf
-            del table_name, region_abb, region, region_mosaic
+            del table_name, region_abb, region, region_mosaic, cell_size
 
         # Cleanup
         del log_file
@@ -7011,7 +6106,10 @@ def createCloudRasterFormatExport():
 
 def importEPU():
     try:
-        function = "importEPU"
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        #arcpy.AddMessage(function)
+
         # Set a start time so that we can see how log things take
         start_time = time()
 
@@ -7029,6 +6127,8 @@ def importEPU():
 
         #arcpy.management.DeleteField('EPU_NOESTUARIES', )
 
+        # Cleanup
+        del epu_shape_path
 
         # Elapsed time
         end_time = time()
@@ -7037,10 +6137,49 @@ def importEPU():
         print(msg)
         del msg, start_time, end_time, elapse_time
 
-        localKeys =  [key for key in locals().keys() if key not in ['function']]
+        localKeys =  [key for key in locals().keys() if "function" not in key]
 
         if localKeys:
-            msg = "#-> Local Keys in function {0}: {1}".format(function, u", ".join(localKeys))
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
+            print(msg)
+            del msg
+        del localKeys, function
+
+    except:
+        import sys, traceback
+        # Get the traceback object
+        tb = sys.exc_info()[2]
+        tbinfo = traceback.format_tb(tb)[0]
+        # Concatenate information together concerning the error into a message string
+        pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
+        print(pymsg)
+        del pymsg, tb, tbinfo
+
+
+def addMetadata(item):
+    try:
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+        #arcpy.AddMessage(function)
+
+        # Get the target item's Metadata object
+        md = arcpy.metadata.Metadata(item)
+        md.synchronize('ACCESSED', 1)
+        md.save()
+        md.reload()
+
+        # Delete all geoprocessing history and any enclosed files from the item's metadata
+        if not md.isReadOnly:
+            md.deleteContent('GPHISTORY')
+            md.deleteContent('ENCLOSED_FILES')
+            md.save()
+
+        del md, item
+
+        localKeys =  [key for key in locals().keys() if "function" not in key]
+
+        if localKeys:
+            msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             print(msg)
             del msg
         del localKeys, function
@@ -7058,6 +6197,8 @@ def importEPU():
 
 if __name__ == '__main__':
     try:
+        arcpy.ResetEnvironments()
+
         # Set a start time so that we can see how log things take
         start_time = time()
 
@@ -7100,48 +6241,14 @@ if __name__ == '__main__':
         # Set the compression environment to LZ77
         arcpy.env.compression = "LZ77"
 
+        arcpy.SetLogMetadata(False)
+
         DEBUG_LEVEL = 0
         # 0: No Debugging Ouput
         # 1: Some probably important stuff
         # 2: mostly important stuff
         # 3: Probably literally everything, as verbose as necessary.
 
-
-        # Get ArcGIS Product Information
-        # print(arcpy.GetInstallInfo()['Version'])
-        ProductName = arcpy.GetInstallInfo()['ProductName']
-        ProductVersion = arcpy.GetInstallInfo()['Version']
-        # Now we need to test what license level
-        if ProductName == "ArcGISPro":
-            # Get the Product License Level
-            ProductLicenseLevel = arcpy.GetInstallInfo()['LicenseLevel']
-            #if not ProductLicenseLevel in ['Advanced', '']
-            #if ProductLicenseLevel in []
-
-        elif ProductName == "Desktop":
-            # Testing Product License Level
-            #print("Advanced: {}".format(arcpy.CheckProduct("arcinfo")))
-            #print("Standard: {}".format(arcpy.CheckProduct("arceditor")))
-
-            if arcpy.CheckProduct("arcinfo") == "Available":
-                ProductLicenseLevel = "Advance"
-            elif arcpy.CheckProduct("arceditor") == "Available":
-                ProductLicenseLevel = "Standard"
-            elif arcpy.CheckProduct("arcview") == "Available":
-                ProductLicenseLevel = "Basic"
-            else:
-                pass
-        else:
-            #print("")
-            pass
-
-        # ## Use the dictionary iteritems to iterate through
-        # ##   the key/value pairs from GetInstallInfo
-        # #d = arcpy.GetInstallInfo()
-        # #for key, value in list(d.items()):
-        # #    # Print a formatted string of the install key and its value
-        # #    #
-        # #    print("{:<13} : {}".format(key, value))
 
         # ###--->>> Declaring folder paths
         # Project Folders:
@@ -7159,9 +6266,21 @@ if __name__ == '__main__':
 
         # Project related items
 
+        # October 1 2022
+        Version = "October 1 2022"
+        DateCode = "20221001"
+
+        # Agust 9 2022
+        # Version = "August 9 2022"
+        # DateCode = "20220809"
+
+        # Agust 2 2022
+        #Version = "August 2 2022"
+        #DateCode = "20220802"
+
         # July 17 2022
-        Version = "July 17 2022"
-        DateCode = "20220717"
+        #Version = "July 17 2022"
+        #DateCode = "20220717"
 
         # May 16 2022
         #Version = "May 16 2022"
@@ -7216,12 +6335,7 @@ if __name__ == '__main__':
         #Geodatabase Raster Files will go here.
         MOSAIC_DIRECTORY = os.path.join(BASE_DIRECTORY, "Mosaic Folder {0} {1}".format(Version, SoftwareEnvironmentLevel))
         # print('MOSAIC_DIRECTORY: ', MOSAIC_DIRECTORY)
-        # Log files will go here.
-        LOG_DIRECTORY = os.path.join(BASE_DIRECTORY, "Log Folder {0}".format(Version))
-        #
-        EXPORT_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "Export Metadata {0} {1}".format(Version, SoftwareEnvironmentLevel))
-        ARCGIS_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "ArcGIS Metadata {0} {1}".format(Version, SoftwareEnvironmentLevel))
-        INPORT_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "InPort Metadata {0} {1}".format(Version, SoftwareEnvironmentLevel))
+
         ProjectGIS = os.path.join(BASE_DIRECTORY, "{0}.aprx".format(ProjectName + " " + SoftwareEnvironmentLevel))
         ProjectToolBox = os.path.join(BASE_DIRECTORY, "{0}.tbx".format(ProjectName + " " + SoftwareEnvironmentLevel))
         #DefaultGDB = os.path.join(BASE_DIRECTORY, "Default.gdb")
@@ -7230,40 +6344,38 @@ if __name__ == '__main__':
         ScratchGDB = os.path.join(BASE_DIRECTORY, "Scratch {0} {1}".format(Version, SoftwareEnvironmentLevel), "scratch.gdb")
         ScratchFolder = os.path.join(BASE_DIRECTORY, "Scratch {0} {1}".format(Version, SoftwareEnvironmentLevel))
 
-        if not os.path.isdir(BASE_DIRECTORY): os.makedirs(BASE_DIRECTORY)
+        # Log files will go here.
+        LOG_DIRECTORY = os.path.join(BASE_DIRECTORY, "Log Folder {0}".format(Version))
 
-        if not os.path.isdir(ScratchFolder): os.makedirs(ScratchFolder)
+        EXPORT_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "Export Metadata")
+        ARCGIS_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "ArcGIS Metadata")
+        INPORT_METADATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "InPort Metadata")
 
-        if not arcpy.Exists(ProjectGDB): arcpy.management.CreateFileGDB(BASE_DIRECTORY, ProjectName + " " + SoftwareEnvironmentLevel)
+##
+##        # Set the workspace to the ProjectGDB
+##        tmp_workspace = arcpy.env.workspace
+##        arcpy.env.workspace = ProjectGDB
+##
+##        # Set the scratch workspace to the ScratchGDB
+##        tmp_scratchWorkspace = arcpy.env.scratchWorkspace
+##        arcpy.env.scratchWorkspace = ScratchGDB
 
-        #if not arcpy.Exists(BathymetryGDB): arcpy.management.CreateFileGDB(BASE_DIRECTORY, "Bathymetry")
-
-        if not os.path.isdir(ANALYSIS_DIRECTORY): os.makedirs(ANALYSIS_DIRECTORY)
-
-        if not os.path.isdir(MOSAIC_DIRECTORY): os.makedirs(MOSAIC_DIRECTORY)
-
-        if not os.path.isdir(EXPORT_METADATA_DIRECTORY): os.makedirs(EXPORT_METADATA_DIRECTORY)
-
-        if not os.path.isdir(ARCGIS_METADATA_DIRECTORY): os.makedirs(ARCGIS_METADATA_DIRECTORY)
-
-        if not os.path.isdir(INPORT_METADATA_DIRECTORY): os.makedirs(INPORT_METADATA_DIRECTORY)
-
-        # Set the workspace to the ProjectGDB
-        tmp_workspace = arcpy.env.workspace
-        arcpy.env.workspace = ProjectGDB
-
-        #if not os.path.isdir(ScratchFolder):
-        #    #shutil.rmtree(ScratchFolder)
-        #    arcpy.management.CreateFileGDB(ScratchGDB)
-        # Scratch workspace
-        tmp_scratchWorkspace = arcpy.env.scratchWorkspace
-        arcpy.env.scratchWorkspace = ScratchGDB
-        # If the scratch workspace is missing, referencing the env will create the workspace
-        msg = arcpy.env.scratchFolder
-        arcpy.AddMessage(msg)
-        msg = arcpy.env.scratchGDB
-        arcpy.AddMessage(msg)
-        del msg
+##        # Set the workspace to the ProjectGDB
+##        tmp_workspace = arcpy.env.workspace
+##        arcpy.env.workspace = ProjectGDB
+##
+##        #if not os.path.isdir(ScratchFolder):
+##        #    #shutil.rmtree(ScratchFolder)
+##        #    arcpy.management.CreateFileGDB(ScratchGDB)
+##        # Scratch workspace
+##        tmp_scratchWorkspace = arcpy.env.scratchWorkspace
+##        arcpy.env.scratchWorkspace = ScratchGDB
+##        # If the scratch workspace is missing, referencing the env will create the workspace
+##        msg = arcpy.env.scratchFolder
+##        arcpy.AddMessage(msg)
+##        msg = arcpy.env.scratchGDB
+##        arcpy.AddMessage(msg)
+##        del msg
 
         # ###--->>>
 
@@ -7288,7 +6400,7 @@ if __name__ == '__main__':
 
                        [ 'GOM_Shape', 'GOM_Boundary','GOM', 'Gulf of Mexico', 'gmex_csv', 'NAD_1983_2011_UTM_Zone_15N', 'contour_gom', 2000],
 
-                       [ 'HI_Shape', 'HI_Boundary','HI', 'Hawaii', 'hi_csv', 'WGS_1984_UTM_Zone_4N', 'contour_hi', 500],
+                       [ 'HI_Shape', 'HI_Boundary','HI', 'Hawaii Islands', 'hi_csv', 'WGS_1984_UTM_Zone_4N', 'contour_hi', 500],
 
                        [ 'NEUS_Fall_Shape', 'NEUS_Fall_Boundary','NEUS_F', 'Northeast US Fall', 'neusf_csv', 'NAD_1983_2011_UTM_Zone_18N', 'contour_neus', 2000],
                        [ 'NEUS_Spring_Shape', 'NEUS_Spring_Boundary','NEUS_S', 'Northeast US Spring', 'neus_csv', 'NAD_1983_2011_UTM_Zone_18N', 'contour_neus', 2000],
@@ -7306,7 +6418,8 @@ if __name__ == '__main__':
                u'NAD_1983_2011_UTM_Zone_3N'  : 'PROJCS["WGS_1984_Albers",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-78.0],PARAMETER["standard_parallel_1",27.33333333333333],PARAMETER["standard_parallel_2",40.66666666666666],PARAMETER["latitude_of_origin",34.0],UNIT["Meter",1.0]]', # Eastern Bering Sea
                u'NAD_1983_2011_UTM_Zone_5N'  : 'PROJCS["WGS_1984_Albers",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-78.0],PARAMETER["standard_parallel_1",27.33333333333333],PARAMETER["standard_parallel_2",40.66666666666666],PARAMETER["latitude_of_origin",34.0],UNIT["Meter",1.0]]', # Gulf of Alaska
                u'NAD_1983_2011_UTM_Zone_10N' : 'PROJCS["WGS_1984_Albers",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-78.0],PARAMETER["standard_parallel_1",27.33333333333333],PARAMETER["standard_parallel_2",40.66666666666666],PARAMETER["latitude_of_origin",34.0],UNIT["Meter",1.0]]', # West Coast
-               u'WGS_1984_UTM_Zone_4N'       : 'PROJCS["WGS_1984_Albers",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-78.0],PARAMETER["standard_parallel_1",27.33333333333333],PARAMETER["standard_parallel_2",40.66666666666666],PARAMETER["latitude_of_origin",34.0],UNIT["Meter",1.0]]', # Hawaii
+               #u'WGS_1984_UTM_Zone_4N'       : 'PROJCS["WGS_1984_Albers",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-78.0],PARAMETER["standard_parallel_1",27.33333333333333],PARAMETER["standard_parallel_2",40.66666666666666],PARAMETER["latitude_of_origin",34.0],UNIT["Meter",1.0]]', # Hawaii Islands
+               u'WGS_1984_UTM_Zone_4N'       : "PROJCS['WGS_1984_UTM_Zone_4N',GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Transverse_Mercator'],PARAMETER['False_Easting',500000.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',-159.0],PARAMETER['Scale_Factor',0.9996],PARAMETER['Latitude_Of_Origin',0.0],UNIT['Meter',1.0]];-5120900 -9998100 450445547.391054;-100000 10000;-100000 10000;0.001;0.001;0.001;IsHighPrecision", # Hawaii Islands
                u'NAD_1983_2011_UTM_Zone_15N' : 'PROJCS["WGS_1984_Albers_NMSDD",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",180.0],PARAMETER["standard_parallel_1",-2.0],PARAMETER["standard_parallel_2",49.0],PARAMETER["latitude_of_origin",25.5],UNIT["Meter",1.0]]', # Gulf of Mexico
                u'NAD_1983_2011_UTM_Zone_17N' : 'PROJCS["WGS_1984_Albers_NMSDD",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",180.0],PARAMETER["standard_parallel_1",-2.0],PARAMETER["standard_parallel_2",49.0],PARAMETER["latitude_of_origin",25.5],UNIT["Meter",1.0]]', # Southeast US
                u'NAD_1983_2011_UTM_Zone_18N' : 'PROJCS["WGS_1984_Albers_NMSDD",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",180.0],PARAMETER["standard_parallel_1",-2.0],PARAMETER["standard_parallel_2",49.0],PARAMETER["latitude_of_origin",25.5],UNIT["Meter",1.0]]', # Northeast US
@@ -7335,7 +6448,7 @@ if __name__ == '__main__':
 ##        Gulf of Alaska
 ##        Spatial Reference: PROJCS["WGS_1984_Albers_NMSDD",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",180.0],PARAMETER["standard_parallel_1",-2.0],PARAMETER["standard_parallel_2",49.0],PARAMETER["latitude_of_origin",25.5],UNIT["Meter",1.0]]
 ##
-##        Hawaii
+##        Hawaii Islands
 ##        Spatial Reference: PROJCS["WGS_1984_Albers_NMSDD",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",180.0],PARAMETER["standard_parallel_1",-2.0],PARAMETER["standard_parallel_2",49.0],PARAMETER["latitude_of_origin",25.5],UNIT["Meter",1.0]]
 
 
@@ -7345,7 +6458,7 @@ if __name__ == '__main__':
                             'GOA'       : 'Gulf of Alaska',
                             'GOM'       : 'Gulf of Mexico',
                             'GMEX'      : 'Gulf of Mexico',
-                            'HI'        : 'Hawaii',
+                            'HI'        : 'Hawaii Islands',
                             'NEUS_F'    : 'Northeast US, East Coast',
                             'NEUSF'     : 'Northeast US, East Coast',
                             'NEUS_S'    : 'Northeast US, East Coast',
@@ -7362,6 +6475,7 @@ if __name__ == '__main__':
                             'Eastern_Bering_Sea'  : 'Eastern Bering Sea, Bering Sea',
                             'Gulf_of_Alaska'      : 'Gulf of Alaska',
                             'Gulf_of_Mexico'      : 'Gulf of Mexico',
+                            'Hawaii_Islands'    : 'Hawaii Islands',
                             #'Northeast_US_Fall'   : 'Northeast US, East Coast',
                             'Northeast_US'   : 'Northeast US, East Coast',
                             #'Northeast_US_Spring' : 'Northeast US, East Coast',
@@ -7372,15 +6486,15 @@ if __name__ == '__main__':
                           }
         # Set to True if we want to filter on certian one or more regions, else
         # False to process all regions
-        FilterRegions = True
+        FilterRegions = False
 
         if not FilterRegions:
             # ###--->>> Use a list to filter on regions.
             # Below are lists used to
             # test different regions
-            selected_regions = ['AI', 'EBS', 'GOA', 'GOM', 'NEUS_F', 'NEUS_S', 'SEUS_FALL', 'SEUS_SPR', 'SEUS_SUM', 'WC_ANN', 'WC_TRI',]
+            selected_regions = ['AI', 'EBS', 'GOA', 'GOM', 'HI', 'NEUS_F', 'NEUS_S', 'SEUS_FALL', 'SEUS_SPR', 'SEUS_SUM', 'WC_ANN', 'WC_TRI',]
         else:
-            selected_regions = ['HI',]
+            selected_regions = ['AI',]
 
 
         # Test if we are filtering on regions. If so, a new table_names list is
@@ -7403,13 +6517,14 @@ if __name__ == '__main__':
                                     # 'GOA', 'Gulf of Alaska'
                                     # 'WC_ANN', 'West Coast Annual (2003-present)'
                                     # 'WC_TRI', 'West Coast Triennial (1977-2004)',
-                                    'Anthopleura xanthogrammica' : 'Giant green anemone',
                                     'Acesta sphoni' : 'Limid clam sp.',
-                                    'Gadus chalcogrammus' : 'Walleye Pollock',
+                                    'Anthopleura xanthogrammica' : 'Giant green anemone',
                                     'Citharichthys sordidus' : 'Pacific sanddab',
                                     'Doryteuthis (Loligo) opalescens' : 'California market squid',
+                                    'Gadus chalcogrammus' : 'Walleye Pollock',
                                     # 'GOM', 'Gulf of Mexico'
-                                    # 'HI', 'Hawaii'
+                                    'Lutjanus campechanus' : 'red snapper',
+                                    # 'HI', 'Hawaii Islands'
                                     'Etelis coruscans' : 'Onaga',
                                     'Hyporthodus quernus' : 'HapuÊ»upuÊ»u',
                                     # 'NEUS_F', 'Northeast US Fall'
@@ -7428,6 +6543,7 @@ if __name__ == '__main__':
                                     # 'WC_ANN', 'West Coast Annual (2003-present)'
                                     # 'WC_TRI', 'West Coast Triennial (1977-2004)',
                                     'Acesta sphoni' : 'Limid clam sp.',
+                                    'Anthopleura xanthogrammica' : 'Giant green anemone',
                                     'Calinaticina oldroydii' : "Oldroyd's Fragile Moon Snail",
                                     'Citharichthys sordidus' : 'Pacific sanddab',
                                     'Doryteuthis (Loligo) opalescens' : 'California market squid',
@@ -7441,7 +6557,7 @@ if __name__ == '__main__':
                                     'Chicoreus florifer-dilectus' : '',
                                     'Lutjanus campechanus' : 'red snapper',
                                     'Scomberomorus maculatus' : 'Spanish Mackerel',
-                                    # 'HI', 'Hawaii'
+                                    # 'HI', 'Hawaii Islands'
                                     'Aphareus rutilans' : 'Lehi',
                                     'Etelis carbunculus' : 'Ehu',
                                     'Etelis coruscans' : 'Onaga',
@@ -7502,115 +6618,34 @@ if __name__ == '__main__':
         # If ClearLogDirectory True or False
         ClearLogDirectory = True
 
+    # ###--->>> Step #1
     # ###--->>> Project Setup Start
         # Project Setup True or False
         ProjectSetup = False
-        ReplaceProject = True
+        ReplaceProject = False
         # Project Setup -- Needs to run first to create folders and stuff
         if ProjectSetup:
             projectSetup()
         del ProjectSetup, ReplaceProject, projectSetup
     # ###--->>> Project Setup End
 
-    # ###--->>> Import CSV Tables Start
-        # Generate Tables True or False
-        GenerateTables = False
-        # Tables
-        # Set ReplaceTable to True or False
-        ReplaceTable = True
-        # Generate Tables -- Needs to run next so that
-        # Feature classes can be created in the following step.
-        if GenerateTables:
-            generateTables()
-        del GenerateTables
-    # ###--->>> Import CSV Tables End
+    # ###--->>> Step #2
+    # ###--->>> importEPU Start
+        ImportEPU = False
 
-    # ###--->>> Feature Classes Start
-        # Generate Point Feature Classes True or False
-        GeneratePointFeatureClasses = False
-        # Feature Classes
-        # Set ReplaceFeatureClass to True or False
-        ReplaceFeatureClass = True
-        # Generate Point Feature Classes -- Needs to run next so that
-        # Rasters can be created for the following step.
-        if GeneratePointFeatureClasses:
-            generatePointFeatureClasses()
+        if ImportEPU:
+            importEPU()
 
-    # ###--->>> Feature Classes End
+        del ImportEPU, importEPU
 
-    # #### Need to create  bathy first
+    # ###--->>> importEPU End
 
-
-    # ###--->>> Create Snap Raster, Bathymetry, Latitude, Longitude Start
-
-        CreateSnapRasterBathymetryLatitudeLongitude = False
-
-        if CreateSnapRasterBathymetryLatitudeLongitude:
-            createSnapRasterBathymetryLatitudeLongitude()
-
-        del CreateSnapRasterBathymetryLatitudeLongitude, createSnapRasterBathymetryLatitudeLongitude
-
-        #CreateRowColumnCountReport = False
-        #if CreateRowColumnCountReport: GetRowColumnCountReport()
-        #del GetRowColumnCountReport, CreateRowColumnCountReport
-        del GetRowColumnCountReport
-
-    # ###--->>> Create Snap Raster, Bathymetry, Latitude, Longitude End
-
-    # ###--->>> Create DisMAP Regions Start
-
-        # Remember to select all regions
-        ReplaceDisMapRegions = False
-        if ReplaceDisMapRegions:
-            CreateDisMapRegions()
-        del CreateDisMapRegions, ReplaceDisMapRegions
-
-    # ###--->>> Create DisMAP Regions End
-
-    # ###--->>> Rasters Start
-
-        # Generate Rasters True or False
-        GenerateRasters = False
-        # Rasters
-        # Change idw_field
-        # idw_field = "WTCPUE" or "WTCPUECubeRoot"
-        idw_field = "WTCPUECubeRoot"
-
-        # Set ReplaceRaster to True or False
-        ReplaceRaster = True
-
-        # Set ReplaceLayer to True or False
-        ReplaceLayer = True
-
-        # Generate Rasters -- Needs to run next so that Mosaics can be
-        # created for the following step.
-        if GenerateRasters:
-            generateRasters()
-
-    # ###--->>> Rasters End
-
-##    # ###--->>> Maps Start
-##        # Generate Maps True or False
-##        GenerateMaps = False
-##        # Maps
-##        # Set ReplaceMapDocument to True or False
-##        ReplaceMapDocument = True
-##        # Generate Maps -- Needs to run next.
-##        if GenerateMaps:
-##            generateMaps()
-##
-##        del generateMaps, GenerateMaps, ReplaceMapDocument
-
-    # ###--->>> Maps End
-
+    # ###--->>> Step #3
     # ###--->>> Tables Start
-
         # Create Tables: True or False
         CreateTemplateTables = False
-
         # Replace Tables: True or False
         ReplaceTables = True
-
         # Filter out tables to process: True or False
         FilterTables = False
 
@@ -7629,29 +6664,21 @@ if __name__ == '__main__':
 
     # ###--->>> Tables End
 
-##    # ###--->>> DataSeries Table Start
-##
-##        # Populate DataSeries Table
-##        PopulateDataSeriesTable = True
-##        if PopulateDataSeriesTable:
-##            populateDataSeriesTable()
-##
-##        del PopulateDataSeriesTable
-##        del populateDataSeriesTable
-##
-##    # ###--->>> DataSeries Table End
+    # ###--->>> Step #4
+    # ###--->>> Import CSV Tables Start
+        # Generate Tables True or False
+        GenerateTables = False
+        # Tables
+        # Set ReplaceTable to True or False
+        ReplaceTable = True
+        # Generate Tables -- Needs to run next so that
+        # Feature classes can be created in the following step.
+        if GenerateTables:
+            generateTables()
+        del GenerateTables
+    # ###--->>> Import CSV Tables End
 
-##    # ###--->>> Species Region Season Table Start
-##
-##        # Populate Species Region Season Table
-##        PopulateSpeciesRegionSeason = False
-##        if PopulateSpeciesRegionSeason:
-##            populateSpeciesRegionSeason()
-##
-##        del populateSpeciesRegionSeason
-##        del PopulateSpeciesRegionSeason
-##    # ###--->>> Species Region Season Table End
-
+    # ###--->>> Step #5
     # ###--->>> Species Region Season Table Start
 
         # Populate Species Region Season Table
@@ -7665,6 +6692,74 @@ if __name__ == '__main__':
 
     # ###--->>> Species Region Season Table End
 
+    # ###--->>> Step #6
+    # ###--->>> Feature Classes Start
+        # Generate Point Feature Classes True or False
+        GeneratePointFeatureClasses = False
+        # Feature Classes
+        # Set ReplaceFeatureClass to True or False
+        ReplaceFeatureClass = True
+        # Generate Point Feature Classes -- Needs to run next so that
+        # Rasters can be created for the following step.
+        if GeneratePointFeatureClasses:
+            generatePointFeatureClasses()
+
+    # ###--->>> Feature Classes End
+
+    # ###--->>> Step #7
+    # ###--->>> Create Snap Raster, Bathymetry, Latitude, Longitude Start
+    # #### Need to create  bathy first
+
+        CreateSnapRasterBathymetryLatitudeLongitude = False
+
+        if CreateSnapRasterBathymetryLatitudeLongitude:
+            createSnapRasterBathymetryLatitudeLongitude()
+
+        del CreateSnapRasterBathymetryLatitudeLongitude, createSnapRasterBathymetryLatitudeLongitude
+
+        #CreateRowColumnCountReport = False
+        #if CreateRowColumnCountReport: GetRowColumnCountReport()
+        #del GetRowColumnCountReport, CreateRowColumnCountReport
+        del GetRowColumnCountReport
+
+    # ###--->>> Create Snap Raster, Bathymetry, Latitude, Longitude End
+
+    # ###--->>> Step #8
+    # ###--->>> Create DisMAP Regions Start
+
+        # Remember to select all regions
+        ReplaceDisMapRegions = False
+        if ReplaceDisMapRegions:
+            CreateDisMapRegions()
+        del CreateDisMapRegions, ReplaceDisMapRegions
+
+    # ###--->>> Create DisMAP Regions End
+
+    # ###--->>> Step #9
+    # ###--->>> Rasters Start
+
+        # Generate Rasters True or False
+        GenerateRasters = False
+        # Rasters
+        # Change idw_field
+        # idw_field = "WTCPUE" or "WTCPUECubeRoot"
+        idw_field = "WTCPUECubeRoot"
+
+        # Set ReplaceRaster to True or False
+        ReplaceRaster = True
+
+        # Set ReplaceLayer to True or False
+        #ReplaceLayer = True
+
+        # Generate Rasters -- Needs to run next so that Mosaics can be
+        # created for the following step.
+        if GenerateRasters:
+            generateRasters()
+        #del ReplaceLayer
+
+    # ###--->>> Rasters End
+
+    # ###--->>> Step #10
     # ###--->>> Indicators Table Start
 
         # Populate Indicators Table True or False
@@ -7699,6 +6794,7 @@ if __name__ == '__main__':
 ##
 ##    # ###--->>> Tables End
 
+    # ###--->>> Step #11
     # ###--->>> Mosaics Start
 
         # Generate Mosaics: True or False
@@ -7721,6 +6817,7 @@ if __name__ == '__main__':
         #del queryYears
     # ###--->>>
 
+    # ###--->>> Step #12
     # ###--->>> Richness Start
 
         # CreateRichnessRasters = True or False
@@ -7743,6 +6840,7 @@ if __name__ == '__main__':
 
     # ###--->>> Richness End
 
+    # ###--->>> Step #13
     # ###--->>>  Set Mosaic Dataset Properties Start
 
         SetMosaicDatasetProperties = True
@@ -7754,6 +6852,7 @@ if __name__ == '__main__':
 
     # ###--->>> CreateCloudRasterFormatExport End
 
+    # ###--->>> Step #14
     # ###--->>> BuildMultidimensionalInfo Start
 
         BuildMultidimensionalInfo = True
@@ -7765,6 +6864,7 @@ if __name__ == '__main__':
 
     # ###--->>> BuildMultidimensionalInfo End
 
+    # ###--->>> Step #15
     # ###--->>> AnalyzeMosaicDataset Start
 
         AnalyzeMosaicDataset = True
@@ -7776,9 +6876,10 @@ if __name__ == '__main__':
 
     # ###--->>> AnalyzeMosaicDataset End
 
+    # ###--->>> Step #16
     # ###--->>> CreateCloudRasterFormatExport Start
 
-        CreateCloudRasterFormatExport = False
+        CreateCloudRasterFormatExport = True
 
         if CreateCloudRasterFormatExport:
             createCloudRasterFormatExport()
@@ -7787,6 +6888,7 @@ if __name__ == '__main__':
 
     # ###--->>> CreateCloudRasterFormatExport End
 
+    # ###--->>> Step #17
     # ###--->>> Tables and Fields Report Start
 
         TablesAndFieldsReport = False
@@ -7798,20 +6900,10 @@ if __name__ == '__main__':
 
     # ###--->>> Tables and Fields Report End
 
-    # ###--->>> importEPU Start
-        ImportEPU = False
-
-        if ImportEPU:
-            importEPU()
-
-        del ImportEPU, importEPU
-
-    # ###--->>> importEPU End
-
-
+    # ###--->>> Step #18
     # ###--->>> Compact Project GDB Start
 
-        CompactProjectGDB = False
+        CompactProjectGDB = True
 
         if CompactProjectGDB:
 
@@ -7825,35 +6917,21 @@ if __name__ == '__main__':
 
     # ###--->>> Compact Project GDB End
 
-##    # ###--->>> Convert Rasters To Points Start
-##        # Convert Rasters To Points
-##        ConvertRastersToPoints = False
-##
-##        # Replace Region Raster Points
-##        ReplaceRegionRasterPoints = True
-##
-##        if ConvertRastersToPoints:
-##            convertRastersToPoints()
-##
-##        # Cleanup
-##        del ConvertRastersToPoints, ReplaceRegionRasterPoints, convertRastersToPoints
-##
-##    # ###--->>> Convert Rasters To Points End
+    # ###--->>> Clean up
 
-        # Clean up
         del table_names, srs
         del selected_regions, ProjectName, ProjectGIS, ProjectGDB, ProjectToolBox
         #del DefaultGDB
         del BASE_DIRECTORY, ANALYSIS_DIRECTORY, CSV_DIRECTORY, MAP_DIRECTORY
-        #del PICTURE_FOLDER
+        del EXPORT_METADATA_DIRECTORY, ARCGIS_METADATA_DIRECTORY, INPORT_METADATA_DIRECTORY
         del MOSAIC_DIRECTORY, LOG_DIRECTORY, logFile
         del DEBUG_OUTPUT, unique_field, unique_fish, unique_year, selected_species
         del select_by_fish, select_by_fish_no_years, DEBUG_LEVEL
         del FilterRegions, FilterSpecies, FilterYears, selected_years
-        del ClearLogDirectory, ProductName, ProductVersion, ProductLicenseLevel
+        del ClearLogDirectory
         del print_function, reorder_fields, generateRasters
         del generatePointFeatureClasses, ReplaceTable, ReplaceFeatureClass
-        del ReplaceRaster, ReplaceLayer, generateTables
+        del ReplaceRaster, generateTables
         del unique_fish_dict
         del idw_field, cell_size
         del GeneratePointFeatureClasses, GenerateRasters
@@ -7871,13 +6949,15 @@ if __name__ == '__main__':
         del geographic_regions
         #del generateMaps
         #del convertRastersToPoints
-        del inspect, myself, what_is_my_name
+        del inspect, functionName, function_name
+        del addMetadata
 
-        del EXPORT_METADATA_DIRECTORY, ARCGIS_METADATA_DIRECTORY, INPORT_METADATA_DIRECTORY
+        #arcpy.env.workspace = tmp_workspace; del tmp_workspace
 
-        arcpy.env.workspace = tmp_workspace; del tmp_workspace
+        #arcpy.env.scratchWorkspace = tmp_scratchWorkspace; del tmp_scratchWorkspace
 
-        arcpy.env.scratchWorkspace = tmp_scratchWorkspace; del tmp_scratchWorkspace
+
+        arcpy.ResetEnvironments()
 
         #Final benchmark for the region.
         msg = "PROGRAM COMPLETED ON {}".format(strftime("%a %b %d %I:%M:%S %p", localtime()))
@@ -7895,7 +6975,6 @@ if __name__ == '__main__':
         if globalKeys:
             #msg = "Global Keys: {0}".format(u", ".join(globalKeys))
             msg = "Global Keys: {0}".format(u', '.join('"{0}"'.format(gk) for gk in globalKeys))
-            #' + '.join('"{0}"'.format(cr) for cr in arcpy.ListRasters("Con*"))
             print(msg)
             #print(globalKeys)
             del msg
