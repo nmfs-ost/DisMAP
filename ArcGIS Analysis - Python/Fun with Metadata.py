@@ -401,7 +401,7 @@ def updateMetadata():
         empty_xml = os.path.join(ARCGIS_METADATA_DIRECTORY, "empty.xml")
 
         #metadataForAllDatasets = os.path.join(ARCGIS_METADATA_DIRECTORY, "Metadata for all Datasets.xml")
-        survey_locations_template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, "Survey Locations Template 20220516.xml")
+        survey_locations_template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, f"Bottom Trawl Survey Catch-per-unit-effort {DateCode}.xml")
 
         prettyXML(survey_locations_template_metadata)
 
@@ -562,7 +562,7 @@ def updateSurveyLocationsMetadata():
 
         #metadataForAllDatasets = os.path.join(ARCGIS_METADATA_DIRECTORY, "Metadata for all Datasets.xml")
         #template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, "Survey Locations Template 20220516.xml")
-        template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, "Survey Locations Template.xml")
+        template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, f"Bottom Trawl Survey Catch-per-unit-effort {DateCode}.xml")
 
         prettyXML(template_metadata)
 
@@ -727,7 +727,7 @@ def updateRasterMosaicMetadata(workspace):
         #metadataForAllDatasets = os.path.join(ARCGIS_METADATA_DIRECTORY, "Metadata for all Datasets.xml")
         #template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, "Survey Locations Template 20220516.xml")
         #template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, f"Raster Mosaics Template {DateCode}.xml")
-        template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, f"Raster Mosaics Template.xml")
+        template_metadata = os.path.join(ARCGIS_METADATA_DIRECTORY, f"Fish and Invertebrate Interpolated Biomass Distribution Surfaces {DateCode}.xml")
 
         prettyXML(template_metadata)
 
@@ -1559,9 +1559,13 @@ if __name__ == '__main__':
 
     # Project related items
 
+    # December 1 2022
+    Version = "December 1 2022"
+    DateCode = "20221201"
+
     # October 1 2022
-    Version = "October 1 2022"
-    DateCode = "20221001"
+    # Version = "October 1 2022"
+    # DateCode = "20221001"
 
     # Agust 9 2022
     # Version = "August 9 2022"
@@ -1674,7 +1678,7 @@ if __name__ == '__main__':
                 'EBS' : 'Eastern Bering Sea',
                 'GOA' : 'Gulf of Alaska',
                 'GOM' : 'Gulf of Mexico',
-                'HI' : 'Hawaii Islands',
+                'HI' : "Hawai'i Islands",
                 'NEUS_F' : 'Northeast US Fall',
                 'NEUS_S' : 'Northeast US Spring',
                 'SEUS_FALL' : 'Southeast US Fall',
@@ -1719,15 +1723,15 @@ if __name__ == '__main__':
 
     #updateMetadata()
 
-    updateSurveyLocationsMetadata()
+    #updateSurveyLocationsMetadata()
 
     # Specify Workspace. Can be Raster Mosaics or CRF
     # ProjectGDB or MOSAIC_DIRECTORY
-    updateRasterMosaicMetadata(ProjectGDB)
-    updateRasterMosaicMetadata(MOSAIC_DIRECTORY)
+    #updateRasterMosaicMetadata(ProjectGDB)
+    #updateRasterMosaicMetadata(MOSAIC_DIRECTORY)
 
     # Pretty Format all XML files in a folder
-    # folderPrettyXML(ARCGIS_METADATA_DIRECTORY)
+    folderPrettyXML(ARCGIS_METADATA_DIRECTORY)
     # folderPrettyXML(EXPORT_METADATA_DIRECTORY)
     #print(os.path.join(BASE_DIRECTORY, 'DisMAP ArcGIS Metadata March 7 2022 Dev'))
     # folderPrettyXML(os.path.join(BASE_DIRECTORY, 'DisMAP ArcGIS Metadata March 7 2022 Dev'))

@@ -15,10 +15,20 @@
 !/Alaska Bathymetry GeoProcessing 20220307.py
 !/Alaska Bathymetry GeoProcessing 20220516.py
 
+# Hawaii Bathymetry GeoProcessing
+!/Hawaii Bathymetry GeoProcessing.py
+
 # Create DisMAP Datasets
 !/Create DisMAP Datasets.py
-!/Create DisMAP Datasets 20220307.py
-!/Create DisMAP Datasets 20220516.py
+!/Create DisMAP Datasets Latest.py
+!/Create DisMAP Datasets 20220822.py
+!/Create DisMAP Datasets 20221017.py
+
+# Pretty Format XMLs
+!/pretty_format_xmls.py
+
+# Create DisMAP Biomass Datasets
+!/Create DisMAP Biomass Datasets.py
 
 # Fun with Metadata
 !/Fun with Metadata.py
