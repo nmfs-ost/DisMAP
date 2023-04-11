@@ -2,3 +2,51 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# Ignore everything
+/*
+
+# Except the following:
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/Metadata.md
+!/Metadata.doc
+
+# And except the following Python scripts
+
+# Alaska Bathymetry GeoProcessing
+!/ArcGIS Analysis - Python/Alaska Bathymetry GeoProcessing.py
+!/ArcGIS Analysis - Python/Alaska Bathymetry GeoProcessing 20220307.py
+!/ArcGIS Analysis - Python/Alaska Bathymetry GeoProcessing 20220516.py
+
+# Hawaii Bathymetry GeoProcessing
+!/ArcGIS Analysis - Python/Hawaii Bathymetry GeoProcessing.py
+
+# Create DisMAP Datasets
+!/ArcGIS Analysis - Python/Create DisMAP Datasets.py
+!/ArcGIS Analysis - Python/Create DisMAP Datasets Latest.py
+!/ArcGIS Analysis - Python/Create DisMAP Datasets 20220822.py
+!/ArcGIS Analysis - Python/Create DisMAP Datasets 20221017.py
+!/ArcGIS Analysis - Python/Create DisMAP Biomass Datasets 20230101
+!/ArcGIS Analysis - Python/Create DisMAP Biomass Datasets 20230301
+!/ArcGIS Analysis - Python/Create DisMAP Biomass Datasets 20230315
+!/ArcGIS Analysis - Python/Create DisMAP Biomass Datasets 20230401
+
+
+
+# Pretty Format XMLs
+!/ArcGIS Analysis - Python/pretty_format_xmls.py
+
+# Create DisMAP Biomass Datasets
+!/ArcGIS Analysis - Python/Create DisMAP Biomass Datasets.py
+
+# Fun with Metadata
+!/ArcGIS Analysis - Python/Fun with Metadata.py
+!/ArcGIS Analysis - Python/Fun with Metadata 20220307.py
+!/ArcGIS Analysis - Python/Fun with Metadata 20220516.py
+
+# GEBCO GeoProcessing
+!/ArcGIS Analysis - Python/GEBCO GeoProcessing.py
+!/ArcGIS Analysis - Python/GEBCO GeoProcessing 20220307.py
+!/ArcGIS Analysis - Python/GEBCO GeoProcessing 20220516.py
