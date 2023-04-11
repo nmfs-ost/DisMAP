@@ -1,53 +1,17 @@
-# Ignore everything
-/*
+# ignore everything
+*
+
+# but don't ignore files ending with slash = directories
+!*/
 
 # Except the following:
-!/.gitignore
-!/.gitattributes
-!/README.md
-!/Metadata.md
-!/Metadata.doc
+!.gitignore
+!.gitattributes
+!README.md
+!Metadata.md
+!Metadata.doc
 
 # And except the following Python scripts
 
-# Alaska Bathymetry GeoProcessing
-!/Alaska Bathymetry GeoProcessing.py
-!/Alaska Bathymetry GeoProcessing 20220307.py
-!/Alaska Bathymetry GeoProcessing 20220516.py
-
-# Hawaii Bathymetry GeoProcessing
-!/Hawaii Bathymetry GeoProcessing.py
-
 # Create DisMAP Datasets
-!/Create DisMAP Datasets.py
-!/Create DisMAP Datasets Latest.py
-!/Create DisMAP Datasets 20220822.py
-!/Create DisMAP Datasets 20221017.py
-!/Create DisMAP Biomass Datasets 20230101
-!/Create DisMAP Biomass Datasets 20230301
-!/Create DisMAP Biomass Datasets 20230315
-!/Create DisMAP Biomass Datasets 20230401
-
-
-
-# Pretty Format XMLs
-!/pretty_format_xmls.py
-
-# Create DisMAP Biomass Datasets
-!/Create DisMAP Biomass Datasets.py
-
-# Fun with Metadata
-!/Fun with Metadata.py
-!/Fun with Metadata 20220307.py
-!/Fun with Metadata 20220516.py
-
-# GEBCO GeoProcessing
-!/GEBCO GeoProcessing.py
-!/GEBCO GeoProcessing 20220307.py
-!/GEBCO GeoProcessing 20220516.py
-
-# Versions
-#!/March 1 2021/Fish Data March 1 2021
-#!/February 1 2021/Fish Data February 1 2022
-#!/March 1 2022/Fish Data March 1 2022
-#!/March 7 2022/Fish Data March 7 2022
+!Create DisMAP Biomass Datasets 20230401.py
