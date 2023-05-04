@@ -23,5 +23,6 @@ Run the download_x.R scripts found in the "R" directory within the DisMAP direct
 ---
 ## Run compile.R script ###
    1. Make sure the directory is set to the folder containing [compile.R](https://github.com/mpinsky/OceanAdapt/blob/master/compile.R), which should be the top level
-    2. Run the script. It will access the raw files, making specific corrections/ standardizations to data format and content, and calculating statistics etc.
+   2. Run the script. It will access the raw files, making specific corrections/ standardizations to data format and content, and calculating statistics etc.
+   3. After running Compile_Dismap.R, run the create_data_for_map_generation.R to get the data in the needed file format for use in the Python script and genarte the interpolated biomass and indicators (as described below)
 ---
