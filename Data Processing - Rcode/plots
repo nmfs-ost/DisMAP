@@ -1,0 +1,1 @@
+This is the Folder where the plots generated in the Compile_Dismap.R script to look at the temporal and spatial coverage of each survey and aid in decisions about what years or strata to trim will be saved to. 
