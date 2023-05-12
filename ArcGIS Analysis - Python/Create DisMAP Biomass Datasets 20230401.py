@@ -116,13 +116,13 @@ def addFields(tb, fields, field_definitions):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -142,14 +142,14 @@ def addFields(tb, fields, field_definitions):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function#, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -240,13 +240,13 @@ def alterFields(tb):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -266,14 +266,14 @@ def alterFields(tb):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function#, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -343,13 +343,13 @@ def addMapsToProjectGIS():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -369,14 +369,14 @@ def addMapsToProjectGIS():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -450,13 +450,13 @@ def addMetadata(item):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -476,14 +476,14 @@ def addMetadata(item):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -594,13 +594,13 @@ def calculateCoreSpecies(csv_table, log_file):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -620,14 +620,14 @@ def calculateCoreSpecies(csv_table, log_file):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function #, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -664,13 +664,13 @@ def clearFolder(folder):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
 def compactGDB(gdb):
     try:
@@ -697,13 +697,13 @@ def compactGDB(gdb):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -723,14 +723,14 @@ def compactGDB(gdb):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function#, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -1065,7 +1065,7 @@ def createAlasakaBathymetry():
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -1077,13 +1077,13 @@ def createAlasakaBathymetry():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -1103,14 +1103,14 @@ def createAlasakaBathymetry():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -1202,13 +1202,13 @@ def createEmptyTempMetadataXML():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -1228,14 +1228,14 @@ def createEmptyTempMetadataXML():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -1449,7 +1449,7 @@ def createDatasetTableMetadata():
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -1461,13 +1461,13 @@ def createDatasetTableMetadata():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -1485,14 +1485,14 @@ def createDatasetTableMetadata():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -1678,7 +1678,7 @@ def createDatasetTable():
                                       # Region    Season    DateCode    Status    DistributionProjectCode    DistributionProjectName    SummaryProduct    FilterRegion    FilterSubRegion
                                       # FeatureServiceName    FeatureServiceTitle    MosaicName    MosaicTitle    ImageServiceName    ImageServiceTitle
                        #  DatasetCode    CSVFile   TransformUnit  TableName    GeographicArea    CellSize    PointFeatureType    FeatureClassName Region    Season    DateCode    Status    DistributionProjectCode    DistributionProjectName    SummaryProduct    FilterRegion    FilterSubRegion  FeatureServiceName    FeatureServiceTitle    MosaicName    MosaicTitle    ImageServiceName    ImageServiceTitle
-        column_formats = ['S20',        'S20',     'S10',         'S20',      'S20',             'u4',        'S20',              'S40',           'S40',     'S10',   'S10',      'S10',    'S10',                    'S60',                      'S10',           'S20',          'S40',           'S40',                'S60',                  'S20',        'S60',         'S40',              'S60']
+        column_formats = ['S20',        'S20',     'S10',         'S20',      'S20',             'u4',        'S20',              'S40',           'S40',     'S10',   'S10',      'S10',    'S10',                    'S60',                      'S10',           'S25',          'S40',           'S40',                'S60',                  'S20',        'S60',         'S40',              'S60']
            #            ['S20',         'S20',     'S10',         'S20',      'S20',             'S10',       'S20',              'S40',           'S40',     'S10',   'S10',      'S10',    'S10',                    'S60',                      'S10',           'S20',          'S40',           'S40',                'S60',                  'S20',        'S60',         'S40',              'S60']
 
         # Get max length of all columns in the dataframe
@@ -1716,7 +1716,7 @@ def createDatasetTable():
             # Capture all other errors
             #print(sys.exc_info()[2].tb_lineno)
             msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-            print(msg); del msg#; sys.exit(1)
+            logFile(log_file, msg); del msg
 
         del df, dtypes
 
@@ -1732,7 +1732,7 @@ def createDatasetTable():
             #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
             msg = arcpy.GetMessages(2).replace('\n', '\n\t')
             msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-            print(msg); del msg#; sys.exit(1)
+            logFile(log_file, msg); del msg
 
         msg = f'>-> Copying the Datasets Table from memory to the GDB'
         logFile(log_file, msg); del msg
@@ -1749,8 +1749,8 @@ def createDatasetTable():
         # Alter Field Aliases
         alterFields(datasets_table)
 
-        msg = f'>-> Adding metadata to the {datasets} Table'
-        logFile(log_file, msg); del msg
+        #msg = f'>-> Adding metadata to the {datasets} Table'
+        #logFile(log_file, msg); del msg
 
         # Add Metadata
         #addMetadata(datasets_table)
@@ -1778,7 +1778,7 @@ def createDatasetTable():
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -1790,13 +1790,13 @@ def createDatasetTable():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -1816,14 +1816,14 @@ def createDatasetTable():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function#, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -1874,13 +1874,13 @@ def createFolders(basefolder):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -1900,14 +1900,14 @@ def createFolders(basefolder):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -2157,7 +2157,7 @@ def createGebcoBathymetry():
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -2169,13 +2169,13 @@ def createGebcoBathymetry():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -2195,14 +2195,14 @@ def createGebcoBathymetry():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -2332,7 +2332,7 @@ def createHawaiiBathymetry():
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -2344,13 +2344,13 @@ def createHawaiiBathymetry():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -2370,14 +2370,14 @@ def createHawaiiBathymetry():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -2500,8 +2500,6 @@ def createMapLayers():
                 aprx.createMap(f"{maptitle}", "Map")
                 aprx.save()
             aprx.save()
-            #aprx.saveACopy(ProjectGIS.replace(".aprx", " Copy.aprx"))
-            #del  aprx
 
             del datasets, datasetcode, region, season, distributionprojectcode
             del datecode, featureclassname, featureservicetitle, maptitle
@@ -2585,10 +2583,6 @@ def createMapLayers():
                 arcpy.management.Delete(dismap_regions_layer)
                 del dismap_regions_layer, dismap_regions_layer_path
 
-                indicatorsTable = arcpy.mp.Table(os.path.join(ProjectGDB, indicatorslayername))
-                datasetsTable = arcpy.mp.Table(os.path.join(ProjectGDB, datasetslayername))
-                species_filterTable = arcpy.mp.Table(os.path.join(ProjectGDB, species_filterlayername))
-
                 msg = f"      > Adding {regionslayertitle} layer to map"
                 logFile(log_file, msg); del msg
 
@@ -2615,10 +2609,12 @@ def createMapLayers():
                 msg = f"   > Adding {indicatorslayertitle} Table."
                 logFile(log_file, msg); del msg
 
+                indicatorsTable = arcpy.mp.Table(os.path.join(ProjectGDB, indicatorslayername))
+
                 # Remove all tables
                 tbs = [t for t in m.listTables("*")]
                 for tb in tbs: m.removeTable(tb); del tb
-                del tbs
+                del tbs#, indicatorsTable
                 aprx.save()
 
                 tbs = [t for t in m.listTables(indicatorslayername)]
@@ -2633,30 +2629,34 @@ def createMapLayers():
                 msg = f"   > Adding {datasetslayertitle} Table."
                 logFile(log_file, msg); del msg
 
+                datasetsTable = arcpy.mp.Table(os.path.join(ProjectGDB, datasetslayername))
+
                 tbs = [t for t in m.listTables(datasetslayername)]
                 for tb in tbs: m.removeTable(tb); del tb
                 tbs = m.listTables()
                 if f"{datasetslayername}" not in tbs:
                     m.addTable(datasetsTable)
-                del tbs
+                del tbs, datasetsTable
                 aprx.save()
 
                 msg = f"   > Adding {species_filterlayertitle} Table."
                 logFile(log_file, msg); del msg
+
+                species_filterTable = arcpy.mp.Table(os.path.join(ProjectGDB, species_filterlayername))
 
                 tbs = [t for t in m.listTables(species_filterlayername)]
                 for tb in tbs: m.removeTable(tb); del tb
                 tbs = m.listTables()
                 if f"{species_filterlayername}" not in tbs:
                     m.addTable(species_filterTable)
-                del tbs
+                del tbs, species_filterTable
                 aprx.save()
                 del m, lyrs
 
                 del dismap_regions_layer_path, maptitle
-                del indicatorslayername, indicatorslayertitle, indicatorsTable
-                del datasetslayername, datasetslayertitle, datasetsTable
-                del species_filterlayername, species_filterlayertitle, species_filterTable
+                del indicatorslayername, indicatorslayertitle
+                del datasetslayername, datasetslayertitle
+                del species_filterlayername, species_filterlayertitle
                 del regionslayername, regionslayertitle
 
             datasets = generateDatasets()
@@ -2788,110 +2788,20 @@ def createMapLayers():
 
                     del featureclassname, featureservicetitle, featureservicetitle_path
 
-                msg = f"  > Processing: {mosaictitle}"
-                logFile(log_file, msg); del msg
-
-                msg = f"   > Creating {mosaictitle} Layer."
-                logFile(log_file, msg); del msg
+                #msg = f"   > Creating {mosaictitle} Layer."
+                #logFile(log_file, msg); del msg
 
                 with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
-                    extent = arcpy.Describe(mosaicname).extent
+                    if arcpy.Exists(mosaicname):
 
-                    variables = []
-                    time_iterations = []
-                    with arcpy.da.SearchCursor(mosaicname, ["StdTime", "Variable",]) as cursor:
-                        for row in cursor:
-                            #print(row)
-                            time_iterations.append(row[0])
-                            variables.append(row[1])
-                            del row
-                    del cursor
+                        msg = f"  > Processing: {mosaictitle}"
+                        logFile(log_file, msg); del msg
 
-                    start_of_first_iteration = f'{str(min(time_iterations)).replace(" ", "T")}'
+                        extent = arcpy.Describe(mosaicname).extent
 
-                    end_of_first_iteration   = f'{str(max(time_iterations)).replace(" ", "T")}'
-
-                    del time_iterations
-
-                    variables = "';'".join(sorted(list(set(variables))))
-                    variables = f"'{variables}'"
-
-                    mosaicname_layer = arcpy.md.MakeMultidimensionalRasterLayer(
-                                                                              in_multidimensional_raster=mosaicname,
-                                                                              out_multidimensional_raster_layer=f"{mosaictitle}",
-                                                                              variables=variables,
-                                                                              dimension_def="BY_ITERATION",
-                                                                              dimension_ranges=None,
-                                                                              dimension_values=None,
-                                                                              dimension="StdTime",
-                                                                              start_of_first_iteration=start_of_first_iteration,
-                                                                              end_of_first_iteration=end_of_first_iteration,
-                                                                              iteration_step=1,
-                                                                              iteration_unit="YEARS",
-                                                                              template=extent,
-                                                                              dimensionless="DIMENSIONS",
-                                                                              spatial_reference=None
-                                                                             )
-
-                    del start_of_first_iteration, end_of_first_iteration
-                    del variables, extent
-                    msg = f"   > Saving {mosaictitle} Layer File."
-                    logFile(log_file, msg); del msg
-
-                    mosaictitle_path = os.path.join(LAYER_DIRECTORY, f"{mosaictitle}.lyrx")
-
-                    arcpy.management.SaveToLayerFile(
-                                                     in_layer=mosaicname_layer,
-                                                     out_layer=mosaictitle_path ,
-                                                     is_relative_path=None,
-                                                     version="CURRENT"
-                                                    )
-
-                    arcpy.management.Delete(f"{mosaictitle}")
-                    arcpy.management.Delete(mosaicname_layer)
-                    del mosaicname_layer
-
-                    mosaictitle_path = os.path.join(LAYER_DIRECTORY, f"{mosaictitle}.lyrx")
-
-                    msg = f"      > Adding {mosaictitle} layer to map"
-                    logFile(log_file, msg); del msg
-
-                    # Get information from a layer in a layer file
-                    lyrFile = arcpy.mp.LayerFile(mosaictitle_path)
-                    m = aprx.listMaps(f"{maptitle}")[0]
-                    rm_lyrs = [l for l in m.listLayers(f"{mosaictitle}")]
-                    for rm_lyr in rm_lyrs: m.removeLayer(rm_lyr); del rm_lyr
-                    del rm_lyrs
-                    lyrs = m.listLayers()
-                    if len(lyrs) > 0:
-                        reference_layer = lyrs[len(lyrs)-1]
-                        m.insertLayer(reference_layer, lyrFile, "BEFORE")
-                        del reference_layer
-                    else:
-                        m.addLayer(lyrFile, 'TOP')
-                    del m, lyrs
-                    lyrFile.save()
-                    aprx.save()
-                    del lyrFile
-
-                    msg = f"   > Working on {datasetcode} {distributionprojectcode} Layer."
-                    logFile(log_file, msg); del msg
-
-                    crftitle_path = os.path.join(LAYER_DIRECTORY, f"{datasetcode} {distributionprojectcode} CRF.lyrx")
-                    #msg = f"      > Checking layer file for {datasetcode} exists"
-                    #print(msg); del msg
-
-                    #msg = f"      > Layer file for {datasetcode} does not exist"
-                    #print(msg); del msg
-
-                    with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = MOSAIC_DIRECTORY):
-                        extent = arcpy.Describe(f"{datasetcode}_{distributionprojectcode}.crf").extent
-
-                    with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
-                        fields = [f.name for f in arcpy.ListFields(mosaicname) if f.name in ["StdTime", "Variable",] and f.type not in ['Geometry', 'OID']]
                         variables = []
                         time_iterations = []
-                        with arcpy.da.SearchCursor(mosaicname, fields) as cursor:
+                        with arcpy.da.SearchCursor(mosaicname, ["StdTime", "Variable",]) as cursor:
                             for row in cursor:
                                 #print(row)
                                 time_iterations.append(row[0])
@@ -2908,77 +2818,172 @@ def createMapLayers():
                         variables = "';'".join(sorted(list(set(variables))))
                         variables = f"'{variables}'"
 
-                        del fields
+                        mosaicname_layer = arcpy.md.MakeMultidimensionalRasterLayer(
+                                                                                  in_multidimensional_raster=mosaicname,
+                                                                                  out_multidimensional_raster_layer=f"{mosaictitle}",
+                                                                                  variables=variables,
+                                                                                  dimension_def="BY_ITERATION",
+                                                                                  dimension_ranges=None,
+                                                                                  dimension_values=None,
+                                                                                  dimension="StdTime",
+                                                                                  start_of_first_iteration=start_of_first_iteration,
+                                                                                  end_of_first_iteration=end_of_first_iteration,
+                                                                                  iteration_step=1,
+                                                                                  iteration_unit="YEARS",
+                                                                                  template=extent,
+                                                                                  dimensionless="DIMENSIONS",
+                                                                                  spatial_reference=None
+                                                                                 )
+
+                        del start_of_first_iteration, end_of_first_iteration
+                        del variables, extent
+                        msg = f"   > Saving {mosaictitle} Layer File."
+                        logFile(log_file, msg); del msg
+
+                        mosaictitle_path = os.path.join(LAYER_DIRECTORY, f"{mosaictitle}.lyrx")
+
+                        arcpy.management.SaveToLayerFile(
+                                                         in_layer=mosaicname_layer,
+                                                         out_layer=mosaictitle_path ,
+                                                         is_relative_path=None,
+                                                         version="CURRENT"
+                                                        )
+
+                        arcpy.management.Delete(f"{mosaictitle}")
+                        arcpy.management.Delete(mosaicname_layer)
+                        del mosaicname_layer
+
+                        mosaictitle_path = os.path.join(LAYER_DIRECTORY, f"{mosaictitle}.lyrx")
+
+                        msg = f"      > Adding {mosaictitle} layer to map"
+                        logFile(log_file, msg); del msg
+
+                        # Get information from a layer in a layer file
+                        lyrFile = arcpy.mp.LayerFile(mosaictitle_path)
+                        m = aprx.listMaps(f"{maptitle}")[0]
+                        rm_lyrs = [l for l in m.listLayers(f"{mosaictitle}")]
+                        for rm_lyr in rm_lyrs: m.removeLayer(rm_lyr); del rm_lyr
+                        del rm_lyrs
+                        lyrs = m.listLayers()
+                        if len(lyrs) > 0:
+                            reference_layer = lyrs[len(lyrs)-1]
+                            m.insertLayer(reference_layer, lyrFile, "BEFORE")
+                            del reference_layer
+                        else:
+                            m.addLayer(lyrFile, 'TOP')
+                        del m, lyrs
+                        lyrFile.save()
+                        aprx.save()
+                        del lyrFile
+                        del mosaictitle_path, mosaictitle
 
                     with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = MOSAIC_DIRECTORY):
 
-                        mosaictitle_layer = arcpy.md.MakeMultidimensionalRasterLayer(
-                                                                                      in_multidimensional_raster=f"{datasetcode}_{distributionprojectcode}.crf",
-                                                                                      out_multidimensional_raster_layer=f"{datasetcode}_{distributionprojectcode} CRF",
-                                                                                      #variables="'Anoplopoma fimbria';'Core Species Richness';'Gadus chalcogrammus';'Limanda aspera';'Microstomus pacificus';'Species Richness'",
-                                                                                      variables=variables,
-                                                                                      dimension_def="BY_ITERATION",
-                                                                                      dimension_ranges=None,
-                                                                                      dimension_values=None,
-                                                                                      dimension="StdTime",
-                                                                                      start_of_first_iteration=start_of_first_iteration,
-                                                                                      end_of_first_iteration=end_of_first_iteration,
-                                                                                      iteration_step=1,
-                                                                                      iteration_unit="YEARS",
-                                                                                      template=extent,
-                                                                                      dimensionless="DIMENSIONS",
-                                                                                      spatial_reference=None
-                                                                                    )
+                        msg = f"   > Working on {datasetcode} {distributionprojectcode} Layer."
+                        logFile(log_file, msg); del msg
 
-                        del variables, start_of_first_iteration, end_of_first_iteration, extent
+                        crftitle_path = os.path.join(LAYER_DIRECTORY, f"{datasetcode} {distributionprojectcode} CRF.lyrx")
+                        #msg = f"      > Checking layer file for {datasetcode} exists"
+                        #print(msg); del msg
 
-                    crftitle_path = os.path.join(LAYER_DIRECTORY, f"{datasetcode}_{distributionprojectcode} CRF.lyrx")
+                        #msg = f"      > Layer file for {datasetcode} does not exist"
+                        #print(msg); del msg
 
-                    msg = f"   > Saving {datasetcode}_{distributionprojectcode} Layer File."
-                    logFile(log_file, msg); del msg
+                        crf = f"{datasetcode}_{distributionprojectcode}.crf"
 
-                    arcpy.management.SaveToLayerFile(
-                                                     in_layer=mosaictitle_layer,
-                                                     #in_layer=f"{mosaicname}.crf",
-                                                     out_layer=crftitle_path,
-                                                     is_relative_path=None,
-                                                     version="CURRENT"
-                                                    )
+                        if arcpy.Exists(crf):
 
-                    arcpy.management.Delete(f"{datasetcode}_{distributionprojectcode} CRF")
-                    arcpy.management.Delete(mosaictitle_layer)
-                    del mosaictitle_layer
+                            extent = arcpy.Describe().extent
 
-                    crftitle_path = os.path.join(LAYER_DIRECTORY, f"{datasetcode}_{distributionprojectcode} CRF.lyrx")
+                            with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
+                                fields = [f.name for f in arcpy.ListFields(mosaicname) if f.name in ["StdTime", "Variable",] and f.type not in ['Geometry', 'OID']]
+                                variables = []
+                                time_iterations = []
+                                with arcpy.da.SearchCursor(mosaicname, fields) as cursor:
+                                    for row in cursor:
+                                        #print(row)
+                                        time_iterations.append(row[0])
+                                        variables.append(row[1])
+                                        del row
+                                del cursor
 
-                    msg = f"      > Adding {datasetcode}_{distributionprojectcode} layer to map"
-                    logFile(log_file, msg); del msg
+                                start_of_first_iteration = f'{str(min(time_iterations)).replace(" ", "T")}'
 
-                    # Get information from a layer in a layer file
-                    lyrFile = arcpy.mp.LayerFile(crftitle_path)
-                    #aprx = arcpy.mp.ArcGISProject(ProjectGIS)
-                    m = aprx.listMaps(f"{maptitle}")[0]
-                    rm_lyrs = [l for l in m.listLayers(f"{datasetcode}_{distributionprojectcode} CRF")]
-                    for rm_lyr in rm_lyrs: m.removeLayer(rm_lyr); del rm_lyr
-                    del rm_lyrs
-                    lyrs = m.listLayers()
-                    if len(lyrs) > 0:
-                        reference_layer = lyrs[len(lyrs)-1]
-                        m.insertLayer(reference_layer, lyrFile, "BEFORE")
-                        del reference_layer
-                    else:
-                        m.addLayer(lyrFile, 'TOP')
-                    del m, lyrs
-                    lyrFile.save()
-                    aprx.save()
-                    del lyrFile
-                    del crftitle_path
+                                end_of_first_iteration   = f'{str(max(time_iterations)).replace(" ", "T")}'
 
-                    #del mosaicname, mosaictitle, mosaictitle_path
+                                del time_iterations
 
-                del datasetcode, region, season, distributionprojectcode, datecode
+                                variables = "';'".join(sorted(list(set(variables))))
+                                variables = f"'{variables}'"
+
+                                del fields
+
+                            with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = MOSAIC_DIRECTORY):
+
+                                mosaictitle_layer = arcpy.md.MakeMultidimensionalRasterLayer(
+                                                                                              in_multidimensional_raster=f"{datasetcode}_{distributionprojectcode}.crf",
+                                                                                              out_multidimensional_raster_layer=f"{datasetcode}_{distributionprojectcode} CRF",
+                                                                                              #variables="'Anoplopoma fimbria';'Core Species Richness';'Gadus chalcogrammus';'Limanda aspera';'Microstomus pacificus';'Species Richness'",
+                                                                                              variables=variables,
+                                                                                              dimension_def="BY_ITERATION",
+                                                                                              dimension_ranges=None,
+                                                                                              dimension_values=None,
+                                                                                              dimension="StdTime",
+                                                                                              start_of_first_iteration=start_of_first_iteration,
+                                                                                              end_of_first_iteration=end_of_first_iteration,
+                                                                                              iteration_step=1,
+                                                                                              iteration_unit="YEARS",
+                                                                                              template=extent,
+                                                                                              dimensionless="DIMENSIONS",
+                                                                                              spatial_reference=None
+                                                                                            )
+
+                                del variables, start_of_first_iteration, end_of_first_iteration, extent
+
+                            crftitle_path = os.path.join(LAYER_DIRECTORY, f"{datasetcode}_{distributionprojectcode} CRF.lyrx")
+
+                            msg = f"   > Saving {datasetcode}_{distributionprojectcode} Layer File."
+                            logFile(log_file, msg); del msg
+
+                            arcpy.management.SaveToLayerFile(
+                                                             in_layer=mosaictitle_layer,
+                                                             out_layer=crftitle_path,
+                                                             is_relative_path=None,
+                                                             version="CURRENT"
+                                                            )
+
+                            arcpy.management.Delete(f"{datasetcode}_{distributionprojectcode} CRF")
+                            arcpy.management.Delete(mosaictitle_layer)
+                            del mosaictitle_layer
+
+                            crftitle_path = os.path.join(LAYER_DIRECTORY, f"{datasetcode}_{distributionprojectcode} CRF.lyrx")
+
+                            msg = f"      > Adding {datasetcode}_{distributionprojectcode} layer to map"
+                            logFile(log_file, msg); del msg
+
+                            # Get information from a layer in a layer file
+                            lyrFile = arcpy.mp.LayerFile(crftitle_path)
+                            #aprx = arcpy.mp.ArcGISProject(ProjectGIS)
+                            m = aprx.listMaps(f"{maptitle}")[0]
+                            rm_lyrs = [l for l in m.listLayers(f"{datasetcode}_{distributionprojectcode} CRF")]
+                            for rm_lyr in rm_lyrs: m.removeLayer(rm_lyr); del rm_lyr
+                            del rm_lyrs
+                            lyrs = m.listLayers()
+                            if len(lyrs) > 0:
+                                reference_layer = lyrs[len(lyrs)-1]
+                                m.insertLayer(reference_layer, lyrFile, "BEFORE")
+                                del reference_layer
+                            else:
+                                m.addLayer(lyrFile, 'TOP')
+                            del m, lyrs
+                            lyrFile.save()
+                            aprx.save()
+                            del lyrFile
+                            del crftitle_path
+
+                del datasetcode, region, season, distributionprojectcode
+                del mosaictitle, datecode
                 del maptitle
-                del mosaicname, mosaictitle, mosaictitle_path
             aprx.save()
             #del aprx
             del datasets
@@ -3057,69 +3062,53 @@ def createMapLayers():
             aprx.save()
         del CreateMapThumbnails
 
-        UpdateMetadataWithThumbnails = True
+        UpdateMetadataWithThumbnails = False
         if UpdateMetadataWithThumbnails:
+            arcpy.env.workspace = LAYER_DIRECTORY
             pngs = arcpy.ListFiles("*.png")
-            if pngs:
-                print("PNG files present.")
-            else:
+            if not pngs:
                 print("No PNG files present. Need to run the thumbnail generator above!!")
-            del pngs
-            from arcpy import metadata as md
+            else:
+                print("PNG files present.")
 
-            msg = f"> Update Metadata with Thumbnails."
-            logFile(log_file, msg); del msg
+                from arcpy import metadata as md
 
-            datasets = generateDatasets()
+                msg = f"> Update Metadata with Thumbnails."
+                logFile(log_file, msg); del msg
 
-            with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
-                fcs = arcpy.ListFeatureClasses("*")
-                datasets = [[r for r in group] for group in datasets if group[7] in fcs]
-                del fcs
-
-            if FilterDatasets:
-                datasets = [[r for r in group] for group in datasets if group[3] in selected_datasets]
-
-            if not datasets:
-                print("###--->>> @@@ Something is wrong with the dataset selection @@@ <<<---###")
-
-            msg = f"> Processing Feature Classes and Mosaics"
-            logFile(log_file, msg); del msg
-
-            for i in range(len(datasets)):
-                datasetcode             = datasets[i][0]
-                featureclassname        = datasets[i][7]
-                distributionprojectcode = datasets[i][12]
-                featureservicetitle     = datasets[i][18]
-                mosaicname              = datasets[i][19]
-                mosaictitle             = datasets[i][20]
-                del i
+                datasets = generateDatasets()
 
                 with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
-                    msg = f" > Processing: {featureservicetitle}"
-                    logFile(log_file, msg); del msg
+                    fcs = arcpy.ListFeatureClasses("*")
+                    datasets = [[r for r in group] for group in datasets if group[7] in fcs]
+                    del fcs
 
-                    thumbnail = f"{featureclassname}.png"
-                    thumbnail_path = os.path.join(LAYER_DIRECTORY, thumbnail)
-                    if arcpy.Exists(thumbnail_path):
-                        layername_md = md.Metadata(featureclassname)
-                        layername_md.synchronize('SELECTIVE')
-                        layername_md.thumbnailUri = thumbnail_path
-                        layername_md.save()
-                        del layername_md
-                    else:
-                        msg = f"\t\t###--> Thumbnail {thumbnail_path} is missing.<---###"
+                if FilterDatasets:
+                    datasets = [[r for r in group] for group in datasets if group[3] in selected_datasets]
+
+                if not datasets:
+                    print("###--->>> @@@ Something is wrong with the dataset selection @@@ <<<---###")
+
+                msg = f"> Processing Feature Classes and Mosaics"
+                logFile(log_file, msg); del msg
+
+                for i in range(len(datasets)):
+                    datasetcode             = datasets[i][0]
+                    featureclassname        = datasets[i][7]
+                    distributionprojectcode = datasets[i][12]
+                    featureservicetitle     = datasets[i][18]
+                    mosaicname              = datasets[i][19]
+                    mosaictitle             = datasets[i][20]
+                    del i
+
+                    with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
+                        msg = f" > Processing: {featureservicetitle}"
                         logFile(log_file, msg); del msg
-                    del featureclassname, featureservicetitle, thumbnail, thumbnail_path
 
-                    if mosaicname:
-                        msg = f" > Processing: {mosaictitle}"
-                        logFile(log_file, msg); del msg
-
-                        thumbnail = f"{mosaicname}.png"
+                        thumbnail = f"{featureclassname}.png"
                         thumbnail_path = os.path.join(LAYER_DIRECTORY, thumbnail)
                         if arcpy.Exists(thumbnail_path):
-                            layername_md = md.Metadata(mosaicname)
+                            layername_md = md.Metadata(featureclassname)
                             layername_md.synchronize('SELECTIVE')
                             layername_md.thumbnailUri = thumbnail_path
                             layername_md.save()
@@ -3127,17 +3116,16 @@ def createMapLayers():
                         else:
                             msg = f"\t\t###--> Thumbnail {thumbnail_path} is missing.<---###"
                             logFile(log_file, msg); del msg
-                        del thumbnail, thumbnail_path
+                        del featureclassname, featureservicetitle, thumbnail, thumbnail_path
 
-                        with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = MOSAIC_DIRECTORY):
-                            crf = f"{datasetcode}_{distributionprojectcode}.crf"
-                            msg = f" > Processing: {crf}"
+                        if mosaicname:
+                            msg = f" > Processing: {mosaictitle}"
                             logFile(log_file, msg); del msg
 
-                            thumbnail = f"{crf}.png"
+                            thumbnail = f"{mosaicname}.png"
                             thumbnail_path = os.path.join(LAYER_DIRECTORY, thumbnail)
                             if arcpy.Exists(thumbnail_path):
-                                layername_md = md.Metadata(crf)
+                                layername_md = md.Metadata(mosaicname)
                                 layername_md.synchronize('SELECTIVE')
                                 layername_md.thumbnailUri = thumbnail_path
                                 layername_md.save()
@@ -3145,10 +3133,28 @@ def createMapLayers():
                             else:
                                 msg = f"\t\t###--> Thumbnail {thumbnail_path} is missing.<---###"
                                 logFile(log_file, msg); del msg
-                            del crf, thumbnail, thumbnail_path
-                    del datasetcode, distributionprojectcode, mosaicname, mosaictitle
-            del md
-            del datasets
+                            del thumbnail, thumbnail_path
+
+                            with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = MOSAIC_DIRECTORY):
+                                crf = f"{datasetcode}_{distributionprojectcode}.crf"
+                                msg = f" > Processing: {crf}"
+                                logFile(log_file, msg); del msg
+
+                                thumbnail = f"{crf}.png"
+                                thumbnail_path = os.path.join(LAYER_DIRECTORY, thumbnail)
+                                if arcpy.Exists(thumbnail_path):
+                                    layername_md = md.Metadata(crf)
+                                    layername_md.synchronize('SELECTIVE')
+                                    layername_md.thumbnailUri = thumbnail_path
+                                    layername_md.save()
+                                    del layername_md
+                                else:
+                                    msg = f"\t\t###--> Thumbnail {thumbnail_path} is missing.<---###"
+                                    logFile(log_file, msg); del msg
+                                del crf, thumbnail, thumbnail_path
+                        del datasetcode, distributionprojectcode, mosaicname, mosaictitle
+                del md, datasets
+            del pngs
         del UpdateMetadataWithThumbnails
 
         aprx.save()
@@ -3162,7 +3168,7 @@ def createMapLayers():
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -3174,18 +3180,18 @@ def createMapLayers():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except:
         import sys
         msg = sys.exc_info()[0]
         print(f"Unexpected error: {msg}" )
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -3205,14 +3211,14 @@ def createMapLayers():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -3390,7 +3396,7 @@ def createSpeciesFilterTable():
 
         # https://www.tutorialsandyou.com/python/numpy-data-types-66.html
         #                ['Species : 60,', 'CommonName : 40,', 'TaxonomicGroup : 80,', 'FilterRegion : 20,', 'FilterSubRegion : 20,', 'ManagementBody : 20,', 'ManagementPlan : 80,']
-        column_formats = ['S60',           'S40',              'S80',                  'S25',                'S25',                   'S20',                   'S90']
+        column_formats = ['S50',           'S40',              'S80',                  'S25',                'S25',                   'S20',                   'S90']
         #            ['S60', 'S40', 'S80', 'S20', 'S20', 'S20', 'S80']
 
         dtypes = list(zip(column_names, column_formats))
@@ -3404,7 +3410,7 @@ def createSpeciesFilterTable():
             # Capture all other errors
             #print(sys.exc_info()[2].tb_lineno)
             msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-            print(msg); del msg#; sys.exit(1)
+            logFile(log_file, msg); del msg
 
         del df, dtypes
 
@@ -3420,7 +3426,7 @@ def createSpeciesFilterTable():
             #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
             msg = arcpy.GetMessages(2).replace('\n', '\n\t')
             msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-            print(msg); del msg#; sys.exit(1)
+            logFile(log_file, msg); del msg
 
         msg = f'>-> Copying the {speciesfilter} Table from memory to the GDB'
         logFile(log_file, msg); del msg
@@ -3455,7 +3461,7 @@ def createSpeciesFilterTable():
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -3467,13 +3473,13 @@ def createSpeciesFilterTable():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -3493,14 +3499,14 @@ def createSpeciesFilterTable():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function#, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -3678,7 +3684,7 @@ def createTableAndFieldReport(workspace, wildcard, datatype, type):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     except arcpy.ExecuteError:
         import sys
@@ -3686,13 +3692,13 @@ def createTableAndFieldReport(workspace, wildcard, datatype, type):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
 def exportArcGisMetadata():
     try: # The code with the exception that you want to catch. If an exception
@@ -4239,7 +4245,7 @@ def exportArcGisMetadata():
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     except arcpy.ExecuteError:
         import sys
@@ -4247,13 +4253,13 @@ def exportArcGisMetadata():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     else: # This code is executed only if no exceptions were raised in the try
           # block. Code executed in this block is just like normal code: if
           # there is an exception, it will not be automatically caught
@@ -4267,14 +4273,14 @@ def exportArcGisMetadata():
         arcpy.ResetEnvironments()
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -4381,26 +4387,26 @@ def generateDatasets():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
 
     finally:
         del datasets
 
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function#, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -4549,13 +4555,13 @@ def generateLayerSpeciesYearImageName():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
 def generateMasterSpeciesInformation():
     try:
@@ -4587,13 +4593,13 @@ def generateMasterSpeciesInformation():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -4613,14 +4619,14 @@ def generateMasterSpeciesInformation():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -4698,13 +4704,13 @@ def generateSpeciesFilter():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -4725,14 +4731,14 @@ def generateSpeciesFilter():
     finally:
         del speciesfilter
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -4855,7 +4861,7 @@ def getDMSPointsForGebco():
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -4867,13 +4873,13 @@ def getDMSPointsForGebco():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -4893,14 +4899,14 @@ def getDMSPointsForGebco():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -4972,7 +4978,7 @@ def importEPU():
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -4984,13 +4990,13 @@ def importEPU():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -5010,14 +5016,14 @@ def importEPU():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -5554,13 +5560,13 @@ def importArcGisMetadata():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     else: # This code is executed only if no exceptions were raised in the try
           # block. Code executed in this block is just like normal code: if
           # there is an exception, it will not be automatically caught
@@ -5588,7 +5594,655 @@ def importArcGisMetadata():
             msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             logFile(log_file, msg); del msg
 
-        del localKeys, function
+        del localKeys, function, log_file
+
+def importMetadata():
+    try: # The code with the exception that you want to catch. If an exception
+         # is raised, control flow leaves this block immediately and goes to
+         # the except block
+
+        # Uses the inspect module and a lamda to find name of this function
+        function = function_name()
+
+        start_time = time()
+
+        # For benchmarking.
+        #timestr = strftime("%Y%m%d-%H%M%S")
+        timestr = strftime('%a %b %d %I %M %S %p', localtime())
+        log_file = os.path.join(log_file_folder, f"{function} {timestr}.log")
+        del timestr
+
+        # Write a message to the log file
+        msg = f"STARTING {function} ON {strftime('%a %b %d %I:%M:%S %p', localtime())}"
+        logFile(log_file, msg); del msg
+
+        # Reset Environments to start fresh
+        arcpy.ResetEnvironments()
+
+        # Set the workspace to the workspace
+        arcpy.env.workspace = ProjectGDB
+
+        # Set the scratch workspace to the RegionScratchGDB
+        arcpy.env.scratchWorkspace = ScratchGDB
+
+        # Set the overwriteOutput to True
+        arcpy.env.overwriteOutput = True
+
+        # Use all of the cores on the machine.
+        arcpy.env.parallelProcessingFactor = "100%"
+
+        # Set Log Metadata to False in order to not record all geoprocessing
+        # steps in metadata
+        arcpy.SetLogMetadata(False)
+
+        arcpy.env.overwriteOutput = True
+
+        from arcpy import metadata as md
+
+        msg = f"> Importing Metadata"
+        logFile(log_file, msg); del msg
+
+        datasets = []
+##        #with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
+##            tb_list = [os.path.join(ProjectGDB, tb) for tb in arcpy.ListTables("*") if tb in ['Indicators', 'Datasets', 'Species_Filter']]
+##            # # fc_list = [os.path.join(ProjectGDB, fc) for fc in arcpy.ListFeatureClasses("*Sample_Locations")] #
+##            fc_list = [os.path.join(ProjectGDB, fc) for fc in arcpy.ListFeatureClasses("*") if "Sample_Locations" in fc or "DisMAP_Regions" in fc] #
+##            ms_list = [os.path.join(ProjectGDB, ms) for ms in arcpy.ListDatasets(feature_type='Mosaic')] # if ms in ['AI_IDW_Mosaic']]
+##            rs_list = [rs for rs in arcpy.ListDatasets(feature_type='Raster') if rs in ['AI_IDW_Mask']]
+##        with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = MOSAIC_DIRECTORY):
+##            #crf_list = [os.path.join(MOSAIC_DIRECTORY, crf) for crf in arcpy.ListFiles(f"*.crf") if crf in ['AI_IDW.crf','WC_GLMME.crf']]
+##            crf_list = [os.path.join(MOSAIC_DIRECTORY, crf) for crf in arcpy.ListFiles(f"*.crf")]
+##
+##        datasets.extend(tb_list);  del tb_list
+##        datasets.extend(fc_list);  del fc_list
+##        datasets.extend(ms_list);  del ms_list
+##        datasets.extend(rs_list);  del rs_list
+##        datasets.extend(crf_list); del crf_list
+
+        with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
+            tb_list = [os.path.join(ProjectGDB, tb) for tb in arcpy.ListTables("*")]
+            fc_list = [os.path.join(ProjectGDB, fc) for fc in arcpy.ListFeatureClasses("*")]
+            ms_list = [os.path.join(ProjectGDB, ms) for ms in arcpy.ListDatasets(feature_type='Mosaic')]
+            rs_list = [os.path.join(ProjectGDB, rs) for rs in arcpy.ListDatasets(feature_type='Raster')]
+        with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = MOSAIC_DIRECTORY):
+            crf_list = [os.path.join(MOSAIC_DIRECTORY, crf) for crf in arcpy.ListFiles(f"*.crf")]
+
+        datasets.extend(tb_list);  del tb_list
+        datasets.extend(fc_list);  del fc_list
+        datasets.extend(ms_list);  del ms_list
+        datasets.extend(rs_list);  del rs_list
+        datasets.extend(crf_list); del crf_list
+
+        #print(EXPORT_METADATA_DIRECTORY)
+        #Loop through all datasets in the database that are specified in the workspace
+        for dataset in sorted(datasets):
+            print(f"Dataset: {os.path.basename(dataset)}")
+            #print(f"\tPath: {dataset}")
+
+            if '.crf' in dataset:
+                dataset_metadata = f"{os.path.basename(dataset).replace('.crf','_CRF')}.xml"
+            else:
+                dataset_metadata = f"{os.path.basename(dataset)}.xml"
+
+            #empty_xml_file = os.path.join(ARCGIS_METADATA_DIRECTORY, f"empty.xml")
+            #prettyXML(empty_xml_file)
+            #entity_xml = os.path.join(ARCGIS_METADATA_DIRECTORY, f"EntityMetadata.xml")
+            dataset_xml_file = os.path.join(ARCGIS_METADATA_DIRECTORY, dataset_metadata)
+            #dataset_xml_file_template = os.path.join(ARCGIS_METADATA_DIRECTORY, dataset_metadata.replace('.xml', ' TEMPLATE.xml'))
+            del dataset_metadata
+
+            if arcpy.Exists(dataset_xml_file):
+
+                # Process: Export Metadata
+                print(f"> Creating dataset Metadata Object for {os.path.basename(dataset)}")
+                #print(dataset)
+                dataset_md = md.Metadata(dataset)
+
+                print(f" > Importing: {os.path.basename(dataset_xml_file)}")
+
+                # #dataset_md.synchronize("ALWAYS")
+                dataset_md.synchronize("SELECTIVE")
+                dataset_md.importMetadata(dataset_xml_file, "DEFAULT")
+                dataset_md.save()
+                dataset_md.reload()
+                dataset_md.synchronize("ACCESSED")
+                dataset_md.save()
+                dataset_md.reload()
+
+                if not dataset_md.isReadOnly:
+                    dataset_md.deleteContent('GPHISTORY')
+                    dataset_md.deleteContent('ENCLOSED_FILES')
+                    #dataset_md.deleteContent('THUMBNAIL')
+                    dataset_md.save()
+                    dataset_md.reload()
+
+                del dataset_md
+
+            else:
+
+                # Process: Export Metadata
+                print(f"> Creating dataset Metadata Object for {os.path.basename(dataset)}")
+                #print(dataset)
+                dataset_md = md.Metadata(dataset)
+
+                print(f" > Creating basic metadata")
+
+                dataset_md.synchronize("ACCESSED")
+                dataset_md.save()
+                dataset_md.reload()
+
+                dataset_md.title             = f'{os.path.basename(dataset)}'
+                dataset_md.tags              = f'{os.path.basename(dataset)}'
+                dataset_md.summary           = f'{os.path.basename(dataset)}, Summary'
+                dataset_md.description       = f'{os.path.basename(dataset)}, Description'
+                dataset_md.credits           = f'{os.path.basename(dataset)}, Credits'
+                dataset_md.accessConstraints = f'{os.path.basename(dataset)}, Access Constraints'
+
+                if not dataset_md.isReadOnly:
+                    dataset_md.deleteContent('GPHISTORY')
+                    dataset_md.deleteContent('ENCLOSED_FILES')
+                    #dataset_md.deleteContent('THUMBNAIL')
+                    dataset_md.save()
+                    dataset_md.reload()
+
+                del dataset_md
+
+            del dataset, dataset_xml_file
+
+        del md, datasets
+
+        PrettyAllXML = False
+        if PrettyAllXML:
+            with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ARCGIS_METADATA_DIRECTORY):
+                xml_list = [os.path.join(ARCGIS_METADATA_DIRECTORY, xml) for xml in arcpy.ListFiles(f"*.xml")]
+                for xml in xml_list:
+                    prettyXML(xml)
+                    del xml
+                del xml_list
+        del PrettyAllXML
+
+
+##            if "Sample_Locations" in os.path.basename(dataset):
+##                dataset_template = os.path.join(ARCGIS_METADATA_DIRECTORY, f"{os.path.basename(dataset)}.xml")
+##            elif "DisMAP_Regions" in os.path.basename(dataset):
+##                dataset_template = os.path.join(ARCGIS_METADATA_DIRECTORY, f"{os.path.basename(dataset)}.xml")
+##            elif "Indicators" in os.path.basename(dataset):
+##                dataset_template = os.path.join(ARCGIS_METADATA_DIRECTORY, f"{os.path.basename(dataset)}.xml")
+##            elif "GRID_Points" in os.path.basename(dataset):
+##                dataset_template = os.path.join(ARCGIS_METADATA_DIRECTORY, f"{os.path.basename(dataset)}.xml")
+##            elif "Mosaic" in os.path.basename(dataset):
+##                dataset_template = os.path.join(ARCGIS_METADATA_DIRECTORY, f"{os.path.basename(dataset)}.xml")
+##            elif ".crf" in os.path.basename(dataset):
+##                dataset_template = os.path.join(ARCGIS_METADATA_DIRECTORY, f"{os.path.basename(dataset.replace('.crf','_Mosaic'))}.xml")
+##            else:
+##                dataset_template = os.path.join(ARCGIS_METADATA_DIRECTORY, f"EntityMetadata.xml")
+##
+##            if arcpy.Exists(dataset_template):
+##                prettyXML(dataset_template)
+##
+##            ImportDatasetMetadata = False
+##            print(f" > Importing: {dataset_template}")
+##            if ImportDatasetMetadata:
+##                # #dataset_md.synchronize("ALWAYS")
+##                dataset_md.synchronize("SELECTIVE")
+##                dataset_md.importMetadata(dataset_template, "DEFAULT")
+##                dataset_md.save()
+##                dataset_md.reload()
+##                dataset_md.synchronize("ACCESSED")
+##                dataset_md.save()
+##                dataset_md.reload()
+##            del dataset_template, ImportDatasetMetadata
+##
+##            #dataset_md.synchronize("ACCESSED", 0)
+##            #dataset_md.synchronize("ALWAYS")
+##            #dataset_md.synchronize("CREATED", 0)
+##            #dataset_md.synchronize("NOT_CREATED", 0)
+##            #dataset_md.synchronize("OVERWRITE")
+##            #dataset_md.synchronize("SELECTIVE")
+##
+##            #dataset_md.synchronize("OVERWRITE")
+##            #dataset_md.importMetadata(empty_xml_file, "DEFAULT")
+##            #dataset_md.save()
+##            #dataset_md.reload()
+##            #del empty_xml_file
+##
+##            if not dataset_md.isReadOnly:
+##                dataset_md.deleteContent('GPHISTORY')
+##                dataset_md.deleteContent('ENCLOSED_FILES')
+##                dataset_md.deleteContent('THUMBNAIL')
+##                dataset_md.save()
+##                dataset_md.reload()
+##
+##            ExportDatasetMetadata = True
+##            if ExportDatasetMetadata:
+##                print(f" > Saving dataset metadata as an 'EXACT_COPY' file: {os.path.basename(dataset_xml_file)}")
+##                dataset_md.saveAsXML(dataset_xml_file, 'EXACT_COPY')
+##
+##                #print(f" > Saving dataset metadata as 'REMOVE_ALL_SENSITIVE_INFO' file: {os.path.basename(dataset_xml_file_template)}")
+##                #dataset_md.saveAsXML(dataset_xml_file_template, 'REMOVE_ALL_SENSITIVE_INFO')
+##
+##                print(f" > Saving dataset as an 'TEMPLATE' file: {os.path.basename(dataset_xml_file_template)}")
+##                #dataset_md.saveAsXML(dataset_xml_file_template, 'TEMPLATE')
+##                #dataset_md.exportMetadata(dataset_xml_file_template.replace('TEMPLATE', 'FGDC_CSDGM'), 'FGDC_CSDGM', 'REMOVE_ALL_SENSITIVE_INFO')
+##
+##                prettyXML(dataset_xml_file)
+##                #prettyXML(dataset_xml_file_template)
+##                #prettyXML(dataset_xml_file_template.replace('TEMPLATE', 'FGDC_CSDGM'))
+##            del ExportDatasetMetadata
+##
+##            del dataset_md, dataset_xml_file, dataset_xml_file_template
+
+
+# # # Delete???
+##            xml_file = os.path.join(EXPORT_METADATA_DIRECTORY, f"{os.path.basename(dataset).replace('.crf','')}_xml.xml")
+##            xml_file_template = os.path.join(EXPORT_METADATA_DIRECTORY, f"{os.path.basename(dataset).replace('.crf','')}_TEMPLATE.xml")
+##            empty_xml_file = os.path.join(EXPORT_METADATA_DIRECTORY, f"empty.xml")
+##
+##            xml_file_exact_copy = xml_file.replace('_xml.xml', '_xml EXACT_COPY.xml')
+##            xml_file_exact_copy_fgdc = xml_file_exact_copy.replace('_xml EXACT_COPY.xml', '_xml EXACT_COPY FGDC.xml')
+##            xml_file_exact_copy_updated = xml_file_exact_copy.replace('_xml EXACT_COPY.xml', '_xml EXACT_COPY Updated.xml')
+##            xml_file_template_updated = xml_file_template.replace('_TEMPLATE.xml', '_TEMPLATE Updated.xml')
+##
+##            #dataset = os.path.join(ProjectGDB, dataset)
+##            # Process: Export Metadata
+##            print(f"> Creating dataset Metadata Object")
+##            dataset_md = md.Metadata(dataset)
+##            # Synchronize the item's metadata now
+##            dataset_md.synchronize('ALWAYS')
+##            #dataset_md.synchronize("OVERWRITE")
+##            dataset_md.save()
+##            dataset_md.reload()
+##            print(f"> Saving dataset as an 'EXACT_COPY' file: {os.path.basename(xml_file)}")
+##            dataset_md.saveAsXML(xml_file, 'EXACT_COPY')
+##            dataset_md.saveAsXML(xml_file_exact_copy, 'EXACT_COPY')
+##            print(f"> Exporting dataset as an 'FGDC_CSDGM' file: {os.path.basename(xml_file)}")
+##            dataset_md.exportMetadata(xml_file.replace('.xml',' FGDC.xml'), 'FGDC_CSDGM', 'REMOVE_ALL_SENSITIVE_INFO')
+##            dataset_md.synchronize('OVERWRITE')
+##            dataset_md.importMetadata(xml_file.replace('.xml',' FGDC.xml'), 'FGDC_CSDGM')
+##            dataset_md.save()
+##            dataset_md.reload()
+##            print(f"> Saving dataset as an 'EXACT_COPY' file: {os.path.basename(xml_file)}")
+##            dataset_md.saveAsXML(xml_file, 'EXACT_COPY')
+##            print(f"> Saving dataset as a 'TEMPLATE' file: {os.path.basename(xml_file_template)}")
+##            dataset_md.saveAsXML(xml_file_template, 'TEMPLATE')
+##            #dataset_md.synchronize("ALWAYS")
+##            #dataset_md.importMetadata(empty_xml_file, "DEFAULT")
+##            #dataset_md.synchronize("OVERWRITE")
+##
+##            del dataset_md
+##
+##            #prettyXML(xml_file)
+##            #prettyXML(xml_file_template)
+##
+##            dataset_md = md.Metadata(xml_file_exact_copy)
+##            if not dataset_md.isReadOnly:
+##                dataset_md.deleteContent('GPHISTORY')
+##                dataset_md.deleteContent('ENCLOSED_FILES')
+##                dataset_md.deleteContent('THUMBNAIL')
+##                dataset_md.save()
+##                dataset_md.reload()
+##
+##            #dataset_md.synchronize("ACCESSED", 0)
+##            #dataset_md.synchronize("ALWAYS")
+##            #dataset_md.synchronize("CREATED", 0)
+##            #dataset_md.synchronize("NOT_CREATED", 0)
+##            #dataset_md.synchronize("OVERWRITE")
+##            dataset_md.synchronize("SELECTIVE")
+##            dataset_md.save()
+##            dataset_md.reload()
+##
+##            if "Indicators" in os.path.basename(dataset):
+##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA_DIRECTORY, "Indicators Template.xml"))
+##            elif "DisMAP_Regions" in os.path.basename(dataset):
+##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA_DIRECTORY, "DisMAP Regions Template.xml"))
+##            elif "_Sample_Locations" in os.path.basename(dataset):
+##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA_DIRECTORY, "Sample Locations Template.xml"))
+##            elif "_Mosaic" in os.path.basename(dataset):
+##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA_DIRECTORY, "Biomass Rasters Template.xml"))
+##            elif ".crf" in os.path.basename(dataset):
+##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA_DIRECTORY, "Biomass Rasters Template.xml"))
+##
+##
+##            if "Indicators" in os.path.basename(dataset):
+##                if not dataset_md.isReadOnly:
+##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA_DIRECTORY, "Indicators Template.xml"))
+##            elif "DisMAP_Regions" in os.path.basename(dataset):
+##                if not dataset_md.isReadOnly:
+##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA_DIRECTORY, "DisMAP Regions Template.xml"))
+##            elif "_Sample_Locations" in os.path.basename(dataset):
+##                if not dataset_md.isReadOnly:
+##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA_DIRECTORY, "Sample Locations Template.xml"))
+##            elif "_Mosaic" in os.path.basename(dataset):
+##                if not dataset_md.isReadOnly:
+##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA_DIRECTORY, "Biomass Rasters Template.xml"))
+##            elif ".crf" in os.path.basename(dataset):
+##                if not dataset_md.isReadOnly:
+##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA_DIRECTORY, "Biomass Rasters Template.xml"))
+##
+##            dataset_md.save()
+##            dataset_md.reload()
+##
+##            print(f"> Exporting dataset as an 'FGDC_CSDGM' file: {os.path.basename(xml_file)}")
+##            dataset_md.exportMetadata(xml_file_exact_copy_fgdc, 'FGDC_CSDGM', 'REMOVE_ALL_SENSITIVE_INFO')
+##            dataset_md.synchronize('OVERWRITE')
+##            dataset_md.importMetadata(xml_file_exact_copy_fgdc, 'FGDC_CSDGM')
+##            dataset_md.save()
+##            dataset_md.reload()
+##            print(f"> Saving dataset as an 'EXACT_COPY' file: {os.path.basename(xml_file)}")
+##            dataset_md.saveAsXML(xml_file_exact_copy_updated, 'EXACT_COPY')
+##            print(f"> Saving dataset as a 'TEMPLATE' file: {os.path.basename(xml_file_template)}")
+##            dataset_md.saveAsXML(xml_file_template_updated, 'TEMPLATE')
+##
+##            #print(f"> Saving dataset as an 'EXACT_COPY' file: {os.path.basename(xml_file)}")
+##            #dataset_md.saveAsXML(xml_file.replace('.xml', ' Update.xml'), 'EXACT_COPY')
+##            #print(f"> Saving dataset as a 'TEMPLATE' file: {os.path.basename(xml_file_template)}")
+##            #dataset_md.saveAsXML(xml_file_template.replace('.xml', ' Update.xml'), 'TEMPLATE')
+##
+##            del dataset_md
+##
+##            #dataset_md.save()
+##            #dataset_md.reload()
+##            #dataset_md.deleteContent('GPHISTORY')
+##            #dataset_md.deleteContent('ENCLOSED_FILES')
+##            #dataset_md.deleteContent('THUMBNAIL')
+##            #dataset_md.synchronize("OVERWRITE")
+##            #dataset_md.save()
+##            #dataset_md.reload()
+##            #dataset_md.saveAsXML(xml_file, 'REMOVE_ALL_SENSITIVE_INFO')
+##            #dataset_md.saveAsXML(xml_file_template, 'TEMPLATE')
+##
+##            prettyXML(xml_file)
+##            prettyXML(xml_file_template)
+##            prettyXML(xml_file_exact_copy)
+##            prettyXML(xml_file_exact_copy_fgdc)
+##            prettyXML(xml_file_template_updated)
+##            prettyXML(xml_file_exact_copy_updated)
+##
+##            del xml_file_template, empty_xml_file
+##            del xml_file_exact_copy, xml_file_exact_copy_fgdc, xml_file_exact_copy_updated, xml_file_template_updated
+##
+##            del dataset, xml_file
+##        del md, datasets, tb_list, fc_list, ms_list, crf_list
+##
+##        datasets = generateDatasets()
+##
+##        with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
+##            fcs = arcpy.ListFeatureClasses("*")
+##            datasets = [[r for r in group] for group in datasets if group[7] in fcs]
+##            del fcs
+##
+##        if FilterDatasets:
+##            datasets = [[r for r in group] for group in datasets if group[3] in selected_datasets]
+##
+##        if not datasets:
+##            print("###--->>> @@@ Something is wrong with the dataset selection @@@ <<<---###")
+##
+##        msg = f"> Processing Tables, Feature Classes, and Mosaics"
+##        logFile(log_file, msg); del msg
+##
+##        for i in range(len(datasets)):
+##            datasetcode             = datasets[i][0]
+##            tablename               = datasets[i][3]
+##            pointfeaturetype        = datasets[i][6]
+##            featureclassname        = datasets[i][7]
+##            region                  = datasets[i][8]
+##            season                  = datasets[i][9]
+##            datecode                = datasets[i][10]
+##            distributionprojectcode = datasets[i][12]
+##            featureservicename      = datasets[i][11]
+##            featureservicetitle     = datasets[i][18]
+##            mosaicname              = datasets[i][19]
+##            mosaictitle             = datasets[i][20]
+##            imageservicename        = datasets[i][21]
+##            imageservicetitle       = datasets[i][22]
+##            del i
+##
+##            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+##
+##            with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
+##                #msg = f" > Processing: {dataset_product_code}"
+##                #logFile(log_file, msg); del msg
+##
+##                if tablename:
+##                    msg = f" > Processing Table: {tablename}"
+##                    logFile(log_file, msg); del msg
+##
+##                    tablename_md = md.Metadata(tablename)
+##
+##                    template_metadata = os.path.join(EXPORT_METADATA_DIRECTORY, f"{tablename} Template.xml")
+##                    if arcpy.Exists(template_metadata):
+##                        tablename_md.importMetadata(template_metadata, 'DEFAULT')
+##                        #tablename_md.synchronize("SELECTIVE")
+##                        #tablename_md.synchronize("ACCESSED", 0)
+##                        #tablename_md.synchronize("NOT_CREATED", 0)
+##                        #tablename_md.synchronize("CREATED", 0)
+##                        #tablename_md.synchronize("ALWAYS")
+##                        #tablename_md.synchronize("OVERWRITE")
+##                    del template_metadata
+##
+##                    #tablename_md.synchronize('ACCESSED')
+##                    tablename_md.title = tablename
+##                    tablename_md.save()
+##                    tablename_md.reload()
+##
+##                    # Delete all geoprocessing history and any enclosed files from the item's metadata
+##                    if not tablename_md.isReadOnly:
+##                        tablename_md.deleteContent('GPHISTORY')
+##                        #tablename_md.deleteContent('ENCLOSED_FILES')
+##                        #tablename_md.deleteContent('THUMBNAIL')
+##                        #tablename_md.save()
+##                        tablename_md.reload()
+##
+##                    export_metadata = os.path.join(EXPORT_METADATA_DIRECTORY, f"{tablename}.xml")
+##                    #tablename_md.saveAsXML(export_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
+##                    tablename_md.saveAsXML(export_metadata, 'EXACT_COPY')
+##                    prettyXML(export_metadata); del export_metadata
+##
+##                    export_metadata = os.path.join(EXPORT_METADATA_DIRECTORY, f"{tablename} Template.xml")
+##                    tablename_md.saveAsXML(export_metadata, 'TEMPLATE')
+##                    prettyXML(export_metadata); del export_metadata
+##
+##                    del tablename_md
+##
+##                if featureclassname:
+##                    msg = f" > Processing Feature Class: {featureclassname}"
+##                    logFile(log_file, msg); del msg
+##
+##                    featureclassname_md = md.Metadata(featureclassname)
+##
+##                    template_metadata = os.path.join(EXPORT_METADATA_DIRECTORY, f"{featureclassname} Template.xml")
+##                    if arcpy.Exists(template_metadata):
+##                        featureclassname_md.importMetadata(template_metadata, 'DEFAULT')
+##                        #featureclassname_md.synchronize("SELECTIVE")
+##                        #featureclassname_md.synchronize("ACCESSED", 0)
+##                        #featureclassname_md.synchronize("NOT_CREATED", 0)
+##                        #featureclassname_md.synchronize("CREATED", 0)
+##                        #featureclassname_md.synchronize("ALWAYS")
+##                        #featureclassname_md.synchronize("OVERWRITE")
+##                    del template_metadata
+##
+##                    #featureclassname_md.synchronize('ACCESSED')
+##                    featureclassname_md.title = featureservicetitle
+##                    featureclassname_md.save()
+##                    featureclassname_md.reload()
+##
+##                    # Delete all geoprocessing history and any enclosed files from the item's metadata
+##                    if not featureclassname_md.isReadOnly:
+##                        featureclassname_md.deleteContent('GPHISTORY')
+##                        #featureclassname_md.deleteContent('ENCLOSED_FILES')
+##                        #featureclassname_md.deleteContent('THUMBNAIL')
+##                        featureclassname_md.save()
+##                        featureclassname_md.reload()
+##
+##                    export_metadata = os.path.join(EXPORT_METADATA_DIRECTORY, f"{featureclassname}.xml")
+##                    #featureclassname_md.saveAsXML(export_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
+##                    featureclassname_md.saveAsXML(export_metadata, 'EXACT_COPY')
+##                    prettyXML(export_metadata); del export_metadata
+##
+##                    export_metadata = os.path.join(EXPORT_METADATA_DIRECTORY, f"{featureclassname} Template.xml")
+##                    featureclassname_md.saveAsXML(export_metadata, 'TEMPLATE')
+##                    prettyXML(export_metadata); del export_metadata
+##
+##                    del featureclassname_md
+##
+##                if mosaicname:
+##                    msg = f" > Processing Mosaic: {mosaicname}"
+##                    logFile(log_file, msg); del msg
+##
+##                    mosaicname_md = md.Metadata(mosaicname)
+##
+##                    template_metadata = os.path.join(EXPORT_METADATA_DIRECTORY, f"{mosaicname} Template.xml")
+##                    if arcpy.Exists(template_metadata):
+##                        mosaicname_md.importMetadata(template_metadata, 'DEFAULT')
+##                        #mosaicname_md.synchronize("SELECTIVE")
+##                        #mosaicname_md.synchronize("ACCESSED", 0)
+##                        #mosaicname_md.synchronize("NOT_CREATED", 0)
+##                        #mosaicname_md.synchronize("CREATED", 0)
+##                        #mosaicname_md.synchronize("ALWAYS")
+##                        #mosaicname_md.synchronize("OVERWRITE")
+##                    del template_metadata
+##
+##                    #mosaicname_md.synchronize('ACCESSED')
+##                    mosaicname_md.title = mosaictitle
+##                    mosaicname_md.save()
+##                    mosaicname_md.reload()
+##
+##                    # Delete all geoprocessing history and any enclosed files from the item's metadata
+##                    if not mosaicname_md.isReadOnly:
+##                        mosaicname_md.deleteContent('GPHISTORY')
+##                        #mosaicname_md.deleteContent('ENCLOSED_FILES')
+##                        #mosaicname_md.deleteContent('THUMBNAIL')
+##                        mosaicname_md.save()
+##                        mosaicname_md.reload()
+##
+##                    export_metadata = os.path.join(EXPORT_METADATA_DIRECTORY, f"{mosaicname}.xml")
+##                    #mosaicname_md.saveAsXML(export_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
+##                    mosaicname_md.saveAsXML(export_metadata, 'EXACT_COPY')
+##                    prettyXML(export_metadata); del export_metadata
+##
+##                    export_metadata = os.path.join(EXPORT_METADATA_DIRECTORY, f"{mosaicname} Template.xml")
+##                    mosaicname_md.saveAsXML(export_metadata, 'TEMPLATE')
+##                    prettyXML(export_metadata); del export_metadata
+##
+##                    del mosaicname_md
+##
+##                    msg = f" > Processing CRF: {dataset_product_code}"
+##                    logFile(log_file, msg); del msg
+##
+##                    with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = MOSAIC_DIRECTORY):
+##                        crf = f"{dataset_product_code}.crf"
+##                        #msg = f" > Processing: {crf}"
+##                        #logFile(log_file, msg); del msg
+##
+##                        crf_md = md.Metadata(crf)
+##
+##                        template_metadata = os.path.join(EXPORT_METADATA_DIRECTORY, f"{mosaicname} CRF Template.xml")
+##                        if arcpy.Exists(template_metadata):
+##                            crf_md.importMetadata(template_metadata, 'DEFAULT')
+##                            #crf_md.synchronize("SELECTIVE")
+##                            #crf_md.synchronize("ACCESSED", 0)
+##                            #crf_md.synchronize("NOT_CREATED", 0)
+##                            #crf_md.synchronize("CREATED", 0)
+##                            #crf_md.synchronize("ALWAYS")
+##                            #crf_md.synchronize("OVERWRITE")
+##                        del template_metadata
+##
+##                        #crf_md.synchronize('ACCESSED')
+##                        crf_md.title = mosaictitle
+##                        crf_md.save()
+##                        crf_md.reload()
+##
+##                        # Delete all geoprocessing history and any enclosed files from the item's metadata
+##                        if not crf_md.isReadOnly:
+##                            crf_md.deleteContent('GPHISTORY')
+##                            #crf_md.deleteContent('ENCLOSED_FILES')
+##                            #crf_md.deleteContent('THUMBNAIL')
+##                            crf_md.save()
+##                            crf_md.reload()
+##
+##                        export_metadata = os.path.join(EXPORT_METADATA_DIRECTORY, f"{mosaicname} CRF.xml")
+##                        crf_md.saveAsXML(export_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
+##                        prettyXML(export_metadata); del export_metadata
+##
+##                        export_metadata = os.path.join(EXPORT_METADATA_DIRECTORY, f"{mosaicname} CRF Template.xml")
+##                        crf_md.saveAsXML(export_metadata, 'TEMPLATE')
+##                        prettyXML(export_metadata); del export_metadata
+##
+##                        del crf_md, crf,
+##
+##            del datasetcode, tablename, pointfeaturetype, featureclassname
+##            del region, season, datecode, distributionprojectcode
+##            del featureservicename, featureservicetitle, mosaicname, mosaictitle
+##            del imageservicename, imageservicetitle, dataset_product_code
+##
+##        del md
+##        del datasets
+##
+##        aprx.save()
+##        del aprx
+
+        compactGDB(ProjectGDB)
+
+        #Final benchmark for the region.
+        msg = f"ENDING {function} COMPLETED ON {strftime('%a %b %d %I:%M:%S %p', localtime())}"
+        logFile(log_file, msg); del msg
+
+        # Elapsed time
+        end_time = time()
+        elapse_time =  end_time - start_time
+        msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
+
+    except arcpy.ExecuteError:
+        import sys
+        # Geoprocessor threw an error
+        #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
+        msg = arcpy.GetMessages(2).replace('\n', '\n\t')
+        msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
+        logFile(log_file, msg); del msg
+    except Exception as e:
+        import sys
+        # Capture all other errors
+        #print(sys.exc_info()[2].tb_lineno)
+        msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
+        logFile(log_file, msg); del msg
+    else: # This code is executed only if no exceptions were raised in the try
+          # block. Code executed in this block is just like normal code: if
+          # there is an exception, it will not be automatically caught
+          # (and probably stop the program). Notice that if the else block is
+          # executed, then the except block is not, and vice versa. This block
+          # is optional.
+        # Use pass to skip this code block
+        # pass
+
+        # Reset Environments to start fresh
+        arcpy.ResetEnvironments()
+    finally:
+        # Get list of local keys that may need to be deleted.
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
+
+        # If there is a list of local keys, print the list, and then delete
+        # variables
+        if localKeys:
+            msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
+            print(msg); del msg
+        del localKeys, function, log_file
+
+        #initializing d with dir()
+        #This will store a list of all the variables in the program
+        d = dir()
+        if d:
+            #print(f'\n\t###--->>> Remaining local variable in {function_name()} <<<---###\n')
+            #You'll need to check for user-defined variables in the directory
+            for obj in d:
+                #checking for built-in variables/functions
+                if not obj.startswith('__'):
+                    #deleting the said obj, since a user-defined function
+                    #del globals()[obj]
+                    #print(f"Remaining local variable: {locals()[obj]}")
+                    del locals()[obj]
+                    del obj
+        del d
 
 def init_processes(arcgismetadatadirectory, basedirectory, csvdirectory,
                    datasetshapefiledirectory, exportmetadatadirectory,
@@ -5596,7 +6250,7 @@ def init_processes(arcgismetadatadirectory, basedirectory, csvdirectory,
                    layerdirectory, logdirectory, logfilefolder, mosaicdirectory,
                    publishdirectory, scratchfolder, softwareenvironmentlevel,
                    fielddefinitions, tabledefinitions, selectedspecies,
-                   filterspecies):
+                   filterspecies, timeZones):
 
     global ARCGIS_METADATA_DIRECTORY
     global BASE_DIRECTORY
@@ -5617,6 +6271,7 @@ def init_processes(arcgismetadatadirectory, basedirectory, csvdirectory,
     global table_definitions
     global selected_species
     global FilterSpecies
+    global timezones
 
     ARCGIS_METADATA_DIRECTORY   = arcgismetadatadirectory
     BASE_DIRECTORY              = basedirectory
@@ -5637,6 +6292,7 @@ def init_processes(arcgismetadatadirectory, basedirectory, csvdirectory,
     table_definitions           = tabledefinitions
     selected_species            = selectedspecies
     FilterSpecies               = filterspecies
+    timezones                   = timeZones
 
     del arcgismetadatadirectory, basedirectory, csvdirectory
     del datasetshapefiledirectory
@@ -5644,7 +6300,7 @@ def init_processes(arcgismetadatadirectory, basedirectory, csvdirectory,
     del inportmetadatadirectory, layerdirectory, logdirectory
     del mosaicdirectory, publishdirectory, scratchfolder
     del softwareenvironmentlevel, fielddefinitions, tabledefinitions
-    del selectedspecies, filterspecies
+    del selectedspecies, filterspecies, timeZones
 
 class LicenseError(Exception):
     pass
@@ -5667,13 +6323,13 @@ def listEnvironments():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
 def listFolder(folder):
     try:
@@ -5687,13 +6343,13 @@ def listFolder(folder):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
 
 def listMapsInProjectGIS():
@@ -5728,13 +6384,13 @@ def listMapsInProjectGIS():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     finally:
         # Get list of local keys that may need to be deleted.
         localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
@@ -5744,7 +6400,7 @@ def listMapsInProjectGIS():
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
 def logFile(log_file, msg):
     try:
@@ -5765,13 +6421,13 @@ def logFile(log_file, msg):
 ##        #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
 ##        msg = arcpy.GetMessages(2).replace('\n', '\n\t')
 ##        msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-##        print(msg); del msg#; sys.exit(1)
+##        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
 def main():
     # Done: - Remove Indicator columns for standard error? Done: Replaced
@@ -5793,7 +6449,7 @@ def main():
         # Uses the inspect module and a lamda to find name of this function
         function = function_name()
 
-        LogInAGOL = False
+        LogInAGOL = True
         if LogInAGOL:
             # For example: 'http://www.arcgis.com/'
             arcpy.SignInToPortal("https://noaa.maps.arcgis.com/")
@@ -6008,7 +6664,7 @@ def main():
                                 "FeatureServiceName"          : ["FeatureServiceName",         "TEXT",   "Feature Service Name",                         40, "", ""],
                                 "FeatureServiceTitle"         : ["FeatureServiceTitle",        "TEXT",   "Feature Service Title",                        60, "", ""],
                                 "FilterRegion"                : ["FilterRegion",               "TEXT",   "Filter Region",                                25, "", ""],
-                                "FilterSubRegion"             : ["FilterSubRegion",            "TEXT",   "Filter Sub-Region",                            25, "", ""],
+                                "FilterSubRegion"             : ["FilterSubRegion",            "TEXT",   "Filter Sub-Region",                            40, "", ""],
                                 "GeographicArea"              : ["GeographicArea",             "TEXT",   "Geographic Area",                              20, "", ""],
                                 "GroupName"                   : ["GroupName",                  "TEXT",   "GroupName",                                   100, "", ""],
                                 "HighPS"                      : ["HighPS",                     "DOUBLE", "HighPS",                                     None, "", ""],
@@ -6044,12 +6700,12 @@ def main():
                                 "PointFeatureType"            : ["PointFeatureType",           "TEXT",   "Point Feature Type",                           20, "", ""],
                                 "ProductName"                 : ["ProductName",                "TEXT",   "Product Name",                                100, "", ""],
                                 "Raster"                      : ["Raster",                     "RASTER", "Raster",                                        0, "", ""],
-                                "Region"                      : ["Region",                     "TEXT",   "Region",                                       25, "", ""],
+                                "Region"                      : ["Region",                     "TEXT",   "Region",                                       40, "", ""],
                                 "SampleID"                    : ["SampleID",                   "TEXT",   "SampleID",                                     20, "", ""],
                                 "Season"                      : ["Season",                     "TEXT",   "Season",                                       10, "", ""],
                                 #"Shape_Area"                  : ["Shape_Area",                 "DOUBLE", "Shape_Area",                                 None, "", ""],
                                 #"Shape_Length"                : ["Shape_Length",               "DOUBLE", "Shape_Length",                               None, "", ""],
-                                "Species"                     : ["Species",                    "TEXT",   "Species",                                      60, "", ""],
+                                "Species"                     : ["Species",                    "TEXT",   "Species",                                      50, "", ""],
                                 "SpeciesCommonName"           : ["SpeciesCommonName",          "TEXT",   "Species (Common Name)",                        90, "", ""],
                                 "Status"                      : ["Status",                     "TEXT",   "Status",                                       10, "", ""],
                                 "StdTime"                     : ["StdTime",                    "DATE",   "StdTime",                                    None, "", ""],
@@ -6079,7 +6735,7 @@ def main():
                                            'SummaryProduct', 'FilterRegion', 'FilterSubRegion',
                                            'FeatureServiceName', 'FeatureServiceTitle', 'MosaicName',
                                            'MosaicTitle', 'ImageServiceName', 'ImageServiceTitle',],
-                            "DisMAP_Regions" : ['DatasetCode', 'Region', 'Season'],
+                            "DisMAP_Regions" : ['DatasetCode', 'Region', 'Season', 'DistributionProjectCode'],
                             "GLMME_Data" : ['DatasetCode', 'Region', 'SummaryProduct', 'Year', 'StdTime',
                                             'Species', 'WTCPUE', 'MapValue', 'TransformUnit', 'CommonName',
                                             'SpeciesCommonName', 'CommonNameSpecies', 'Easting',
@@ -6128,6 +6784,51 @@ def main():
 # #                    print(f"\t{field_atr}")
 # #                    del field_atr
 
+        # #    Timezones
+        # #    US/Alaska
+        # #    US/Aleutian
+        # #    US/Arizona
+        # #    US/Central
+        # #    US/East-Indiana
+        # #    US/Eastern
+        # #    US/Hawaii
+        # #    US/Indiana-Starke
+        # #    US/Michigan
+        # #    US/Mountain
+        # #    US/Pacific
+        # #    US/Samoa
+
+        global timezones
+        timezones = {"AI"       : "US/Aleutian",
+                     "EBS"      : "US/Alaska",
+                     "NBS"      : "US/Alaska",
+                     "GOA"      : "US/Alaska",
+                     "ENBS"     : "US/Alaska",
+                     "GMEX"     : "US/Central",
+                     "HI"       : "US/Hawaii",
+                     "NEUS_FAL" : "US/Eastern",
+                     "NEUS_SPR" : "US/Eastern",
+                     "SEUS_FAL" : "US/Eastern",
+                     "SEUS_SPR" : "US/Eastern",
+                     "SEUS_SUM" : "US/Eastern",
+                     "WC"       : "US/Pacific",
+                     "WC_ANN"   : "US/Pacific",
+                     "WC_TRI"   : "US/Pacific",
+                    }
+
+##        timezones = {"Aleutian Islands"                : "US/Aleutian",
+##                     "Eastern Bering Sea"              : "US/Alaska",
+##                     "Northern Bering Sea"             : "US/Alaska",
+##                     "Gulf of Alaska"                  : "US/Alaska",
+##                     "Eastern and Northern Bering Sea" : "US/Alaska",
+##                     "Gulf of Mexico"                  : "US/Central",
+##                     "Hawai'i Islands"                 : "US/Hawaii",
+##                     "Hawaii Islands"                  : "US/Hawaii",
+##                     "Northeast US"                    : "US/Eastern",
+##                     "Southeast US"                    : "US/Eastern",
+##                     "West Coast"                      : "US/Pacific",
+##                    }
+
         # Geographic Regions Dictionary
         global geographic_regions
         geographic_regions = {
@@ -6163,6 +6864,26 @@ def main():
                               'West_Coast'          : 'West Coast',
                              }
 
+# #        Atheresthes stomias and A. evermanni    Aleutian Islands
+# #        Atheresthes stomias and A. evermanni    Eastern Bering Sea
+# #        Bathyraja spp.    Aleutian Islands
+# #        Bathyraja spp.    Eastern Bering Sea
+# #        Bathyraja spp.    Northern Bering Sea
+# #        Bathyraja spp.    Gulf of Alaska
+# #        Bathyraja spp.    West Coast
+# #        Eucinostomus spp.    Southeast
+# #        Hippoglossoides elassodon and H. robustus    Eastern Bering Sea
+# #        Hippoglossoides elassodon and H. robustus    Northern Bering Sea
+# #        Lepidopsetta sp.    Aleutian Islands
+# #        Lepidopsetta sp.    Eastern Bering Sea
+# #        Lepidopsetta sp.    Northern Bering Sea
+# #        Lepidopsetta sp.    Gulf of Alaska
+# #        Lepidopsetta sp.    West Coast
+# #        Loligo spp.    Southeast
+# #        Sebastes melanostictus and S. aleutianus    West Coast
+# #        Sebastes variabilis and S. ciliatus    Aleutian Islands
+# #        Sebastes variabilis and S. ciliatus    Gulf of Alaska
+
         # Test if SoftwareEnvironmentLevel is Dev or Test, if so, then set
         # selected species. Dev gets a short list and Test gets a longer list.
         # Prod processes all species
@@ -6180,9 +6901,12 @@ def main():
                                     # 'WC_TRI', 'West Coast Triennial (1977-2004)',
                                     'Acesta sphoni'                   : 'Limid clam sp.',
                                     'Anthopleura xanthogrammica'      : 'Giant green anemone',
+                                    'Bathymaster signatus'            : 'Searcher',
+                                    'Bathyraja spp.'                  : 'Skate complex',
                                     'Citharichthys sordidus'          : 'Pacific sanddab',
                                     'Doryteuthis (Loligo) opalescens' : 'California market squid',
                                     'Gadus chalcogrammus'             : 'Walleye Pollock', # in EBS,
+                                    'Gadus macrocephalus'             : 'Pacific Cod',
                                     'Limanda aspera'                  : 'yellowfin sole', # in EBS,
                                     # 'WC_GLMME'
                                     'Anoplopoma fimbria'              : 'Sablefish',
@@ -6199,8 +6923,9 @@ def main():
                                     # 'SEUS_SUM', 'Southeast US Summer'
                                     # 'SEUS_FALL', 'Southeast US Fall'
                                     'Centropristis striata'            : 'black sea bass',
-                                    'Rachycentron canadum'             : 'Cobia',
                                     'Geryon (Chaceon) quinquedens'     : 'Red Deep Sea Crab',
+                                    'Loligo spp.'                      : 'Loligo squid',
+                                    'Rachycentron canadum'             : 'Cobia',
                                    }
             if SoftwareEnvironmentLevel == "Test":
                 # TODO: Consider using sets instead
@@ -6210,45 +6935,48 @@ def main():
                                     # 'GOA', 'Gulf of Alaska'
                                     # 'WC_ANN', 'West Coast Annual (2003-present)'
                                     # 'WC_TRI', 'West Coast Triennial (1977-2004)',
-                                    'Acesta sphoni'                   : 'Limid clam sp.',
-                                    'Anthopleura xanthogrammica'      : 'Giant green anemone',
-                                    'Calinaticina oldroydii'          : "Oldroyd's Fragile Moon Snail",
-                                    'Citharichthys sordidus'          : 'Pacific sanddab',
-                                    'Doryteuthis (Loligo) opalescens' : 'California market squid',
-                                    'Gadus chalcogrammus'             : 'Walleye Pollock',
-                                    'Gadus macrocephalus'             : 'Pacific Cod',
-                                    'Hippoglossus stenolepis'         : 'Pacific Halibut',
-                                    'Limanda aspera'                  : 'yellowfin sole',
+                                    'Acesta sphoni'                       : 'Limid clam sp.',
+                                    'Anthopleura xanthogrammica'          : 'Giant green anemone',
+                                    'Bathyraja spp.'                      : 'Skate complex',
+                                    'Calinaticina oldroydii'              : "Oldroyd's Fragile Moon Snail",
+                                    'Citharichthys sordidus'              : 'Pacific sanddab',
+                                    'Doryteuthis (Loligo) opalescens'     : 'California market squid',
+                                    'Gadus chalcogrammus'                 : 'Walleye Pollock',
+                                    'Gadus macrocephalus'                 : 'Pacific Cod',
+                                    'Hippoglossus stenolepis'             : 'Pacific Halibut',
+                                    'Limanda aspera'                      : 'yellowfin sole',
+                                    'Sebastes variabilis and S. ciliatus' : 'Dusky and dark rockfish',
                                     # 'WC_GLMME'
-                                    'Anoplopoma fimbria'              : 'Sablefish',
-                                    'Microstomus pacificus'           : 'Dover sole',
-                                    'Sebastolobus alascanus'          : 'Shortspine thornyhead',
-                                    'Sebastolobus altivelis'          : 'Longspine thornyhead',
+                                    'Anoplopoma fimbria'                  : 'Sablefish',
+                                    'Microstomus pacificus'               : 'Dover sole',
+                                    'Sebastolobus alascanus'              : 'Shortspine thornyhead',
+                                    'Sebastolobus altivelis'              : 'Longspine thornyhead',
                                     # 'GMEX_IDW', 'Gulf of Mexico'
-                                    'Ancylopsetta dilecta'            : 'three-eye flounder',
-                                    'Ancylopsetta ommata'             : 'ocellated flounder',
-                                    'Chicoreus florifer-dilectus'     : 'Flowery lace murex',
-                                    'Lutjanus campechanus'            : 'red snapper',
-                                    'Scomberomorus maculatus'         : 'Spanish Mackerel',
+                                    'Ancylopsetta dilecta'                : 'three-eye flounder',
+                                    'Ancylopsetta ommata'                 : 'ocellated flounder',
+                                    'Chicoreus florifer-dilectus'         : 'Flowery lace murex',
+                                    'Lutjanus campechanus'                : 'red snapper',
+                                    'Scomberomorus maculatus'             : 'Spanish Mackerel',
                                     # 'HI', 'Hawaii'
-                                    'Aphareus rutilans'               : 'Lehi',
-                                    'Etelis carbunculus'              : 'Ehu',
-                                    'Etelis coruscans'                : 'Onaga',
-                                    'Hyporthodus quernus'             : 'HapuÊ»upuÊ»u',
-                                    'Pristipomoides filamentosus'     : 'Opakapaka',
-                                    'Pristipomoides sieboldii'        : 'Kalekale',
-                                    'Pristipomoides zonatus'          : 'Gindai',
+                                    'Aphareus rutilans'                   : 'Lehi',
+                                    'Etelis carbunculus'                  : 'Ehu',
+                                    'Etelis coruscans'                    : 'Onaga',
+                                    'Hyporthodus quernus'                 : 'HapuÊ»upuÊ»u',
+                                    'Pristipomoides filamentosus'         : 'Opakapaka',
+                                    'Pristipomoides sieboldii'            : 'Kalekale',
+                                    'Pristipomoides zonatus'              : 'Gindai',
                                     # NEUS_FAL_IDW, 'Northeast US Fall'
                                     # 'NEUS_S', 'Northeast US Spring'
-                                    'Centropristis striata'           : 'black sea bass',
-                                    'Geryon (Chaceon) quinquedens'    : 'Red Deep Sea Crab',
-                                    'Homarus americanus'              : 'American Lobster',
+                                    'Centropristis striata'               : 'black sea bass',
+                                    'Geryon (Chaceon) quinquedens'        : 'Red Deep Sea Crab',
+                                    'Homarus americanus'                  : 'American Lobster',
                                     # 'SEUS_SPR', 'Southeast US Spring'
                                     # 'SEUS_SUM', 'Southeast US Summer'
                                     # 'SEUS_FALL', 'Southeast US Fall'
-                                    'Brevoortia tyrannus'             : 'Atlantic menhaden',
-                                    'Micropogonias undulatus'         : 'Atlantic croaker',
-                                    'Rachycentron canadum'            : 'Cobia',
+                                    'Brevoortia tyrannus'                 : 'Atlantic menhaden',
+                                    'Loligo spp.'                         : 'Loligo squid',
+                                    'Micropogonias undulatus'             : 'Atlantic croaker',
+                                    'Rachycentron canadum'                : 'Cobia',
                                    }
         else:
             FilterSpecies = False
@@ -6264,13 +6992,13 @@ def main():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        print(msg); del msg #logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -6290,14 +7018,14 @@ def main():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function#, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -6732,13 +7460,13 @@ def metadataUpdate():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     else: # This code is executed only if no exceptions were raised in the try
           # block. Code executed in this block is just like normal code: if
           # there is an exception, it will not be automatically caught
@@ -6766,7 +7494,7 @@ def metadataUpdate():
             msg = "Local Keys in {0}(): {1}".format(function, u", ".join(localKeys))
             logFile(log_file, msg); del msg
 
-        del localKeys, function
+        del localKeys, function, log_file
 
 def mpCreateDisMapRegions(dataset):
     """mp Create Region Bathymetry"""
@@ -6799,7 +7527,7 @@ def mpCreateDisMapRegions(dataset):
         del dataset
 
         dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
-        del distributionprojectcode
+        #del distributionprojectcode
 
         RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -6903,6 +7631,12 @@ def mpCreateDisMapRegions(dataset):
         arcpy.management.CalculateField(datasetcode_shape_scratch, "Season", f'"{season}"', "PYTHON", "")
         del season
 
+        msg = f">-> Calculating the 'DistributionProjectCode' field in the {dataset_product_code} Dataset"
+        logFile(log_file, msg); del msg
+        # Process: Calculate Region Field
+        arcpy.management.CalculateField(datasetcode_shape_scratch, "DistributionProjectCode", f'"{distributionprojectcode}"', "PYTHON", "")
+        del distributionprojectcode
+
         msg = f">-> Adding the 'ID' field in the {dataset_product_code} Dataset"
         logFile(log_file, msg); del msg
         arcpy.management.AddField(datasetcode_shape_scratch, "ID", "LONG","","","","ID","NULLABLE","NON_REQUIRED")
@@ -6968,9 +7702,7 @@ def mpCreateDisMapRegions(dataset):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
-
-        return True # everything went well so we return True
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -6982,14 +7714,14 @@ def mpCreateDisMapRegions(dataset):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
         return False
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
         return False
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -7009,14 +7741,14 @@ def mpCreateDisMapRegions(dataset):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -7033,6 +7765,8 @@ def mpCreateDisMapRegions(dataset):
                     del locals()[obj]
                     del obj
         del d
+
+        return True # everything went well so we return True
 
 def mpCreateIndicatorsTable(dataset):
 
@@ -7771,9 +8505,7 @@ def mpCreateIndicatorsTable(dataset):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
-
-        return True # everything went well so we return True
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -7785,13 +8517,15 @@ def mpCreateIndicatorsTable(dataset):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -7811,14 +8545,14 @@ def mpCreateIndicatorsTable(dataset):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -7835,6 +8569,8 @@ def mpCreateIndicatorsTable(dataset):
                     del locals()[obj]
                     del obj
         del d
+
+        return True # everything went well so we return True
 
 # ## Reads from the queue and does work
 def mpCreateLatitudeLongitudeRasters(dataset):
@@ -7969,9 +8705,7 @@ def mpCreateLatitudeLongitudeRasters(dataset):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
-
-        return True # everything went well so we return True
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -7983,13 +8717,15 @@ def mpCreateLatitudeLongitudeRasters(dataset):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -8009,14 +8745,14 @@ def mpCreateLatitudeLongitudeRasters(dataset):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -8033,6 +8769,8 @@ def mpCreateLatitudeLongitudeRasters(dataset):
                     del locals()[obj]
                     del obj
         del d
+
+        return True # everything went well so we return True
 
 def mpCreateLayerBathymetry(dataset):
     """mp Create Region Bathymetry"""
@@ -8159,9 +8897,7 @@ def mpCreateLayerBathymetry(dataset):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
-
-        return True
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -8173,13 +8909,15 @@ def mpCreateLayerBathymetry(dataset):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -8199,14 +8937,14 @@ def mpCreateLayerBathymetry(dataset):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -8223,6 +8961,8 @@ def mpCreateLayerBathymetry(dataset):
                     del locals()[obj]
                     del obj
         del d
+
+        return True # everything went well so we return True
 
 def mpCreateLayerFishnets(dataset):
     """mp Create Region Bathymetry"""
@@ -8435,9 +9175,7 @@ def mpCreateLayerFishnets(dataset):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
-
-        return True # everything went well so we return True
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -8449,13 +9187,15 @@ def mpCreateLayerFishnets(dataset):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -8475,14 +9215,14 @@ def mpCreateLayerFishnets(dataset):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -8499,6 +9239,8 @@ def mpCreateLayerFishnets(dataset):
                     del locals()[obj]
                     del obj
         del d
+
+        return True # everything went well so we return True
 
 def mpCreateLayerSpeciesYearImageName(dataset):
     try: # The code with the exception that you want to catch. If an exception
@@ -8665,11 +9407,16 @@ def mpCreateLayerSpeciesYearImageName(dataset):
                     row[7]  = speciesfilter[row[2]][4] # ManagementBody
                     row[8]  = speciesfilter[row[2]][5] # ManagementPlan
                 else:
-                    row[4]  = filterregion
-                    row[5]  = filtersubregion
-                    row[6]  = "TaxonomicGroup"
-                    row[7]  = "ManagementBody"
-                    row[8]  = "ManagementPlan"
+##                    row[4]  = filterregion
+##                    row[5]  = filtersubregion
+##                    row[6]  = "TaxonomicGroup"
+##                    row[7]  = "ManagementBody"
+##                    row[8]  = "ManagementPlan"
+                    row[4]  = ""
+                    row[5]  = ""
+                    row[6]  = ""
+                    row[7]  = ""
+                    row[8]  = ""
                 row[9]      = variable
                 row[10]     = value
                 row[11]     = dimensions
@@ -8813,7 +9560,7 @@ def mpCreateLayerSpeciesYearImageName(dataset):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, end_time, elapse_time, start_time, log_file
+        logFile(log_file, msg); del msg, end_time, elapse_time, start_time#, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -8825,13 +9572,13 @@ def mpCreateLayerSpeciesYearImageName(dataset):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -8849,14 +9596,14 @@ def mpCreateLayerSpeciesYearImageName(dataset):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -9052,7 +9799,8 @@ def mpCreateLayerTables(dataset):
             msg = f'#--->  Adding StdTime.'
             logFile(log_file, msg); del msg
             # Insert column
-            df.insert(4, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.normalize())
+            #df.insert(df.columns.get_loc('Year')+1, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize(timezones[datasetcode]))
+            df.insert(4, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize(timezones[datasetcode]).dt.tz_convert('UTC'))
 
             #df['Year'] = df['Year'].dt.strftime('%Y')
 
@@ -9110,8 +9858,8 @@ def mpCreateLayerTables(dataset):
 
             # https://www.tutorialsandyou.com/python/numpy-data-types-66.html
             #[                'DatasetCode', 'Region', 'SummaryProduct', 'Year',   'StdTime', 'Species', 'WTCPUE', 'MapValue', 'TransformUnit', 'CommonName', 'SpeciesCommonName', 'CommonNameSpecies', 'Easting', 'Northing', 'Latitude', 'Longitude', 'MedianEstimate', 'Depth',]
-            column_formats = [ 'S20',      'S40',    'S5',             'u4',    'M8[us]', 'S40',     'd',      'd',        'S30',           'U30',        'U60',               'U60',               'd',       'd',        'd',        'd',         'd',              'd', ]
-            #column_formats = [ 'S20',      'S40',    'S5',             'M8[us]', 'M8[us]', 'S40',     'd',      'd',        'S30',           'U30',        'U60',               'U60',               'd',       'd',        'd',        'd',         'd',              'd',  ]
+            column_formats = [ 'S20',        'S40',    'S5',             'u4',     'M8[us]',  'S50',     'd',      'd',        'S30',           'U40',        'U90',               'U90',               'd',       'd',        'd',        'd',         'd',              'd', ]
+            #column_formats = [ 'S20',       'S40',    'S5',             'M8[us]', 'M8[us]',  'S40',     'd',      'd',        'S30',           'U30',        'U60',               'U60',               'd',       'd',        'd',        'd',         'd',              'd',  ]
 
             dtypes = list(zip(column_names, column_formats))
             del column_names, column_formats
@@ -9125,7 +9873,7 @@ def mpCreateLayerTables(dataset):
             except Exception as e:
                 import sys
                 msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-                print(msg); del msg#; sys.exit(1)
+                logFile(log_file, msg); del msg
 
             del df, dtypes
 
@@ -9308,9 +10056,8 @@ def mpCreateLayerTables(dataset):
             msg = f'#--->  Adding StdTime.'
             logFile(log_file, msg); del msg
             # Insert column
-            #df['date'] = pd.to_datetime(df['Year'], format="%Y").dt.tz_localize(timezone).dt.tz_convert('UTC').dt.normalize()
-            #df.insert(df.columns.get_loc('Year')+1, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize(timezone))
-            df.insert(df.columns.get_loc('Year')+1, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.normalize())
+            #df.insert(df.columns.get_loc('Year')+1, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize(timezones[datasetcode])
+            df.insert(df.columns.get_loc('Year')+1, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize(timezones[datasetcode]).dt.tz_convert('UTC'))
 
             #df['Year'] = df['Year'].dt.strftime('%Y')
 
@@ -9350,7 +10097,7 @@ def mpCreateLayerTables(dataset):
             #print(column_names)
             # https://www.tutorialsandyou.com/python/numpy-data-types-66.html
             #[                'DatasetCode', 'Region', 'Season', 'SummaryProduct', 'SampleID', 'Year', 'StdTime',  'Species', 'WTCPUE', 'MapValue', 'TransformUnit', 'CommonName', 'SpeciesCommonName', 'CommonNameSpecies', 'CoreSpecies', 'Stratum', 'StratumArea', 'Latitude', 'Longitude', 'Depth']
-            column_formats = [ 'S20',       'S40',    'S10',    'S5',             'S20',      'u4',   'M8[us]',   'S40',     'd',      'd',        'S30',           'U30',        'U60',               'U60',               'S5',          'S20',     'd',           'd',        'd',        'd']
+            column_formats = [ 'S20',        'S40',    'S10',    'S5',             'S20',       'u4',   'M8[us]',   'S50',     'd',      'd',        'S30',           'U40',        'U90',               'U90',               'S5',          'S20',     'd',           'd',        'd',        'd']
             #column_formats = ['S20',       'S40',    'S10',    'S5',             'S20',      'M8[us]',   'M8[us]',   'S40',     'd',      'd',        'S30',           'U30',        'U60',               'U60',               'S5',          'S20',     'd',           'd',        'd',        'd']
             # 'M8[us]' can be used for date fields
 
@@ -9364,7 +10111,7 @@ def mpCreateLayerTables(dataset):
                 # Capture all other errors
                 #print(sys.exc_info()[2].tb_lineno)
                 msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-                print(msg); del msg#; sys.exit(1)
+                logFile(log_file, msg); del msg
 
             del df, dtypes
 
@@ -9383,7 +10130,7 @@ def mpCreateLayerTables(dataset):
                 #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
                 msg = arcpy.GetMessages(2).replace('\n', '\n\t')
                 msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-                print(msg); del msg#; sys.exit(1)
+                logFile(log_file, msg); del msg
 
             msg = f'>-> Calculate Core Species for the {datasetcode} Table'
             logFile(log_file, msg); del msg
@@ -9423,9 +10170,7 @@ def mpCreateLayerTables(dataset):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
-
-        return True # everything went well so we return True
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -9437,13 +10182,13 @@ def mpCreateLayerTables(dataset):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -9463,14 +10208,14 @@ def mpCreateLayerTables(dataset):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -9858,7 +10603,7 @@ def mpCreateMosaics(dataset):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -9870,13 +10615,15 @@ def mpCreateMosaics(dataset):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -9896,14 +10643,14 @@ def mpCreateMosaics(dataset):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -9920,6 +10667,8 @@ def mpCreateMosaics(dataset):
                     del locals()[obj]
                     del obj
         del d
+
+        return True # everything went well so we return True
 
 # ## Reads from the queue and does work
 def mpCreateRasters(dataset):
@@ -10023,7 +10772,7 @@ def mpCreateRasters(dataset):
             # We prepare a place so that we can place fish data relevant to the fish species we're looking at.
             #print(datasetcode_unique_specie)
 
-            datasetcode_unique_specie_dir = datasetcode_unique_specie.replace('(','').replace(')','')
+            datasetcode_unique_specie_dir = datasetcode_unique_specie.replace('(','').replace(')','').replace('.','')
 
             msg = f"#---> Creating Raster Files for {datasetcode_unique_specie} in directory: {datasetcode_unique_specie_dir}"
             logFile(log_file, msg); del msg
@@ -10204,9 +10953,7 @@ def mpCreateRasters(dataset):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
-
-        return True # everything went well so we return True
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -10218,13 +10965,15 @@ def mpCreateRasters(dataset):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -10244,14 +10993,14 @@ def mpCreateRasters(dataset):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -10268,6 +11017,8 @@ def mpCreateRasters(dataset):
                     del locals()[obj]
                     del obj
         del d
+
+        return True # everything went well so we return True
 
 def mpCreateSampleLocationPoints(dataset):
     """mp Create Region Sample LocationP oints"""
@@ -10391,9 +11142,7 @@ def mpCreateSampleLocationPoints(dataset):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
-
-        return True
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -10405,13 +11154,15 @@ def mpCreateSampleLocationPoints(dataset):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -10431,14 +11182,14 @@ def mpCreateSampleLocationPoints(dataset):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -10455,6 +11206,8 @@ def mpCreateSampleLocationPoints(dataset):
                     del locals()[obj]
                     del obj
         del d
+
+        return True # everything went well so we return True
 
 # ## Reads from the queue and does work
 def mpCreateSpeciesRichnessRasters(dataset):
@@ -10736,9 +11489,7 @@ def mpCreateSpeciesRichnessRasters(dataset):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
-
-        return True # everything went well so we return True
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -10750,13 +11501,15 @@ def mpCreateSpeciesRichnessRasters(dataset):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
+        return False
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -10776,14 +11529,14 @@ def mpCreateSpeciesRichnessRasters(dataset):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -10800,6 +11553,8 @@ def mpCreateSpeciesRichnessRasters(dataset):
                     del locals()[obj]
                     del obj
         del d
+
+        return True # everything went well so we return True
 
 def mpHandlerCreateDisMapRegions(Sequential):
     try:
@@ -10880,14 +11635,14 @@ def mpHandlerCreateDisMapRegions(Sequential):
         if not Sequential:
             # setup the multiprocessing pool with the number of cores in the current PC
             # The cpu_count() functions retruns the number of cpu cores
-            cpu_num = multiprocessing.cpu_count() - 2
+            #cpu_num = multiprocessing.cpu_count() - 2
             with multiprocessing.Pool(processes=cpu_num, initializer=init_processes, initargs=(ARCGIS_METADATA_DIRECTORY, BASE_DIRECTORY, CSV_DIRECTORY,
                                                                                                DATASET_SHAPEFILE_DIRECTORY, EXPORT_METADATA_DIRECTORY,
                                                                                                FilterDatasets, IMAGE_DIRECTORY, INPORT_METADATA_DIRECTORY,
                                                                                                LAYER_DIRECTORY, LOG_DIRECTORY, log_file_folder, MOSAIC_DIRECTORY,
                                                                                                PUBLISH_DIRECTORY, ScratchFolder, SoftwareEnvironmentLevel,
                                                                                                field_definitions, table_definitions, selected_species,
-                                                                                               FilterSpecies)) as pool:
+                                                                                               FilterSpecies, timezones)) as pool:
             #with multiprocessing.Pool(processes=cpu_num,) as pool:
                 args = []
                 for i in range(len(datasets)):
@@ -10906,7 +11661,7 @@ def mpHandlerCreateDisMapRegions(Sequential):
                 print("Finished multiprocessing!")
                 del res, failed
                 del pool, args
-            del cpu_num
+            #del cpu_num
 
     # ###--->>> Multiprocessing End
 
@@ -11017,6 +11772,7 @@ def mpHandlerCreateDisMapRegions(Sequential):
             # Delete after last use
             del RegionGDB, RegionScratchGDB
             del datasetcode_boundary_line, distributionprojectcode
+            del datasetcode, dataset_product_code
 
         # ##-->> Copy data from Scratch and Temporary GDB to Project GDB End
 
@@ -11041,44 +11797,44 @@ def mpHandlerCreateDisMapRegions(Sequential):
 
         # ##-->> Delete Identical features in DisMAP Regions End
 
-        # ##-->> Deleting Scratch and Temporary GDB Start
-        for i in range(len(datasets)):
-            datasetcode = datasets[i][0]
-            distributionprojectcode = datasets[i][12]
-            del i
-
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
-
-            RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
-
-            RegionScratchGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel} Scratch.gdb")
-
-            RegionScratchFolder = os.path.join(ScratchFolder, f"{datasetcode}")
-
-            msg = f"#-> Deleting the {datasetcode} Region GDB"
-            logFile(log_file, msg); del msg
-
-            #purgeGDB(RegionGDB)
-            arcpy.management.Delete(RegionGDB)
-            #shutil.rmtree(RegionGDB)
-
-            msg = f"#-> Deleting the {dataset_product_code} Region Scratch GDB"
-            logFile(log_file, msg); del msg
-
-            #purgeGDB(RegionScratchGDB)
-            arcpy.management.Delete(RegionScratchGDB)
-            #shutil.rmtree(RegionScratchGDB)
-
-            msg = f"#-> Deleting the {dataset_product_code} Region Scratch Folder"
-            logFile(log_file, msg); del msg
-
-            #purgeGDB(RegionScratchGDB)
-            arcpy.management.Delete(RegionScratchFolder)
-            #shutil.rmtree(RegionScratchGDB)
-
-            del RegionGDB, RegionScratchGDB, RegionScratchFolder
-            del datasetcode, dataset_product_code, distributionprojectcode
-        # ##-->> Deleting Scratch and Temporary GDB End
+##        # ##-->> Deleting Scratch and Temporary GDB Start
+##        for i in range(len(datasets)):
+##            datasetcode = datasets[i][0]
+##            distributionprojectcode = datasets[i][12]
+##            del i
+##
+##            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+##
+##            RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
+##
+##            RegionScratchGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel} Scratch.gdb")
+##
+##            RegionScratchFolder = os.path.join(ScratchFolder, f"{datasetcode}")
+##
+##            msg = f"#-> Deleting the {datasetcode} Region GDB"
+##            logFile(log_file, msg); del msg
+##
+##            #purgeGDB(RegionGDB)
+##            arcpy.management.Delete(RegionGDB)
+##            #shutil.rmtree(RegionGDB)
+##
+##            msg = f"#-> Deleting the {dataset_product_code} Region Scratch GDB"
+##            logFile(log_file, msg); del msg
+##
+##            #purgeGDB(RegionScratchGDB)
+##            arcpy.management.Delete(RegionScratchGDB)
+##            #shutil.rmtree(RegionScratchGDB)
+##
+##            msg = f"#-> Deleting the {dataset_product_code} Region Scratch Folder"
+##            logFile(log_file, msg); del msg
+##
+##            #purgeGDB(RegionScratchGDB)
+##            arcpy.management.Delete(RegionScratchFolder)
+##            #shutil.rmtree(RegionScratchGDB)
+##
+##            del RegionGDB, RegionScratchGDB, RegionScratchFolder
+##            del datasetcode, dataset_product_code, distributionprojectcode
+##        # ##-->> Deleting Scratch and Temporary GDB End
 
     # ###--->>> Postprocessing End
 
@@ -11092,7 +11848,7 @@ def mpHandlerCreateDisMapRegions(Sequential):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -11104,13 +11860,13 @@ def mpHandlerCreateDisMapRegions(Sequential):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -11130,14 +11886,14 @@ def mpHandlerCreateDisMapRegions(Sequential):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -11196,6 +11952,8 @@ def mpHandlerCreateIndicatorsTable(Sequential):
 
         msg = f"Creating the {indicators} Table"
         logFile(log_file, msg); del msg
+
+        arcpy.management.Delete(indicators_table)
 
         if not arcpy.Exists(indicators_table):
             # Execute CreateTable
@@ -11286,10 +12044,12 @@ def mpHandlerCreateIndicatorsTable(Sequential):
             del datasetcode_longitude
 
             if not arcpy.Exists(os.path.join(RegionGDB, f"{dataset_product_code}_{indicators}")):
-                msg = f"\t> Copying the {dataset_product_code}_{indicators}"
+                msg = f"\t> Creating the {dataset_product_code}_{indicators} table"
                 logFile(log_file, msg); del msg
 
-                arcpy.management.Copy(os.path.join(ProjectGDB, indicators), os.path.join(RegionGDB, f"{dataset_product_code}_{indicators}"))
+                arcpy.management.CreateTable(RegionGDB, f"{dataset_product_code}_{indicators}", os.path.join(ProjectGDB, indicators), "", "")
+
+                #arcpy.management.Copy(os.path.join(ProjectGDB, indicators), os.path.join(RegionGDB, f"{dataset_product_code}_{indicators}"), "", "")
 
             del RegionGDB, RegionScratchGDB, dataset_product_code, datasetcode
             del distributionprojectcode
@@ -11303,14 +12063,14 @@ def mpHandlerCreateIndicatorsTable(Sequential):
         if not Sequential:
             # setup the multiprocessing pool with the number of cores in the current PC
             # The cpu_count() functions retruns the number of cpu cores
-            cpu_num = multiprocessing.cpu_count() - 2
+            #cpu_num = multiprocessing.cpu_count() - 2
             with multiprocessing.Pool(processes=cpu_num, initializer=init_processes, initargs=(ARCGIS_METADATA_DIRECTORY, BASE_DIRECTORY, CSV_DIRECTORY,
                                                                                                DATASET_SHAPEFILE_DIRECTORY, EXPORT_METADATA_DIRECTORY,
                                                                                                FilterDatasets, IMAGE_DIRECTORY, INPORT_METADATA_DIRECTORY,
                                                                                                LAYER_DIRECTORY, LOG_DIRECTORY, log_file_folder, MOSAIC_DIRECTORY,
                                                                                                PUBLISH_DIRECTORY, ScratchFolder, SoftwareEnvironmentLevel,
                                                                                                field_definitions, table_definitions, selected_species,
-                                                                                               FilterSpecies)) as pool:
+                                                                                               FilterSpecies, timezones)) as pool:
                 args = []
                 for i in range(len(datasets)):
                     args.append(datasets[i])
@@ -11328,7 +12088,7 @@ def mpHandlerCreateIndicatorsTable(Sequential):
                 print("Finished multiprocessing!")
                 del res, failed
                 del pool, args
-            del cpu_num
+            #del cpu_num
 
     # ###--->>> Multiprocessing End
 
@@ -11426,7 +12186,7 @@ def mpHandlerCreateIndicatorsTable(Sequential):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -11438,13 +12198,13 @@ def mpHandlerCreateIndicatorsTable(Sequential):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -11464,14 +12224,14 @@ def mpHandlerCreateIndicatorsTable(Sequential):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -11594,14 +12354,14 @@ def mpHandlerCreateLayerBathymetry(Sequential):
         if not Sequential:
             # setup the multiprocessing pool with the number of cores in the current PC
             # The cpu_count() functions retruns the number of cpu cores
-            cpu_num = multiprocessing.cpu_count() - 2
+            #cpu_num = multiprocessing.cpu_count() - 2
             with multiprocessing.Pool(processes=cpu_num, initializer=init_processes, initargs=(ARCGIS_METADATA_DIRECTORY, BASE_DIRECTORY, CSV_DIRECTORY,
                                                                                                DATASET_SHAPEFILE_DIRECTORY, EXPORT_METADATA_DIRECTORY,
                                                                                                FilterDatasets, IMAGE_DIRECTORY, INPORT_METADATA_DIRECTORY,
                                                                                                LAYER_DIRECTORY, LOG_DIRECTORY, log_file_folder, MOSAIC_DIRECTORY,
                                                                                                PUBLISH_DIRECTORY, ScratchFolder, SoftwareEnvironmentLevel,
                                                                                                field_definitions, table_definitions, selected_species,
-                                                                                               FilterSpecies)) as pool:
+                                                                                               FilterSpecies, timezones)) as pool:
                 args = []
                 for i in range(len(datasets)):
                     args.append(datasets[i])
@@ -11620,7 +12380,7 @@ def mpHandlerCreateLayerBathymetry(Sequential):
                 print("Finished multiprocessing!")
                 del res, failed
                 del pool, args
-            del cpu_num
+            #del cpu_num
 
     # ###--->>> Multiprocessing End
 
@@ -11708,7 +12468,7 @@ def mpHandlerCreateLayerBathymetry(Sequential):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -11720,13 +12480,13 @@ def mpHandlerCreateLayerBathymetry(Sequential):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -11746,14 +12506,14 @@ def mpHandlerCreateLayerBathymetry(Sequential):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -11860,14 +12620,14 @@ def mpHandlerCreateLayerFishnets(Sequential):
         if not Sequential:
             # setup the multiprocessing pool with the number of cores in the current PC
             # The cpu_count() functions retruns the number of cpu cores
-            cpu_num = multiprocessing.cpu_count() - 2
+            #cpu_num = multiprocessing.cpu_count() - 2
             with multiprocessing.Pool(processes=cpu_num, initializer=init_processes, initargs=(ARCGIS_METADATA_DIRECTORY, BASE_DIRECTORY, CSV_DIRECTORY,
                                                                                                DATASET_SHAPEFILE_DIRECTORY, EXPORT_METADATA_DIRECTORY,
                                                                                                FilterDatasets, IMAGE_DIRECTORY, INPORT_METADATA_DIRECTORY,
                                                                                                LAYER_DIRECTORY, LOG_DIRECTORY, log_file_folder, MOSAIC_DIRECTORY,
                                                                                                PUBLISH_DIRECTORY, ScratchFolder, SoftwareEnvironmentLevel,
                                                                                                field_definitions, table_definitions, selected_species,
-                                                                                               FilterSpecies)) as pool:
+                                                                                               FilterSpecies, timezones)) as pool:
                 args = []
                 for i in range(len(datasets)):
                     args.append(datasets[i])
@@ -11885,7 +12645,7 @@ def mpHandlerCreateLayerFishnets(Sequential):
                 print("Finished multiprocessing!")
                 del res, failed
                 del pool, args
-            del cpu_num
+            #del cpu_num
 
     # ###--->>> Multiprocessing End
 
@@ -11981,14 +12741,14 @@ def mpHandlerCreateLayerFishnets(Sequential):
         if not Sequential:
             # setup the multiprocessing pool with the number of cores in the current PC
             # The cpu_count() functions retruns the number of cpu cores
-            cpu_num = multiprocessing.cpu_count() - 2
+            #cpu_num = multiprocessing.cpu_count() - 2
             with multiprocessing.Pool(processes=cpu_num, initializer=init_processes, initargs=(ARCGIS_METADATA_DIRECTORY, BASE_DIRECTORY, CSV_DIRECTORY,
                                                                                    DATASET_SHAPEFILE_DIRECTORY, EXPORT_METADATA_DIRECTORY,
                                                                                    FilterDatasets, IMAGE_DIRECTORY, INPORT_METADATA_DIRECTORY,
                                                                                    LAYER_DIRECTORY, LOG_DIRECTORY, log_file_folder, MOSAIC_DIRECTORY,
                                                                                    PUBLISH_DIRECTORY, ScratchFolder, SoftwareEnvironmentLevel,
                                                                                    field_definitions, table_definitions, selected_species,
-                                                                                   FilterSpecies)) as pool:
+                                                                                   FilterSpecies, timezones)) as pool:
             #cpu_num = cpu_count()
             #with multiprocessing.Pool(processes=cpu_num, ) as pool:
             #with multiprocessing.Pool(len(datasets)) as pool:
@@ -12009,7 +12769,7 @@ def mpHandlerCreateLayerFishnets(Sequential):
                 print("Finished multiprocessing!")
                 del res, failed
                 del pool, args
-            del cpu_num
+            #del cpu_num
 
     # ###--->>> Multiprocessing End
 
@@ -12113,7 +12873,7 @@ def mpHandlerCreateLayerFishnets(Sequential):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -12125,13 +12885,13 @@ def mpHandlerCreateLayerFishnets(Sequential):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -12151,14 +12911,14 @@ def mpHandlerCreateLayerFishnets(Sequential):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -12221,7 +12981,7 @@ def mpHandlerCreateLayerSpeciesYearImageName(Sequential):
 
         layerspeciesyearimagename_table = os.path.join(ProjectGDB, layerspeciesyearimagename)
 
-        ReplaceLayerSpeciesYearImageName = False
+        ReplaceLayerSpeciesYearImageName = True
         if not arcpy.Exists(layerspeciesyearimagename_table) or ReplaceLayerSpeciesYearImageName:
 
             # Execute CreateTable
@@ -12314,14 +13074,14 @@ def mpHandlerCreateLayerSpeciesYearImageName(Sequential):
         if not Sequential:
             # setup the multiprocessing pool with the number of cores in the current PC
             # The cpu_count() functions retruns the number of cpu cores
-            cpu_num = multiprocessing.cpu_count() - 2
+            #cpu_num = multiprocessing.cpu_count() - 2
             with multiprocessing.Pool(processes=cpu_num, initializer=init_processes, initargs=(ARCGIS_METADATA_DIRECTORY, BASE_DIRECTORY, CSV_DIRECTORY,
                                                                                                DATASET_SHAPEFILE_DIRECTORY, EXPORT_METADATA_DIRECTORY,
                                                                                                FilterDatasets, IMAGE_DIRECTORY, INPORT_METADATA_DIRECTORY,
                                                                                                LAYER_DIRECTORY, LOG_DIRECTORY, log_file_folder, MOSAIC_DIRECTORY,
                                                                                                PUBLISH_DIRECTORY, ScratchFolder, SoftwareEnvironmentLevel,
                                                                                                field_definitions, table_definitions, selected_species,
-                                                                                               FilterSpecies)) as pool:
+                                                                                               FilterSpecies, timezones)) as pool:
                 args = []
                 for i in range(len(datasets)):
                     args.append(datasets[i])
@@ -12339,7 +13099,7 @@ def mpHandlerCreateLayerSpeciesYearImageName(Sequential):
                 print("Finished multiprocessing!")
                 del res, failed
                 del pool, args
-            del cpu_num
+            #del cpu_num
     # ###--->>> Multiprocessing End
 
     # ###--->>> Sequentialprocessing Start
@@ -12437,7 +13197,7 @@ def mpHandlerCreateLayerSpeciesYearImageName(Sequential):
             msg = f'\t> Statistics Analysis: {os.path.basename(layerspeciesyearimagename_table)} table for Species Filter'
             logFile(log_file, msg); del msg
 
-            arcpy.analysis.Statistics(in_table=layerspeciesyearimagename_table, out_table="_Species_Filter", statistics_fields="Species COUNT", case_field="Species;CommonName;TaxonomicGroup;FilterRegion;FilterSubRegion;ManagementBody;ManagementPlan")
+            arcpy.analysis.Statistics(in_table=layerspeciesyearimagename_table, out_table="_Species_Filter", statistics_fields="Species COUNT", case_field="DatasetCode;Species;CommonName;TaxonomicGroup;Region;FilterRegion;FilterSubRegion;ManagementBody;ManagementPlan")
 
             arcpy.management.DeleteField(in_table="_Species_Filter", drop_field="FREQUENCY;COUNT_Species")
 
@@ -12540,7 +13300,7 @@ def mpHandlerCreateLayerSpeciesYearImageName(Sequential):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -12552,13 +13312,13 @@ def mpHandlerCreateLayerSpeciesYearImageName(Sequential):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -12578,14 +13338,14 @@ def mpHandlerCreateLayerSpeciesYearImageName(Sequential):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -12674,7 +13434,8 @@ def mpHandlerCreateLayerTables(Sequential):
 
             dataset_product_code_table = os.path.join(ProjectGDB, tablename)
 
-            if not arcpy.Exists(dataset_product_code_table):
+            ReplaceDatasetTable = True
+            if not arcpy.Exists(dataset_product_code_table) or ReplaceDatasetTable:
                 tb_fields = [f.name for f in arcpy.ListFields(dataset_product_code_table) if f.type not in ['Geometry', 'OID']]
                 # Distribution Project Codes: IDW, GLMME
                 tb_definition = f"{distributionprojectcode}_Data"
@@ -12682,13 +13443,12 @@ def mpHandlerCreateLayerTables(Sequential):
                 fields = [f for f in tb_definition_fields if f not in tb_fields]
 
                 addFields(dataset_product_code_table, fields, field_definitions)
-                del tb_fields, tb_definition_fields, fields
-
+                del tb_fields, tb_definition_fields, fields, tb_definition
 
                 #msg = f'>-> Updating the field aliases for the {os.path.basename(dataset_product_code_table)} Table'
                 #logFile(log_file, msg); del msg
-
                 #alterFields(dataset_product_code_table)
+            del ReplaceDatasetTable
 
             xml_file = os.path.join(BASE_DIRECTORY, f"{tablename}.xml")
 
@@ -12720,14 +13480,14 @@ def mpHandlerCreateLayerTables(Sequential):
         if not Sequential:
             # setup the multiprocessing pool with the number of cores in the current PC
             # The cpu_count() functions retruns the number of cpu cores
-            cpu_num = multiprocessing.cpu_count() - 2
+            #cpu_num = multiprocessing.cpu_count() - 2
             with multiprocessing.Pool(processes=cpu_num, initializer=init_processes, initargs=(ARCGIS_METADATA_DIRECTORY, BASE_DIRECTORY, CSV_DIRECTORY,
                                                                                                DATASET_SHAPEFILE_DIRECTORY, EXPORT_METADATA_DIRECTORY,
                                                                                                FilterDatasets, IMAGE_DIRECTORY, INPORT_METADATA_DIRECTORY,
                                                                                                LAYER_DIRECTORY, LOG_DIRECTORY, log_file_folder, MOSAIC_DIRECTORY,
                                                                                                PUBLISH_DIRECTORY, ScratchFolder, SoftwareEnvironmentLevel,
                                                                                                field_definitions, table_definitions, selected_species,
-                                                                                               FilterSpecies)) as pool:
+                                                                                               FilterSpecies, timezones)) as pool:
                 args = []
                 for i in range(len(datasets)):
                     args.append(datasets[i])
@@ -12745,7 +13505,7 @@ def mpHandlerCreateLayerTables(Sequential):
                 print("Finished multiprocessing!")
                 del res, failed
                 del pool, args
-            del cpu_num
+            #del cpu_num
 
     # ###--->>> Multiprocessing End
 
@@ -12834,7 +13594,7 @@ def mpHandlerCreateLayerTables(Sequential):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -12846,13 +13606,13 @@ def mpHandlerCreateLayerTables(Sequential):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -12872,14 +13632,14 @@ def mpHandlerCreateLayerTables(Sequential):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -12970,6 +13730,12 @@ def mpHandlerCreateMosaics(Sequential):
             arcpy.management.CopyRows(tableview, os.path.join(RegionGDB, "LayerSpeciesYearImageName"))
             arcpy.management.Delete(tableview)
             del tableview
+            arcpy.management.DeleteIdentical(
+                                             in_dataset=os.path.join(RegionGDB, "LayerSpeciesYearImageName"),
+                                             fields="ImageName",
+                                             xy_tolerance=None,
+                                             z_tolerance=0
+                                            )
 
             del datasetcode, distributionprojectcode, dataset_product_code
             del RegionGDB, RegionScratchGDB
@@ -12982,14 +13748,14 @@ def mpHandlerCreateMosaics(Sequential):
         if not Sequential:
             # setup the multiprocessing pool with the number of cores in the current PC
             # The cpu_count() functions retruns the number of cpu cores
-            cpu_num = multiprocessing.cpu_count() - 2
+            #cpu_num = multiprocessing.cpu_count() - 2
             with multiprocessing.Pool(processes=cpu_num, initializer=init_processes, initargs=(ARCGIS_METADATA_DIRECTORY, BASE_DIRECTORY, CSV_DIRECTORY,
                                                                                                DATASET_SHAPEFILE_DIRECTORY, EXPORT_METADATA_DIRECTORY,
                                                                                                FilterDatasets, IMAGE_DIRECTORY, INPORT_METADATA_DIRECTORY,
                                                                                                LAYER_DIRECTORY, LOG_DIRECTORY, log_file_folder, MOSAIC_DIRECTORY,
                                                                                                PUBLISH_DIRECTORY, ScratchFolder, SoftwareEnvironmentLevel,
                                                                                                field_definitions, table_definitions, selected_species,
-                                                                                               FilterSpecies)) as pool:
+                                                                                               FilterSpecies, timezones)) as pool:
                 args = []
                 for i in range(len(datasets)):
                     args.append(datasets[i])
@@ -13007,7 +13773,7 @@ def mpHandlerCreateMosaics(Sequential):
                 print("Finished multiprocessing!")
                 del res, failed
                 del pool, args
-            del cpu_num
+            #del cpu_num
     # ###--->>> Multiprocessing End
 
     # ###--->>> Sequentialprocessing Start
@@ -13056,44 +13822,44 @@ def mpHandlerCreateMosaics(Sequential):
 
         # ##-->> Copy data from Scratch and Temporary GDB to Project GDB End
 
-        #compactGDB(ProjectGDB)
+        compactGDB(ProjectGDB)
 
         # ##-->> Copying Output End
 
-        # ##-->> Deleting Scratch and Temporary GDB Start
-        for i in range(len(datasets)):
-            datasetcode             = datasets[i][0]
-            distributionprojectcode = datasets[i][12]
-            mosaicname              = datasets[i][19]
-            del i
-
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
-
-            RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
-
-            RegionScratchGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel} Scratch.gdb")
-
-            msg = f"#-> Deleting the {datasetcode} Region GDB"
-            logFile(log_file, msg); del msg
-
-            #purgeGDB(RegionGDB)
-            arcpy.management.Delete(RegionGDB)
-
-            msg = f"#-> Deleting the {datasetcode} Region Scratch GDB"
-            logFile(log_file, msg); del msg
-
-            #purgeGDB(RegionScratchGDB)
-            arcpy.management.Delete(RegionScratchGDB)
-
-            msg = f"#-> Deleting the {mosaicname.replace('_Mosaic', '')}.crf Dataset"
-            logFile(log_file, msg); del msg
-
-            arcpy.management.Delete(os.path.join(ScratchFolder, f"{mosaicname.replace('_Mosaic', '')}.crf"))
-
-            del RegionGDB, RegionScratchGDB
-            del datasetcode, distributionprojectcode, mosaicname
-            del dataset_product_code
-        # ##-->> Deleting Scratch and Temporary GDB End
+##        # ##-->> Deleting Scratch and Temporary GDB Start
+##        for i in range(len(datasets)):
+##            datasetcode             = datasets[i][0]
+##            distributionprojectcode = datasets[i][12]
+##            mosaicname              = datasets[i][19]
+##            del i
+##
+##            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+##
+##            RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
+##
+##            RegionScratchGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel} Scratch.gdb")
+##
+##            msg = f"#-> Deleting the {datasetcode} Region GDB"
+##            logFile(log_file, msg); del msg
+##
+##            #purgeGDB(RegionGDB)
+##            arcpy.management.Delete(RegionGDB)
+##
+##            msg = f"#-> Deleting the {datasetcode} Region Scratch GDB"
+##            logFile(log_file, msg); del msg
+##
+##            #purgeGDB(RegionScratchGDB)
+##            arcpy.management.Delete(RegionScratchGDB)
+##
+##            msg = f"#-> Deleting the {mosaicname.replace('_Mosaic', '')}.crf Dataset"
+##            logFile(log_file, msg); del msg
+##
+##            arcpy.management.Delete(os.path.join(ScratchFolder, f"{mosaicname.replace('_Mosaic', '')}.crf"))
+##
+##            del RegionGDB, RegionScratchGDB
+##            del datasetcode, distributionprojectcode, mosaicname
+##            del dataset_product_code
+##        # ##-->> Deleting Scratch and Temporary GDB End
 
         del datasets, Sequential
 
@@ -13107,7 +13873,7 @@ def mpHandlerCreateMosaics(Sequential):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -13119,13 +13885,13 @@ def mpHandlerCreateMosaics(Sequential):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -13145,14 +13911,14 @@ def mpHandlerCreateMosaics(Sequential):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -13266,14 +14032,14 @@ def mpHandlerCreateRasters(Sequential):
         if not Sequential:
             # setup the multiprocessing pool with the number of cores in the current PC
             # The cpu_count() functions retruns the number of cpu cores
-            cpu_num = multiprocessing.cpu_count() - 2
+            #cpu_num = multiprocessing.cpu_count() - 2
             with multiprocessing.Pool(processes=cpu_num, initializer=init_processes, initargs=(ARCGIS_METADATA_DIRECTORY, BASE_DIRECTORY, CSV_DIRECTORY,
                                                                                                DATASET_SHAPEFILE_DIRECTORY, EXPORT_METADATA_DIRECTORY,
                                                                                                FilterDatasets, IMAGE_DIRECTORY, INPORT_METADATA_DIRECTORY,
                                                                                                LAYER_DIRECTORY, LOG_DIRECTORY, log_file_folder, MOSAIC_DIRECTORY,
                                                                                                PUBLISH_DIRECTORY, ScratchFolder, SoftwareEnvironmentLevel,
                                                                                                field_definitions, table_definitions, selected_species,
-                                                                                               FilterSpecies)) as pool:
+                                                                                               FilterSpecies, timezones)) as pool:
 
                 args = []
                 for i in range(len(datasets)):
@@ -13292,7 +14058,7 @@ def mpHandlerCreateRasters(Sequential):
                 print("Finished multiprocessing!")
                 del res, failed
                 del pool, args
-            del cpu_num
+            #del cpu_num
 
     # ###--->>> Multiprocessing End
 
@@ -13354,7 +14120,7 @@ def mpHandlerCreateRasters(Sequential):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -13366,13 +14132,13 @@ def mpHandlerCreateRasters(Sequential):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -13392,14 +14158,14 @@ def mpHandlerCreateRasters(Sequential):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -13493,14 +14259,14 @@ def mpHandlerCreateSampleLocationPoints(Sequential):
         if not Sequential:
             # setup the multiprocessing pool with the number of cores in the current PC
             # The cpu_count() functions retruns the number of cpu cores
-            cpu_num = multiprocessing.cpu_count() - 2
+            #cpu_num = multiprocessing.cpu_count() - 2
             with multiprocessing.Pool(processes=cpu_num, initializer=init_processes, initargs=(ARCGIS_METADATA_DIRECTORY, BASE_DIRECTORY, CSV_DIRECTORY,
                                                                                                DATASET_SHAPEFILE_DIRECTORY, EXPORT_METADATA_DIRECTORY,
                                                                                                FilterDatasets, IMAGE_DIRECTORY, INPORT_METADATA_DIRECTORY,
                                                                                                LAYER_DIRECTORY, LOG_DIRECTORY, log_file_folder, MOSAIC_DIRECTORY,
                                                                                                PUBLISH_DIRECTORY, ScratchFolder, SoftwareEnvironmentLevel,
                                                                                                field_definitions, table_definitions, selected_species,
-                                                                                               FilterSpecies)) as pool:
+                                                                                               FilterSpecies, timezones)) as pool:
 
                 args = []
                 for i in range(len(datasets)):
@@ -13519,7 +14285,7 @@ def mpHandlerCreateSampleLocationPoints(Sequential):
                 print("Finished multiprocessing!")
                 del res, failed
                 del pool, args
-            del cpu_num
+            #del cpu_num
 
     # ###--->>> Multiprocessing End
 
@@ -13605,7 +14371,7 @@ def mpHandlerCreateSampleLocationPoints(Sequential):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -13617,13 +14383,13 @@ def mpHandlerCreateSampleLocationPoints(Sequential):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -13643,14 +14409,14 @@ def mpHandlerCreateSampleLocationPoints(Sequential):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -13791,14 +14557,14 @@ def mpHandlerCreateSpeciesRichnessRasters(Sequential):
         if not Sequential:
             # setup the multiprocessing pool with the number of cores in the current PC
             # The cpu_count() functions retruns the number of cpu cores
-            cpu_num = multiprocessing.cpu_count() - 2
+            #cpu_num = multiprocessing.cpu_count() - 2
             with multiprocessing.Pool(processes=cpu_num, initializer=init_processes, initargs=(ARCGIS_METADATA_DIRECTORY, BASE_DIRECTORY, CSV_DIRECTORY,
                                                                                                DATASET_SHAPEFILE_DIRECTORY, EXPORT_METADATA_DIRECTORY,
                                                                                                FilterDatasets, IMAGE_DIRECTORY, INPORT_METADATA_DIRECTORY,
                                                                                                LAYER_DIRECTORY, LOG_DIRECTORY, log_file_folder, MOSAIC_DIRECTORY,
                                                                                                PUBLISH_DIRECTORY, ScratchFolder, SoftwareEnvironmentLevel,
                                                                                                field_definitions, table_definitions, selected_species,
-                                                                                               FilterSpecies)) as pool:
+                                                                                               FilterSpecies, timezones)) as pool:
                 args = []
                 for i in range(len(datasets)):
                     args.append(datasets[i])
@@ -13816,7 +14582,7 @@ def mpHandlerCreateSpeciesRichnessRasters(Sequential):
                 print("Finished multiprocessing!")
                 del res, failed
                 del pool, args
-            del cpu_num
+            #del cpu_num
 
     # ###--->>> Multiprocessing End
 
@@ -13889,7 +14655,7 @@ def mpHandlerCreateSpeciesRichnessRasters(Sequential):
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -13901,13 +14667,13 @@ def mpHandlerCreateSpeciesRichnessRasters(Sequential):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -13927,14 +14693,14 @@ def mpHandlerCreateSpeciesRichnessRasters(Sequential):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -14039,13 +14805,13 @@ def parseXML(xml_file):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -14065,14 +14831,14 @@ def parseXML(xml_file):
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -14121,13 +14887,13 @@ def prettyXML(metadata):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     finally:
         # Get list of local keys that may need to be deleted.
         localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
@@ -14137,7 +14903,7 @@ def prettyXML(metadata):
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
 def publishMapLayers():
     """Create Map Layers"""
@@ -14618,15 +15384,15 @@ def publishMapLayers():
 ##                del sddraft
 ##                del aprx
 ##
-####                ## Change the SDDraft to overwrite existing service
-####                # Read the file
-####                with open(sddraft_output_filename, 'r') as file:
-####                    filedata = file.read()
-####                # Replace the target string
-####                filedata = filedata.replace('esriServiceDefinitionType_New', 'esriServiceDefinitionType_Replacement')
-####                # Write the file out again
-####                with open(sddraft_output_filename, 'w') as file:
-####                    file.write(filedata)
+### #                ## Change the SDDraft to overwrite existing service
+### #                # Read the file
+### #                with open(sddraft_output_filename, 'r') as file:
+### #                    filedata = file.read()
+### #                # Replace the target string
+### #                filedata = filedata.replace('esriServiceDefinitionType_New', 'esriServiceDefinitionType_Replacement')
+### #                # Write the file out again
+### #                with open(sddraft_output_filename, 'w') as file:
+### #                    file.write(filedata)
 ##
 ##                try:
 ##                    # Stage Service
@@ -14751,11 +15517,11 @@ def publishMapLayers():
 ##                server_type = "HOSTING_SERVER"
 ##                sddraft = m.getWebLayerSharingDraft(server_type, "FEATURE", service_name)
 ##
-####                sddraft.summary = "My Summary"
-####                sddraft.tags = "My tags"
-####                sddraft.description = "My description"
-####                sddraft.credits = "My credits"
-####                sddraft.use = "My disclaimer"
+### #                sddraft.summary = "My Summary"
+### #                sddraft.tags = "My tags"
+### #                sddraft.description = "My description"
+### #                sddraft.credits = "My credits"
+### #                sddraft.use = "My disclaimer"
 ##
 ##                del service_name, outdir, sd_filename, server_type
 ##                del m
@@ -14887,7 +15653,7 @@ def publishMapLayers():
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
     # This code is executed only if an exception was raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -14899,13 +15665,13 @@ def publishMapLayers():
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -14925,14 +15691,14 @@ def publishMapLayers():
     # caught (and probably stop the program). This block is also optional.
     finally:
         # Get list of local keys that may need to be deleted.
-        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function"])]
+        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
         # If there is a list of local keys, print the list, and then delete
         # variables
         if localKeys:
             msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
             print(msg); del msg
-        del localKeys, function
+        del localKeys, function, log_file
 
         #initializing d with dir()
         #This will store a list of all the variables in the program
@@ -14973,13 +15739,13 @@ def purgeGDB(target_gdb=arcpy.env.scratchGDB):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
 def reorder_fields(table, out_table, field_order, add_missing=True):
     try:
@@ -15035,13 +15801,13 @@ def reorder_fields(table, out_table, field_order, add_missing=True):
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
 # #
 # Function: select_by_specie
@@ -15232,7 +15998,7 @@ if __name__ == '__main__':
         # Set to True if we want to filter on certian one or more regions, else
         # False to process all regions
         FilterDatasets = False # True False
-        # selected_regions = 'AI_IDW','BSS_IDW','EBS_IDW','NEBS_IDW','NBS_IDW',
+        # selected_regions = 'AI_IDW','BSS_IDW','EBS_IDW','ENBS_IDW','NBS_IDW',
         #                    'GOA_IDW','GMEX_IDW','HI_IDW','NEUS_FAL_IDW',
         #                    'NEUS_SPR_IDW','SEUS_FAL_IDW','SEUS_SPR_IDW',
         #                    'SEUS_SUM_IDW','WC_ANN_IDW','WC_GLMME','WC_TRI_IDW',
@@ -15242,6 +16008,10 @@ if __name__ == '__main__':
         # Set to True if we want to filter on certian years, else False to
         # process all years
         #FilterYears = False
+
+        # Set Gloabl cpu_num
+        cpu_num = multiprocessing.cpu_count() - 2
+        #cpu_num = multiprocessing.cpu_count()
 
         # The main() is for testing and project setup
         main()
@@ -15253,7 +16023,7 @@ if __name__ == '__main__':
         # ###--->>> Create Dataset Table Start
         # Create Dataset Table: True or False
 
-        CreateDatasetTable = False
+        CreateDatasetTable = True
         if CreateDatasetTable:
             createDatasetTable()
             # Create Dataset Table Metadata
@@ -15376,6 +16146,8 @@ if __name__ == '__main__':
     # ###--->>> Step #6
     # ###--->>> Import Sample Location CSV Tables Start
         # ###--->>> Import Layer CSV Tables Start
+        FilterDatasets = False # True False
+        selected_datasets = ['AI_IDW', 'EBS_IDW', 'ENBS_IDW', 'NBS_IDW', 'GOA_IDW',]
 
         # Create Layer CSV Tables True or False
         CreateLayerTables = False
@@ -15395,12 +16167,15 @@ if __name__ == '__main__':
     # ###--->>> Populate Region Species Year Image Name Table Start
         # Create Region-Species-Year-Image-Name Table True or False
 
+##        FilterDatasets = False # True False
+##        # selected_regions = 'AI_IDW','BSS_IDW','EBS_IDW','NEBS_IDW','NBS_IDW',
+##        #                    'GOA_IDW','GMEX_IDW','HI_IDW','NEUS_FAL_IDW',
+##        #                    'NEUS_SPR_IDW','SEUS_FAL_IDW','SEUS_SPR_IDW',
+##        #                    'SEUS_SUM_IDW','WC_ANN_IDW','WC_GLMME','WC_TRI_IDW',
+##        selected_datasets = ['AI_IDW',]
+
         FilterDatasets = False # True False
-        # selected_regions = 'AI_IDW','BSS_IDW','EBS_IDW','NEBS_IDW','NBS_IDW',
-        #                    'GOA_IDW','GMEX_IDW','HI_IDW','NEUS_FAL_IDW',
-        #                    'NEUS_SPR_IDW','SEUS_FAL_IDW','SEUS_SPR_IDW',
-        #                    'SEUS_SUM_IDW','WC_ANN_IDW','WC_GLMME','WC_TRI_IDW',
-        selected_datasets = ['AI_IDW',]
+        selected_datasets = ['ENBS_IDW',]
 
         CreateLayerSpeciesYearImageName = False
         Sequential = False
@@ -15414,6 +16189,8 @@ if __name__ == '__main__':
 
     # ###--->>> Step #8
     # ###--->>> Create Sample Location Points Datasetes Start
+        FilterDatasets = False # True False
+        selected_datasets = ['AI_IDW', 'EBS_IDW', 'ENBS_IDW', 'NBS_IDW', 'GOA_IDW',]
 
         # Generate Point Datasetes True or False
         CreateSampleLocationPoints = False
@@ -15427,9 +16204,11 @@ if __name__ == '__main__':
 
     # ###--->>> Step #9
     # ###--->>> Create Biomass Rasters Start
+        FilterDatasets = False # True False
+        selected_datasets = ['AI_IDW', 'EBS_IDW', 'ENBS_IDW', 'NBS_IDW', 'GOA_IDW',]
 
         # Generate Rasters True or False
-        CreateRasters = True
+        CreateRasters = False
         Sequential = False
         if CreateRasters:
             mpHandlerCreateRasters(Sequential)
@@ -15438,6 +16217,12 @@ if __name__ == '__main__':
 
     # ###--->>> Step #110
     # ###--->>> Indicators Table Start
+##        #                    'GOA_IDW','GMEX_IDW','HI_IDW','NEUS_FAL_IDW',
+##        #                    'NEUS_SPR_IDW','SEUS_FAL_IDW','SEUS_SPR_IDW',
+##        #                    'SEUS_SUM_IDW','WC_ANN_IDW','WC_GLMME','WC_TRI_IDW',
+        FilterDatasets = False # True False
+        #selected_datasets = ['AI_IDW', 'EBS_IDW', 'ENBS_IDW', 'NBS_IDW', 'GOA_IDW',]
+        selected_datasets = ['WC_TRI_IDW',]
 
         # Populate Indicators Table True or False
         CreateIndicatorsTable = False
@@ -15472,8 +16257,8 @@ if __name__ == '__main__':
 
     # ###--->>> Step #12
     # ###--->>> Mosaics Start
-        FilterDatasets = False # True False
-        selected_datasets = ['AI_IDW','WC_GLMME']
+        FilterDatasets = True # True False
+        selected_datasets = ['AI_IDW','GOA_IDW', 'NEUS_FAL_IDW', 'GMEX_IDW']
 
         # This function creates Mosaics that iterate over years
         # Create Species Richness Rasters = True or False
@@ -15491,45 +16276,54 @@ if __name__ == '__main__':
     # ###--->>> Step #13
     # ###--->>> Import ArcGIS Metadata for Layers Start
 
+        # Import Metadata = True or False
+        ImportMetadata = False
+        if ImportMetadata:
+            importMetadata()
+        del ImportMetadata, importMetadata
+
         # Create Species Richness Rasters = True or False
-        ExportArcGisMetadata = False
-        if ExportArcGisMetadata:
-            exportArcGisMetadata()
-        del ExportArcGisMetadata, exportArcGisMetadata
+        #createEmptyTempMetadataXML()
+##        ImportArcGisMetadata = False
+##        if ImportArcGisMetadata:
+##            importArcGisMetadata()
+##        del ImportArcGisMetadata
+        del importArcGisMetadata
+        del createEmptyTempMetadataXML
 
-        MetadataUpdate = False
-        if MetadataUpdate:
-            metadataUpdate()
-        del MetadataUpdate, metadataUpdate
-
-        PrettyXML = False
-        if PrettyXML:
-            with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = EXPORT_METADATA_DIRECTORY):
-            #with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = PUBLISH_DIRECTORY):
-                wc = ".xml"
-                #wc = ".sddraft"
-                metadata_files = [os.path.join(EXPORT_METADATA_DIRECTORY, f) for f in arcpy.ListFiles(f"*{wc}")]; del wc
-                #metadata_files = [os.path.join(PUBLISH_DIRECTORY, f) for f in arcpy.ListFiles(f"*{wc}")]; del wc
-                for metadata_file in metadata_files:
-                    prettyXML(metadata=metadata_file)
-                    del metadata_file
-                del metadata_files
-        del PrettyXML
-
-    # ###--->>> Export ArcGIS Metadata for Layers End
+    # ###--->>> Import ArcGIS Metadata for Layers End
 
     # ###--->>> Step #14
     # ###--->>> Import ArcGIS Metadata for Layers Start
 
-        # Create Species Richness Rasters = True or False
-        #createEmptyTempMetadataXML()
-        ImportArcGisMetadata = False
-        if ImportArcGisMetadata:
-            importArcGisMetadata()
-        del ImportArcGisMetadata
-        del createEmptyTempMetadataXML
+        # Export ArcGIS Metadata = True or False
+##        ExportArcGisMetadata = False
+##        if ExportArcGisMetadata:
+##            exportArcGisMetadata()
+##        del ExportArcGisMetadata
+        del exportArcGisMetadata
 
-    # ###--->>> Import ArcGIS Metadata for Layers End
+##        MetadataUpdate = False
+##        if MetadataUpdate:
+##            metadataUpdate()
+##        del MetadataUpdate
+        del metadataUpdate
+
+##        PrettyXML = False
+##        if PrettyXML:
+##            with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = EXPORT_METADATA_DIRECTORY):
+##            #with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = PUBLISH_DIRECTORY):
+##                wc = ".xml"
+##                #wc = ".sddraft"
+##                metadata_files = [os.path.join(EXPORT_METADATA_DIRECTORY, f) for f in arcpy.ListFiles(f"*{wc}")]; del wc
+##                #metadata_files = [os.path.join(PUBLISH_DIRECTORY, f) for f in arcpy.ListFiles(f"*{wc}")]; del wc
+##                for metadata_file in metadata_files:
+##                    prettyXML(metadata=metadata_file)
+##                    del metadata_file
+##                del metadata_files
+##        del PrettyXML
+
+    # ###--->>> Export ArcGIS Metadata for Layers End
 
     # ###--->>> Step #15
     # ###--->>> Create Maps Layers Start
@@ -15573,7 +16367,7 @@ if __name__ == '__main__':
         del PublishMapLayers, publishMapLayers
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        # This function puplishes the version with the CURRENT
+        # This function puplishes the version with CURRENT
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
     # ###--->>> Publish Map Layers End
@@ -15623,7 +16417,7 @@ if __name__ == '__main__':
         end_time = time()
         elapse_time =  end_time - start_time
         msg = f"Elapsed Time for {script_file}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-        logFile(log_file, msg); del msg, start_time, end_time, elapse_time, log_file
+        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
 
         del cwd, script_file
 
@@ -15649,13 +16443,13 @@ if __name__ == '__main__':
         #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
         msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
     except Exception as e:
         import sys
         # Capture all other errors
         #print(sys.exc_info()[2].tb_lineno)
         msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-        print(msg); del msg#; sys.exit(1)
+        logFile(log_file, msg); del msg
 
     # This code is executed only if no exceptions were raised in the try block.
     # Code executed in this block is just like normal code: if there is an
@@ -15693,7 +16487,7 @@ if __name__ == '__main__':
         del generateSpeciesFilter, generateMasterSpeciesInformation
         del createSpeciesFilterTable, generateLayerSpeciesYearImageName
         del addMapsToProjectGIS, listMapsInProjectGIS, prettyXML,
-        del importArcGisMetadata, alterFields, init_processes, logFile
+        del alterFields, init_processes, logFile
 
         # Remove declared globals
         del BASE_DIRECTORY, IMAGE_DIRECTORY, CSV_DIRECTORY, DATASET_SHAPEFILE_DIRECTORY
@@ -15708,9 +16502,13 @@ if __name__ == '__main__':
         #del logger, formatter, ch, selected_years
         del SoftwareEnvironmentLevel, FilterDatasets, log_file_folder
         # del FilterYears
+        del cpu_num, timezones
 
         # This is a list of local and global variables that are exclude from
         # lists of variables
+
+
+        del log_file
 
         globalKeys = [key for key in globals().keys() if not key.startswith('__')]
 
@@ -15727,7 +16525,7 @@ if __name__ == '__main__':
             #checking for built-in variables/functions
             if not obj.startswith('__'):
                 #deleting the said obj, since a user-defined function
-                print(f"\tRemaining global variable: {globals()[obj]}")
+                #print(f"\tRemaining global variable: {globals()[obj]}")
                 del globals()[obj]
                 del obj
         del d
