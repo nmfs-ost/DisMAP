@@ -58,7 +58,6 @@
 
 import os
 import arcpy
-import multiprocessing
 from time import time, localtime, strftime, gmtime, sleep
 
 # Get the name of the running fuction using inspect
@@ -193,7 +192,7 @@ def alterFields(tb):
                     try:
                         # arcpy.management.AlterField(in_table, field, {new_field_name}, {new_field_alias}, {field_type}, {field_length}, {field_is_nullable}, {clear_field_alias})
                         arcpy.management.AlterField(
-                                                    in_table = tb,
+                                                    in_table          = tb,
                                                     field             = field_definition[0],
                                                     new_field_name    = field_definition[0],
                                                     new_field_alias   = field_definition[2],
@@ -203,10 +202,14 @@ def alterFields(tb):
                                                     )
 
                     except arcpy.ExecuteError:
+                        import sys
+                        # Geoprocessor threw an error
+                        #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
                         msg = arcpy.GetMessages(2).replace('\n', '\n\t')
+                        msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
                         print(msg); del msg
                         msg = f"###--->>> Table: {os.path.basename(tb)}, Field: {field_definition[0]}, Field Alias: {field_definition[2]}, Field Length: {field_definition[3]}"
-                        print(msg); del msg
+                        print(msg); del msg, sys
 
                 else:
                     msg = f"###---> Add field: {field_name} to field_definitions dictionary<---###"
@@ -682,7 +685,7 @@ def compactGDB(gdb):
         base_name = os.path.basename(gdb) #.strip('.gdb')
         msg = f"\n###--->>> Compacting GDB: {base_name} <<<---###"
         print(msg); del msg
-        arcpy.Compact_management(gdb)
+        arcpy.management.Compact(gdb)
         msg = arcpy.GetMessages().replace('chr(10)', f'chr(10)#---> Compact {base_name} ')
         msg = f"#---> {msg}\n"
         print(msg); del msg
@@ -812,7 +815,7 @@ def createAlasakaBathymetry():
         # Set AlaskaGDB
         AlaskaGDB = os.path.join(BASE_FOLDER, "Alaska.gdb")
 
-        if not arcpy.Exists(AlaskaGDB): arcpy.CreateFileGDB_management(BASE_FOLDER, "Alaska")
+        if not arcpy.Exists(AlaskaGDB): arcpy.management.CreateFileGDB(BASE_FOLDER, "Alaska")
 
 # #        arcpy.env.cellSize = "MAXOF"
 # #        arcpy.env.cellSizeProjectionMethod = "PRESERVE_RESOLUTION"
@@ -1255,263 +1258,6 @@ def createEmptyTempMetadataXML():
                     del obj
         del d
 
-##def createDatasetTableMetadata():
-##    """Create Dataset Table"""
-##    try: # The code with the exception that you want to catch. If an exception
-##         # is raised, control flow leaves this block immediately and goes to
-##         # the except block
-##
-##        from arcpy import metadata as md
-##
-##        # Uses the inspect module and a lamda to find name of this function
-##        function = function_name()
-##
-##        start_time = time()
-##
-##        # For benchmarking.
-##        #timestr = strftime("%Y%m%d-%H%M%S")
-##        timestr = strftime('%a %b %d %I %M %S %p', localtime())
-##        log_file = os.path.join(log_file_folder, f"{function} {timestr}.log")
-##        del timestr
-##
-##        # Write a message to the log file
-##        msg = f"STARTING {function} ON {strftime('%a %b %d %I:%M:%S %p', localtime())}"
-##        logFile(log_file, msg); del msg
-##
-##        arcpy.SetLogHistory(False)
-##
-##        datasets = "Datasets"
-##        datasets_table = os.path.join(ProjectGDB, datasets)
-##
-##        msg = f'> Creating Metadata for: {os.path.basename(datasets_table)}'
-##        logFile(log_file, msg); del msg
-##
-##        datasets_md = md.Metadata(datasets_table)
-##
-##        empty_metadata = os.path.join(EXPORT_METADATA, f"empty.xml")
-##
-##        #datasets_md.importMetadata(empty_metadata, 'ARCGIS_METADATA')
-##        datasets_md.importMetadata(empty_metadata, 'DEFAULT')
-##        #datasets_md.synchronize("SELECTIVE")
-##        #datasets_md.synchronize("ACCESSED", 0)
-##        #datasets_md.synchronize("NOT_CREATED", 0)
-##        #datasets_md.synchronize("CREATED", 0)
-##        #datasets_md.synchronize("ALWAYS")
-##        #datasets_md.synchronize("OVERWRITE")
-##        datasets_md.save()
-##        datasets_md.reload()
-##        del empty_metadata, datasets_md
-##
-####        datasets_md = md.Metadata(datasets_table)
-####
-####        template_metadata = os.path.join(EXPORT_METADATA, "Indicators Template")
-####
-####        #datasets_md.importMetadata(template_metadata, 'ARCGIS_METADATA')
-####        datasets_md.importMetadata(template_metadata, 'DEFAULT')
-####        datasets_md.save()
-####        datasets_md.reload()
-####        #datasets_md.synchronize("SELECTIVE")
-####        #datasets_md.synchronize("ACCESSED", 0)
-####        #datasets_md.synchronize("NOT_CREATED", 0)
-####        #datasets_md.synchronize("CREATED", 0)
-####        #datasets_md.synchronize("ALWAYS")
-####        #datasets_md.synchronize("OVERWRITE")
-####        datasets_md.save()
-####        datasets_md.reload()
-####        del template_metadata, datasets_md
-##
-##        datasets_md = md.Metadata(datasets_table)
-##
-##        msg = "\t\t Title: {0}".format(datasets_md.title)
-##        print(msg); del msg
-##
-##        msg = "\t\t Tags: {0}".format(datasets_md.tags)
-##        print(msg); del msg
-##
-##        msg = "\t\t Summary: {0}".format(datasets_md.summary)
-##        print(msg); del msg
-##
-##        msg = "\t\t Description: {0}".format(datasets_md.description)
-##        print(msg); del msg
-##
-##        msg = "\t\t Credits: {0}".format(datasets_md.credits)
-##        print(msg); del msg
-##
-##        msg = "\t\t Access Constraints: {0}".format(datasets_md.accessConstraints)
-##        print(msg); del msg
-##
-##        # Delete all geoprocessing history and any enclosed files from the item's metadata
-####        if not datasets_md.isReadOnly:
-####            datasets_md.deleteContent('GPHISTORY')
-####            datasets_md.deleteContent('ENCLOSED_FILES')
-####            datasets_md.deleteContent('THUMBNAIL')
-####            datasets_md.save()
-####            datasets_md.reload()
-##
-##        export_metadata = os.path.join(EXPORT_METADATA, f"{datasets}.xml")
-##
-##        datasets_md.saveAsXML(export_metadata.replace(".xml", " EXACT_COPY.xml"), 'EXACT_COPY') # Default
-##        datasets_md.saveAsXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO.xml"), 'REMOVE_ALL_SENSITIVE_INFO')
-##        #datasets_md.saveAsXML(export_metadata.replace(".xml", " REMOVE_MACHINE_NAMES.xml"), 'REMOVE_MACHINE_NAMES')
-##        datasets_md.saveAsXML(export_metadata.replace(".xml", " TEMPLATE.xml"), 'TEMPLATE')
-##        #prettyXML(export_metadata.replace(".xml", " EXACT_COPY.xml"))
-##        #prettyXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO.xml"))
-##        #prettyXML(export_metadata.replace(".xml", " TEMPLATE.xml"))
-##
-####        datasets_md.synchronize("ACCESSED", 0)
-####        datasets_md.save()
-####        datasets_md.reload()
-####
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " EXACT_COPY ACCESSED.xml"), 'EXACT_COPY')
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO ACCESSED.xml"), 'REMOVE_ALL_SENSITIVE_INFO')
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " TEMPLATE ACCESSED.xml"), 'TEMPLATE')
-####
-####        prettyXML(export_metadata.replace(".xml", " EXACT_COPY ACCESSED.xml"))
-####        prettyXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO ACCESSED.xml"))
-####        prettyXML(export_metadata.replace(".xml", " TEMPLATE ACCESSED.xml"))
-####
-####        datasets_md.synchronize("ALWAYS")
-####        datasets_md.save()
-####        datasets_md.reload()
-####
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " EXACT_COPY ALWAYS.xml"), 'EXACT_COPY')
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO ALWAYS.xml"), 'REMOVE_ALL_SENSITIVE_INFO')
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " TEMPLATE ALWAYS.xml"), 'TEMPLATE')
-####
-####        prettyXML(export_metadata.replace(".xml", " EXACT_COPY ALWAYS.xml"))
-####        prettyXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO ALWAYS.xml"))
-####        prettyXML(export_metadata.replace(".xml", " TEMPLATE ALWAYS.xml"))
-##
-####        datasets_md.synchronize("CREATED", 0)
-####        datasets_md.save()
-####        datasets_md.reload()
-####
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " EXACT_COPY CREATED.xml"), 'EXACT_COPY')
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO CREATED.xml"), 'REMOVE_ALL_SENSITIVE_INFO')
-####        #datasets_md.saveAsXML(export_metadata.replace(".xml", " TEMPLATE CREATED.xml"), 'TEMPLATE')
-####
-####        prettyXML(export_metadata.replace(".xml", " EXACT_COPY CREATED.xml"))
-####        prettyXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO CREATED.xml"))
-####        #prettyXML(export_metadata.replace(".xml", " TEMPLATE CREATED.xml"))
-##
-####        datasets_md.synchronize("NOT_CREATED", 0)
-####        datasets_md.save()
-####        datasets_md.reload()
-####
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " EXACT_COPY NOT_CREATED.xml"), 'EXACT_COPY')
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO NOT_CREATED.xml"), 'REMOVE_ALL_SENSITIVE_INFO')
-####        #datasets_md.saveAsXML(export_metadata.replace(".xml", " TEMPLATE NOT_CREATED.xml"), 'TEMPLATE')
-####
-####        prettyXML(export_metadata.replace(".xml", " EXACT_COPY NOT_CREATED.xml"))
-####        prettyXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO NOT_CREATED.xml"))
-####        #prettyXML(export_metadata.replace(".xml", " TEMPLATE NOT_CREATED.xml"))
-##
-####        datasets_md.synchronize("OVERWRITE")
-####        datasets_md.save()
-####        datasets_md.reload()
-####
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " EXACT_COPY OVERWRITE.xml"), 'EXACT_COPY')
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO OVERWRITE.xml"), 'REMOVE_ALL_SENSITIVE_INFO')
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " TEMPLATE OVERWRITE.xml"), 'TEMPLATE')
-####
-####        prettyXML(export_metadata.replace(".xml", " EXACT_COPY OVERWRITE.xml"))
-####        prettyXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO OVERWRITE.xml"))
-####        prettyXML(export_metadata.replace(".xml", " TEMPLATE OVERWRITE.xml"))
-####
-####        datasets_md.synchronize("SELECTIVE")
-####        datasets_md.save()
-####        datasets_md.reload()
-####
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " EXACT_COPY SELECTIVE.xml"), 'EXACT_COPY')
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO SELECTIVE.xml"), 'REMOVE_ALL_SENSITIVE_INFO')
-####        datasets_md.saveAsXML(export_metadata.replace(".xml", " TEMPLATE SELECTIVE.xml"), 'TEMPLATE')
-####
-####        prettyXML(export_metadata.replace(".xml", " EXACT_COPY SELECTIVE.xml"))
-####        prettyXML(export_metadata.replace(".xml", " REMOVE_ALL_SENSITIVE_INFO SELECTIVE.xml"))
-####        prettyXML(export_metadata.replace(".xml", " TEMPLATE SELECTIVE.xml"))
-##
-##
-##        # Save the modified ArcGIS metadata output back to the source item
-##        #tgt_item_md = md.Metadata(target_file_path)
-##        #src_item_md.copy(tgt_item_md)
-##        #src_item_md.save()
-##
-##
-##        del datasets_md
-##        del datasets, datasets_table, export_metadata
-##        del md
-##
-##        compactGDB(ProjectGDB)
-##
-##        #Final benchmark for the region.
-##        msg = f"ENDING {function} COMPLETED ON {strftime('%a %b %d %I:%M:%S %p', localtime())}"
-##        logFile(log_file, msg); del msg
-##
-##        # Elapsed time
-##        end_time = time()
-##        elapse_time =  end_time - start_time
-##        msg = f"Elapsed Time for {function}: {strftime('%H:%M:%S', gmtime(elapse_time))} (H:M:S)"
-##        logFile(log_file, msg); del msg, start_time, end_time, elapse_time #, log_file
-##
-##    # This code is executed only if an exception was raised in the try block.
-##    # Code executed in this block is just like normal code: if there is an
-##    # exception, it will not be automatically caught (and probably stop the
-##    # program).
-##    except arcpy.ExecuteError:
-##        import sys
-##        # Geoprocessor threw an error
-##        #print("\n\t" + arcpy.GetMessages().replace("\n", "\n\t") + "\n")
-##        msg = arcpy.GetMessages(2).replace('\n', '\n\t')
-##        msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-##        logFile(log_file, msg); del msg
-##    except Exception as e:
-##        import sys
-##        # Capture all other errors
-##        #print(sys.exc_info()[2].tb_lineno)
-##        msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-##        logFile(log_file, msg); del msg
-##
-##    # This code is executed only if no exceptions were raised in the try block.
-##    # Code executed in this block is just like normal code: if there is an
-##    # exception, it will not be automatically caught (and probably stop the
-##    # program). Notice that if the else block is executed, then the except block
-##    # is not, and vice versa. This block is optional.
-##    else:
-##        # Use pass to skip this code block
-##        pass
-##
-##    # This code always executes after the other blocks, even if there was an
-##    # uncaught exception (that didn’t cause a crash, obviously) or a return
-##    # statement in one of the other blocks. Code executed in this block is just
-##    # like normal code: if there is an exception, it will not be automatically
-##    # caught (and probably stop the program). This block is also optional.
-##    finally:
-##        # Get list of local keys that may need to be deleted.
-##        localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
-##
-##        # If there is a list of local keys, print the list, and then delete
-##        # variables
-##        if localKeys:
-##            msg = f"\n###--->>> Local Keys in {function}(): {', '.join(localKeys)} <<<---###\n"
-##            print(msg); del msg
-##        del localKeys, function, log_file
-##
-##        #initializing d with dir()
-##        #This will store a list of all the variables in the program
-##        d = dir()
-##        if d:
-##            #print(f'\n\t###--->>> Remaining local variable in {function_name()} <<<---###\n')
-##            #You'll need to check for user-defined variables in the directory
-##            for obj in d:
-##                #checking for built-in variables/functions
-##                if not obj.startswith('__'):
-##                    #deleting the said obj, since a user-defined function
-##                    #del globals()[obj]
-##                    #print(f"Remaining local variable: {locals()[obj]}")
-##                    del locals()[obj]
-##                    del obj
-##        del d
-
 def createDatasetTable():
     """Create Dataset Table"""
     try: # The code with the exception that you want to catch. If an exception
@@ -1559,17 +1305,6 @@ def createDatasetTable():
         dataset = "Datasets"
         input_datasets_csv_table = os.path.join(CSV_DATA_FOLDER, f"{dataset}.csv")
         dataset_table = os.path.join(ProjectGDB, dataset)
-
-##        # Execute CreateTable
-##        #arcpy.management.CreateTable(ProjectGDB, dataset, template_datasets_path, "", "")
-##        arcpy.management.CreateTable(ProjectGDB, dataset, "", "", "")
-##
-##        tb_fields = [f.name for f in arcpy.ListFields(dataset_table) if f.type not in ['Geometry', 'OID']]
-##        tb_definition_fields = table_definitions[datasets]
-##        fields = [f for f in tb_definition_fields if f not in tb_fields]
-##
-##        addFields(dataset_table, fields, field_definitions)
-##        del tb_fields, tb_definition_fields, fields
 
         xml_file = os.path.join(SCHEMA_FOLDER, f"{dataset}.xml")
 
@@ -1693,7 +1428,7 @@ def createDatasetTable():
                                       # Region    Season    DateCode    Status    DistributionProjectCode    DistributionProjectName    SummaryProduct    FilterRegion    FilterSubRegion
                                       # FeatureServiceName    FeatureServiceTitle    MosaicName    MosaicTitle    ImageServiceName    ImageServiceTitle
                        #  DatasetCode    CSVFile   TransformUnit  TableName    GeographicArea    CellSize    PointFeatureType    FeatureClassName Region    Season    DateCode    Status    DistributionProjectCode    DistributionProjectName    SummaryProduct    FilterRegion    FilterSubRegion  FeatureServiceName    FeatureServiceTitle    MosaicName    MosaicTitle    ImageServiceName    ImageServiceTitle
-        column_formats = ['S20',        'S20',     'S20',         'S20',      'S20',             'u4',        'S20',              'S40',           'S40',     'S10',   'S10',      'S10',    'S10',                    'S60',                      'S10',           'S25',          'S40',           'S40',                'S60',                  'S20',        'S60',         'S40',              'S60']
+        column_formats = ['S20',        'S20',     'S20',         'S20',      'S20',             'u4',        'S20',              'S40',           'S40',     'S15',   'S10',      'S10',    'S10',                    'S60',                      'S10',           'S25',          'S40',           'S40',                'S60',                  'S20',        'S60',         'S40',              'S60']
            #            ['S20',         'S20',     'S20',         'S20',      'S20',             'S10',       'S20',              'S40',           'S40',     'S10',   'S10',      'S10',    'S10',                    'S60',                      'S10',           'S20',          'S40',           'S40',                'S60',                  'S20',        'S60',         'S40',              'S60']
 
         # Get max length of all columns in the dataframe
@@ -1997,7 +1732,7 @@ def createGebcoBathymetry():
         # Set GebcoGDB
         GebcoGDB = os.path.join(BASE_FOLDER, "GEBCO.gdb")
 
-        if not arcpy.Exists(GebcoGDB): arcpy.CreateFileGDB_management(BASE_FOLDER, "GEBCO")
+        if not arcpy.Exists(GebcoGDB): arcpy.management.CreateFileGDB(BASE_FOLDER, "GEBCO")
 
 ##        arcpy.env.cellSize = "MAXOF"
 ##        arcpy.env.cellSizeProjectionMethod = "PRESERVE_RESOLUTION"
@@ -2050,7 +1785,9 @@ def createGebcoBathymetry():
                        'SEUS_FAL' : 'gebco_2022_n35.4_s28.6_w-81.4_e-75.6.asc',
                        'SEUS_SPR' : 'gebco_2022_n35.4_s28.6_w-81.4_e-75.6.asc',
                        'SEUS_SUM' : 'gebco_2022_n35.4_s28.6_w-81.4_e-75.6.asc',
-                       'WC'       : 'gebco_2022_n48.6_s32.0_w-126.0_e-115.8.asc',
+                       #'WC'       : 'gebco_2022_n48.6_s32.0_w-126.0_e-115.8.asc',
+                       'WC_GLMME' : 'gebco_2022_n48.6_s32.0_w-126.0_e-115.8.asc',
+                       'WC_GFDL'  : 'gebco_2022_n48.6_s32.0_w-126.0_e-115.8.asc',
                        'WC_ANN'   : 'gebco_2022_n48.6_s32.0_w-126.0_e-115.8.asc',
                        'WC_TRI'   : 'gebco_2022_n49.2_s36.0_w-126.6_e-121.6.asc',
                       }
@@ -2069,7 +1806,8 @@ def createGebcoBathymetry():
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
             del distributionprojectcode
 
             gebco_grid = os.path.join(BATHYMETRY_DIRECTORY, f'{gebco_dict[datasetcode]}')
@@ -2291,7 +2029,7 @@ def createHawaiiBathymetry():
 
         HawaiiGDB = os.path.join(BASE_FOLDER, "HAWAII_500m.gdb")
 
-        if not arcpy.Exists(HawaiiGDB): arcpy.CreateFileGDB_management(BASE_FOLDER, "HAWAII_500m")
+        if not arcpy.Exists(HawaiiGDB): arcpy.management.CreateFileGDB(BASE_FOLDER, "HAWAII_500m")
 
         hi_bathy_grid  = os.path.join(BATHYMETRY_DIRECTORY, 'BFISH_PSU.shp')
 
@@ -3365,16 +3103,6 @@ def createSpeciesFilterTable():
         speciesfiltertable_csv_table = os.path.join(CSV_DATA_FOLDER, f"{speciesfilter}.csv")
         speciesfilter_table = os.path.join(ProjectGDB, speciesfilter)
 
-##        # Execute CreateTable
-##        arcpy.management.CreateTable(ProjectGDB, speciesfilter, "", "", "")
-##
-##        tb_fields = [f.name for f in arcpy.ListFields(speciesfilter_table) if f.type not in ['Geometry', 'OID']]
-##        tb_definition_fields = table_definitions[speciesfilter]
-##        fields = [f for f in tb_definition_fields if f not in tb_fields]
-##
-##        addFields(speciesfilter_table, fields, field_definitions)
-##        del tb_fields, tb_definition_fields, fields
-
         xml_file = os.path.join(SCHEMA_FOLDER, f"{speciesfilter}.xml")
 
         #arcpy.management.ImportXMLWorkspaceDocument(target_geodatabase, in_file, {import_type}, {config_keyword})
@@ -3979,354 +3707,6 @@ def exportArcGisMetadata():
                 del xml_list
         del PrettyAllXML
 
-
-##            xml_file = os.path.join(EXPORT_METADATA, f"{os.path.basename(dataset).replace('.crf','')}_xml.xml")
-##            xml_file_template = os.path.join(EXPORT_METADATA, f"{os.path.basename(dataset).replace('.crf','')}_TEMPLATE.xml")
-##            empty_xml_file = os.path.join(EXPORT_METADATA, f"empty.xml")
-##
-##            xml_file_exact_copy = xml_file.replace('_xml.xml', '_xml EXACT_COPY.xml')
-##            xml_file_exact_copy_fgdc = xml_file_exact_copy.replace('_xml EXACT_COPY.xml', '_xml EXACT_COPY FGDC.xml')
-##            xml_file_exact_copy_updated = xml_file_exact_copy.replace('_xml EXACT_COPY.xml', '_xml EXACT_COPY Updated.xml')
-##            xml_file_template_updated = xml_file_template.replace('_TEMPLATE.xml', '_TEMPLATE Updated.xml')
-##
-##            #dataset = os.path.join(ProjectGDB, dataset)
-##            # Process: Export Metadata
-##            print(f"> Creating dataset Metadata Object")
-##            dataset_md = md.Metadata(dataset)
-##            # Synchronize the item's metadata now
-##            dataset_md.synchronize('ALWAYS')
-##            #dataset_md.synchronize("OVERWRITE")
-##            dataset_md.save()
-##            dataset_md.reload()
-##            print(f"> Saving dataset as an 'EXACT_COPY' file: {os.path.basename(xml_file)}")
-##            dataset_md.saveAsXML(xml_file, 'EXACT_COPY')
-##            dataset_md.saveAsXML(xml_file_exact_copy, 'EXACT_COPY')
-##            print(f"> Exporting dataset as an 'FGDC_CSDGM' file: {os.path.basename(xml_file)}")
-##            dataset_md.exportMetadata(xml_file.replace('.xml',' FGDC.xml'), 'FGDC_CSDGM', 'REMOVE_ALL_SENSITIVE_INFO')
-##            dataset_md.synchronize('OVERWRITE')
-##            dataset_md.importMetadata(xml_file.replace('.xml',' FGDC.xml'), 'FGDC_CSDGM')
-##            dataset_md.save()
-##            dataset_md.reload()
-##            print(f"> Saving dataset as an 'EXACT_COPY' file: {os.path.basename(xml_file)}")
-##            dataset_md.saveAsXML(xml_file, 'EXACT_COPY')
-##            print(f"> Saving dataset as a 'TEMPLATE' file: {os.path.basename(xml_file_template)}")
-##            dataset_md.saveAsXML(xml_file_template, 'TEMPLATE')
-##            #dataset_md.synchronize("ALWAYS")
-##            #dataset_md.importMetadata(empty_xml_file, "DEFAULT")
-##            #dataset_md.synchronize("OVERWRITE")
-##
-##            del dataset_md
-##
-##            #prettyXML(xml_file)
-##            #prettyXML(xml_file_template)
-##
-##            dataset_md = md.Metadata(xml_file_exact_copy)
-##            if not dataset_md.isReadOnly:
-##                dataset_md.deleteContent('GPHISTORY')
-##                dataset_md.deleteContent('ENCLOSED_FILES')
-##                dataset_md.deleteContent('THUMBNAIL')
-##                dataset_md.save()
-##                dataset_md.reload()
-##
-##            #dataset_md.synchronize("ACCESSED", 0)
-##            #dataset_md.synchronize("ALWAYS")
-##            #dataset_md.synchronize("CREATED", 0)
-##            #dataset_md.synchronize("NOT_CREATED", 0)
-##            #dataset_md.synchronize("OVERWRITE")
-##            dataset_md.synchronize("SELECTIVE")
-##            dataset_md.save()
-##            dataset_md.reload()
-##
-##            if "Indicators" in os.path.basename(dataset):
-##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Indicators Template.xml"))
-##            elif "DisMAP_Regions" in os.path.basename(dataset):
-##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "DisMAP Regions Template.xml"))
-##            elif "_Sample_Locations" in os.path.basename(dataset):
-##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Sample Locations Template.xml"))
-##            elif "_Mosaic" in os.path.basename(dataset):
-##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Biomass Rasters Template.xml"))
-##            elif ".crf" in os.path.basename(dataset):
-##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Biomass Rasters Template.xml"))
-##
-##
-##            if "Indicators" in os.path.basename(dataset):
-##                if not dataset_md.isReadOnly:
-##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Indicators Template.xml"))
-##            elif "DisMAP_Regions" in os.path.basename(dataset):
-##                if not dataset_md.isReadOnly:
-##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "DisMAP Regions Template.xml"))
-##            elif "_Sample_Locations" in os.path.basename(dataset):
-##                if not dataset_md.isReadOnly:
-##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Sample Locations Template.xml"))
-##            elif "_Mosaic" in os.path.basename(dataset):
-##                if not dataset_md.isReadOnly:
-##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Biomass Rasters Template.xml"))
-##            elif ".crf" in os.path.basename(dataset):
-##                if not dataset_md.isReadOnly:
-##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Biomass Rasters Template.xml"))
-##
-##            dataset_md.save()
-##            dataset_md.reload()
-##
-##            print(f"> Exporting dataset as an 'FGDC_CSDGM' file: {os.path.basename(xml_file)}")
-##            dataset_md.exportMetadata(xml_file_exact_copy_fgdc, 'FGDC_CSDGM', 'REMOVE_ALL_SENSITIVE_INFO')
-##            dataset_md.synchronize('OVERWRITE')
-##            dataset_md.importMetadata(xml_file_exact_copy_fgdc, 'FGDC_CSDGM')
-##            dataset_md.save()
-##            dataset_md.reload()
-##            print(f"> Saving dataset as an 'EXACT_COPY' file: {os.path.basename(xml_file)}")
-##            dataset_md.saveAsXML(xml_file_exact_copy_updated, 'EXACT_COPY')
-##            print(f"> Saving dataset as a 'TEMPLATE' file: {os.path.basename(xml_file_template)}")
-##            dataset_md.saveAsXML(xml_file_template_updated, 'TEMPLATE')
-##
-##            #print(f"> Saving dataset as an 'EXACT_COPY' file: {os.path.basename(xml_file)}")
-##            #dataset_md.saveAsXML(xml_file.replace('.xml', ' Update.xml'), 'EXACT_COPY')
-##            #print(f"> Saving dataset as a 'TEMPLATE' file: {os.path.basename(xml_file_template)}")
-##            #dataset_md.saveAsXML(xml_file_template.replace('.xml', ' Update.xml'), 'TEMPLATE')
-##
-##            del dataset_md
-##
-##            #dataset_md.save()
-##            #dataset_md.reload()
-##            #dataset_md.deleteContent('GPHISTORY')
-##            #dataset_md.deleteContent('ENCLOSED_FILES')
-##            #dataset_md.deleteContent('THUMBNAIL')
-##            #dataset_md.synchronize("OVERWRITE")
-##            #dataset_md.save()
-##            #dataset_md.reload()
-##            #dataset_md.saveAsXML(xml_file, 'REMOVE_ALL_SENSITIVE_INFO')
-##            #dataset_md.saveAsXML(xml_file_template, 'TEMPLATE')
-##
-##            prettyXML(xml_file)
-##            prettyXML(xml_file_template)
-##            prettyXML(xml_file_exact_copy)
-##            prettyXML(xml_file_exact_copy_fgdc)
-##            prettyXML(xml_file_template_updated)
-##            prettyXML(xml_file_exact_copy_updated)
-##
-##            del xml_file_template, empty_xml_file
-##            del xml_file_exact_copy, xml_file_exact_copy_fgdc, xml_file_exact_copy_updated, xml_file_template_updated
-##
-##            del dataset, xml_file
-##        del md, datasets, tb_list, fc_list, ms_list, crf_list
-##
-##        datasets = generateDatasets()
-##
-##        with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
-##            fcs = arcpy.ListFeatureClasses("*")
-##            datasets = [[r for r in group] for group in datasets if group[7] in fcs]
-##            del fcs
-##
-##        if FilterDatasets:
-##            datasets = [[r for r in group] for group in datasets if group[3] in selected_datasets]
-##
-##        if not datasets:
-##            print("###--->>> @@@ Something is wrong with the dataset selection @@@ <<<---###")
-##
-##        msg = f"> Processing Tables, Feature Classes, and Mosaics"
-##        logFile(log_file, msg); del msg
-##
-##        for i in range(len(datasets)):
-##            datasetcode             = datasets[i][0]
-##            tablename               = datasets[i][3]
-##            pointfeaturetype        = datasets[i][6]
-##            featureclassname        = datasets[i][7]
-##            region                  = datasets[i][8]
-##            season                  = datasets[i][9]
-##            datecode                = datasets[i][10]
-##            distributionprojectcode = datasets[i][12]
-##            featureservicename      = datasets[i][11]
-##            featureservicetitle     = datasets[i][18]
-##            mosaicname              = datasets[i][19]
-##            mosaictitle             = datasets[i][20]
-##            imageservicename        = datasets[i][21]
-##            imageservicetitle       = datasets[i][22]
-##            del i
-##
-##            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
-##
-##            with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
-##                #msg = f" > Processing: {dataset_product_code}"
-##                #logFile(log_file, msg); del msg
-##
-##                if tablename:
-##                    msg = f" > Processing Table: {tablename}"
-##                    logFile(log_file, msg); del msg
-##
-##                    tablename_md = md.Metadata(tablename)
-##
-##                    template_metadata = os.path.join(EXPORT_METADATA, f"{tablename} Template.xml")
-##                    if arcpy.Exists(template_metadata):
-##                        tablename_md.importMetadata(template_metadata, 'DEFAULT')
-##                        #tablename_md.synchronize("SELECTIVE")
-##                        #tablename_md.synchronize("ACCESSED", 0)
-##                        #tablename_md.synchronize("NOT_CREATED", 0)
-##                        #tablename_md.synchronize("CREATED", 0)
-##                        #tablename_md.synchronize("ALWAYS")
-##                        #tablename_md.synchronize("OVERWRITE")
-##                    del template_metadata
-##
-##                    #tablename_md.synchronize('ACCESSED')
-##                    tablename_md.title = tablename
-##                    tablename_md.save()
-##                    tablename_md.reload()
-##
-##                    # Delete all geoprocessing history and any enclosed files from the item's metadata
-##                    if not tablename_md.isReadOnly:
-##                        tablename_md.deleteContent('GPHISTORY')
-##                        #tablename_md.deleteContent('ENCLOSED_FILES')
-##                        #tablename_md.deleteContent('THUMBNAIL')
-##                        #tablename_md.save()
-##                        tablename_md.reload()
-##
-##                    export_metadata = os.path.join(EXPORT_METADATA, f"{tablename}.xml")
-##                    #tablename_md.saveAsXML(export_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
-##                    tablename_md.saveAsXML(export_metadata, 'EXACT_COPY')
-##                    prettyXML(export_metadata); del export_metadata
-##
-##                    export_metadata = os.path.join(EXPORT_METADATA, f"{tablename} Template.xml")
-##                    tablename_md.saveAsXML(export_metadata, 'TEMPLATE')
-##                    prettyXML(export_metadata); del export_metadata
-##
-##                    del tablename_md
-##
-##                if featureclassname:
-##                    msg = f" > Processing Feature Class: {featureclassname}"
-##                    logFile(log_file, msg); del msg
-##
-##                    featureclassname_md = md.Metadata(featureclassname)
-##
-##                    template_metadata = os.path.join(EXPORT_METADATA, f"{featureclassname} Template.xml")
-##                    if arcpy.Exists(template_metadata):
-##                        featureclassname_md.importMetadata(template_metadata, 'DEFAULT')
-##                        #featureclassname_md.synchronize("SELECTIVE")
-##                        #featureclassname_md.synchronize("ACCESSED", 0)
-##                        #featureclassname_md.synchronize("NOT_CREATED", 0)
-##                        #featureclassname_md.synchronize("CREATED", 0)
-##                        #featureclassname_md.synchronize("ALWAYS")
-##                        #featureclassname_md.synchronize("OVERWRITE")
-##                    del template_metadata
-##
-##                    #featureclassname_md.synchronize('ACCESSED')
-##                    featureclassname_md.title = featureservicetitle
-##                    featureclassname_md.save()
-##                    featureclassname_md.reload()
-##
-##                    # Delete all geoprocessing history and any enclosed files from the item's metadata
-##                    if not featureclassname_md.isReadOnly:
-##                        featureclassname_md.deleteContent('GPHISTORY')
-##                        #featureclassname_md.deleteContent('ENCLOSED_FILES')
-##                        #featureclassname_md.deleteContent('THUMBNAIL')
-##                        featureclassname_md.save()
-##                        featureclassname_md.reload()
-##
-##                    export_metadata = os.path.join(EXPORT_METADATA, f"{featureclassname}.xml")
-##                    #featureclassname_md.saveAsXML(export_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
-##                    featureclassname_md.saveAsXML(export_metadata, 'EXACT_COPY')
-##                    prettyXML(export_metadata); del export_metadata
-##
-##                    export_metadata = os.path.join(EXPORT_METADATA, f"{featureclassname} Template.xml")
-##                    featureclassname_md.saveAsXML(export_metadata, 'TEMPLATE')
-##                    prettyXML(export_metadata); del export_metadata
-##
-##                    del featureclassname_md
-##
-##                if mosaicname:
-##                    msg = f" > Processing Mosaic: {mosaicname}"
-##                    logFile(log_file, msg); del msg
-##
-##                    mosaicname_md = md.Metadata(mosaicname)
-##
-##                    template_metadata = os.path.join(EXPORT_METADATA, f"{mosaicname} Template.xml")
-##                    if arcpy.Exists(template_metadata):
-##                        mosaicname_md.importMetadata(template_metadata, 'DEFAULT')
-##                        #mosaicname_md.synchronize("SELECTIVE")
-##                        #mosaicname_md.synchronize("ACCESSED", 0)
-##                        #mosaicname_md.synchronize("NOT_CREATED", 0)
-##                        #mosaicname_md.synchronize("CREATED", 0)
-##                        #mosaicname_md.synchronize("ALWAYS")
-##                        #mosaicname_md.synchronize("OVERWRITE")
-##                    del template_metadata
-##
-##                    #mosaicname_md.synchronize('ACCESSED')
-##                    mosaicname_md.title = mosaictitle
-##                    mosaicname_md.save()
-##                    mosaicname_md.reload()
-##
-##                    # Delete all geoprocessing history and any enclosed files from the item's metadata
-##                    if not mosaicname_md.isReadOnly:
-##                        mosaicname_md.deleteContent('GPHISTORY')
-##                        #mosaicname_md.deleteContent('ENCLOSED_FILES')
-##                        #mosaicname_md.deleteContent('THUMBNAIL')
-##                        mosaicname_md.save()
-##                        mosaicname_md.reload()
-##
-##                    export_metadata = os.path.join(EXPORT_METADATA, f"{mosaicname}.xml")
-##                    #mosaicname_md.saveAsXML(export_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
-##                    mosaicname_md.saveAsXML(export_metadata, 'EXACT_COPY')
-##                    prettyXML(export_metadata); del export_metadata
-##
-##                    export_metadata = os.path.join(EXPORT_METADATA, f"{mosaicname} Template.xml")
-##                    mosaicname_md.saveAsXML(export_metadata, 'TEMPLATE')
-##                    prettyXML(export_metadata); del export_metadata
-##
-##                    del mosaicname_md
-##
-##                    msg = f" > Processing CRF: {dataset_product_code}"
-##                    logFile(log_file, msg); del msg
-##
-##                    with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = CRF_FOLDER):
-##                        crf = f"{dataset_product_code}.crf"
-##                        #msg = f" > Processing: {crf}"
-##                        #logFile(log_file, msg); del msg
-##
-##                        crf_md = md.Metadata(crf)
-##
-##                        template_metadata = os.path.join(EXPORT_METADATA, f"{mosaicname} CRF Template.xml")
-##                        if arcpy.Exists(template_metadata):
-##                            crf_md.importMetadata(template_metadata, 'DEFAULT')
-##                            #crf_md.synchronize("SELECTIVE")
-##                            #crf_md.synchronize("ACCESSED", 0)
-##                            #crf_md.synchronize("NOT_CREATED", 0)
-##                            #crf_md.synchronize("CREATED", 0)
-##                            #crf_md.synchronize("ALWAYS")
-##                            #crf_md.synchronize("OVERWRITE")
-##                        del template_metadata
-##
-##                        #crf_md.synchronize('ACCESSED')
-##                        crf_md.title = mosaictitle
-##                        crf_md.save()
-##                        crf_md.reload()
-##
-##                        # Delete all geoprocessing history and any enclosed files from the item's metadata
-##                        if not crf_md.isReadOnly:
-##                            crf_md.deleteContent('GPHISTORY')
-##                            #crf_md.deleteContent('ENCLOSED_FILES')
-##                            #crf_md.deleteContent('THUMBNAIL')
-##                            crf_md.save()
-##                            crf_md.reload()
-##
-##                        export_metadata = os.path.join(EXPORT_METADATA, f"{mosaicname} CRF.xml")
-##                        crf_md.saveAsXML(export_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
-##                        prettyXML(export_metadata); del export_metadata
-##
-##                        export_metadata = os.path.join(EXPORT_METADATA, f"{mosaicname} CRF Template.xml")
-##                        crf_md.saveAsXML(export_metadata, 'TEMPLATE')
-##                        prettyXML(export_metadata); del export_metadata
-##
-##                        del crf_md, crf,
-##
-##            del datasetcode, tablename, pointfeaturetype, featureclassname
-##            del region, season, datecode, distributionprojectcode
-##            del featureservicename, featureservicetitle, mosaicname, mosaictitle
-##            del imageservicename, imageservicetitle, dataset_product_code
-##
-##        del md
-##        del datasets
-##
-##        aprx.save()
-##        del aprx
-
         compactGDB(ProjectGDB)
 
         #Final benchmark for the region.
@@ -4470,8 +3850,6 @@ def generateDatasets():
         del cursor
         del dataset_table, fields
         return datasets
-
-
 
     except arcpy.ExecuteError:
         import sys
@@ -4906,7 +4284,8 @@ def getDMSPointsForGebco():
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             # Region DMS Points
             datasetcode_dms_points = f"{dataset_product_code}_Points"
@@ -5179,21 +4558,6 @@ def importAllMetadata():
         logFile(log_file, msg); del msg
 
         datasets = []
-##        #with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
-##            tb_list = [os.path.join(ProjectGDB, tb) for tb in arcpy.ListTables("*") if tb in ['Indicators', 'Datasets', 'Species_Filter']]
-##            # # fc_list = [os.path.join(ProjectGDB, fc) for fc in arcpy.ListFeatureClasses("*Sample_Locations")] #
-##            fc_list = [os.path.join(ProjectGDB, fc) for fc in arcpy.ListFeatureClasses("*") if "Sample_Locations" in fc or "DisMAP_Regions" in fc] #
-##            ms_list = [os.path.join(ProjectGDB, ms) for ms in arcpy.ListDatasets(feature_type='Mosaic')] # if ms in ['AI_IDW_Mosaic']]
-##            rs_list = [rs for rs in arcpy.ListDatasets(feature_type='Raster') if rs in ['AI_IDW_Mask']]
-##        with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = CRF_FOLDER):
-##            #crf_list = [os.path.join(CRF_FOLDER, crf) for crf in arcpy.ListFiles(f"*.crf") if crf in ['AI_IDW.crf','WC_GLMME.crf']]
-##            crf_list = [os.path.join(CRF_FOLDER, crf) for crf in arcpy.ListFiles(f"*.crf")]
-##
-##        datasets.extend(tb_list);  del tb_list
-##        datasets.extend(fc_list);  del fc_list
-##        datasets.extend(ms_list);  del ms_list
-##        datasets.extend(rs_list);  del rs_list
-##        datasets.extend(crf_list); del crf_list
 
         with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
             tb_list = [os.path.join(ProjectGDB, tb) for tb in arcpy.ListTables("*")]
@@ -5296,426 +4660,6 @@ def importAllMetadata():
                     del xml
                 del xml_list
         del PrettyAllXML
-
-
-##            if "Sample_Locations" in os.path.basename(dataset):
-##                dataset_template = os.path.join(ARCGIS_METADATA, f"{os.path.basename(dataset)}.xml")
-##            elif "DisMAP_Regions" in os.path.basename(dataset):
-##                dataset_template = os.path.join(ARCGIS_METADATA, f"{os.path.basename(dataset)}.xml")
-##            elif "Indicators" in os.path.basename(dataset):
-##                dataset_template = os.path.join(ARCGIS_METADATA, f"{os.path.basename(dataset)}.xml")
-##            elif "GRID_Points" in os.path.basename(dataset):
-##                dataset_template = os.path.join(ARCGIS_METADATA, f"{os.path.basename(dataset)}.xml")
-##            elif "Mosaic" in os.path.basename(dataset):
-##                dataset_template = os.path.join(ARCGIS_METADATA, f"{os.path.basename(dataset)}.xml")
-##            elif ".crf" in os.path.basename(dataset):
-##                dataset_template = os.path.join(ARCGIS_METADATA, f"{os.path.basename(dataset.replace('.crf','_Mosaic'))}.xml")
-##            else:
-##                dataset_template = os.path.join(ARCGIS_METADATA, f"EntityMetadata.xml")
-##
-##            if arcpy.Exists(dataset_template):
-##                prettyXML(dataset_template)
-##
-##            ImportDatasetMetadata = False
-##            print(f" > Importing: {dataset_template}")
-##            if ImportDatasetMetadata:
-##                # #dataset_md.synchronize("ALWAYS")
-##                dataset_md.synchronize("SELECTIVE")
-##                dataset_md.importMetadata(dataset_template, "DEFAULT")
-##                dataset_md.save()
-##                dataset_md.reload()
-##                dataset_md.synchronize("ACCESSED")
-##                dataset_md.save()
-##                dataset_md.reload()
-##            del dataset_template, ImportDatasetMetadata
-##
-##            #dataset_md.synchronize("ACCESSED", 0)
-##            #dataset_md.synchronize("ALWAYS")
-##            #dataset_md.synchronize("CREATED", 0)
-##            #dataset_md.synchronize("NOT_CREATED", 0)
-##            #dataset_md.synchronize("OVERWRITE")
-##            #dataset_md.synchronize("SELECTIVE")
-##
-##            #dataset_md.synchronize("OVERWRITE")
-##            #dataset_md.importMetadata(empty_xml_file, "DEFAULT")
-##            #dataset_md.save()
-##            #dataset_md.reload()
-##            #del empty_xml_file
-##
-##            if not dataset_md.isReadOnly:
-##                dataset_md.deleteContent('GPHISTORY')
-##                dataset_md.deleteContent('ENCLOSED_FILES')
-##                dataset_md.deleteContent('THUMBNAIL')
-##                dataset_md.save()
-##                dataset_md.reload()
-##
-##            ExportDatasetMetadata = True
-##            if ExportDatasetMetadata:
-##                print(f" > Saving dataset metadata as an 'EXACT_COPY' file: {os.path.basename(dataset_xml_file)}")
-##                dataset_md.saveAsXML(dataset_xml_file, 'EXACT_COPY')
-##
-##                #print(f" > Saving dataset metadata as 'REMOVE_ALL_SENSITIVE_INFO' file: {os.path.basename(dataset_xml_file_template)}")
-##                #dataset_md.saveAsXML(dataset_xml_file_template, 'REMOVE_ALL_SENSITIVE_INFO')
-##
-##                print(f" > Saving dataset as an 'TEMPLATE' file: {os.path.basename(dataset_xml_file_template)}")
-##                #dataset_md.saveAsXML(dataset_xml_file_template, 'TEMPLATE')
-##                #dataset_md.exportMetadata(dataset_xml_file_template.replace('TEMPLATE', 'FGDC_CSDGM'), 'FGDC_CSDGM', 'REMOVE_ALL_SENSITIVE_INFO')
-##
-##                prettyXML(dataset_xml_file)
-##                #prettyXML(dataset_xml_file_template)
-##                #prettyXML(dataset_xml_file_template.replace('TEMPLATE', 'FGDC_CSDGM'))
-##            del ExportDatasetMetadata
-##
-##            del dataset_md, dataset_xml_file, dataset_xml_file_template
-
-
-# # # Delete???
-##            xml_file = os.path.join(EXPORT_METADATA, f"{os.path.basename(dataset).replace('.crf','')}_xml.xml")
-##            xml_file_template = os.path.join(EXPORT_METADATA, f"{os.path.basename(dataset).replace('.crf','')}_TEMPLATE.xml")
-##            empty_xml_file = os.path.join(EXPORT_METADATA, f"empty.xml")
-##
-##            xml_file_exact_copy = xml_file.replace('_xml.xml', '_xml EXACT_COPY.xml')
-##            xml_file_exact_copy_fgdc = xml_file_exact_copy.replace('_xml EXACT_COPY.xml', '_xml EXACT_COPY FGDC.xml')
-##            xml_file_exact_copy_updated = xml_file_exact_copy.replace('_xml EXACT_COPY.xml', '_xml EXACT_COPY Updated.xml')
-##            xml_file_template_updated = xml_file_template.replace('_TEMPLATE.xml', '_TEMPLATE Updated.xml')
-##
-##            #dataset = os.path.join(ProjectGDB, dataset)
-##            # Process: Export Metadata
-##            print(f"> Creating dataset Metadata Object")
-##            dataset_md = md.Metadata(dataset)
-##            # Synchronize the item's metadata now
-##            dataset_md.synchronize('ALWAYS')
-##            #dataset_md.synchronize("OVERWRITE")
-##            dataset_md.save()
-##            dataset_md.reload()
-##            print(f"> Saving dataset as an 'EXACT_COPY' file: {os.path.basename(xml_file)}")
-##            dataset_md.saveAsXML(xml_file, 'EXACT_COPY')
-##            dataset_md.saveAsXML(xml_file_exact_copy, 'EXACT_COPY')
-##            print(f"> Exporting dataset as an 'FGDC_CSDGM' file: {os.path.basename(xml_file)}")
-##            dataset_md.exportMetadata(xml_file.replace('.xml',' FGDC.xml'), 'FGDC_CSDGM', 'REMOVE_ALL_SENSITIVE_INFO')
-##            dataset_md.synchronize('OVERWRITE')
-##            dataset_md.importMetadata(xml_file.replace('.xml',' FGDC.xml'), 'FGDC_CSDGM')
-##            dataset_md.save()
-##            dataset_md.reload()
-##            print(f"> Saving dataset as an 'EXACT_COPY' file: {os.path.basename(xml_file)}")
-##            dataset_md.saveAsXML(xml_file, 'EXACT_COPY')
-##            print(f"> Saving dataset as a 'TEMPLATE' file: {os.path.basename(xml_file_template)}")
-##            dataset_md.saveAsXML(xml_file_template, 'TEMPLATE')
-##            #dataset_md.synchronize("ALWAYS")
-##            #dataset_md.importMetadata(empty_xml_file, "DEFAULT")
-##            #dataset_md.synchronize("OVERWRITE")
-##
-##            del dataset_md
-##
-##            #prettyXML(xml_file)
-##            #prettyXML(xml_file_template)
-##
-##            dataset_md = md.Metadata(xml_file_exact_copy)
-##            if not dataset_md.isReadOnly:
-##                dataset_md.deleteContent('GPHISTORY')
-##                dataset_md.deleteContent('ENCLOSED_FILES')
-##                dataset_md.deleteContent('THUMBNAIL')
-##                dataset_md.save()
-##                dataset_md.reload()
-##
-##            #dataset_md.synchronize("ACCESSED", 0)
-##            #dataset_md.synchronize("ALWAYS")
-##            #dataset_md.synchronize("CREATED", 0)
-##            #dataset_md.synchronize("NOT_CREATED", 0)
-##            #dataset_md.synchronize("OVERWRITE")
-##            dataset_md.synchronize("SELECTIVE")
-##            dataset_md.save()
-##            dataset_md.reload()
-##
-##            if "Indicators" in os.path.basename(dataset):
-##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Indicators Template.xml"))
-##            elif "DisMAP_Regions" in os.path.basename(dataset):
-##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "DisMAP Regions Template.xml"))
-##            elif "_Sample_Locations" in os.path.basename(dataset):
-##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Sample Locations Template.xml"))
-##            elif "_Mosaic" in os.path.basename(dataset):
-##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Biomass Rasters Template.xml"))
-##            elif ".crf" in os.path.basename(dataset):
-##                dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Biomass Rasters Template.xml"))
-##
-##
-##            if "Indicators" in os.path.basename(dataset):
-##                if not dataset_md.isReadOnly:
-##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Indicators Template.xml"))
-##            elif "DisMAP_Regions" in os.path.basename(dataset):
-##                if not dataset_md.isReadOnly:
-##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "DisMAP Regions Template.xml"))
-##            elif "_Sample_Locations" in os.path.basename(dataset):
-##                if not dataset_md.isReadOnly:
-##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Sample Locations Template.xml"))
-##            elif "_Mosaic" in os.path.basename(dataset):
-##                if not dataset_md.isReadOnly:
-##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Biomass Rasters Template.xml"))
-##            elif ".crf" in os.path.basename(dataset):
-##                if not dataset_md.isReadOnly:
-##                    dataset_md.importMetadata(os.path.join(EXPORT_METADATA, "Biomass Rasters Template.xml"))
-##
-##            dataset_md.save()
-##            dataset_md.reload()
-##
-##            print(f"> Exporting dataset as an 'FGDC_CSDGM' file: {os.path.basename(xml_file)}")
-##            dataset_md.exportMetadata(xml_file_exact_copy_fgdc, 'FGDC_CSDGM', 'REMOVE_ALL_SENSITIVE_INFO')
-##            dataset_md.synchronize('OVERWRITE')
-##            dataset_md.importMetadata(xml_file_exact_copy_fgdc, 'FGDC_CSDGM')
-##            dataset_md.save()
-##            dataset_md.reload()
-##            print(f"> Saving dataset as an 'EXACT_COPY' file: {os.path.basename(xml_file)}")
-##            dataset_md.saveAsXML(xml_file_exact_copy_updated, 'EXACT_COPY')
-##            print(f"> Saving dataset as a 'TEMPLATE' file: {os.path.basename(xml_file_template)}")
-##            dataset_md.saveAsXML(xml_file_template_updated, 'TEMPLATE')
-##
-##            #print(f"> Saving dataset as an 'EXACT_COPY' file: {os.path.basename(xml_file)}")
-##            #dataset_md.saveAsXML(xml_file.replace('.xml', ' Update.xml'), 'EXACT_COPY')
-##            #print(f"> Saving dataset as a 'TEMPLATE' file: {os.path.basename(xml_file_template)}")
-##            #dataset_md.saveAsXML(xml_file_template.replace('.xml', ' Update.xml'), 'TEMPLATE')
-##
-##            del dataset_md
-##
-##            #dataset_md.save()
-##            #dataset_md.reload()
-##            #dataset_md.deleteContent('GPHISTORY')
-##            #dataset_md.deleteContent('ENCLOSED_FILES')
-##            #dataset_md.deleteContent('THUMBNAIL')
-##            #dataset_md.synchronize("OVERWRITE")
-##            #dataset_md.save()
-##            #dataset_md.reload()
-##            #dataset_md.saveAsXML(xml_file, 'REMOVE_ALL_SENSITIVE_INFO')
-##            #dataset_md.saveAsXML(xml_file_template, 'TEMPLATE')
-##
-##            prettyXML(xml_file)
-##            prettyXML(xml_file_template)
-##            prettyXML(xml_file_exact_copy)
-##            prettyXML(xml_file_exact_copy_fgdc)
-##            prettyXML(xml_file_template_updated)
-##            prettyXML(xml_file_exact_copy_updated)
-##
-##            del xml_file_template, empty_xml_file
-##            del xml_file_exact_copy, xml_file_exact_copy_fgdc, xml_file_exact_copy_updated, xml_file_template_updated
-##
-##            del dataset, xml_file
-##        del md, datasets, tb_list, fc_list, ms_list, crf_list
-##
-##        datasets = generateDatasets()
-##
-##        with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
-##            fcs = arcpy.ListFeatureClasses("*")
-##            datasets = [[r for r in group] for group in datasets if group[7] in fcs]
-##            del fcs
-##
-##        if FilterDatasets:
-##            datasets = [[r for r in group] for group in datasets if group[3] in selected_datasets]
-##
-##        if not datasets:
-##            print("###--->>> @@@ Something is wrong with the dataset selection @@@ <<<---###")
-##
-##        msg = f"> Processing Tables, Feature Classes, and Mosaics"
-##        logFile(log_file, msg); del msg
-##
-##        for i in range(len(datasets)):
-##            datasetcode             = datasets[i][0]
-##            tablename               = datasets[i][3]
-##            pointfeaturetype        = datasets[i][6]
-##            featureclassname        = datasets[i][7]
-##            region                  = datasets[i][8]
-##            season                  = datasets[i][9]
-##            datecode                = datasets[i][10]
-##            distributionprojectcode = datasets[i][12]
-##            featureservicename      = datasets[i][11]
-##            featureservicetitle     = datasets[i][18]
-##            mosaicname              = datasets[i][19]
-##            mosaictitle             = datasets[i][20]
-##            imageservicename        = datasets[i][21]
-##            imageservicetitle       = datasets[i][22]
-##            del i
-##
-##            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
-##
-##            with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = ProjectGDB):
-##                #msg = f" > Processing: {dataset_product_code}"
-##                #logFile(log_file, msg); del msg
-##
-##                if tablename:
-##                    msg = f" > Processing Table: {tablename}"
-##                    logFile(log_file, msg); del msg
-##
-##                    tablename_md = md.Metadata(tablename)
-##
-##                    template_metadata = os.path.join(EXPORT_METADATA, f"{tablename} Template.xml")
-##                    if arcpy.Exists(template_metadata):
-##                        tablename_md.importMetadata(template_metadata, 'DEFAULT')
-##                        #tablename_md.synchronize("SELECTIVE")
-##                        #tablename_md.synchronize("ACCESSED", 0)
-##                        #tablename_md.synchronize("NOT_CREATED", 0)
-##                        #tablename_md.synchronize("CREATED", 0)
-##                        #tablename_md.synchronize("ALWAYS")
-##                        #tablename_md.synchronize("OVERWRITE")
-##                    del template_metadata
-##
-##                    #tablename_md.synchronize('ACCESSED')
-##                    tablename_md.title = tablename
-##                    tablename_md.save()
-##                    tablename_md.reload()
-##
-##                    # Delete all geoprocessing history and any enclosed files from the item's metadata
-##                    if not tablename_md.isReadOnly:
-##                        tablename_md.deleteContent('GPHISTORY')
-##                        #tablename_md.deleteContent('ENCLOSED_FILES')
-##                        #tablename_md.deleteContent('THUMBNAIL')
-##                        #tablename_md.save()
-##                        tablename_md.reload()
-##
-##                    export_metadata = os.path.join(EXPORT_METADATA, f"{tablename}.xml")
-##                    #tablename_md.saveAsXML(export_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
-##                    tablename_md.saveAsXML(export_metadata, 'EXACT_COPY')
-##                    prettyXML(export_metadata); del export_metadata
-##
-##                    export_metadata = os.path.join(EXPORT_METADATA, f"{tablename} Template.xml")
-##                    tablename_md.saveAsXML(export_metadata, 'TEMPLATE')
-##                    prettyXML(export_metadata); del export_metadata
-##
-##                    del tablename_md
-##
-##                if featureclassname:
-##                    msg = f" > Processing Feature Class: {featureclassname}"
-##                    logFile(log_file, msg); del msg
-##
-##                    featureclassname_md = md.Metadata(featureclassname)
-##
-##                    template_metadata = os.path.join(EXPORT_METADATA, f"{featureclassname} Template.xml")
-##                    if arcpy.Exists(template_metadata):
-##                        featureclassname_md.importMetadata(template_metadata, 'DEFAULT')
-##                        #featureclassname_md.synchronize("SELECTIVE")
-##                        #featureclassname_md.synchronize("ACCESSED", 0)
-##                        #featureclassname_md.synchronize("NOT_CREATED", 0)
-##                        #featureclassname_md.synchronize("CREATED", 0)
-##                        #featureclassname_md.synchronize("ALWAYS")
-##                        #featureclassname_md.synchronize("OVERWRITE")
-##                    del template_metadata
-##
-##                    #featureclassname_md.synchronize('ACCESSED')
-##                    featureclassname_md.title = featureservicetitle
-##                    featureclassname_md.save()
-##                    featureclassname_md.reload()
-##
-##                    # Delete all geoprocessing history and any enclosed files from the item's metadata
-##                    if not featureclassname_md.isReadOnly:
-##                        featureclassname_md.deleteContent('GPHISTORY')
-##                        #featureclassname_md.deleteContent('ENCLOSED_FILES')
-##                        #featureclassname_md.deleteContent('THUMBNAIL')
-##                        featureclassname_md.save()
-##                        featureclassname_md.reload()
-##
-##                    export_metadata = os.path.join(EXPORT_METADATA, f"{featureclassname}.xml")
-##                    #featureclassname_md.saveAsXML(export_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
-##                    featureclassname_md.saveAsXML(export_metadata, 'EXACT_COPY')
-##                    prettyXML(export_metadata); del export_metadata
-##
-##                    export_metadata = os.path.join(EXPORT_METADATA, f"{featureclassname} Template.xml")
-##                    featureclassname_md.saveAsXML(export_metadata, 'TEMPLATE')
-##                    prettyXML(export_metadata); del export_metadata
-##
-##                    del featureclassname_md
-##
-##                if mosaicname:
-##                    msg = f" > Processing Mosaic: {mosaicname}"
-##                    logFile(log_file, msg); del msg
-##
-##                    mosaicname_md = md.Metadata(mosaicname)
-##
-##                    template_metadata = os.path.join(EXPORT_METADATA, f"{mosaicname} Template.xml")
-##                    if arcpy.Exists(template_metadata):
-##                        mosaicname_md.importMetadata(template_metadata, 'DEFAULT')
-##                        #mosaicname_md.synchronize("SELECTIVE")
-##                        #mosaicname_md.synchronize("ACCESSED", 0)
-##                        #mosaicname_md.synchronize("NOT_CREATED", 0)
-##                        #mosaicname_md.synchronize("CREATED", 0)
-##                        #mosaicname_md.synchronize("ALWAYS")
-##                        #mosaicname_md.synchronize("OVERWRITE")
-##                    del template_metadata
-##
-##                    #mosaicname_md.synchronize('ACCESSED')
-##                    mosaicname_md.title = mosaictitle
-##                    mosaicname_md.save()
-##                    mosaicname_md.reload()
-##
-##                    # Delete all geoprocessing history and any enclosed files from the item's metadata
-##                    if not mosaicname_md.isReadOnly:
-##                        mosaicname_md.deleteContent('GPHISTORY')
-##                        #mosaicname_md.deleteContent('ENCLOSED_FILES')
-##                        #mosaicname_md.deleteContent('THUMBNAIL')
-##                        mosaicname_md.save()
-##                        mosaicname_md.reload()
-##
-##                    export_metadata = os.path.join(EXPORT_METADATA, f"{mosaicname}.xml")
-##                    #mosaicname_md.saveAsXML(export_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
-##                    mosaicname_md.saveAsXML(export_metadata, 'EXACT_COPY')
-##                    prettyXML(export_metadata); del export_metadata
-##
-##                    export_metadata = os.path.join(EXPORT_METADATA, f"{mosaicname} Template.xml")
-##                    mosaicname_md.saveAsXML(export_metadata, 'TEMPLATE')
-##                    prettyXML(export_metadata); del export_metadata
-##
-##                    del mosaicname_md
-##
-##                    msg = f" > Processing CRF: {dataset_product_code}"
-##                    logFile(log_file, msg); del msg
-##
-##                    with arcpy.EnvManager(scratchWorkspace = ScratchGDB, workspace = CRF_FOLDER):
-##                        crf = f"{dataset_product_code}.crf"
-##                        #msg = f" > Processing: {crf}"
-##                        #logFile(log_file, msg); del msg
-##
-##                        crf_md = md.Metadata(crf)
-##
-##                        template_metadata = os.path.join(EXPORT_METADATA, f"{mosaicname} CRF Template.xml")
-##                        if arcpy.Exists(template_metadata):
-##                            crf_md.importMetadata(template_metadata, 'DEFAULT')
-##                            #crf_md.synchronize("SELECTIVE")
-##                            #crf_md.synchronize("ACCESSED", 0)
-##                            #crf_md.synchronize("NOT_CREATED", 0)
-##                            #crf_md.synchronize("CREATED", 0)
-##                            #crf_md.synchronize("ALWAYS")
-##                            #crf_md.synchronize("OVERWRITE")
-##                        del template_metadata
-##
-##                        #crf_md.synchronize('ACCESSED')
-##                        crf_md.title = mosaictitle
-##                        crf_md.save()
-##                        crf_md.reload()
-##
-##                        # Delete all geoprocessing history and any enclosed files from the item's metadata
-##                        if not crf_md.isReadOnly:
-##                            crf_md.deleteContent('GPHISTORY')
-##                            #crf_md.deleteContent('ENCLOSED_FILES')
-##                            #crf_md.deleteContent('THUMBNAIL')
-##                            crf_md.save()
-##                            crf_md.reload()
-##
-##                        export_metadata = os.path.join(EXPORT_METADATA, f"{mosaicname} CRF.xml")
-##                        crf_md.saveAsXML(export_metadata, 'REMOVE_ALL_SENSITIVE_INFO')
-##                        prettyXML(export_metadata); del export_metadata
-##
-##                        export_metadata = os.path.join(EXPORT_METADATA, f"{mosaicname} CRF Template.xml")
-##                        crf_md.saveAsXML(export_metadata, 'TEMPLATE')
-##                        prettyXML(export_metadata); del export_metadata
-##
-##                        del crf_md, crf,
-##
-##            del datasetcode, tablename, pointfeaturetype, featureclassname
-##            del region, season, datecode, distributionprojectcode
-##            del featureservicename, featureservicetitle, mosaicname, mosaictitle
-##            del imageservicename, imageservicetitle, dataset_product_code
-##
-##        del md
-##        del datasets
-##
-##        aprx.save()
-##        del aprx
 
         compactGDB(ProjectGDB)
 
@@ -6805,8 +5749,7 @@ def main():
         if not os.path.exists( PUBLISH_FOLDER ) and not os.path.isdir( PUBLISH_FOLDER ):
             os.makedirs( PUBLISH_FOLDER )
 
-        # The PUBLISH_FOLDER Folder is the output location for InPort
-        # metadata
+        # The SCHEMA_FOLDER Folder is the output location for schema files
         global SCHEMA_FOLDER
         SCHEMA_FOLDER = os.path.join(BASE_FOLDER, "Schmea Folder")
         # If SCHEMA_FOLDER is missing, create the folder
@@ -6815,6 +5758,16 @@ def main():
         else:
             if not listFolder( SCHEMA_FOLDER ):
                 print(f"###--->>> {os.path.basename(SCHEMA_FOLDER)} is empty")
+
+        # The RFT_FOLDER Folder is the output location for Raster Function Templates
+        global RFT_FOLDER
+        RFT_FOLDER = os.path.join(BASE_FOLDER, "RasterFunctionTemplates")
+        # If RFT_FOLDER is missing, create the folder
+        if not os.path.exists( RFT_FOLDER ) and not os.path.isdir( RFT_FOLDER ):
+            os.makedirs( RFT_FOLDER )
+        else:
+            if not listFolder( RFT_FOLDER ):
+                print(f"###--->>> {os.path.basename(RFT_FOLDER)} is empty")
 
         # Project Name
         global ProjectName
@@ -6968,7 +5921,7 @@ def main():
                                 "Raster"                      : ["Raster",                     "RASTER", "Raster",                                        0, "", ""],
                                 "Region"                      : ["Region",                     "TEXT",   "Region",                                       40, "", ""],
                                 "SampleID"                    : ["SampleID",                   "TEXT",   "SampleID",                                     20, "", ""],
-                                "Season"                      : ["Season",                     "TEXT",   "Season",                                       10, "", ""],
+                                "Season"                      : ["Season",                     "TEXT",   "Season",                                       15, "", ""],
                                 #"Shape_Area"                  : ["Shape_Area",                 "DOUBLE", "Shape_Area",                                 None, "", ""],
                                 #"Shape_Length"                : ["Shape_Length",               "DOUBLE", "Shape_Length",                               None, "", ""],
                                 "Species"                     : ["Species",                    "TEXT",   "Species",                                      50, "", ""],
@@ -6977,7 +5930,7 @@ def main():
                                 "StdTime"                     : ["StdTime",                    "DATE",   "StdTime",                                    None, "", ""],
                                 "Stratum"                     : ["Stratum",                    "TEXT",   "Stratum",                                      20, "", ""],
                                 "StratumArea"                 : ["StratumArea",                "DOUBLE", "Stratum Area",                               None, "", ""],
-                                "SummaryProduct"              : ["SummaryProduct",             "TEXT",   "Summary Product",                              10, "", ""],
+                                "SummaryProduct"              : ["SummaryProduct",             "TEXT",   "Summary Product",                               5, "", ""],
                                 "TableName"                   : ["TableName",                  "TEXT",   "Table Name",                                   20, "", ""],
                                 "Tag"                         : ["Tag",                        "TEXT",   "Tag",                                         100, "", ""],
                                 "TaxonomicGroup"              : ["TaxonomicGroup",             "TEXT",   "Taxonomic Group",                              80, "", ""],
@@ -7002,6 +5955,11 @@ def main():
                                            'FeatureServiceName', 'FeatureServiceTitle', 'MosaicName',
                                            'MosaicTitle', 'ImageServiceName', 'ImageServiceTitle',],
                             "DisMAP_Regions" : ['DatasetCode', 'Region', 'Season', 'DistributionProjectCode'],
+                            "GFDL_Data" : ['DatasetCode', 'Region', 'SummaryProduct', 'Year', 'StdTime',
+                                            'Species', 'WTCPUE', 'MapValue', 'TransformUnit', 'CommonName',
+                                            'SpeciesCommonName', 'CommonNameSpecies', 'Easting',
+                                            'Northing', 'Latitude', 'Longitude', 'MedianEstimate',
+                                            'Depth'],
                             "GLMME_Data" : ['DatasetCode', 'Region', 'SummaryProduct', 'Year', 'StdTime',
                                             'Species', 'WTCPUE', 'MapValue', 'TransformUnit', 'CommonName',
                                             'SpeciesCommonName', 'CommonNameSpecies', 'Easting',
@@ -7050,106 +6008,6 @@ def main():
 # #                    print(f"\t{field_atr}")
 # #                    del field_atr
 
-        # #    Timezones
-        # #    US/Alaska
-        # #    US/Aleutian
-        # #    US/Arizona
-        # #    US/Central
-        # #    US/East-Indiana
-        # #    US/Eastern
-        # #    US/Hawaii
-        # #    US/Indiana-Starke
-        # #    US/Michigan
-        # #    US/Mountain
-        # #    US/Pacific
-        # #    US/Samoa
-
-##        global timezones
-##        timezones = {"AI"       : "US/Aleutian",
-##                     "EBS"      : "US/Alaska",
-##                     "NBS"      : "US/Alaska",
-##                     "GOA"      : "US/Alaska",
-##                     "ENBS"     : "US/Alaska",
-##                     "GMEX"     : "US/Central",
-##                     "HI"       : "US/Hawaii",
-##                     "NEUS_FAL" : "US/Eastern",
-##                     "NEUS_SPR" : "US/Eastern",
-##                     "SEUS_FAL" : "US/Eastern",
-##                     "SEUS_SPR" : "US/Eastern",
-##                     "SEUS_SUM" : "US/Eastern",
-##                     "WC"       : "US/Pacific",
-##                     "WC_ANN"   : "US/Pacific",
-##                     "WC_TRI"   : "US/Pacific",
-##                    }
-
-##        timezones = {"Aleutian Islands"                : "US/Aleutian",
-##                     "Eastern Bering Sea"              : "US/Alaska",
-##                     "Northern Bering Sea"             : "US/Alaska",
-##                     "Gulf of Alaska"                  : "US/Alaska",
-##                     "Eastern and Northern Bering Sea" : "US/Alaska",
-##                     "Gulf of Mexico"                  : "US/Central",
-##                     "Hawai'i Islands"                 : "US/Hawaii",
-##                     "Hawaii Islands"                  : "US/Hawaii",
-##                     "Northeast US"                    : "US/Eastern",
-##                     "Southeast US"                    : "US/Eastern",
-##                     "West Coast"                      : "US/Pacific",
-##                    }
-
-##        # Geographic Regions Dictionary
-##        global geographic_regions
-##        geographic_regions = {
-##                              'AI'        : 'Aleutian Islands',
-##                              'EBS'       : 'Eastern Bering Sea',
-##                              'GOA'       : 'Gulf of Alaska',
-##                              'GMEX_IDW'      : 'Gulf of Mexico',
-##                              #'HI'        : 'Hawaii Islands',
-##                              'HI'        : "Hawai'i Islands",
-##                              'NEUS_FAL_IDW'    : 'Northeast US',
-##                              'NEUSF'     : 'Northeast US, East Coast',
-##                              'NEUS_S'    : 'Northeast US',
-##                              'NEUS'      : 'Northeast US, East Coast',
-##                              'SEUS_SPR'  : 'Southeast US',
-##                              'SEUS_SUM'  : 'Southeast US',
-##                              'SEUS_FALL' : 'Southeast US',
-##                              'SEUS_FAL'  : 'Southeast US, East Coast',
-##                              'WC_ANN'    : 'West Coast',
-##                              'WCANN'     : 'West Coast',
-##                              'WC_TRI'    : 'West Coast',
-##                              'WCTRI'     : 'West Coast',
-##                              'Aleutian_Islands'    : 'Aleutian Islands',
-##                              'Eastern_Bering_Sea'  : 'Eastern Bering Sea, Bering Sea',
-##                              'Gulf_of_Alaska'      : 'Gulf of Alaska',
-##                              'Gulf_of_Mexico'      : 'Gulf of Mexico',
-##                              #'Hawaii_Islands'    : 'Hawaii Islands',
-##                              'Hawaii_Islands'    : "Hawai'i Islands",
-##                              #'Northeast_US_Fall'   : 'Northeast US, East Coast',
-##                              'Northeast_US'   : 'Northeast US, East Coast',
-##                              #'Northeast_US_Spring' : 'Northeast US, East Coast',
-##                              'Southeast_US'        : 'Southeast US, East Coast',
-##                              #'Southeast_US_Summer' : 'Southeast US, East Coast',
-##                              'West_Coast'          : 'West Coast',
-##                             }
-
-# #        Atheresthes stomias and A. evermanni    Aleutian Islands
-# #        Atheresthes stomias and A. evermanni    Eastern Bering Sea
-# #        Bathyraja spp.    Aleutian Islands
-# #        Bathyraja spp.    Eastern Bering Sea
-# #        Bathyraja spp.    Northern Bering Sea
-# #        Bathyraja spp.    Gulf of Alaska
-# #        Bathyraja spp.    West Coast
-# #        Eucinostomus spp.    Southeast
-# #        Hippoglossoides elassodon and H. robustus    Eastern Bering Sea
-# #        Hippoglossoides elassodon and H. robustus    Northern Bering Sea
-# #        Lepidopsetta sp.    Aleutian Islands
-# #        Lepidopsetta sp.    Eastern Bering Sea
-# #        Lepidopsetta sp.    Northern Bering Sea
-# #        Lepidopsetta sp.    Gulf of Alaska
-# #        Lepidopsetta sp.    West Coast
-# #        Loligo spp.    Southeast
-# #        Sebastes melanostictus and S. aleutianus    West Coast
-# #        Sebastes variabilis and S. ciliatus    Aleutian Islands
-# #        Sebastes variabilis and S. ciliatus    Gulf of Alaska
-
         # Test if SoftwareEnvironmentLevel is Dev or Test, if so, then set
         # selected species. Dev gets a short list and Test gets a longer list.
         # Prod processes all species
@@ -7176,7 +6034,9 @@ def main():
                                     'Limanda aspera'                  : 'yellowfin sole', # in EBS,
                                     # 'WC_GLMME'
                                     'Anoplopoma fimbria'              : 'Sablefish',
-                                    'Microstomus pacificus'           : 'Dover sole', # also in EBS
+                                    #'Microstomus pacificus'           : 'Dover sole', # also in EBS
+                                    # 'WC_GFDL
+                                    'Raja rhina'                      : 'Longnose skate',
                                     # 'GMEX_IDW', 'Gulf of Mexico'
                                     'Lutjanus campechanus'            : 'red snapper',
                                     'Ancylopsetta dilecta'            : 'three-eye flounder',
@@ -7189,8 +6049,10 @@ def main():
                                     # 'SEUS_SUM', 'Southeast US Summer'
                                     # 'SEUS_FALL', 'Southeast US Fall'
                                     'Centropristis striata'            : 'black sea bass',
+                                    'Chaceon quinquedens'              : 'Red deepsea',
                                     'Geryon (Chaceon) quinquedens'     : 'Red Deep Sea Crab',
                                     'Loligo spp.'                      : 'Loligo squid',
+                                    'Micropogonias undulatus'          : 'Atlantic croaker',
                                     'Rachycentron canadum'             : 'Cobia',
                                    }
             if SoftwareEnvironmentLevel == "Test":
@@ -7215,8 +6077,10 @@ def main():
                                     # 'WC_GLMME'
                                     'Anoplopoma fimbria'                  : 'Sablefish',
                                     'Microstomus pacificus'               : 'Dover sole',
-                                    'Sebastolobus alascanus'              : 'Shortspine thornyhead',
-                                    'Sebastolobus altivelis'              : 'Longspine thornyhead',
+                                    #'Sebastolobus alascanus'              : 'Shortspine thornyhead',
+                                    #'Sebastolobus altivelis'              : 'Longspine thornyhead',
+                                    # 'WC_GFDL
+                                    'Raja rhina'                          : 'Longnose skate',
                                     # 'GMEX_IDW', 'Gulf of Mexico'
                                     'Ancylopsetta dilecta'                : 'three-eye flounder',
                                     'Ancylopsetta ommata'                 : 'ocellated flounder',
@@ -7234,14 +6098,16 @@ def main():
                                     # NEUS_FAL_IDW, 'Northeast US Fall'
                                     # 'NEUS_S', 'Northeast US Spring'
                                     'Centropristis striata'               : 'black sea bass',
+                                    'Chaceon quinquedens'                 : 'Red deepsea',
                                     'Geryon (Chaceon) quinquedens'        : 'Red Deep Sea Crab',
+                                    'Dipturus laevis'                     : 'Barndoor skate',
                                     'Homarus americanus'                  : 'American Lobster',
+                                    'Micropogonias undulatus'             : 'Atlantic croaker',
                                     # 'SEUS_SPR', 'Southeast US Spring'
                                     # 'SEUS_SUM', 'Southeast US Summer'
                                     # 'SEUS_FALL', 'Southeast US Fall'
                                     'Brevoortia tyrannus'                 : 'Atlantic menhaden',
                                     'Loligo spp.'                         : 'Loligo squid',
-                                    'Micropogonias undulatus'             : 'Atlantic croaker',
                                     'Rachycentron canadum'                : 'Cobia',
                                    }
         else:
@@ -7791,7 +6657,8 @@ def mpCreateBathymetry(dataset):
         distributionprojectcode = dataset[12]
         del dataset
 
-        dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
         RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -7984,8 +6851,8 @@ def mpCreateDisMapRegions(dataset):
         distributionprojectcode = dataset[12]
         del dataset
 
-        dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
-        #del distributionprojectcode
+        #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
         RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -8005,6 +6872,16 @@ def mpCreateDisMapRegions(dataset):
 
         # Use all of the cores on the machine.
         arcpy.env.parallelProcessingFactor = "100%"
+
+        # Set the XYTolerance to 0.02 Meters
+        # "0.001 Meters"
+        #arcpy.env.XYTolerance = "0.02 Meters"
+        arcpy.env.XYTolerance = "0.1 Meters"
+
+        # Set the XYResolution environment to a linear unit
+        # "0.0001 Meters"
+        #arcpy.env.XYResolution = "0.002 Meters"
+        arcpy.env.XYResolution = "0.01 Meters"
 
         # Set Log Metadata to False in order to not record all geoprocessing
         # steps in metadata
@@ -8028,7 +6905,7 @@ def mpCreateDisMapRegions(dataset):
 
         datasetcode_survey_area   = f"{dataset_product_code}_Survey_Area"
         datasetcode_boundary_line = f"{dataset_product_code}_Boundary_Line"
-        datasetcode_raster_mask   = f"{dataset_product_code}_Raster_Mask"
+        #datasetcode_raster_mask   = f"{dataset_product_code}_Raster_Mask"
 
         # The shapefile used to create the extent and mask for the environment variable
         datasetcode_shape_file = os.path.join(DATASET_SHAPEFILE_FOLDER, dataset_product_code, f"{geographicarea}.shp")
@@ -8081,15 +6958,6 @@ def mpCreateDisMapRegions(dataset):
         with arcpy.EnvManager(scratchWorkspace = RegionScratchGDB, workspace = RegionGDB):
             arcpy.management.CopyFeatures(datasetcode_shape_scratch, datasetcode_survey_area)
 
-##        tb_fields = [f.name for f in arcpy.ListFields(datasetcode_shape_scratch) if f.type not in ['Geometry', 'OID']]
-##        tb_definition_fields = table_definitions[dismap_regions]
-##        fields = [f for f in tb_definition_fields if f not in tb_fields]
-##
-##        del dismap_regions, tb_fields
-##
-##        addFields(datasetcode_shape_scratch, fields, field_definitions)
-##        del tb_definition_fields, fields
-
         del dismap_regions
 
         msg = f">-> Calculating the 'DatasetCode' field in the {dataset_product_code} Dataset"
@@ -8141,19 +7009,20 @@ def mpCreateDisMapRegions(dataset):
             # Delete after last use
             del datasetcode_boundary_line
 
-        msg = f">-> Feature to Raster Conversion using {datasetcode_survey_area} to create Raster Mask {datasetcode_raster_mask}"
-        logFile(log_file, msg); del msg
-
-        with arcpy.EnvManager(scratchWorkspace = RegionScratchGDB, workspace = RegionGDB):
-            # Change mask to the region shape to create the raster mask
-            arcpy.env.extent   = arcpy.Describe(datasetcode_survey_area).extent
-            arcpy.env.mask     = datasetcode_survey_area
-            arcpy.env.cellSize = cellsize
-            arcpy.conversion.FeatureToRaster(datasetcode_survey_area, "ID", datasetcode_raster_mask, cellsize)
-
-            #addMetadata(datasetcode_raster_mask)
-
-            del datasetcode_survey_area, datasetcode_raster_mask, RegionScratchGDB, RegionGDB, cellsize
+##        msg = f">-> Feature to Raster Conversion using {datasetcode_survey_area} to create Raster Mask {datasetcode_raster_mask}"
+##        logFile(log_file, msg); del msg
+##
+##        with arcpy.EnvManager(scratchWorkspace = RegionScratchGDB, workspace = RegionGDB):
+##            # Change mask to the region shape to create the raster mask
+##            arcpy.env.extent   = arcpy.Describe(datasetcode_survey_area).extent
+##            arcpy.env.mask     = datasetcode_survey_area
+##            arcpy.env.cellSize = cellsize
+##            arcpy.conversion.FeatureToRaster(datasetcode_survey_area, "ID", datasetcode_raster_mask, cellsize)
+##
+##            #addMetadata(datasetcode_raster_mask)
+##
+##            #del datasetcode_survey_area, datasetcode_raster_mask, RegionScratchGDB, RegionGDB, cellsize
+            del datasetcode_survey_area, RegionScratchGDB, RegionGDB, cellsize
 
         del datasetcode, dataset_product_code, region
 
@@ -8259,7 +7128,8 @@ def mpCreateFishnets(dataset):
         distributionprojectcode = dataset[12]
         del dataset
 
-        dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
         RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -8272,13 +7142,23 @@ def mpCreateFishnets(dataset):
         arcpy.env.workspace = RegionGDB
 
         # Set the scratch workspace to the RegionScratchGDB
-        arcpy.env.scratchWorkspace = RegionScratchGDB; del RegionScratchGDB
+        arcpy.env.scratchWorkspace = RegionScratchGDB
 
         # Set the overwriteOutput to True
         arcpy.env.overwriteOutput = True
 
         # Use all of the cores on the machine.
         arcpy.env.parallelProcessingFactor = "100%"
+
+        # Set the XYTolerance to 0.02 Meters
+        # "0.001 Meters"
+        #arcpy.env.XYTolerance = "0.02 Meters"
+        arcpy.env.XYTolerance = "0.1 Meters"
+
+        # Set the XYResolution environment to a linear unit
+        # "0.0001 Meters"
+        #arcpy.env.XYResolution = "0.002 Meters"
+        arcpy.env.XYResolution = "0.01 Meters"
 
         # Set Log Metadata to False in order to not record all geoprocessing
         # steps in metadata
@@ -8306,6 +7186,23 @@ def mpCreateFishnets(dataset):
         datasetcode_extent_points   = os.path.join(RegionGDB, f"{dataset_product_code}_Extent_Points")
         datasetcode_fishnet         = os.path.join(RegionGDB, f"{dataset_product_code}_Fishnet")
         datasetcode_lat_long        = os.path.join(RegionGDB, f"{dataset_product_code}_Lat_Long")
+
+        msg = f">-> Feature to Raster Conversion using {datasetcode_survey_area} to create Raster Mask {os.path.basename(datasetcode_raster_mask)}"
+        logFile(log_file, msg); del msg
+
+        with arcpy.EnvManager(scratchWorkspace = RegionScratchGDB, workspace = RegionGDB):
+            # Change mask to the region shape to create the raster mask
+            arcpy.env.extent   = arcpy.Describe(datasetcode_survey_area).extent
+            arcpy.env.mask     = datasetcode_survey_area
+            arcpy.env.cellSize = cellsize
+            arcpy.conversion.FeatureToRaster(datasetcode_survey_area, "ID", datasetcode_raster_mask, cellsize)
+
+            #addMetadata(datasetcode_raster_mask)
+
+            #del datasetcode_survey_area, datasetcode_raster_mask, RegionScratchGDB, RegionGDB, cellsize
+        del datasetcode_raster_mask, RegionScratchGDB
+
+
 
         # Get Extent
         extent = arcpy.Describe(datasetcode_survey_area).extent
@@ -8421,7 +7318,7 @@ def mpCreateFishnets(dataset):
         del datasetcode, cellsize
         del datasetcode_fishnet
         del datasetcode_lat_long
-        del datasetcode_raster_mask
+        #del datasetcode_raster_mask
         del distributionprojectcode, dataset_product_code
         del datasetcode_sr
 
@@ -8538,7 +7435,6 @@ def mpCreateIndicatorsTable(dataset):
 
         # Assigning variables from items in the chosen table list
         datasetcode             = dataset[0]
-        geographicarea          = dataset[4]
         cellsize                = dataset[5]
         region                  = dataset[8]
         season                  = dataset[9]
@@ -8549,7 +7445,8 @@ def mpCreateIndicatorsTable(dataset):
 
         del dataset
 
-        dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
         RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -8578,14 +7475,15 @@ def mpCreateIndicatorsTable(dataset):
         logFile(log_file, msg); del msg
 
         # Get the reference system defined for the region in datasets
-        datasetcodepath = os.path.join(RegionGDB, f"{dataset_product_code}")
+        #datasetcodepath = os.path.join(RegionGDB, f"{dataset_product_code}")
+
         # Set the output coordinate system to what is needed for the
         # DisMAP project
-        geographicarea_sr = os.path.join(DATASET_SHAPEFILE_FOLDER, dataset_product_code, f"{geographicarea}.prj")
-        psr = arcpy.SpatialReference(geographicarea_sr)
-        arcpy.env.outputCoordinateSystem = psr
+        #geographicarea_sr = os.path.join(DATASET_SHAPEFILE_FOLDER, dataset_product_code, f"{geographicarea}.prj")
+        #psr = arcpy.SpatialReference(geographicarea_sr)
+        #arcpy.env.outputCoordinateSystem = psr
 
-        del geographicarea, geographicarea_sr, psr
+        #del geographicarea, geographicarea_sr, psr
 
         arcpy.env.cellSize = cellsize; del cellsize
 
@@ -8625,10 +7523,7 @@ def mpCreateIndicatorsTable(dataset):
         del datasetcode_raster_mask
 
         # region abbreviated path
-        datasetcode_folder = os.path.join(IMAGE_FOLDER, dataset_product_code)
-
-        # Template Indicators Table
-        #template_indicators = os.path.join(RegionGDB, f"Indicators")
+        #datasetcode_folder = os.path.join(IMAGE_FOLDER, dataset_product_code)
 
         # Region Indicators
         datasetcode_indicators = os.path.join(RegionGDB, f"{dataset_product_code}_Indicators")
@@ -8642,105 +7537,117 @@ def mpCreateIndicatorsTable(dataset):
         # Region Longitude
         datasetcode_longitude = os.path.join(RegionGDB, f"{dataset_product_code}_Longitude")
 
-        # Region CVS Table
-        datasetcode_path = os.path.join(RegionGDB, dataset_product_code)
-        #print(datasetcode_path)
-        fields = [f.name for f in arcpy.ListFields(datasetcode_path) if f.type not in ['Geometry', 'OID']]
+        layerspeciesyearimagename_table = os.path.join(RegionGDB, "LayerSpeciesYearImageName")
+        getcount = int(arcpy.management.GetCount(layerspeciesyearimagename_table)[0])
+        msg = f'\n> "{os.path.basename(layerspeciesyearimagename_table)}" has {getcount:,d} records\n'
+        logFile(log_file, msg); del msg, getcount
 
-        if "CoreSpecies" not in fields:
-            arcpy.management.AddField(datasetcode_path, "CoreSpecies", "TEXT", "", "", 10, "Core Species")
-            arcpy.management.CalculateField(datasetcode_path, "CoreSpecies", "None")
+        input_rasters = {}
+
+        #fields = "DatasetCode;Region;Season;Species;CommonName;SpeciesCommonName;CoreSpecies;Year;StdTime;Variable;Value;Dimensions"
+        #fields = fields.split(";")
+        fields = ['ImageName', 'Variable', 'Species', 'CommonName', 'CoreSpecies', 'Year']
+
+        #print(fields)
+        #fields = [f.name for f in arcpy.ListFields(datasetcode_tmp) if f.type not in ['Geometry', 'OID']]
+        with arcpy.da.SearchCursor(layerspeciesyearimagename_table, fields) as cursor:
+            for row in cursor:
+                image_name, variable, species, commonname, corespecies, year = row[0], row[1], row[2], row[3], row[4], row[5]
+                #if variable not in variables: variables.append(variable)
+                #print(variable, image_name)
+                #variable = f"_{variable}" if "Species Richness" in variable else variable
+                if "Species Richness" not in variable:
+                    #print(variable, year)
+                    input_raster_path = os.path.join(IMAGE_FOLDER, dataset_product_code, variable, f"{image_name}.tif")
+                    #print(input_raster_path)
+                    #input_rasters[variable, year] = [image_name, variable, species, commonname, corespecies, year, input_raster_path]
+                    #input_rasters[variable][year] = [image_name, variable, species, commonname, corespecies, year, input_raster_path]
+                    #input_rasters[variable] = {year : image_name}
+                    if variable not in input_rasters:
+                        input_rasters[variable] = {year : [image_name, variable, species, commonname, corespecies, year, input_raster_path]}
+                    else:
+                        value = input_rasters[variable]
+                        if year not in value:
+                            value[year] = [image_name, variable, species, commonname, corespecies, year, input_raster_path]
+                            input_rasters[variable] = value
+                        del value
+
+                    del input_raster_path
+
+                del row, image_name, variable, species, commonname, corespecies, year
+            del cursor
+
+        #print(variables)
         del fields
-
-##        # Execute CreateTable
-##        arcpy.management.CreateTable(RegionGDB, f"{datasetcode}_Indicators", template_indicators, "")
-##        msg = arcpy.GetMessages()
-##        msg = ">---> {0}".format(msg.replace('\n', '\n>-----> '))
-##        logFile(log_file, msg); del msg
-##
-##        del template_indicators
-
-        # Get a disctionary of species and common names from the
-        # Dictionary of species and common names that are in the tables
-        datasetcode_unique_species_common_name_dict = unique_fish_dict(datasetcode_path)
-        del datasetcode_path
-
-        #print( datasetcode_unique_species_common_name_dict )
-        #print("Is the")
+        #del variables
+        del layerspeciesyearimagename_table
 
         # Start with empty row_values list of list
         row_values = []
 
-        # Loop through dictionary
-        for datasetcode_unique_specie in datasetcode_unique_species_common_name_dict:
-            # Speices folders do not include the '.' that can be a part
-            # of the name, so remove
-            datasetcode_unique_specie_dir = datasetcode_unique_specie.replace('(','').replace(')','')
-            # Species
-            Species = datasetcode_unique_specie[:]
-            #print(Species)
-            # The common name is the value in the dictionary
-            CommonName = datasetcode_unique_species_common_name_dict[datasetcode_unique_specie][0]
-            #print(CommonName)
-            CoreSpecies = datasetcode_unique_species_common_name_dict[datasetcode_unique_specie][1]
-            del datasetcode_unique_specie
-            #print(CoreSpecies)
-
-            msg = f">---> Species: {Species}, Common Name: {CommonName}"
-            logFile(log_file, msg); del msg
-
-            datasetcode_unique_specie_dir = os.path.join(datasetcode_folder, datasetcode_unique_specie_dir)
-
-            msg = f">---> Processing Biomass Rasters in {os.path.basename(datasetcode_unique_specie_dir)}"
-            logFile(log_file, msg); del msg
-
-            arcpy.env.workspace = datasetcode_unique_specie_dir; del datasetcode_unique_specie_dir
-
-            biomassRasters = arcpy.ListRasters("*.tif")
-
-            # ###--->>> This is to get a median biomass value for all years
+        print('\n')
+        for variable in sorted(input_rasters):
 
             first_year = 9999
-            # Process rasters
-            for biomassRaster in sorted(biomassRasters):
-                # Get year from raster name
-                br_year = int(biomassRaster[-8:-4])
 
-                msg = f">-----> Processing {biomassRaster} Biomass Raster"
+            years = input_rasters[variable]
+            for year in sorted(years):
+                image_name, variable, species, commonname, corespecies, year, input_raster_path = years[year]
+
+                PrintRecord = False
+                if PrintRecord:
+                    msg = f"\n\t> Image Name: {image_name}\n"
+                    msg = msg + f"\t\t> Variable:      {variable}\n"
+                    msg = msg + f"\t\t> Species:       {species}\n"
+                    msg = msg + f"\t\t> Common Name:   {commonname}\n"
+                    msg = msg + f"\t\t> Core Species:  {corespecies}\n"
+                    msg = msg + f"\t\t> Year:          {year}\n"
+                    msg = msg + f"\t\t> Output Raster: {os.path.basename(input_raster_path)}"
+                    logFile(log_file, msg); del msg
+                del PrintRecord
+
+                msg = f"\t\t> Processing {image_name} Biomass Raster"
                 logFile(log_file, msg); del msg
 
                 # Get maximumBiomass value to filter out "zero" rasters
-                maximumBiomass = float(arcpy.management.GetRasterProperties(biomassRaster,"MAXIMUM").getOutput(0))
+                maximumBiomass = float(arcpy.management.GetRasterProperties(input_raster_path, "MAXIMUM").getOutput(0))
 
-                msg = f">-------> Biomass Raster Maximum: {maximumBiomass}"
+                msg = f"\t\t> Biomass Raster Maximum: {maximumBiomass}"
                 logFile(log_file, msg); del msg
+                # print(variable, corespecies, first_year, year)
 
                 # If maximumBiomass greater than zero, then process raster
                 if maximumBiomass > 0.0:
-                    msg = f">-------> Calculating indicators"
+                    # Test is for first year
+
+                    first_year = year if year < first_year else first_year
+                    #print(f"\t{first_year}, {year} {first_year == year}")
+
+                    msg = f"\t\t> Calculating Indicators"
                     logFile(log_file, msg); del msg
 
-                    # Test is for first year
-                    if br_year < first_year:
-                        first_year = br_year
+                    # ###--->>> Biomass Start
 
-                # ###--->>> Biomass Start
-
-                    biomassArray = arcpy.RasterToNumPyArray(biomassRaster, nodata_to_value=np.nan)
+                    biomassArray = arcpy.RasterToNumPyArray(input_raster_path, nodata_to_value=np.nan)
                     biomassArray[biomassArray <= 0.0] = np.nan
 
-                    #sumWtCpue = sum of all wtcpue values (get this from biomassRaster stats??)
+                    #sumWtCpue = sum of all wtcpue values (get this from input_raster_path stats??)
                     sumBiomassArray = np.nansum(biomassArray)
 
-                    msg = f">-------> sumBiomassArray: {sumBiomassArray}"
+                    msg = f"\t\t\t> sumBiomassArray: {sumBiomassArray}"
                     logFile(log_file, msg); del msg
 
-                    msg = f">-------> biomassArray non-nan count: {np.count_nonzero(~np.isnan(biomassArray))}"
+                    msg = f"\t\t\t> biomassArray non-nan count: {np.count_nonzero(~np.isnan(biomassArray))}"
                     logFile(log_file, msg); del msg
 
-                # ###--->>> Biomass End
+                    # ###--->>> Biomass End
 
-                # ###--->>> Latitude Start
+                    # ###--->>> Latitude Start
+                    #CenterOfGravityLatitude    = None
+                    #MinimumLatitude            = None
+                    #MaximumLatitude            = None
+                    #OffsetLatitude             = None
+                    #CenterOfGravityLatitudeSE  = None
 
                     # Latitude
                     latitudeArray = arcpy.RasterToNumPyArray(datasetcode_latitude, nodata_to_value=np.nan)
@@ -8748,13 +7655,13 @@ def mpCreateIndicatorsTable(dataset):
                     latitudeArray[np.isnan(biomassArray)] = np.nan
                     #print(latitudeArray.shape)
 
-                    #msg = f">-------> latitudeArray non-nan count: {np.count_nonzero(~np.isnan(latitudeArray)):,d}"
+                    #msg = f"\t\t\t> latitudeArray non-nan count: {np.count_nonzero(~np.isnan(latitudeArray)):,d}"
                     #logFile(log_file, msg); del msg
 
-                    #msg = f">-------> Latitude Min: {np.nanmin(latitudeArray)}"
+                    #msg = f"\t\t\t> Latitude Min: {np.nanmin(latitudeArray)}"
                     #logFile(log_file, msg); del msg
 
-                    #msg = f">-------> Latitude Max: {np.nanmax(latitudeArray)}"
+                    #msg = f"\t\t\t> Latitude Max: {np.nanmax(latitudeArray)}"
                     #logFile(log_file, msg); del msg
 
                     # make the biomass and latitude arrays one dimensional
@@ -8802,7 +7709,8 @@ def mpCreateIndicatorsTable(dataset):
                     #minLat = sortedLatitudeArray[minIndex]
                     MinimumLatitude = sortedLatitudeArray[minIndex]
 
-                    del sortedBiomassArrayCumSum, sortedBiomassArrayQuantile, diffArray, minIndex
+                    del sortedBiomassArrayCumSum, sortedBiomassArrayQuantile
+                    del diffArray, minIndex
                     del sortedLatitudeArray, sortedBiomassArray, flatBiomassArray
                     del latsInds, flatLatitudeArray
 
@@ -8810,12 +7718,12 @@ def mpCreateIndicatorsTable(dataset):
 
                     sumWeightedLatitudeArray = np.nansum(weightedLatitudeArray)
 
-                    #msg = ">-------> Sum Weighted Latitude: {sumWeightedLatitudeArray}"
+                    #msg = "\t\t\t> Sum Weighted Latitude: {sumWeightedLatitudeArray}"
                     #logFile(log_file, msg); del msg
 
                     CenterOfGravityLatitude = sumWeightedLatitudeArray / sumBiomassArray
 
-                    if br_year == first_year:
+                    if year == first_year:
                         first_year_offset_latitude = CenterOfGravityLatitude
 
                     OffsetLatitude = CenterOfGravityLatitude - first_year_offset_latitude
@@ -8827,35 +7735,32 @@ def mpCreateIndicatorsTable(dataset):
 
                     del weightedLatitudeArrayVariance, weightedLatitudeArrayCount
 
-                    #msg = f">-------> Center of Gravity Latitude: {round(CenterOfGravityLatitude,6)}"
-                    msg = f">-------> Center of Gravity Latitude: {CenterOfGravityLatitude}"
+                    #msg = f"\t\t\t> Center of Gravity Latitude: {round(CenterOfGravityLatitude,6)}"
+                    msg = f"\t\t\t> Center of Gravity Latitude: {CenterOfGravityLatitude}"
                     logFile(log_file, msg); del msg
 
-                    msg = f">-------> Minimum Latitude (5th Percentile): {MinimumLatitude}"
+                    msg = f"\t\t\t> Minimum Latitude (5th Percentile): {MinimumLatitude}"
                     logFile(log_file, msg); del msg
 
-                    msg = f">-------> Maximum Latitude (95th Percentile): {MaximumLatitude}"
+                    msg = f"\t\t\t> Maximum Latitude (95th Percentile): {MaximumLatitude}"
                     logFile(log_file, msg); del msg
 
-                    msg = f">-------> Offset Latitude: {OffsetLatitude}"
+                    msg = f"\t\t\t> Offset Latitude: {OffsetLatitude}"
                     logFile(log_file, msg); del msg
 
-                    msg = f">-------> Center of Gravity Latitude Standard Error: {CenterOfGravityLatitudeSE}"
+                    msg = f"\t\t\t> Center of Gravity Latitude Standard Error: {CenterOfGravityLatitudeSE}"
                     logFile(log_file, msg); del msg
 
                     del latitudeArray, weightedLatitudeArray, sumWeightedLatitudeArray
 
-                # ###--->>> Latitude End
+                    # ###--->>> Latitude End
 
-                # ###--->>> Longitude Start
-                    #longitudeArray = arcpy.RasterToNumPyArray(masked_longitude_raster, nodata_to_value = np.nan)
-                    #arcpy.management.Delete(masked_longitude_raster)
-                    #del masked_longitude_raster
-
-                    # Longitude
-                    # Doesn't work for International Date Line
-                    #longitudeArray = arcpy.RasterToNumPyArray(datasetcode_longitude, nodata_to_value=np.nan)
-                    #longitudeArray[np.isnan(biomassArray)] = np.nan
+                    # ###--->>> Longitude Start
+                    #CenterOfGravityLongitude   = None
+                    #MinimumLongitude           = None
+                    #MaximumLongitude           = None
+                    #OffsetLongitude            = None
+                    #CenterOfGravityLongitudeSE = None
 
                     # For issue of international date line
                     # Added/Modified by JFK June 15, 2022
@@ -8918,8 +7823,8 @@ def mpCreateIndicatorsTable(dataset):
 
                     CenterOfGravityLongitude = sumWeightedLongitudeArray / sumBiomassArray
 
-                    if br_year == first_year:
-                        first_year_offset_longitude = CenterOfGravityLongitude
+                    if year == first_year:
+                       first_year_offset_longitude = CenterOfGravityLongitude
 
                     OffsetLongitude = CenterOfGravityLongitude - first_year_offset_longitude
 
@@ -8936,33 +7841,39 @@ def mpCreateIndicatorsTable(dataset):
                     MinimumLongitude = np.mod(MinimumLongitude - 180.0, 360.0) - 180.0
                     MaximumLongitude = np.mod(MaximumLongitude - 180.0, 360.0) - 180.0
 
-                    #msg = f">-------> Sum Weighted Longitude: {0}".format(sumWeightedLongitudeArray)
+                    #msg = f"\t\t\t> Sum Weighted Longitude: {0}".format(sumWeightedLongitudeArray)
                     #logFile(log_file, msg); del msg
 
-                    #msg = f">-------> Center of Gravity Longitude: {round(CenterOfGravityLongitude,6)}"
-                    msg = f">-------> Center of Gravity Longitude: {CenterOfGravityLongitude}"
+                    #msg = f"\t\t\t> Center of Gravity Longitude: {round(CenterOfGravityLongitude,6)}"
+                    msg = f"\t\t\t> Center of Gravity Longitude: {CenterOfGravityLongitude}"
                     logFile(log_file, msg); del msg
 
-
-                    #msg = F">-------> Center of Gravity Longitude: {np.mod(CenterOfGravityLongitude - 180.0, 360.0) -180.0}"
+                    #msg = F"\t\t\t> Center of Gravity Longitude: {np.mod(CenterOfGravityLongitude - 180.0, 360.0) -180.0}"
                     #logFile(log_file, msg); del msg
 
-                    msg = f">-------> Minimum Longitude (5th Percentile): {MinimumLongitude}"
+                    msg = f"\t\t\t> Minimum Longitude (5th Percentile): {MinimumLongitude}"
                     logFile(log_file, msg); del msg
 
-                    msg = f">-------> Maximum Longitude (95th Percentile): {MaximumLongitude}"
+                    msg = f"\t\t\t> Maximum Longitude (95th Percentile): {MaximumLongitude}"
                     logFile(log_file, msg); del msg
 
-                    msg = f">-------> Offset Longitude: {OffsetLongitude}"
+                    msg = f"\t\t\t> Offset Longitude: {OffsetLongitude}"
                     logFile(log_file, msg); del msg
 
-                    msg = f">-------> Center of Gravity Longitude Standard Error: {CenterOfGravityLongitudeSE}"
+                    msg = f"\t\t\t> Center of Gravity Longitude Standard Error: {CenterOfGravityLongitudeSE}"
                     logFile(log_file, msg); del msg
 
                     del longitudeArray, weightedLongitudeArray, sumWeightedLongitudeArray
 
-                # ###--->>> Center of Gravity Depth Start
-                    # ###--->>> Bathymetry (Depth)
+                    # ###--->>> Longitude End
+
+                    # ###--->>> Center of Gravity Depth (Bathymetry) Start
+
+                    #CenterOfGravityDepth       = None
+                    #MinimumDepth               = None
+                    #MaximumDepth               = None
+                    #OffsetDepth                = None
+                    #CenterOfGravityDepthSE     = None
 
                     # Bathymetry
                     bathymetryArray = arcpy.RasterToNumPyArray(datasetcode_bathymetry, nodata_to_value=np.nan)
@@ -9040,7 +7951,7 @@ def mpCreateIndicatorsTable(dataset):
                     #
                     CenterOfGravityDepth = sumWeightedBathymetryArray / sumBiomassArray
 
-                    if br_year == first_year:
+                    if year == first_year:
                         first_year_offset_depth = CenterOfGravityDepth
 
                     OffsetDepth = CenterOfGravityDepth - first_year_offset_depth
@@ -9068,10 +7979,12 @@ def mpCreateIndicatorsTable(dataset):
                     logFile(log_file, msg); del msg
 
                     del bathymetryArray, weightedBathymetryArray
-                    del sumWeightedBathymetryArray, biomassRaster
-                    del biomassArray, sumBiomassArray
+                    del sumWeightedBathymetryArray
 
-                # ###--->>> Center of Gravity Depth End
+                    # ###--->>> Center of Gravity Depth (Bathymetry) End
+
+                    # Clean Up
+                    del biomassArray, sumBiomassArray
 
                 elif maximumBiomass == 0.0:
                     CenterOfGravityLatitude    = None
@@ -9089,6 +8002,7 @@ def mpCreateIndicatorsTable(dataset):
                     MaximumDepth               = None
                     OffsetDepth                = None
                     CenterOfGravityDepthSE     = None
+
                 else:
                     msg = 'Something wrong with biomass raster'
                     logFile(log_file, msg); del msg
@@ -9101,13 +8015,14 @@ def mpCreateIndicatorsTable(dataset):
                 Region                  = region
                 Season                  = season
                 DateCode                = datecode
-                # Species,CommonName,
-                # CoreSpecies,
-                Year                    = br_year
+                Species                 = species
+                CommonName              = commonname
+                CoreSpecies             = corespecies
+                Year                    = year
                 DistributionProjectName = distributionprojectname
                 DistributionProjectCode = distributionprojectcode
                 SummaryProduct          = summaryproduct
-                #
+
                 row = [
                        DatasetCode,
                        Region,
@@ -9136,93 +8051,126 @@ def mpCreateIndicatorsTable(dataset):
                        OffsetDepth,
                        CenterOfGravityDepthSE,
                       ]
+
+                del DatasetCode, Region, Season, DateCode, Species, CommonName
+                del CoreSpecies, Year, DistributionProjectName
+                del DistributionProjectCode, SummaryProduct, CenterOfGravityLatitude
+                del MinimumLatitude, MaximumLatitude, OffsetLatitude
+                del CenterOfGravityLatitudeSE, CenterOfGravityLongitude
+                del MinimumLongitude, MaximumLongitude, OffsetLongitude
+                del CenterOfGravityLongitudeSE, CenterOfGravityDepth, MinimumDepth
+                del MaximumDepth, OffsetDepth, CenterOfGravityDepthSE
+
                 # Append to list
                 row_values.append(row)
                 del row
 
-                del br_year
-                del Year, DistributionProjectName, DistributionProjectCode
-                del SummaryProduct, CenterOfGravityLatitude, MinimumLatitude
-                del MaximumLatitude, OffsetLatitude, CenterOfGravityLatitudeSE
-                del CenterOfGravityLongitude, MinimumLongitude, MaximumLongitude
-                del OffsetLongitude, CenterOfGravityLongitudeSE, CenterOfGravityDepth
-                del MinimumDepth, MaximumDepth, OffsetDepth, CenterOfGravityDepthSE
-                del DateCode, DatasetCode, Region, Season
+            del years
 
-            del biomassRasters
-            del first_year
-            del Species, CommonName, CoreSpecies
-            del first_year_offset_latitude
-            del first_year_offset_longitude, first_year_offset_depth
+            if "first_year_offset_latitude"  in locals(): del first_year_offset_latitude
+            if "first_year_offset_longitude" in locals(): del first_year_offset_longitude
+            if "first_year_offset_depth"     in locals(): del first_year_offset_depth
 
-        del datasetcode, region, season, datecode, distributionprojectcode
-        del distributionprojectname, summaryproduct
-        del dataset_product_code, RegionGDB, datasetcodepath ,
-        del datasetcode_folder, datasetcode_bathymetry, datasetcode_latitude
-        del datasetcode_longitude, datasetcode_unique_species_common_name_dict
-        del np, math,
+        del datasetcode, region, season, datecode, species, commonname
+        del corespecies, year, distributionprojectname
+        del distributionprojectcode, summaryproduct
+
+        #del dataset_product_code, datasetcodepath, datasetcode_folder
+        del dataset_product_code
+        del datasetcode_bathymetry, datasetcode_latitude, datasetcode_longitude
+        del input_rasters, image_name, variable, input_raster_path, first_year
+        del RegionGDB
+
+        del np, math
 
         msg = ">-----> Inserting records into the table"
         logFile(log_file, msg); del msg
-
-        PrintRowContent = False
-        if PrintRowContent:
-            for row_value in row_values:
-                #print(row_value)
-                # DatasetCode
-                msg =  f"DatasetCode:                {row_value[4]}\n"
-                msg += f"Region:                     {row_value[5]}\n"
-                msg += f"Season:                     {row_value[6]}\n"
-                msg += f"DateCode:                   {row_value[7]}\n"
-                msg += f"Species:                    {row_value[8]}\n"
-                msg += f"CommonName:                 {row_value[9]}\n"
-                msg += f"CoreSpecies:                {row_value[10]}\n"
-                msg += f"Year:                       {row_value[11]}\n"
-                msg += f"DistributionProjectName:    {row_value[12]}\n"
-                msg += f"DistributionProjectCode:    {row_value[13]}\n"
-                msg += f"SummaryProduct:             {row_value[14]}\n"
-                msg += f"CenterOfGravityLatitude:    {row_value[15]}\n"
-                msg += f"MinimumLatitude:            {row_value[16]}\n"
-                msg += f"MaximumLatitude:            {row_value[17]}\n"
-                msg += f"OffsetLatitude:             {row_value[18]}\n"
-                msg += f"CenterOfGravityLatitudeSE:  {row_value[19]}\n"
-                msg += f"CenterOfGravityLongitude:   {row_value[20]}\n"
-                msg += f"MinimumLongitude:           {row_value[21]}\n"
-                msg += f"MaximumLongitude:           {row_value[22]}\n"
-                msg += f"OffsetLongitude:            {row_value[23]}\n"
-                msg += f"CenterOfGravityLongitudeSE: {row_value[24]}\n"
-                msg += f"CenterOfGravityDepth:       {row_value[25]}\n"
-                msg += f"MinimumDepth:               {row_value[26]}\n"
-                msg += f"MaximumDepth:               {row_value[27]}\n"
-                msg += f"OffsetDepth:                {row_value[28]}\n"
-                msg += f"enterOfGravityDepthSE:      {row_value[29]}\n"
-                logFile(log_file, msg); del msg
-                if row_value: del row_value
-        del PrintRowContent
 
         # This gets a list of fields in the table
         fields = [f.name for f in arcpy.ListFields(datasetcode_indicators) if f.type not in ['Geometry', 'OID']]
 
         # Open an InsertCursor
         cursor = arcpy.da.InsertCursor(datasetcode_indicators, fields)
-        del datasetcode_indicators
+        del fields
 
         # Insert new rows into the table
         for row in row_values:
             try:
                 row = [None if x != x else x for x in row]
                 cursor.insertRow(row)
-                del row
             except Exception as e:
                 import sys
                 # Capture all other errors
                 #print(sys.exc_info()[2].tb_lineno)
                 msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
                 logFile(log_file.replace(".log", " ERROR.log"), msg); del msg, sys
+            finally:
+                del row
 
-        #print(row_values)
         # Delete cursor object
-        del cursor, row_values, fields
+        del cursor, row_values
+
+        getcount = int(arcpy.management.GetCount(datasetcode_indicators)[0])
+        msg = f'\n> "{os.path.basename(datasetcode_indicators)}" has {getcount:,d} records\n'
+        logFile(log_file, msg); del msg, getcount
+
+        PrintRowContent = False
+        if PrintRowContent:
+            msg = ">-----> Print records in the table"
+            logFile(log_file, msg); del msg
+
+            fields = [f.name for f in arcpy.ListFields(datasetcode_indicators) if f.type not in ['Geometry', 'OID']]
+            with arcpy.da.SearchCursor(datasetcode_indicators, fields) as cursor:
+            #with arcpy.da.SearchCursor(datasetcode_indicators, fields, "CoreSpecies = 'No'") as cursor:
+                for row in cursor:
+                    #print(', '.join((row)))
+
+                    DatasetCode                = row[0]
+                    Region                     = row[1]
+                    Season                     = row[2]
+                    DateCode                   = row[3]
+                    Species                    = row[4]
+                    CommonName                 = row[5]
+                    CoreSpecies                = row[6]
+                    Year                       = row[7]
+                    #DistributionProjectName    = row[8]
+                    DistributionProjectCode    = row[9]
+                    SummaryProduct             = row[10]
+                    CenterOfGravityLatitude    = '' if row[11] is None else f'{row[11]:.1f}'
+                    MinimumLatitude            = '' if row[12] is None else f'{row[12]:.1f}'
+                    MaximumLatitude            = '' if row[13] is None else f'{row[13]:.1f}'
+                    OffsetLatitude             = '' if row[14] is None else f'{row[14]:.1f}'
+                    CenterOfGravityLatitudeSE  = '' if row[15] is None else f'{row[15]:.1f}'
+                    CenterOfGravityLongitude   = '' if row[16] is None else f'{row[16]:.1f}'
+                    MinimumLongitude           = '' if row[17] is None else f'{row[17]:.1f}'
+                    MaximumLongitude           = '' if row[18] is None else f'{row[18]:.1f}'
+                    OffsetLongitude            = '' if row[19] is None else f'{row[19]:.1f}'
+                    CenterOfGravityLongitudeSE = '' if row[20] is None else f'{row[20]:.1f}'
+                    CenterOfGravityDepth       = '' if row[21] is None else f'{row[21]:.1f}'
+                    MinimumDepth               = '' if row[22] is None else f'{row[22]:.1f}'
+                    MaximumDepth               = '' if row[23] is None else f'{row[23]:.1f}'
+                    OffsetDepth                = '' if row[24] is None else f'{row[24]:.1f}'
+                    CenterOfGravityDepthSE     = '' if row[25] is None else f'{row[25]:.1f}'
+
+                    #print(DatasetCode, Region, Season, DateCode, Species, CommonName, CoreSpecies, Year, DistributionProjectName, DistributionProjectCode, SummaryProduct, CenterOfGravityLatitude, MinimumLatitude, MaximumLatitude, OffsetLatitude, CenterOfGravityLatitudeSE, CenterOfGravityLongitude, MinimumLongitude, MaximumLongitude, OffsetLongitude, CenterOfGravityLongitudeSE, CenterOfGravityDepth, MinimumDepth, MaximumDepth, OffsetDepth, CenterOfGravityDepthSE)
+                    print(DatasetCode, Region, Season, DateCode, Species, CommonName, CoreSpecies, Year, DistributionProjectCode, SummaryProduct, CenterOfGravityLatitude, MinimumLatitude, MaximumLatitude, OffsetLatitude, CenterOfGravityLatitudeSE, CenterOfGravityLongitude, MinimumLongitude, MaximumLongitude, OffsetLongitude, CenterOfGravityLongitudeSE, CenterOfGravityDepth, MinimumDepth, MaximumDepth, OffsetDepth, CenterOfGravityDepthSE)
+
+                    del DatasetCode, Region, Season, DateCode, Species, CommonName
+                    #del CoreSpecies, Year, DistributionProjectName
+                    del CoreSpecies, Year
+                    del DistributionProjectCode, SummaryProduct, CenterOfGravityLatitude
+                    del MinimumLatitude, MaximumLatitude, OffsetLatitude
+                    del CenterOfGravityLatitudeSE, CenterOfGravityLongitude
+                    del MinimumLongitude, MaximumLongitude, OffsetLongitude
+                    del CenterOfGravityLongitudeSE, CenterOfGravityDepth, MinimumDepth
+                    del MaximumDepth, OffsetDepth, CenterOfGravityDepthSE
+
+                    del row
+                del cursor
+            del fields
+        del PrintRowContent
+
+        del datasetcode_indicators
 
 # #    # Add some metadata
 # #    years_md = unique_years(datasetcode_indicators)
@@ -9338,7 +8286,8 @@ def mpCreateLatLongRasters(dataset):
         distributionprojectcode = dataset[12]
         del dataset
 
-        dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
         RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -9358,6 +8307,16 @@ def mpCreateLatLongRasters(dataset):
 
         # Use all of the cores on the machine.
         arcpy.env.parallelProcessingFactor = "100%"
+
+        # Set the XYTolerance to 0.02 Meters
+        # "0.001 Meters"
+        #arcpy.env.XYTolerance = "0.02 Meters"
+        arcpy.env.XYTolerance = "0.1 Meters"
+
+        # Set the XYResolution environment to a linear unit
+        # "0.0001 Meters"
+        #arcpy.env.XYResolution = "0.002 Meters"
+        arcpy.env.XYResolution = "0.01 Meters"
 
         # Set Log Metadata to False in order to not record all geoprocessing
         # steps in metadata
@@ -9523,7 +8482,7 @@ def mpCreateMosaics(dataset):
 
         start_time = time()
 
-        import numpy as np
+        #import numpy as np
 
         # For benchmarking.
         #timestr = strftime("%Y%m%d-%H%M%S")
@@ -9544,7 +8503,8 @@ def mpCreateMosaics(dataset):
         mosaictitle             = dataset[20]
         del dataset
 
-        dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
         RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -9568,9 +8528,52 @@ def mpCreateMosaics(dataset):
         # Use all of the cores on the machine.
         arcpy.env.parallelProcessingFactor = "100%"
 
+        # Set the XYTolerance to 0.02 Meters
+        # "0.001 Meters"
+        #arcpy.env.XYTolerance = "0.02 Meters"
+        arcpy.env.XYTolerance = "0.1 Meters"
+
+        # Set the XYResolution environment to a linear unit
+        # "0.0001 Meters"
+        #arcpy.env.XYResolution = "0.002 Meters"
+        arcpy.env.XYResolution = "0.01 Meters"
+
         # Set Log Metadata to False in order to not record all geoprocessing
         # steps in metadata
         arcpy.SetLogMetadata(False)
+
+        geographicarea_sr = os.path.join(DATASET_SHAPEFILE_FOLDER, dataset_product_code, f"{geographicarea}.prj")
+        # Set the output coordinate system to what is needed for the
+        # DisMAP project
+        psr = arcpy.SpatialReference(geographicarea_sr)
+        del geographicarea_sr, geographicarea
+
+        layerspeciesyearimagename_table = os.path.join(RegionGDB, "LayerSpeciesYearImageName")
+
+        input_raster_paths = []
+        #variables = []
+
+        #fields = "DatasetCode;Region;Season;Species;CommonName;SpeciesCommonName;CoreSpecies;Year;StdTime;Variable;Value;Dimensions"
+        #fields = fields.split(";")
+        fields = ['Variable', 'ImageName']
+        #print(fields)
+        #fields = [f.name for f in arcpy.ListFields(datasetcode_tmp) if f.type not in ['Geometry', 'OID']]
+        with arcpy.da.SearchCursor(layerspeciesyearimagename_table, fields) as cursor:
+            for row in cursor:
+                variable, image_name = row[0], row[1]
+                #if variable not in variables: variables.append(variable)
+                #print(variable, image_name)
+                variable = f"_{variable}" if "Species Richness" in variable else variable
+                input_raster_path = os.path.join(IMAGE_FOLDER, dataset_product_code, variable, f"{image_name}.tif")
+                if arcpy.Exists(input_raster_path):
+                    #print(input_raster_path)
+                    input_raster_paths.append(input_raster_path)
+                #print(input_raster_path)
+                del row, variable, image_name, input_raster_path
+            del cursor
+
+        #print(variables)
+        del fields
 
         mosaicname_path = os.path.join(RegionGDB, mosaicname)
 
@@ -9582,138 +8585,52 @@ def mpCreateMosaics(dataset):
             msg = f'\t> Creating the {dataset_product_code} Mosaic'
             logFile(log_file, msg)
 
-            geographicarea_sr = os.path.join(DATASET_SHAPEFILE_FOLDER, dataset_product_code, f"{geographicarea}.prj")
-            # Set the output coordinate system to what is needed for the
-            # DisMAP project
-            psr = arcpy.SpatialReference(geographicarea_sr)
-            del geographicarea_sr, geographicarea
-
-            arcpy.management.CreateMosaicDataset(in_workspace = RegionGDB,
-                                                 in_mosaicdataset_name = mosaicname,
-                                                 coordinate_system = psr,
-                                                 num_bands = "1",
-                                                 pixel_type = "32_BIT_FLOAT",
-                                                 product_definition = "",
-                                                 product_band_definitions="")
+            arcpy.management.CreateMosaicDataset(in_workspace             = RegionGDB,
+                                                 in_mosaicdataset_name    = mosaicname,
+                                                 coordinate_system        = psr,
+                                                 num_bands                = "1",
+                                                 pixel_type               = "32_BIT_FLOAT",
+                                                 product_definition       = "",
+                                                 product_band_definitions = "")
 
             msg = arcpy.GetMessages()
             msg = ">->-> {0}\n".format(msg.replace('\n', '\n>->-> '))
             logFile(log_file, msg); del msg
 
-        layerspeciesyearimagename_table = os.path.join(RegionGDB, "LayerSpeciesYearImageName")
-
-        input_raster_paths = []
-        input_rasters_path = os.path.join(IMAGE_FOLDER, dataset_product_code)
-
-        msg = f"\t> Walking the {os.path.basename(input_rasters_path)} directory searching for species rasters."
+        #del variables
+        msg = f"\t> Loading Rasters into the {os.path.basename(mosaicname_path)}."
         logFile(log_file, msg); del msg
 
-        # Get a list of input_rasters
-        walk = arcpy.da.Walk(input_rasters_path, topdown=True, datatype="RasterDataset")
-        for dirpath, dirnames, filenames in walk:
-            for filename in filenames:
-                if os.path.basename(dirpath) not in ["_Core Species Richness", "_Species Richness",]:
-                    if dirpath not in input_raster_paths:
-                        input_raster_paths.append(dirpath)
-                del filename
-        del walk, dirpath, dirnames, filenames
+        arcpy.management.AddRastersToMosaicDataset(in_mosaic_dataset       = mosaicname_path,
+                                                   raster_type             = "Raster Dataset",
+                                                   input_path              = input_raster_paths,
+                                                   update_cellsize_ranges  = "UPDATE_CELL_SIZES",
+                                                   #update_cellsize_ranges = "NO_CELL_SIZES",
+                                                   update_boundary         = "UPDATE_BOUNDARY",
+                                                   #update_boundary        = "NO_BOUNDARY",
+                                                   update_overviews        = "NO_OVERVIEWS",
+                                                   maximum_pyramid_levels  = None,
+                                                   maximum_cell_size       = "0",
+                                                   minimum_dimension       = "1500",
+                                                   spatial_reference       = psr,
+                                                   filter                  = "",
+                                                   sub_folder              = "NO_SUBFOLDERS",
+                                                   #duplicate_items_action = "OVERWRITE_DUPLICATES",
+                                                   duplicate_items_action  = "EXCLUDE_DUPLICATES",
+                                                   build_pyramids          = "NO_PYRAMIDS",
+                                                   #calculate_statistics   = "CALCULATE_STATISTICS",
+                                                   calculate_statistics    = "NO_STATISTICS",
+                                                   #build_thumbnails       = "BUILD_THUMBNAILS",
+                                                   build_thumbnails        = "NO_THUMBNAILS",
+                                                   operation_description   = "DisMAP",
+                                                   #force_spatial_reference= "NO_FORCE_SPATIAL_REFERENCE",
+                                                   force_spatial_reference = "FORCE_SPATIAL_REFERENCE",
+                                                   #estimate_statistics    = "ESTIMATE_STATISTICS",
+                                                   estimate_statistics     = "NO_STATISTICS",
+                                                   )
 
-        msg = f"\t> Loading Species Rasters into the {os.path.basename(mosaicname_path)}."
-        logFile(log_file, msg); del msg
-
-        for input_raster_path in input_raster_paths:
-            msg = f"\t\t> Layer Code: {dataset_product_code} Species: {os.path.basename(input_raster_path)}."
-            logFile(log_file, msg); del msg
-
-            arcpy.management.AddRastersToMosaicDataset(in_mosaic_dataset = mosaicname_path,
-                                                       raster_type = "Raster Dataset",
-                                                       input_path = input_raster_path,
-                                                       update_cellsize_ranges = "UPDATE_CELL_SIZES",
-                                                       #update_cellsize_ranges = "NO_CELL_SIZES",
-                                                       update_boundary = "UPDATE_BOUNDARY",
-                                                       #update_boundary = "NO_BOUNDARY",
-                                                       update_overviews = "NO_OVERVIEWS",
-                                                       maximum_pyramid_levels = "",
-                                                       maximum_cell_size = "0",
-                                                       minimum_dimension = "1500",
-                                                       spatial_reference = psr,
-                                                       #filter = "*Richness.tif",
-                                                       #filter = "*Richness.tif",
-                                                       filter = "",
-                                                       sub_folder = "NO_SUBFOLDERS",
-                                                       #duplicate_items_action = "OVERWRITE_DUPLICATES",
-                                                       duplicate_items_action = "EXCLUDE_DUPLICATES",
-                                                       build_pyramids = "NO_PYRAMIDS",
-                                                       calculate_statistics = "CALCULATE_STATISTICS",
-                                                       #calculate_statistics = "NO_STATISTICS",
-                                                       build_thumbnails = "BUILD_THUMBNAILS",
-                                                       #build_thumbnails = "NO_THUMBNAILS",
-                                                       operation_description = "",
-                                                       #force_spatial_reference = "NO_FORCE_SPATIAL_REFERENCE",
-                                                       force_spatial_reference = "FORCE_SPATIAL_REFERENCE",
-                                                       estimate_statistics = "ESTIMATE_STATISTICS",
-                                                       #estimate_statistics = "NO_STATISTICS",
-                                                       )
-            del input_raster_path
         del input_raster_paths
-
-        input_raster_paths = []
-        input_rasters_path = os.path.join(IMAGE_FOLDER, dataset_product_code)
-
-        msg = f"\t> Walking the {os.path.basename(input_rasters_path)} directory searching for species richness rasters."
-        logFile(log_file, msg); del msg
-
-        # Get a list of input_rasters
-        walk = arcpy.da.Walk(input_rasters_path, topdown=True, datatype="RasterDataset")
-        for dirpath, dirnames, filenames in walk:
-            for filename in filenames:
-                if os.path.basename(dirpath) in ["_Core Species Richness", "_Species Richness",]:
-                    if dirpath not in input_raster_paths:
-                        input_raster_paths.append(dirpath)
-                del filename
-        del walk, dirpath, dirnames, filenames
-
-        msg = f"\t> Loading Species Richness Rasters into the {os.path.basename(mosaicname_path)}."
-        logFile(log_file, msg); del msg
-
-        for input_raster_path in input_raster_paths:
-            msg = f"\t\t> Layer Code: {dataset_product_code} Species: {os.path.basename(input_raster_path)}."
-            logFile(log_file, msg); del msg
-
-            arcpy.management.AddRastersToMosaicDataset(in_mosaic_dataset = mosaicname_path,
-                                                       raster_type = "Raster Dataset",
-                                                       input_path = input_raster_path,
-                                                       update_cellsize_ranges = "UPDATE_CELL_SIZES",
-                                                       #update_cellsize_ranges = "NO_CELL_SIZES",
-                                                       update_boundary = "UPDATE_BOUNDARY",
-                                                       #update_boundary = "NO_BOUNDARY",
-                                                       update_overviews = "NO_OVERVIEWS",
-                                                       maximum_pyramid_levels = "",
-                                                       maximum_cell_size = "0",
-                                                       minimum_dimension = "1500",
-                                                       spatial_reference = psr,
-                                                       #filter = "*Richness.tif",
-                                                       #filter = "*Richness.tif",
-                                                       filter = "",
-                                                       sub_folder = "NO_SUBFOLDERS",
-                                                       #duplicate_items_action = "OVERWRITE_DUPLICATES",
-                                                       duplicate_items_action = "EXCLUDE_DUPLICATES",
-                                                       build_pyramids = "NO_PYRAMIDS",
-                                                       calculate_statistics = "CALCULATE_STATISTICS",
-                                                       #calculate_statistics = "NO_STATISTICS",
-                                                       build_thumbnails = "BUILD_THUMBNAILS",
-                                                       #build_thumbnails = "NO_THUMBNAILS",
-                                                       operation_description = "",
-                                                       #force_spatial_reference = "NO_FORCE_SPATIAL_REFERENCE",
-                                                       force_spatial_reference = "FORCE_SPATIAL_REFERENCE",
-                                                       estimate_statistics = "ESTIMATE_STATISTICS",
-                                                       #estimate_statistics = "NO_STATISTICS",
-                                                       )
-
-            del input_raster_path
-        del input_raster_paths, psr
-
-        del input_rasters_path
+        del psr
 
         msg = f">-> Joining {os.path.basename(mosaicname_path)} with {os.path.basename(layerspeciesyearimagename_table)}"
         logFile(log_file, msg); del msg
@@ -9728,7 +8645,7 @@ def mpCreateMosaics(dataset):
         logFile(log_file, msg); del msg
 
         try:
-            arcpy.RemoveIndex_management(datasetcode_mosaic, [f"{dataset_product_code}_MosaicSpeciesIndex",])
+            arcpy.management.RemoveIndex(datasetcode_mosaic, [f"{dataset_product_code}_MosaicSpeciesIndex",])
         except:
             pass
 
@@ -9753,105 +8670,92 @@ def mpCreateMosaics(dataset):
         #fds = '", "'.join(fields)
         #print(f'["{fds}"]'); del fds
 
-        processing_templates        = os.path.join(BASE_FOLDER, "RasterFunctionTemplates/Project1/Statistics and Histogram.rft.xml")
-        default_processing_template = os.path.join(BASE_FOLDER, "RasterFunctionTemplates/Project1/Statistics and Histogram.rft.xml")
+        processing_templates        = os.path.join(BASE_FOLDER, "RasterFunctionTemplates/DisMAP/Statistics and Histogram.rft.xml")
 
-        arcpy.management.SetMosaicDatasetProperties(
-                                                    in_mosaic_dataset=mosaicname_path,
-                                                    rows_maximum_imagesize=4100,
-                                                    columns_maximum_imagesize=15000,
-                                                    allowed_compressions="None;JPEG;LZ77;LERC",
-                                                    default_compression_type="LZ77",
-                                                    JPEG_quality=75,
-                                                    LERC_Tolerance=0.01,
-                                                    resampling_type="BILINEAR",
-                                                    clip_to_footprints="NOT_CLIP",
-                                                    footprints_may_contain_nodata="FOOTPRINTS_MAY_CONTAIN_NODATA",
-                                                    clip_to_boundary="CLIP",
-                                                    color_correction="NOT_APPLY",
-                                                    allowed_mensuration_capabilities="Basic",
-                                                    default_mensuration_capabilities="Basic",
-                                                    allowed_mosaic_methods="NorthWest;Center;LockRaster;ByAttribute;Nadir;Viewpoint;Seamline;None",
-                                                    default_mosaic_method="NorthWest",
-                                                    order_field="",
-                                                    order_base="",
-                                                    sorting_order="ASCENDING",
-                                                    mosaic_operator="FIRST",
-                                                    blend_width=10,
-                                                    view_point_x=600,
-                                                    view_point_y=300,
-                                                    max_num_per_mosaic=20,
-                                                    cell_size_tolerance=0.8,
-                                                    cell_size=f"{cellsize} {cellsize}",
-                                                    metadata_level="FULL",
-                                                    transmission_fields=fields,
-                                                    use_time="ENABLED",
-                                                    start_time_field="StdTime",
-                                                    end_time_field="StdTime",
-                                                    time_format="YYYYMMDD",
-                                                    geographic_transform=None,
-                                                    max_num_of_download_items=20,
-                                                    max_num_of_records_returned=1000,
-                                                    data_source_type="GENERIC",
-                                                    minimum_pixel_contribution=1,
-                                                    #processing_templates = "None",
-                                                    processing_templates = processing_templates,
-                                                    #processing_templates="None;'Anoplopoma fimbria';'Core Species Richness';'Gadus chalcogrammus';'Limanda aspera';'Microstomus pacificus';'Species Richness'",
-                                                    #default_processing_template="None",
-                                                    default_processing_template = default_processing_template,
-                                                    time_interval=1,
-                                                    time_interval_units="Years",
-                                                    product_definition="NONE",
-                                                    product_band_definitions=None
+        arcpy.management.SetMosaicDatasetProperties(in_mosaic_dataset                = mosaicname_path,
+                                                    rows_maximum_imagesize           = 4100,
+                                                    columns_maximum_imagesize        = 15000,
+                                                    allowed_compressions             = "None;LZ77",
+                                                    default_compression_type         = "LZ77",
+                                                    JPEG_quality                     = 75,
+                                                    LERC_Tolerance                   = 0.01,
+                                                    resampling_type                  = "BILINEAR",
+                                                    clip_to_footprints               = "NOT_CLIP",
+                                                    footprints_may_contain_nodata    = "FOOTPRINTS_MAY_CONTAIN_NODATA",
+                                                    clip_to_boundary                 = "CLIP",
+                                                    color_correction                 = "NOT_APPLY",
+                                                    allowed_mensuration_capabilities = "Basic",
+                                                    default_mensuration_capabilities = "Basic",
+                                                    allowed_mosaic_methods           = "None",
+                                                    default_mosaic_method            = "None",
+                                                    order_field                      = "StdTime",
+                                                    order_base                       = "",
+                                                    sorting_order                    = "ASCENDING",
+                                                    mosaic_operator                  = "FIRST",
+                                                    blend_width                      = 10,
+                                                    view_point_x                     = 600,
+                                                    view_point_y                     = 300,
+                                                    max_num_per_mosaic               = 20,
+                                                    cell_size_tolerance              = 0.8,
+                                                    cell_size                        = f"{cellsize} {cellsize}",
+                                                    metadata_level                   = "FULL",
+                                                    transmission_fields              = fields,
+                                                    use_time                         = "ENABLED",
+                                                    start_time_field                 = "StdTime",
+                                                    end_time_field                   = "StdTime",
+                                                    time_format                      = "YYYY", #YYYYMMDD
+                                                    geographic_transform             = None,
+                                                    max_num_of_download_items        = 20,
+                                                    max_num_of_records_returned      = 1000,
+                                                    data_source_type                 = "GENERIC",
+                                                    minimum_pixel_contribution       = 1,
+                                                    processing_templates             = "'C:/Users/john.f.kennedy/Documents/GitHub/DisMAP/ArcGIS Analysis - Python/April 1 2023/RasterFunctionTemplates/Statistics and Histogram.rft.xml';'C:/Users/john.f.kennedy/Documents/GitHub/DisMAP/ArcGIS Analysis - Python/April 1 2023/RasterFunctionTemplates/Stretch.rft.xml'",
+                                                    default_processing_template      = "C:/Users/john.f.kennedy/Documents/GitHub/DisMAP/ArcGIS Analysis - Python/April 1 2023/RasterFunctionTemplates/Statistics and Histogram.rft.xml",
+                                                    #processing_templates             = "None",
+                                                    #processing_templates             = processing_templates,
+                                                    #default_processing_template      = "None",
+                                                    time_interval                    = 1,
+                                                    time_interval_units              = "Years",
+                                                    product_definition               = "NONE",
+                                                    product_band_definitions         = None
                                                    )
-        del fields, processing_templates, default_processing_template
+        del fields, processing_templates
 
         msg = f">-> Adding Multidimensional Information to {os.path.basename(mosaicname_path)} Dataset"
         logFile(log_file, msg); del msg
 
         with arcpy.EnvManager(scratchWorkspace = RegionScratchGDB, workspace = RegionGDB):
             arcpy.md.BuildMultidimensionalInfo(
-                                                in_mosaic_dataset=mosaicname_path,
-                                                variable_field="Variable",
-                                                dimension_fields="StdTime Year Year",
-                                                variable_desc_units=None,
-                                                delete_multidimensional_info="NO_DELETE_MULTIDIMENSIONAL_INFO"
+                                                in_mosaic_dataset            = mosaicname_path,
+                                                variable_field               = "Variable",
+                                                dimension_fields             = [["StdTime", "Time Step", "Year"],],
+                                                variable_desc_units          = None,
+                                                delete_multidimensional_info = "NO_DELETE_MULTIDIMENSIONAL_INFO"
                                                )
 
         msg = arcpy.GetMessages()
         msg = ">->-> {0}".format(msg.replace('\n', '\n>->-> '))
         logFile(log_file, msg); del msg
 
-        msg = f">-> arcpy.management.AnalyzeMosaicDataset for {mosaicname}"
-        logFile(log_file, msg); del msg
-
-        arcpy.management.AnalyzeMosaicDataset(
-                                              in_mosaic_dataset=mosaicname_path,
-                                              where_clause="",
-                                              checker_keywords="FOOTPRINT;FUNCTION;RASTER;PATHS;SOURCE_VALIDITY;STALE;PYRAMIDS;STATISTICS;PERFORMANCE;INFORMATION"
-                                             )
-        msg = arcpy.GetMessages()
-        msg = ">->-> {0}".format(msg.replace('\n', '\n>->-> '))
-        logFile(log_file, msg); del msg
 
         # Copy Raster to CRF
         crf = os.path.join( ScratchFolder, f"{mosaicname.replace('_Mosaic', '')}.crf")#print(crf)
         #print(os.path.basename(mosaicname_path))
         arcpy.management.CopyRaster(
-                                    in_raster=mosaicname_path,
-                                    out_rasterdataset=crf,
-                                    config_keyword="",
-                                    background_value=None,
-                                    nodata_value="",
-                                    onebit_to_eightbit="NONE",
-                                    colormap_to_RGB="NONE",
-                                    pixel_type="",
-                                    scale_pixel_value="NONE",
-                                    RGB_to_Colormap="NONE",
-                                    format="CRF",
-                                    transform=None,
-                                    process_as_multidimensional="ALL_SLICES",
-                                    build_multidimensional_transpose="NO_TRANSPOSE"
+                                    in_raster                        = mosaicname_path,
+                                    out_rasterdataset                = crf,
+                                    config_keyword                   = "",
+                                    background_value                 = None,
+                                    nodata_value                     = "-3.40282e+38",
+                                    onebit_to_eightbit               = "NONE",
+                                    colormap_to_RGB                  = "NONE",
+                                    pixel_type                       = "32_BIT_FLOAT",
+                                    scale_pixel_value                = "NONE",
+                                    RGB_to_Colormap                  = "NONE",
+                                    format                           = "CRF",
+                                    transform                        = None,
+                                    process_as_multidimensional      = "ALL_SLICES",
+                                    build_multidimensional_transpose = "NO_TRANSPOSE"
                                    )
         del mosaicname_path
 
@@ -9862,14 +8766,14 @@ def mpCreateMosaics(dataset):
         msg = f">->-> Calculate Statistics on {os.path.basename(crf)}"
         logFile(log_file, msg); del msg
 
-        arcpy.management.CalculateStatistics(crf, 1, 1, [], "OVERWRITE")
+        arcpy.management.CalculateStatistics(crf, 1, 1, [], "OVERWRITE", "")
         del crf
 
         msg = arcpy.GetMessages()
         msg = ">->-> {0}".format(msg.replace('\n', '\n>->-> '))
         logFile(log_file, msg); del msg
 
-        del np
+        #del np
         del mosaicname, mosaictitle, RegionGDB, RegionScratchGDB
         del dataset_product_code, datasetcode, cellsize, distributionprojectcode
 
@@ -9980,7 +8884,8 @@ def mpCreateRasters(dataset):
         summaryproduct          = dataset[14]
         del dataset
 
-        dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
         RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -10001,6 +8906,16 @@ def mpCreateRasters(dataset):
         # Use all of the cores on the machine.
         arcpy.env.parallelProcessingFactor = "100%"
 
+        # Set the XYTolerance to 0.02 Meters
+        # "0.001 Meters"
+        #arcpy.env.XYTolerance = "0.02 Meters"
+        arcpy.env.XYTolerance = "0.1 Meters"
+
+        # Set the XYResolution environment to a linear unit
+        # "0.0001 Meters"
+        #arcpy.env.XYResolution = "0.002 Meters"
+        arcpy.env.XYResolution = "0.01 Meters"
+
         # Set Log Metadata to False in order to not record all geoprocessing
         # steps in metadata
         arcpy.SetLogMetadata(False)
@@ -10012,13 +8927,66 @@ def mpCreateRasters(dataset):
 
         arcpy.env.cellSize = cellsize
 
+        # NEAREST (default, for integer data), BILINEAR or CUBIC
+        arcpy.env.pyramid = "PYRAMIDS -1 CUBIC LZ77 NO_SKIP"
+
+        # Set the resampling method environment to bilinear interpolation. NEAREST, BILINEAR, CUBIC
+        arcpy.env.resamplingMethod = "CUBIC"
+
         datasetcode_raster_mask = os.path.join(RegionGDB, f"{tablename}_Raster_Mask")
+
+        # Set the resampling method environment to bilinear interpolation. NEAREST, BILINEAR, CUBIC
+        #arcpy.env.resamplingMethod = "BILINEAR"
 
         # we need to set the mask and extent of the environment, or the raster and items may not come out correctly.
         arcpy.env.extent     = arcpy.Describe(datasetcode_raster_mask).extent
         arcpy.env.mask       = datasetcode_raster_mask
         arcpy.env.snapRaster = datasetcode_raster_mask
         del datasetcode_raster_mask
+
+        geographicarea_sr = os.path.join(DATASET_SHAPEFILE_FOLDER, dataset_product_code, f"{geographicarea}.prj")
+        # Set the output coordinate system to what is needed for the
+        # DisMAP project
+        psr = arcpy.SpatialReference(geographicarea_sr)
+        arcpy.env.outputCoordinateSystem = psr
+        del geographicarea_sr, geographicarea, psr
+
+        layerspeciesyearimagename_table = os.path.join(RegionGDB, "LayerSpeciesYearImageName")
+
+        output_rasters = {}
+        #variables = []
+
+        #fields = "DatasetCode;Region;Season;Species;CommonName;SpeciesCommonName;CoreSpecies;Year;StdTime;Variable;Value;Dimensions"
+        #fields = fields.split(";")
+        fields = ['ImageName', 'Variable', 'Species', 'Year']
+        #print(fields)
+        #fields = [f.name for f in arcpy.ListFields(datasetcode_tmp) if f.type not in ['Geometry', 'OID']]
+        with arcpy.da.SearchCursor(layerspeciesyearimagename_table, fields) as cursor:
+            for row in cursor:
+                image_name, variable, species, year = row[0], row[1], row[2], row[3]
+                #if variable not in variables: variables.append(variable)
+                #print(variable, image_name)
+                #variable = f"_{variable}" if "Species Richness" in variable else variable
+                if "Species Richness" not in variable:
+                    output_raster_path = os.path.join(IMAGE_FOLDER, dataset_product_code, variable, f"{image_name}.tif")
+                    #print(output_raster_path)
+                    output_rasters[image_name] = [image_name, variable, species, year, output_raster_path]
+                    image_folder = os.path.dirname(output_raster_path)
+                    if not os.path.exists(image_folder):
+                        os.mkdir(image_folder)
+                    #print(output_raster_path)
+                    #print(os.path.dirname(output_raster_path))
+                    #print(image_folder)
+                    del image_folder
+                    del output_raster_path
+
+                del row, image_name, variable, species, year
+            del cursor
+
+        #print(variables)
+        del fields
+        #del variables
+        del layerspeciesyearimagename_table
 
         msg = f'> Generating {tablename} Biomass Rasters'
         logFile(log_file, msg); del msg
@@ -10031,204 +8999,151 @@ def mpCreateRasters(dataset):
         datasetcode_sample_locations_layer = arcpy.management.MakeFeatureLayer(datasetcode_sample_locations, "Region Sample Locations Layer")
         del datasetcode_sample_locations
 
-        # Add the YearWeights feild
-        fields =  [f.name for f in arcpy.ListFields(datasetcode_sample_locations_layer) if f.type not in ['Geometry', 'OID']]
-        if "YearWeights" not in fields:
-            # Add the YearWeights field to the Dataset. This is used for the IDW modeling later
-            arcpy.management.AddField(datasetcode_sample_locations_layer, "YearWeights", "SHORT", field_alias = "Year Weights")
-        del fields
+        if summaryproduct == "Yes":
+            # Add the YearWeights feild
+            fields =  [f.name for f in arcpy.ListFields(datasetcode_sample_locations_layer) if f.type not in ['Geometry', 'OID']]
+            if "YearWeights" not in fields:
+                # Add the YearWeights field to the Dataset. This is used for the IDW modeling later
+                arcpy.management.AddField(datasetcode_sample_locations_layer, "YearWeights", "SHORT", field_alias = "Year Weights")
+            del fields
 
         getcount = int(arcpy.management.GetCount(datasetcode_sample_locations_layer)[0])
         msg = f'\t> {datasetcode}_Sample_Locations has {getcount:,d} records'
         logFile(log_file, msg); del msg, getcount
 
-        datasetcode_unique_species = unique_species( datasetcode_sample_locations_layer )
-        # print(f"{', '.join(datasetcode_unique_species)}\n")
-
-        # Finally we will start looping of the uniquely identified fish in this csv.
-        for datasetcode_unique_specie in datasetcode_unique_species:
-            # We prepare a place so that we can place fish data relevant to the fish species we're looking at.
-            #print(datasetcode_unique_specie)
-
-            datasetcode_unique_specie_dir = datasetcode_unique_specie.replace('(','').replace(')','').replace('.','')
-
-            msg = f"#---> Creating Raster Files for {datasetcode_unique_specie} in directory: {datasetcode_unique_specie_dir}"
+        for output_raster in output_rasters:
+            image_name, variable, species, year, output_raster_path =  output_rasters[output_raster]
+            msg = f"\n\t\t>Image Name: {output_raster}\n"
+            msg = msg + f"\t\t\t> Variable:      {variable}\n"
+            msg = msg + f"\t\t\t> Species:       {species}\n"
+            msg = msg + f"\t\t\t> Year:          {year}\n"
+            msg = msg + f"\t\t\t> Output Raster: {os.path.basename(output_raster_path)}\n"
             logFile(log_file, msg); del msg
 
-            # Create a special folder for them
-            datasetcode_unique_specie_dir_path = os.path.join(IMAGE_FOLDER, dataset_product_code, datasetcode_unique_specie_dir)
-            if not os.path.exists( datasetcode_unique_specie_dir_path  ) and not os.path.isdir( datasetcode_unique_specie_dir_path ):
-                os.makedirs( datasetcode_unique_specie_dir_path )
-            #print(f"\n#-> {datasetcode_unique_specie_dir_path}")
-            #print(f"###--->>> {arcpy.ValidateTableName(datasetcode_unique_specie_dir, datasetcode_unique_specie_dir_path)}\n")
-            del datasetcode_unique_specie_dir_path
+            #tmp_raster = os.path.join(ScratchFolder, f"{output_raster}.tif")
+            tmp_raster = f"memory\\{output_raster}"
 
-            msg = f"#---> Select from {datasetcode}_Sample_Locations all records for {datasetcode_unique_specie}"
+            msg = f'\t\t\t> Select Layer by Attribute: "CLEAR_SELECTION"'
             logFile(log_file, msg); del msg
 
-            # We are pretty much going to set min to 0, max to STD(OVER YEARS)*2+AVG(OVER YEARS), and the other two shouldn't matter, but we'll set those anyways.
-            select_by_specie_no_years(datasetcode_sample_locations_layer, datasetcode_unique_specie, log_file)
+            arcpy.management.SelectLayerByAttribute( datasetcode_sample_locations_layer, "CLEAR_SELECTION" )
 
-            msg = f"#---> Get a list of years for the selected species {datasetcode_unique_specie}"
+            msg = f'\t\t\t> Select Layer by Attribute: Species = "{species}" AND Year = {year}'
             logFile(log_file, msg); del msg
 
-            # Get all of the unique years
-            specie_unique_years = unique_year(datasetcode_sample_locations_layer, datasetcode_unique_specie)
+            # Select for species and year
+            arcpy.management.SelectLayerByAttribute( datasetcode_sample_locations_layer, "NEW_SELECTION", f"Species = '{species}' AND Year = {year}" )
 
-            # Note: in the previous script there was an attemp to find the
-            # earliest year of data, but that doesn't make since as the
-            # unique year list is sorted (ordered).
-            # set the year to the future, where no data should exist.
-            # We will update this variable as we loop over the uniquely
-            # identified years for later.
-            # year_smallest = date.today().year + 100
-            # Since the goal is to get the first (or smallest) year in the list
-            # year_smallest = min(specie_unique_years)
+            # Get the count of records for selected species
+            getcount = int(arcpy.management.GetCount(datasetcode_sample_locations_layer)[0])
+            msg = f"\t\t\t> {datasetcode}_Sample_Locations has {getcount:,d} records for {species} and year {year}"
+            logFile(log_file, msg); del msg, getcount
 
-            #print(f"Year smallest in the future: {year_smallest}"
-            for specie_unique_year in specie_unique_years:
-                msg =  f"#-----> Processing {datasetcode}_Sample_Locations for {datasetcode_unique_specie} and year: {specie_unique_year}"
+            msg =  f"\t\t\t> Creating Raster File {output_raster}.tif for {species} and {year}"
+            logFile(log_file, msg); del msg
+
+            if summaryproduct == "Yes":
+                msg =  f"\t\t\t\t> Processing IDW"
                 logFile(log_file, msg); del msg
 
-                msg =  f"#-------> Select from {datasetcode}_Sample_Locations all records for {datasetcode_unique_specie} and year {specie_unique_year}"
-                logFile(log_file, msg); del msg
-
-                # select the fish species data by the year provided.
-                #select_by_specie(datasetcode_sample_locations_layer, datasetcode_unique_specie, str(specie_unique_year), log_file)
-                select_by_specie(datasetcode_sample_locations_layer, datasetcode_unique_specie, specie_unique_year, log_file)
-
-                # Calculate YearWeights=3-(abs(Tc-Ti))
-                arcpy.management.CalculateField(in_table=datasetcode_sample_locations_layer, field="YearWeights", expression=f"3 - (abs({int(specie_unique_year)} - !Year!))", expression_type="PYTHON", code_block="")
+                # Select weighted years
+                arcpy.management.SelectLayerByAttribute( datasetcode_sample_locations_layer, "NEW_SELECTION", f"Species = '{species}' AND Year >= ({year-2}) AND Year <= ({year+2})" )
 
                 # Get the count of records for selected species
                 getcount = int(arcpy.management.GetCount(datasetcode_sample_locations_layer)[0])
-                msg = f"#-------> {datasetcode}_Sample_Locations has {getcount:,d} records for {datasetcode_unique_specie} and year {specie_unique_year}"
+                msg = f"\t\t\t\t> {datasetcode}_Sample_Locations has {getcount:,d} records for {species} and from years {year-2} to {year+2}"
                 logFile(log_file, msg); del msg, getcount
 
+                # Calculate YearWeights=3-(abs(Tc-Ti))
+                arcpy.management.CalculateField(in_table=datasetcode_sample_locations_layer, field="YearWeights", expression=f"3 - (abs({int(year)} - !Year!))", expression_type="PYTHON", code_block="")
 
-                # Generate the interpolated Raster file and store it on the local hard drive. Can now be used in other ArcGIS Documents
-                # No special character used, replace spaces, '(', ')' '.', '-' with '_' (underscores)
-                specie_unique_year_raster = f"{dataset_product_code}_{datasetcode_unique_specie_dir.replace(' ','_')}_{specie_unique_year}"
-                #del specie_unique_year
+                # Set variables for search neighborhood
+                majSemiaxis = cellsize * 1000
+                minSemiaxis = cellsize * 1000
+                angle = 0
+                maxNeighbors = 15
+                minNeighbors = 10
+                sectorType = "ONE_SECTOR"
+                searchNeighbourhood = arcpy.SearchNeighborhoodStandard(majSemiaxis, minSemiaxis,
+                                                                       angle, maxNeighbors,
+                                                                       minNeighbors, sectorType)
 
-                #tmp_raster = os.path.join(RegionScratchGDB, f"{specie_unique_year_raster.replace('_','')}")
-                tmp_raster = os.path.join(ScratchFolder, f"{specie_unique_year_raster.replace('_','')}.tif")
+                del majSemiaxis, minSemiaxis, angle
+                del maxNeighbors, minNeighbors, sectorType
 
-                specie_unique_year_raster_path = os.path.join(IMAGE_FOLDER, dataset_product_code, datasetcode_unique_specie_dir, specie_unique_year_raster+".tif")
+                # Check out the ArcGIS Geostatistical Analyst extension license
+                arcpy.CheckOutExtension("GeoStats")
 
-                ReplaceRasters = True
-                if not arcpy.Exists(specie_unique_year_raster_path) or ReplaceRasters:
+                # Execute IDW using the selected selected species, years, and MapValue
+                arcpy.ga.IDW(in_features = datasetcode_sample_locations_layer,
+                             z_field = 'MapValue',
+                             out_ga_layer = '',
+                             out_raster = tmp_raster,
+                             #cell_size = '',
+                             cell_size = cellsize,
+                             power = 2,
+                             search_neighborhood = searchNeighbourhood,
+                             weight_field = "YearWeights")
 
-                    msg =  f"#-------> Creating Raster File {specie_unique_year_raster}.tif for {datasetcode_unique_specie}"
-                    logFile(log_file, msg); del msg
+                del searchNeighbourhood
 
-                    geographicarea_sr = os.path.join(DATASET_SHAPEFILE_FOLDER, dataset_product_code, f"{geographicarea}.prj")
-                    # Set the output coordinate system to what is needed for the
-                    # DisMAP project
-                    psr = arcpy.SpatialReference(geographicarea_sr)
-                    arcpy.env.outputCoordinateSystem = psr; del psr
-                    del geographicarea_sr
+                # Check In GeoStats Extension
+                arcpy.CheckInExtension("GeoStats")
 
-                    if summaryproduct == "Yes":
-                        msg =  f"#-------> Image: {specie_unique_year_raster}.tif for {datasetcode_unique_specie}"
-                        logFile(log_file, msg); del msg
-                        # Set variables for search neighborhood
-                        #majSemiaxis = 200000
-                        #minSemiaxis = 200000
-                        majSemiaxis = cellsize * 1000
-                        minSemiaxis = cellsize * 1000
-                        angle = 0
-                        maxNeighbors = 15
-                        minNeighbors = 10
-                        sectorType = "ONE_SECTOR"
-                        searchNeighbourhood = arcpy.SearchNeighborhoodStandard(majSemiaxis, minSemiaxis,
-                                                                               angle, maxNeighbors,
-                                                                               minNeighbors, sectorType)
+                # Execute Power to convert the raster back to WTCPUE from WTCPUECubeRoot
+                out_cube = arcpy.sa.Power(tmp_raster, 3)
+                #out_cube.save(tmp_raster_power)
+                out_cube.save(output_raster_path)
+                del out_cube
 
-                        del majSemiaxis, minSemiaxis, angle
-                        del maxNeighbors, minNeighbors, sectorType
-
-                        # Check out the ArcGIS Geostatistical Analyst extension license
-                        arcpy.CheckOutExtension("GeoStats")
-
-                        # Execute IDW using the selected selected species, years, and MapValue
-                        arcpy.IDW_ga(in_features = datasetcode_sample_locations_layer,
-                                     z_field = 'MapValue',
-                                     out_ga_layer = '',
-                                     out_raster = tmp_raster,
-                                     cell_size = '',
-                                     power = 2,
-                                     search_neighborhood = searchNeighbourhood,
-                                     weight_field = "YearWeights")
-
-                        del searchNeighbourhood
-
-                        # Check In GeoStats Extension
-                        arcpy.CheckInExtension("GeoStats")
-
-                        # Execute Power to convert the raster back to WTCPUE from WTCPUECubeRoot
-                        out_cube = arcpy.sa.Power(tmp_raster, 3)
-                        #out_cube.save(tmp_raster_power)
-                        out_cube.save(specie_unique_year_raster_path)
-                        #arcpy.management.Delete(out_cube)
-                        del out_cube
-
-                    if summaryproduct == "No":
-                        msg =  f"#-------> Image: {specie_unique_year_raster}.tif for {datasetcode_unique_specie}"
-                        logFile(log_file, msg); del msg
-                        #gsr = "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]]"
-                        #arcpy.env.outputCoordinateSystem = gsr
-                        #del gsr
-
-                        # Set local variables
-                        # inFeatures     = datasetcode_sample_locations_layer
-                        # valField       = 'MapValue'
-                        # #outRaster      = tmp_raster
-                        # outRaster      = specie_unique_year_raster_path
-                        # assignmentType = "MEAN"
-                        # priorityField  = ""
-                        # cellSize       = cellsize
-
-                        # # Run PointToRaster
-                        # arcpy.conversion.PointToRaster(inFeatures, valField, outRaster,
-                        #                                assignmentType, priorityField, cellSize)
-
-                        # del inFeatures, valField, outRaster, assignmentType, priorityField, cellSize
-
-                        # Set local variables
-                        inPntFeat      = datasetcode_sample_locations_layer
-                        zField         = 'MapValue'
-                        cellSize       = cellsize
-                        splineType     = "REGULARIZED"
-                        weight         = 0.1  # Default
-                        #numberOfPoints = 12 # Default
-                        numberOfPoints = 4 # Default
-                        # Execute Spline
-                        outSpline = arcpy.sa.Spline(inPntFeat, zField, cellSize, splineType, weight)
-                        # Save the output
-                        #outSpline.save(tmp_raster) specie_unique_year_raster_path
-                        outSpline.save(specie_unique_year_raster_path)
-                        del inPntFeat, zField, cellSize, splineType, weight, numberOfPoints, outSpline
-
-                del ReplaceRasters, specie_unique_year_raster
-
-                arcpy.management.Delete(tmp_raster)
-                del tmp_raster
-
-                del specie_unique_year
-
-                del specie_unique_year_raster_path
-                # Replace a layer/table view name with a path to a dataset (which can be a layer file) or create the layer/table view within the script
-                # The following inputs are layers or table views: "Aleutian_Islands"
+                # Reser the YearWeights to None
                 arcpy.management.CalculateField(in_table=datasetcode_sample_locations_layer, field="YearWeights", expression="None", expression_type="PYTHON", code_block="")
 
-            del specie_unique_years, datasetcode_unique_specie, datasetcode_unique_specie_dir
+            if summaryproduct == "No":
+                msg =  f"\t\t\t\t> Processing SDM"
+                logFile(log_file, msg); del msg
 
-            # Delete after last use
+                # Set local variables
+                # inFeatures     = datasetcode_sample_locations_layer
+                # valField       = 'MapValue'
+                # #outRaster      = tmp_raster
+                # outRaster      = specie_unique_year_raster_path
+                # assignmentType = "MEAN"
+                # priorityField  = ""
+                # cellSize       = cellsize
 
-        msg = f'>-> Delete non-required fields from {datasetcode}_Sample_Locations.'
-        logFile(log_file, msg); del msg
-        arcpy.management.DeleteField(datasetcode_sample_locations_layer, ["YearWeights"])
+                # # Run PointToRaster
+                # arcpy.conversion.PointToRaster(inFeatures, valField, outRaster,
+                #                                assignmentType, priorityField, cellSize)
+
+                # Set local variables
+                inPntFeat      = datasetcode_sample_locations_layer
+                zField         = 'MapValue'
+                cellSize       = cellsize
+                splineType     = "REGULARIZED"
+                weight         = 0.1  # Default
+                #numberOfPoints = 12 # Default
+                numberOfPoints = 4 # Default
+                # Execute Spline
+                outSpline = arcpy.sa.Spline(inPntFeat, zField, cellSize, splineType, weight)
+                # Save the output
+                outSpline.save(output_raster_path)
+                del inPntFeat, zField, cellSize, splineType, weight, numberOfPoints, outSpline
+
+            arcpy.management.Delete(tmp_raster)
+            del tmp_raster
+
+            # Clear selection
+            arcpy.management.SelectLayerByAttribute( datasetcode_sample_locations_layer, "CLEAR_SELECTION" )
+
+            # Clean up
+            del output_raster, image_name, variable, species, year, output_raster_path
+
+        del  output_rasters
+
+        # msg = f'>-> Delete non-required fields from {datasetcode}_Sample_Locations.'
+        # logFile(log_file, msg); del msg
+        # arcpy.management.DeleteField(datasetcode_sample_locations_layer, ["YearWeights"])
 
         # Delete datasetcode_sample_locations_layer
         arcpy.management.Delete(datasetcode_sample_locations_layer)
@@ -10236,8 +9151,10 @@ def mpCreateRasters(dataset):
 
         # Clean up
         del RegionScratchGDB, RegionGDB, tablename, distributionprojectcode
-        del datasetcode, cellsize, datasetcode_unique_species
-        del geographicarea, season, summaryproduct, dataset_product_code
+        #del datasetcode, cellsize, datasetcode_unique_species
+        del datasetcode, cellsize
+        #del geographicarea, season, summaryproduct, dataset_product_code
+        del season, summaryproduct, dataset_product_code
 
         #Final benchmark for the region.
         msg = f"ENDING {function} COMPLETED ON {strftime('%a %b %d %I:%M:%S %p', localtime())}"
@@ -10343,7 +9260,8 @@ def mpCreateSampleLocations(dataset):
         summaryproduct          = dataset[14]
         del dataset
 
-        dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
         RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -10363,6 +9281,16 @@ def mpCreateSampleLocations(dataset):
 
         # Use all of the cores on the machine.
         arcpy.env.parallelProcessingFactor = "100%"
+
+        # Set the XYTolerance to 0.02 Meters
+        # "0.001 Meters"
+        #arcpy.env.XYTolerance = "0.02 Meters"
+        arcpy.env.XYTolerance = "0.1 Meters"
+
+        # Set the XYResolution environment to a linear unit
+        # "0.0001 Meters"
+        #arcpy.env.XYResolution = "0.002 Meters"
+        arcpy.env.XYResolution = "0.01 Meters"
 
         # Set Log Metadata to False in order to not record all geoprocessing
         # steps in metadata
@@ -10534,7 +9462,8 @@ def mpCreateSpeciesRichnessRasters(dataset):
         distributionprojectcode = dataset[12]
         del dataset
 
-        dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
         del datasetcode, distributionprojectcode
 
         RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
@@ -10559,6 +9488,16 @@ def mpCreateSpeciesRichnessRasters(dataset):
         # Use all of the cores on the machine.
         arcpy.env.parallelProcessingFactor = "100%"
 
+        # Set the XYTolerance to 0.02 Meters
+        # "0.001 Meters"
+        #arcpy.env.XYTolerance = "0.02 Meters"
+        arcpy.env.XYTolerance = "0.1 Meters"
+
+        # Set the XYResolution environment to a linear unit
+        # "0.0001 Meters"
+        #arcpy.env.XYResolution = "0.002 Meters"
+        arcpy.env.XYResolution = "0.01 Meters"
+
         # Set Log Metadata to False in order to not record all geoprocessing
         # steps in metadata
         arcpy.SetLogMetadata(False)
@@ -10575,6 +9514,13 @@ def mpCreateSpeciesRichnessRasters(dataset):
         arcpy.env.snapRaster = datasetcode_raster_mask
         #del datasetcode_raster_mask
 
+        geographicarea_sr = os.path.join(DATASET_SHAPEFILE_FOLDER, dataset_product_code, f"{geographicarea}.prj")
+        # Set the output coordinate system to what is needed for the
+        # DisMAP project
+        psr = arcpy.SpatialReference(geographicarea_sr)
+        arcpy.env.outputCoordinateSystem = psr; del psr
+        del geographicarea_sr, geographicarea
+
         # These are used later to set the rows and columns for a zero numpy array
         rowCount = int(arcpy.management.GetRasterProperties(datasetcode_raster_mask, "ROWCOUNT" ).getOutput(0))
         columnCount = int(arcpy.management.GetRasterProperties(datasetcode_raster_mask, "COLUMNCOUNT" ).getOutput(0))
@@ -10584,58 +9530,34 @@ def mpCreateSpeciesRichnessRasters(dataset):
         lowerLeft = arcpy.Point(rasterMask.extent.XMin, rasterMask.extent.YMin)
         del rasterMask
 
-        geographicarea_sr = os.path.join(DATASET_SHAPEFILE_FOLDER, dataset_product_code, f"{geographicarea}.prj")
-        # Set the output coordinate system to what is needed for the
-        # DisMAP project
-        psr = arcpy.SpatialReference(geographicarea_sr)
-        arcpy.env.outputCoordinateSystem = psr; del psr
-        del geographicarea_sr, geographicarea
-
         msg = f'>-> Creating {dataset_product_code} Species Richness Rasters'
         logFile(log_file, msg); del msg
 
         layerspeciesyearimagename = os.path.join(RegionGDB, "LayerSpeciesYearImageName")
 
-        fields = [f.name for f in arcpy.ListFields(layerspeciesyearimagename) if f.type not in ['Geometry', 'OID']]
+        #fields = [f.name for f in arcpy.ListFields(layerspeciesyearimagename) if f.type not in ['Geometry', 'OID']]
+        #print(fields)
+        #['DatasetCode', 'Region', 'Season', 'SummaryProduct', 'FilterRegion', 'FilterSubRegion', 'Species', 'CommonName', 'SpeciesCommonName', 'CommonNameSpecies', 'TaxonomicGroup', 'ManagementBody', 'ManagementPlan', 'CoreSpecies', 'Year', 'StdTime', 'Variable', 'Value', 'Dimensions', 'ImageName']
 
-        datasetcode_rasters = {}
-        with arcpy.da.SearchCursor(layerspeciesyearimagename, fields) as cursor:
-            for row in cursor:
-                datasetcode             = row[0]
-                distributionprojectcode = row[12]
-                corespecies             = row[13]
-                year                    = row[14]
-                image                   = row[19]
-                datasetcode_rasters[f"{image}.tif"] = [f"{datasetcode}_{distributionprojectcode}", corespecies, year]
-                del row, datasetcode, distributionprojectcode, corespecies, year, image
-        del cursor, layerspeciesyearimagename, fields
-
-##        for i in range(len(layerspeciesyearimagename)):
-##            datasetcode             = layerspeciesyearimagename[i][0]
-##            distributionprojectcode = layerspeciesyearimagename[i][12]
-##            corespecies             = layerspeciesyearimagename[i][13]
-##            year                    = layerspeciesyearimagename[i][14]
-##            image                   = layerspeciesyearimagename[i][19]
-##            datasetcode_rasters[f"{image}.tif"] = [f"{datasetcode}_{distributionprojectcode}", corespecies, year]
-##            #print(layer, corespecies, year, image)
-##            del i, datasetcode, distributionprojectcode, corespecies, year, image
+        fields = ['DatasetCode', 'CoreSpecies', 'Year', 'Variable', 'ImageName']
 
         input_rasters = {}
         input_rasters_path = os.path.join(IMAGE_FOLDER, dataset_product_code)
 
-        # Get a list of input_rasters
-        walk = arcpy.da.Walk(input_rasters_path, topdown=True, datatype="RasterDataset")
-        for dirpath, dirnames, filenames in walk:
-            for filename in filenames:
-                if os.path.basename(dirpath) not in ["_Core Species Richness", "_Species Richness",]:
-                    imagelist = datasetcode_rasters[filename]
-                    imagepath = os.path.join(dirpath, filename)
-                    imagelist.append(imagepath)
-                    input_rasters[filename] = imagelist
-                    del imagelist, imagepath
-                del filename
-        del walk, dirpath, dirnames, filenames
-        del datasetcode_rasters, input_rasters_path
+        with arcpy.da.SearchCursor(layerspeciesyearimagename, fields, where_clause="Variable NOT IN ('Core Species Richness', 'Species Richness')") as cursor:
+            for row in cursor:
+                datasetcode    = row[0]
+                corespecies    = row[1]
+                year           = row[2]
+                variable       = row[3]
+                image          = row[4]
+                input_rasters[f"{image}.tif"] = [variable, corespecies, year, os.path.join(input_rasters_path, variable, f"{image}.tif")]
+                del row, datasetcode, corespecies, year, variable, image
+        del cursor, layerspeciesyearimagename, fields
+        del input_rasters_path
+
+        #for input_raster in input_rasters:
+        #    print(input_raster, input_rasters[input_raster])
 
         # Set layercode_species_richness_path
         species_richness = "_Species Richness"
@@ -10673,6 +9595,7 @@ def mpCreateSpeciesRichnessRasters(dataset):
                 in_raster = input_rasters[raster][3]
 
                 rasterArray = arcpy.RasterToNumPyArray(in_raster, nodata_to_value=np.nan)
+
                 rasterArray[rasterArray < 0.0] = np.nan
 
                 rasterArray[rasterArray > 0.0] = 1.0
@@ -10767,8 +9690,6 @@ def mpCreateSpeciesRichnessRasters(dataset):
             del richnessArray, rasters
 
         del years, layercode_core_species_richness_path
-
-            # Add metadata layerspeciesyearimagename
 
         del RegionGDB, RegionScratchGDB
         del columnCount, rowCount, lowerLeft
@@ -10878,7 +9799,8 @@ def mpCreateSpeciesYearImageName(dataset):
         filtersubregion         = dataset[16]
         del dataset
 
-        dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
         del distributionprojectcode
 
         RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
@@ -11262,11 +10184,10 @@ def mpCreateTables(dataset):
         season                  = dataset[9]
         distributionprojectcode = dataset[12]
         summaryproduct          = dataset[14]
-        #filterregion            = dataset[15]
-        #filtersubregion         = dataset[16]
         del dataset
 
-        dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+        dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
         RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -11302,228 +10223,6 @@ def mpCreateTables(dataset):
         #
         msg = f'> Generating CSV Table: {os.path.basename(input_csvfile)}'
         logFile(log_file, msg); del msg
-
-        if summaryproduct == "No":
-            # https://pandas.pydata.org/pandas-docs/stable/getting_started/intro_tutorials/09_timeseries.html?highlight=datetime
-            # https://www.tutorialsandyou.com/python/numpy-data-types-66.html
-            #df = pd.read_csv('my_file.tsv', sep='\t', header=0)  ## not setting the index_col
-            #df.set_index(['0'], inplace=True)
-
-            # C:\. . .\ArcGIS\Pro\bin\Python\envs\arcgispro-py3\lib\site-packages\numpy\lib\arraysetops.py:583:
-            # FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-            # mask |= (ar1 == a)
-            # A fix: https://www.youtube.com/watch?v=TTeElATMpoI
-            # TLDR: pandas are Jedi; numpy are the hutts; and python is the galatic empire
-            with warnings.catch_warnings():
-                warnings.simplefilter(action='ignore', category=FutureWarning)
-                # DataFrame
-                #parse_dates = ['year']
-                df = pd.read_csv(input_csvfile,
-                                 #index_col = False,
-                                 index_col = 0,
-                                 encoding="utf-8",
-                                 #encoding = "ISO-8859-1",
-                                 #engine='python',
-                                 delimiter = ',',
-                                 #dtype = None, #year,lon_UTM,lat_UTM,lat,lon,depth_m,median_est,spp_sci,spp_common,median_est_kgha
-                                 #parse_dates=parse_dates,
-                                 dtype = {
-                                          "year"              : 'uint16',
-                                          "lon_UTM"           : float,
-                                          "lat_UTM"           : float,
-                                          "lat"               : float,
-                                          "lon"               : float,
-                                          "depth_m"           : float,
-                                          "median_est"        : float,
-                                          "spp_sci"           : str,
-                                          "spp_common"        : str,
-                                          "wtcpue"            : float,
-                                          "transformed_value" : float,
-                                          "transform_unit"    : str,
-                                          },
-                                 )
-            del input_csvfile
-            #parse_dates
-
-            msg = f'>-> Defining the column names.'
-            logFile(log_file, msg); del msg
-
-            # The original column names from the CSV files are not very
-            # reader friendly, so we are making some changes here
-            df.columns  = ['Year', 'Easting', 'Northing', 'Latitude', 'Longitude', 'Depth', 'MedianEstimate', 'Species', 'CommonName', 'WTCPUE', 'MapValue', 'TransformUnit',]
-            new_columns = ['Year', 'Species', 'WTCPUE', 'MapValue', 'TransformUnit', 'CommonName', 'Easting', 'Northing', 'Latitude', 'Longitude', 'MedianEstimate', 'Depth',]
-            df = df[new_columns]; del new_columns
-
-            # Test if we are filtering on species. If so, a new species list is
-            # created with the selected species remaining in the list
-            if FilterSpecies:
-                msg = f'>->-> Filtering table on selected species for {datasetcode} Table'
-                logFile(log_file, msg); del msg
-                # Filter data frame
-                df = df.loc[df['Species'].isin(selected_species.keys())]
-            else:
-                msg = f'>->-> No species filtering of selected species for {datasetcode} Table'
-                logFile(log_file, msg); del msg
-
-            #-->> Species and CommonName
-            msg = f'#--->  Setting Nulls in Species and CommonName to empty strings.'
-            logFile(log_file, msg); del msg
-            # Replace NaN with an empty string. When pandas reads a cell
-            # with missing data, it asigns that cell with a Null or nan
-            # value. So, we are changing that value to an empty string of ''.
-            # Seems to be realivent for Species and CommonName only
-            df.Species    = df.Species.fillna('')
-            df.CommonName = df.CommonName.fillna('')
-            df.Species    = df.Species.replace('Na', '')
-            df.CommonName = df.CommonName.replace('Na', '')
-
-            # Example of how to drop rows in a Data Frame
-            # msg = f'#--->  Droping row where Species have an empty string.'
-            # logFile(log_file, msg); del msg
-            # Drop rows based on a condition. Rows without a species name are not of use
-            # df = df[df.Species != '']
-
-            #-->> Layer Code
-            msg = f'#--->  Adding Layer Code.'
-            logFile(log_file, msg); del msg
-            # Insert column
-            #df.insert(df.columns.get_loc('Year'), 'DatasetCode', f"{datasetcode}")
-            #print(df.columns.get_loc('Year'))
-            df.insert(0, 'DatasetCode', f"{datasetcode}")
-
-            #-->> Region
-            msg = f'#--->  Adding Region.'
-            logFile(log_file, msg); del msg
-            # Insert column
-            #df.insert(df.columns.get_loc('Year'), 'Region', f"{region}")
-            df.insert(1, 'Region', f"{region}")
-
-            #-->> SummaryProduct
-            msg = f'#--->  Adding SummaryProduct.'
-            logFile(log_file, msg); del msg
-            # Insert column
-            #df.insert(df.columns.get_loc('StdTime') + 1, 'SummaryProduct', f"{summaryproduct}")
-            df.insert(2, 'SummaryProduct', f"{summaryproduct}")
-
-            #-->> StdTime
-            msg = f'#--->  Adding StdTime.'
-            logFile(log_file, msg); del msg
-            # Insert column
-            #df.insert(df.columns.get_loc('Year')+1, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize(timezones[datasetcode]))
-            #df.insert(4, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize(timezones[datasetcode]).dt.tz_convert('UTC')) #
-            df.insert(4, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize('Etc/GMT+12'))
-
-            #df['Year'] = df['Year'].dt.strftime('%Y')
-
-            #-->> SpeciesCommonName
-            msg = f'#--->  Adding SpeciesCommonName and setting it to "Species (CommonName)".'
-            logFile(log_file, msg); del msg
-            # Insert column
-            #df.insert(df.columns.get_loc('CommonName')+1, 'SpeciesCommonName', df['Species'] + ' (' + df['CommonName'] + ')')
-            df.insert(10, 'SpeciesCommonName', df['Species'] + ' (' + df['CommonName'] + ')')
-
-            #-->> CommonNameSpecies
-            msg = f'#--->  Adding CommonNameSpecies and setting it to "CommonName (Species)".'
-            logFile(log_file, msg); del msg
-            # Insert column
-            #df.insert(df.columns.get_loc('SpeciesCommonName')+1, 'CommonNameSpecies', df['CommonName'] + ' (' + df['Species'] + ')')
-            df.insert(11, 'CommonNameSpecies', df['CommonName'] + ' (' + df['Species'] + ')')
-
-            #df.drop(['wtcpue', 'transformed_value', 'transform_unit'], axis=1)
-            #df.drop(columns=['wtcpue', 'transformed_value', 'transform_unit'], inplace=True)
-
-            msg = f'>-> Creating the {datasetcode} Geodatabase Table'
-            logFile(log_file, msg); del msg
-
-            # ###--->>> Numpy Datatypes
-            # https://pro.arcgis.com/en/pro-app/latest/arcpy/get-started/working-with-numpy-in-arcgis.htm
-
-            # Get max length of all columns in the dataframe
-            # max_length_all_cols = {col: df.loc[:, col].astype(str).apply(len).max() for col in df.columns}
-            # type_dict = {'TEXT' : "S", 'SHORT' : "u4", 'DOUBLE' : 'd', 'DATE' : 'M8[us]' }
-
-            # print([f'S{max_length_all_cols[v]}' for v in max_length_all_cols])
-            # print([f'{v} : {max_length_all_cols[v]},' for v in max_length_all_cols])
-            # print([f'S{field_definitions[v][3]}' for v in max_length_all_cols])
-            # print([f'{v} S{field_definitions[v][3]}' for v in max_length_all_cols])
-            # print([f'{field_definitions[v][1]} {field_definitions[v][3]}' for v in max_length_all_cols])
-
-            # small = 10
-            # big   = 20
-            # multiplier = lambda x: big if x > small else small
-            # nearest = lambda x: multiplier(x) * math.ceil(x / multiplier(x))
-
-            # for key in max_length_all_cols:
-            #     print(f"\t# # {key:23} = {max_length_all_cols[key]:3} ({nearest(max_length_all_cols[key]):2})")
-            #    max_length_all_cols[key] = nearest(max_length_all_cols[key])
-
-            # print([f'{v} : {max_length_all_cols[v]},' for v in max_length_all_cols])
-            # print([f'S{max_length_all_cols[v]}' for v in max_length_all_cols])
-            # del max_length_all_cols
-
-            #print('DataFrame\n----------\n', df.head(10))
-            #print('DataFrame datatypes:\n', df.dtypes)
-            #columns = [str(c) for c in df.dtypes.index.tolist()]
-            column_names = list(df.columns)
-            #print(column_names); del columns
-
-            # https://www.tutorialsandyou.com/python/numpy-data-types-66.html
-            #[                'DatasetCode', 'Region', 'SummaryProduct', 'Year',   'StdTime', 'Species', 'WTCPUE', 'MapValue', 'TransformUnit', 'CommonName', 'SpeciesCommonName', 'CommonNameSpecies', 'Easting', 'Northing', 'Latitude', 'Longitude', 'MedianEstimate', 'Depth',]
-            column_formats = [ 'S20',        'S40',    'S5',             'u4',     'M8[us]',  'S50',     'd',      'd',        'S20',           'U40',        'U90',               'U90',               'd',       'd',        'd',        'd',         'd',              'd', ]
-            #column_formats = [ 'S20',       'S40',    'S5',             'M8[us]', 'M8[us]',  'S40',     'd',      'd',        'S30',           'U30',        'U60',               'U60',               'd',       'd',        'd',        'd',         'd',              'd',  ]
-
-            dtypes = list(zip(column_names, column_formats))
-            del column_names, column_formats
-
-            # Cast text as Unicode in the CommonName field
-            df['CommonName'] = df['CommonName'].astype('unicode')
-
-            #print(df)
-            try:
-                array = np.array(np.rec.fromrecords(df.values), dtype = dtypes)
-            except Exception as e:
-                import sys
-                msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
-                logFile(log_file, msg); del msg
-
-            del df, dtypes
-
-            # Temporary table
-            tmp_table = f'memory\{csvfile.replace(".csv", "")}_tmp'
-            #print(csvfile)
-            #tmp_table = os.path.join(RegionScratchGDB, f'{csvfile}_tmp'); del RegionScratchGDB
-
-            if arcpy.Exists(tmp_table):
-                arcpy.management.Delete(tmp_table)
-
-            try:
-                arcpy.da.NumPyArrayToTable(array, tmp_table)
-                del array
-            except arcpy.ExecuteError:
-                import sys
-                msg = arcpy.GetMessages(2).replace('\n', '\n\t')
-                msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
-                #print(msg); del msg
-                logFile(log_file.replace(".log", " ERROR.log"), msg); del msg, sys
-
-            msg = f'>-> Copying the {datasetcode} Table from memory to the GDB'
-            logFile(log_file, msg); del msg
-
-            out_table = os.path.join(RegionGDB, csvfile.replace(".csv", ""))
-
-            # Execute CreateTable
-            arcpy.management.CreateTable(RegionGDB, csvfile.replace(".csv", ""), os.path.join(RegionGDB, "GLMME_Data_Schema"), "", "")
-
-            del RegionGDB
-
-            arcpy.management.CopyRows(tmp_table, out_table, "")
-
-            # Remove the temporary table
-            arcpy.management.Delete(tmp_table)
-            del tmp_table
-
-            # Cleanup
-            del out_table
 
         if summaryproduct == "Yes":
             # https://pandas.pydata.org/pandas-docs/stable/getting_started/intro_tutorials/09_timeseries.html?highlight=datetime
@@ -11669,7 +10368,8 @@ def mpCreateTables(dataset):
             # Insert column
             #df.insert(df.columns.get_loc('Year')+1, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize(timezones[datasetcode])
             #df.insert(df.columns.get_loc('Year')+1, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize(timezones[datasetcode]).dt.tz_convert('UTC'))
-            df.insert(df.columns.get_loc('Year')+1, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize('Etc/GMT+12'))
+            #df.insert(df.columns.get_loc('Year')+1, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize('Etc/GMT+12'))
+            df.insert(df.columns.get_loc('Year')+1, 'StdTime', pd.to_datetime(df['Year'], format="%Y"))
 
             #df['Year'] = df['Year'].dt.strftime('%Y')
 
@@ -11708,9 +10408,9 @@ def mpCreateTables(dataset):
             column_names = list(df.columns)
             #print(column_names)
             # https://www.tutorialsandyou.com/python/numpy-data-types-66.html
-            #[                'DatasetCode', 'Region', 'Season', 'SummaryProduct', 'SampleID', 'Year', 'StdTime',  'Species', 'WTCPUE', 'MapValue', 'TransformUnit', 'CommonName', 'SpeciesCommonName', 'CommonNameSpecies', 'CoreSpecies', 'Stratum', 'StratumArea', 'Latitude', 'Longitude', 'Depth']
-            column_formats = [ 'S20',        'S40',    'S10',    'S5',             'S20',       'u4',   'M8[us]',   'S50',     'd',      'd',        'S20',           'U40',        'U90',               'U90',               'S5',          'S20',     'd',           'd',        'd',        'd']
-            #column_formats = ['S20',       'S40',    'S10',    'S5',             'S20',      'M8[us]',   'M8[us]',   'S40',     'd',      'd',        'S30',           'U30',        'U60',               'U60',               'S5',          'S20',     'd',           'd',        'd',        'd']
+            #[                'DatasetCode', 'Region', 'SummaryProduct', 'Season', 'SampleID', 'Year', 'StdTime',  'Species', 'WTCPUE', 'MapValue', 'TransformUnit', 'CommonName', 'SpeciesCommonName', 'CommonNameSpecies', 'CoreSpecies', 'Stratum', 'StratumArea', 'Latitude', 'Longitude', 'Depth']
+            column_formats = [ 'S20',        'S40',    'S5',             'S5',     'S20',       'u4',   'M8[us]',   'S50',     'd',      'd',        'S20',           'U40',        'U90',               'U90',               'S5',          'S20',     'd',           'd',        'd',        'd']
+            #column_formats = ['S20',       'S40',    'S10',             'S5',     'S20',      'M8[us]',   'M8[us]',   'S40',     'd',      'd',        'S30',           'U30',        'U60',               'U60',               'S5',          'S20',     'd',           'd',        'd',        'd']
             # 'M8[us]' can be used for date fields
 
             dtypes = list(zip(column_names, column_formats))
@@ -11757,6 +10457,240 @@ def mpCreateTables(dataset):
 
             # Execute CreateTable
             arcpy.management.CreateTable(RegionGDB, csvfile.replace(".csv", ""), os.path.join(RegionGDB, "IDW_Data_Schema"), "", "")
+
+            del RegionGDB
+
+            arcpy.management.CopyRows(tmp_table, out_table, "")
+
+            # Remove the temporary table
+            arcpy.management.Delete(tmp_table)
+            del tmp_table
+
+            # Cleanup
+            del out_table
+
+        if summaryproduct == "No":
+            # https://pandas.pydata.org/pandas-docs/stable/getting_started/intro_tutorials/09_timeseries.html?highlight=datetime
+            # https://www.tutorialsandyou.com/python/numpy-data-types-66.html
+            #df = pd.read_csv('my_file.tsv', sep='\t', header=0)  ## not setting the index_col
+            #df.set_index(['0'], inplace=True)
+
+            # C:\. . .\ArcGIS\Pro\bin\Python\envs\arcgispro-py3\lib\site-packages\numpy\lib\arraysetops.py:583:
+            # FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+            # mask |= (ar1 == a)
+            # A fix: https://www.youtube.com/watch?v=TTeElATMpoI
+            # TLDR: pandas are Jedi; numpy are the hutts; and python is the galatic empire
+            with warnings.catch_warnings():
+                warnings.simplefilter(action='ignore', category=FutureWarning)
+                # DataFrame
+                #parse_dates = ['year']
+                df = pd.read_csv(input_csvfile,
+                                 #index_col = False,
+                                 index_col = 0,
+                                 encoding="utf-8",
+                                 #encoding = "ISO-8859-1",
+                                 #engine='python',
+                                 delimiter = ',',
+                                 #dtype = None, #year,lon_UTM,lat_UTM,lat,lon,depth_m,median_est,spp_sci,spp_common,median_est_kgha
+                                 #parse_dates=parse_dates,
+                                 dtype = {
+                                          "year"              : 'uint16',
+                                          "lon_UTM"           : float,
+                                          "lat_UTM"           : float,
+                                          "lat"               : float,
+                                          "lon"               : float,
+                                          "depth_m"           : float,
+                                          "median_est"        : float,
+                                          "spp_sci"           : str,
+                                          "spp_common"        : str,
+                                          "wtcpue"            : float,
+                                          "transformed"       : float,
+                                          #"transformed_value" : float,
+                                          #"transform_unit"    : str,
+                                          },
+                                 )
+            del input_csvfile
+            #parse_dates
+
+            msg = f'>-> Defining the column names.'
+            logFile(log_file, msg); del msg
+
+            # The original column names from the CSV files are not very
+            # reader friendly, so we are making some changes here
+            #df.columns  = ['Year', 'Easting', 'Northing', 'Latitude', 'Longitude', 'Depth', 'MedianEstimate', 'Species', 'CommonName', 'WTCPUE', 'MapValue', 'TransformUnit',]
+            #new_columns = ['Year', 'Species', 'WTCPUE', 'MapValue', 'TransformUnit', 'CommonName', 'Easting', 'Northing', 'Latitude', 'Longitude', 'MedianEstimate', 'Depth',]
+            df.columns  = ['Year', 'Easting', 'Northing', 'Latitude', 'Longitude', 'Depth', 'MedianEstimate', 'Species', 'CommonName', 'WTCPUE', 'MapValue']
+            new_columns = ['Year', 'Species', 'WTCPUE', 'MapValue', 'CommonName', 'Easting', 'Northing', 'Latitude', 'Longitude', 'MedianEstimate', 'Depth',]
+            # #                                                          'Year',            'Species', 'WTCPUE', 'MapValue',                  'CommonName',                                           'Easting', 'Northing', 'Latitude', 'Longitude', 'MedianEstimate', 'Depth',
+            # #               'DatasetCode', 'Region', 'SummaryProduct', 'Year', 'StdTime', 'Species', 'WTCPUE', 'MapValue', 'TransformUnit', 'CommonName', 'SpeciesCommonName', 'CommonNameSpecies', 'Easting', 'Northing', 'Latitude', 'Longitude', 'MedianEstimate', 'Depth',]
+            df = df[new_columns]; del new_columns
+
+            # Test if we are filtering on species. If so, a new species list is
+            # created with the selected species remaining in the list
+            if FilterSpecies:
+                msg = f'>->-> Filtering table on selected species for {datasetcode} Table'
+                logFile(log_file, msg); del msg
+                # Filter data frame
+                df = df.loc[df['Species'].isin(selected_species.keys())]
+            else:
+                msg = f'>->-> No species filtering of selected species for {datasetcode} Table'
+                logFile(log_file, msg); del msg
+
+            #-->> Species and CommonName
+            msg = f'#--->  Setting Nulls in Species and CommonName to empty strings.'
+            logFile(log_file, msg); del msg
+            # Replace NaN with an empty string. When pandas reads a cell
+            # with missing data, it asigns that cell with a Null or nan
+            # value. So, we are changing that value to an empty string of ''.
+            # Seems to be realivent for Species and CommonName only
+            df.Species    = df.Species.fillna('')
+            df.CommonName = df.CommonName.fillna('')
+            df.Species    = df.Species.replace('Na', '')
+            df.CommonName = df.CommonName.replace('Na', '')
+
+            # Example of how to drop rows in a Data Frame
+            # msg = f'#--->  Droping row where Species have an empty string.'
+            # logFile(log_file, msg); del msg
+            # Drop rows based on a condition. Rows without a species name are not of use
+            # df = df[df.Species != '']
+
+            #-->> Layer Code
+            msg = f'#--->  Adding Layer Code.'
+            logFile(log_file, msg); del msg
+            # Insert column
+            #df.insert(df.columns.get_loc('Year'), 'DatasetCode', f"{datasetcode}")
+            #print(df.columns.get_loc('Year'))
+            df.insert(0, 'DatasetCode', f"{datasetcode}")
+
+            #-->> Region
+            msg = f'#--->  Adding Region.'
+            logFile(log_file, msg); del msg
+            # Insert column
+            #df.insert(df.columns.get_loc('Year'), 'Region', f"{region}")
+            df.insert(1, 'Region', f"{region}")
+
+            #-->> SummaryProduct
+            msg = f'#--->  Adding SummaryProduct.'
+            logFile(log_file, msg); del msg
+            # Insert column
+            #df.insert(df.columns.get_loc('StdTime') + 1, 'SummaryProduct', f"{summaryproduct}")
+            df.insert(2, 'SummaryProduct', f"{summaryproduct}")
+
+            #-->> StdTime
+            msg = f'#--->  Adding StdTime.'
+            logFile(log_file, msg); del msg
+            # Insert column
+            #df.insert(df.columns.get_loc('Year')+1, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize(timezones[datasetcode]))
+            #df.insert(4, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize(timezones[datasetcode]).dt.tz_convert('UTC')) #
+            #df.insert(4, 'StdTime', pd.to_datetime(df['Year'], format="%Y").dt.tz_localize('Etc/GMT+12'))
+            df.insert(4, 'StdTime', pd.to_datetime(df['Year'], format="%Y"))
+
+            #df['Year'] = df['Year'].dt.strftime('%Y')
+
+            #-->> TransformUnit
+            msg = f'#--->  Adding TransformUnit and setting it to "ln".'
+            logFile(log_file, msg); del msg
+            # Insert column
+            df.insert(8, 'TransformUnit', f'{transformunit}')
+
+            #-->> SpeciesCommonName
+            msg = f'#--->  Adding SpeciesCommonName and setting it to "Species (CommonName)".'
+            logFile(log_file, msg); del msg
+            # Insert column
+            #df.insert(df.columns.get_loc('CommonName')+1, 'SpeciesCommonName', df['Species'] + ' (' + df['CommonName'] + ')')
+            df.insert(10, 'SpeciesCommonName', df['Species'] + ' (' + df['CommonName'] + ')')
+
+            #-->> CommonNameSpecies
+            msg = f'#--->  Adding CommonNameSpecies and setting it to "CommonName (Species)".'
+            logFile(log_file, msg); del msg
+            # Insert column
+            #df.insert(df.columns.get_loc('SpeciesCommonName')+1, 'CommonNameSpecies', df['CommonName'] + ' (' + df['Species'] + ')')
+            df.insert(11, 'CommonNameSpecies', df['CommonName'] + ' (' + df['Species'] + ')')
+
+            #df.drop(['wtcpue', 'transformed_value', 'transform_unit'], axis=1)
+            #df.drop(columns=['wtcpue', 'transformed_value', 'transform_unit'], inplace=True)
+
+            msg = f'>-> Creating the {datasetcode} Geodatabase Table'
+            logFile(log_file, msg); del msg
+
+            # ###--->>> Numpy Datatypes
+            # https://pro.arcgis.com/en/pro-app/latest/arcpy/get-started/working-with-numpy-in-arcgis.htm
+
+            # Get max length of all columns in the dataframe
+            # max_length_all_cols = {col: df.loc[:, col].astype(str).apply(len).max() for col in df.columns}
+            # type_dict = {'TEXT' : "S", 'SHORT' : "u4", 'DOUBLE' : 'd', 'DATE' : 'M8[us]' }
+
+            # print([f'S{max_length_all_cols[v]}' for v in max_length_all_cols])
+            # print([f'{v} : {max_length_all_cols[v]},' for v in max_length_all_cols])
+            # print([f'S{field_definitions[v][3]}' for v in max_length_all_cols])
+            # print([f'{v} S{field_definitions[v][3]}' for v in max_length_all_cols])
+            # print([f'{field_definitions[v][1]} {field_definitions[v][3]}' for v in max_length_all_cols])
+
+            # small = 10
+            # big   = 20
+            # multiplier = lambda x: big if x > small else small
+            # nearest = lambda x: multiplier(x) * math.ceil(x / multiplier(x))
+
+            # for key in max_length_all_cols:
+            #     print(f"\t# # {key:23} = {max_length_all_cols[key]:3} ({nearest(max_length_all_cols[key]):2})")
+            #    max_length_all_cols[key] = nearest(max_length_all_cols[key])
+
+            # print([f'{v} : {max_length_all_cols[v]},' for v in max_length_all_cols])
+            # print([f'S{max_length_all_cols[v]}' for v in max_length_all_cols])
+            # del max_length_all_cols
+
+            #print('DataFrame\n----------\n', df.head(10))
+            #print('DataFrame datatypes:\n', df.dtypes)
+            #columns = [str(c) for c in df.dtypes.index.tolist()]
+            column_names = list(df.columns)
+            #print(column_names); del columns
+
+            # https://www.tutorialsandyou.com/python/numpy-data-types-66.html
+            #[                'DatasetCode', 'Region', 'SummaryProduct', 'Year',   'StdTime', 'Species', 'WTCPUE', 'MapValue', 'TransformUnit', 'CommonName', 'SpeciesCommonName', 'CommonNameSpecies', 'Easting', 'Northing', 'Latitude', 'Longitude', 'MedianEstimate', 'Depth',]
+            column_formats = [ 'S20',        'S40',    'S5',             'u4',     'M8[us]',  'S50',     'd',      'd',        'S20',           'U40',        'U90',               'U90',               'd',       'd',        'd',        'd',         'd',              'd', ]
+            #column_formats = [ 'S20',       'S40',    'S5',             'M8[us]', 'M8[us]',  'S40',     'd',      'd',        'S30',           'U30',        'U60',               'U60',               'd',       'd',        'd',        'd',         'd',              'd',  ]
+
+            dtypes = list(zip(column_names, column_formats))
+            del column_names, column_formats
+
+            # Cast text as Unicode in the CommonName field
+            df['CommonName'] = df['CommonName'].astype('unicode')
+
+            #print(df)
+            try:
+                array = np.array(np.rec.fromrecords(df.values), dtype = dtypes)
+            except Exception as e:
+                import sys
+                msg = f"\nPython Exception:\n\tType: {type(e).__name__}\n\tMessage: {e.args[0]}\n\tLine Number: {sys.exc_info()[2].tb_lineno}\n"
+                logFile(log_file, msg); del msg
+
+            del df, dtypes
+
+            # Temporary table
+            tmp_table = f'memory\{csvfile.replace(".csv", "")}_tmp'
+            #print(csvfile)
+            #tmp_table = os.path.join(RegionScratchGDB, f'{csvfile}_tmp'); del RegionScratchGDB
+
+            if arcpy.Exists(tmp_table):
+                arcpy.management.Delete(tmp_table)
+
+            try:
+                arcpy.da.NumPyArrayToTable(array, tmp_table)
+                del array
+            except arcpy.ExecuteError:
+                import sys
+                msg = arcpy.GetMessages(2).replace('\n', '\n\t')
+                msg = f"\nArcPy Exception:\n\t{msg}Line Number: {sys.exc_info()[2].tb_lineno}\n"
+                #print(msg); del msg
+                logFile(log_file.replace(".log", " ERROR.log"), msg); del msg, sys
+
+            msg = f'>-> Copying the {datasetcode} Table from memory to the GDB'
+            logFile(log_file, msg); del msg
+
+            out_table = os.path.join(RegionGDB, csvfile.replace(".csv", ""))
+
+            # Execute CreateTable
+            arcpy.management.CreateTable(RegionGDB, csvfile.replace(".csv", ""), os.path.join(RegionGDB, f"{distributionprojectcode}_Data_Schema"), "", "")
 
             del RegionGDB
 
@@ -11847,6 +10781,7 @@ def mpCreateTables(dataset):
 
 def mpHandlerCreateBathymetry(Sequential):
     try:
+        import multiprocessing
         # Uses the inspect module and a lamda to find name of this function
         function = function_name()
 
@@ -11891,7 +10826,8 @@ def mpHandlerCreateBathymetry(Sequential):
             msg = f"> Checking if there is a File GDB for region: {datasetcode} and if there is data"
             logFile(log_file, msg); del msg
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -12001,7 +10937,8 @@ def mpHandlerCreateBathymetry(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -12032,7 +10969,8 @@ def mpHandlerCreateBathymetry(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -12103,6 +11041,9 @@ def mpHandlerCreateBathymetry(Sequential):
     # like normal code: if there is an exception, it will not be automatically
     # caught (and probably stop the program). This block is also optional.
     finally:
+
+        del multiprocessing
+
         # Get list of local keys that may need to be deleted.
         localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
@@ -12131,8 +11072,19 @@ def mpHandlerCreateBathymetry(Sequential):
 
 def mpHandlerCreateDisMapRegions(Sequential):
     try:
+        import multiprocessing
         # Uses the inspect module and a lamda to find name of this function
         function = function_name()
+
+        # Set the XYTolerance to 0.02 Meters
+        # "0.001 Meters"
+        #arcpy.env.XYTolerance = "0.02 Meters"
+        arcpy.env.XYTolerance = "0.1 Meters"
+
+        # Set the XYResolution environment to a linear unit
+        # "0.0001 Meters"
+        #arcpy.env.XYResolution = "0.002 Meters"
+        arcpy.env.XYResolution = "0.01 Meters"
 
         arcpy.SetLogHistory(False)
 
@@ -12214,17 +11166,6 @@ def mpHandlerCreateDisMapRegions(Sequential):
 
         arcpy.management.Delete(os.path.join(ProjectGDB, dismap_regions+'_Schema'))
 
-##        msg = f'>-> Updating the field aliases for the {os.path.basename(dismap_regions_path)} Feature Class'
-##        logFile(log_file, msg); del msg
-##
-##        alterFields(dismap_regions_path)
-##
-##        msg = f" >-> Adding metadata to {dismap_regions}"
-##        print(msg)
-##        importMetadata(dismap_regions_path)
-##
-##        del dismap_regions_path
-
         for i in range(len(datasets)):
             datasetcode             = datasets[i][0]
             distributionprojectcode = datasets[i][12]
@@ -12233,7 +11174,8 @@ def mpHandlerCreateDisMapRegions(Sequential):
             msg = f"> Checking if there is a File GDB for region: {datasetcode} and if there is data"
             logFile(log_file, msg); del msg
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -12330,7 +11272,8 @@ def mpHandlerCreateDisMapRegions(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            # dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -12414,7 +11357,8 @@ def mpHandlerCreateDisMapRegions(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -12496,6 +11440,9 @@ def mpHandlerCreateDisMapRegions(Sequential):
     # like normal code: if there is an exception, it will not be automatically
     # caught (and probably stop the program). This block is also optional.
     finally:
+
+        del multiprocessing
+
         # Get list of local keys that may need to be deleted.
         localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
@@ -12524,6 +11471,7 @@ def mpHandlerCreateDisMapRegions(Sequential):
 
 def mpHandlerCreateFishnets(Sequential):
     try:
+        import multiprocessing
         # Uses the inspect module and a lamda to find name of this function
         function = function_name()
 
@@ -12568,7 +11516,8 @@ def mpHandlerCreateFishnets(Sequential):
             msg = f"> Checking if there is a File GDB for region: {datasetcode} and if there is data"
             logFile(log_file, msg); del msg
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -12662,7 +11611,8 @@ def mpHandlerCreateFishnets(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -12734,12 +11684,12 @@ def mpHandlerCreateFishnets(Sequential):
             # The cpu_count() functions retruns the number of cpu cores
             #cpu_num = multiprocessing.cpu_count() - 2
             with multiprocessing.Pool(processes=cpu_num, initializer=init_processes, initargs=(ARCGIS_METADATA, BASE_FOLDER, CSV_DATA_FOLDER,
-                                                                                   DATASET_SHAPEFILE_FOLDER, EXPORT_METADATA,
-                                                                                   FilterDatasets, IMAGE_FOLDER, INPORT_METADATA,
-                                                                                   LAYER_FOLDER, LOG_FOLDER, log_file_folder, CRF_FOLDER,
-                                                                                   PUBLISH_FOLDER, ScratchFolder, SoftwareEnvironmentLevel,
-                                                                                   field_definitions, table_definitions, selected_species,
-                                                                                   FilterSpecies)) as pool: #, timezones)) as pool:
+                                                                                               DATASET_SHAPEFILE_FOLDER, EXPORT_METADATA,
+                                                                                               FilterDatasets, IMAGE_FOLDER, INPORT_METADATA,
+                                                                                               LAYER_FOLDER, LOG_FOLDER, log_file_folder, CRF_FOLDER,
+                                                                                               PUBLISH_FOLDER, ScratchFolder, SoftwareEnvironmentLevel,
+                                                                                               field_definitions, table_definitions, selected_species,
+                                                                                               FilterSpecies)) as pool: #, timezones)) as pool:
             #cpu_num = cpu_count()
             #with multiprocessing.Pool(processes=cpu_num, ) as pool:
             #with multiprocessing.Pool(len(datasets)) as pool:
@@ -12784,7 +11734,8 @@ def mpHandlerCreateFishnets(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             msg = f"#-> Copying the {dataset_product_code}_Points, {dataset_product_code}_Lat_Long, and {dataset_product_code}_Fishnet Datasetes"
             logFile(log_file, msg); del msg
@@ -12840,7 +11791,8 @@ def mpHandlerCreateFishnets(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -12911,6 +11863,9 @@ def mpHandlerCreateFishnets(Sequential):
     # like normal code: if there is an exception, it will not be automatically
     # caught (and probably stop the program). This block is also optional.
     finally:
+
+        del multiprocessing
+
         # Get list of local keys that may need to be deleted.
         localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
@@ -12939,6 +11894,7 @@ def mpHandlerCreateFishnets(Sequential):
 
 def mpHandlerCreateIndicatorsTable(Sequential):
     try:
+        import multiprocessing
         # Uses the inspect module and a lamda to find name of this function
         function = function_name()
 
@@ -12973,13 +11929,15 @@ def mpHandlerCreateIndicatorsTable(Sequential):
      # ###--->>> Preprocessing Setup Start
         arcpy.env.overwriteOutput = True
 
+        layerspeciesyearimagename_table = os.path.join(ProjectGDB, "LayerSpeciesYearImageName")
+
         indicators = "Indicators"
         indicators_table = os.path.join(ProjectGDB, indicators)
 
         msg = f"Creating the {indicators} Table"
         logFile(log_file, msg); del msg
 
-        arcpy.management.Delete(indicators_table)
+        #arcpy.management.Delete(indicators_table)
 
         if not arcpy.Exists(indicators_table):
             # Execute CreateTable
@@ -13000,7 +11958,8 @@ def mpHandlerCreateIndicatorsTable(Sequential):
             msg = f"> Checking if there is a File GDB for region: {datasetcode} and if there is data"
             logFile(log_file, msg); del msg
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -13029,7 +11988,21 @@ def mpHandlerCreateIndicatorsTable(Sequential):
                 logFile(log_file, msg); del msg
 
                 arcpy.management.CreateFileGDB(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel} Scratch")
-                #arcpy.management.Copy(os.path.join(BathymetryGDB, datasetcode_bathymetry), os.path.join(RegionScratchGDB, datasetcode_bathymetry))
+
+            if not arcpy.Exists(os.path.join(RegionGDB, "LayerSpeciesYearImageName")):
+                msg = f"\t> Creating Table View: {os.path.basename(layerspeciesyearimagename_table)}"
+                logFile(log_file, msg); del msg
+
+                tableview = arcpy.management.MakeTableView(layerspeciesyearimagename_table, "table view", f"DatasetCode = '{datasetcode}'", RegionGDB)
+                arcpy.management.CopyRows(tableview, os.path.join(RegionGDB, "LayerSpeciesYearImageName"))
+                arcpy.management.Delete(tableview)
+                del tableview
+                arcpy.management.DeleteIdentical(
+                                                 in_dataset=os.path.join(RegionGDB, "LayerSpeciesYearImageName"),
+                                                 fields="ImageName",
+                                                 xy_tolerance=None,
+                                                 z_tolerance=0
+                                                )
 
             if not arcpy.Exists(os.path.join(RegionGDB, dataset_product_code)):
                 msg = f"\t> Copying the {dataset_product_code}"
@@ -13069,18 +12042,21 @@ def mpHandlerCreateIndicatorsTable(Sequential):
 
             del datasetcode_longitude
 
-            if not arcpy.Exists(os.path.join(RegionGDB, f"{dataset_product_code}_{indicators}")):
-                msg = f"\t> Creating the {dataset_product_code}_{indicators} table"
-                logFile(log_file, msg); del msg
+            #if not arcpy.Exists(os.path.join(RegionGDB, f"{dataset_product_code}_{indicators}")):
+            #    msg = f"\t> Creating the {dataset_product_code}_{indicators} table"
+            #    logFile(log_file, msg); del msg
 
-                arcpy.management.CreateTable(RegionGDB, f"{dataset_product_code}_{indicators}", os.path.join(ProjectGDB, indicators), "", "")
+            #    arcpy.management.CreateTable(RegionGDB, f"{dataset_product_code}_{indicators}", os.path.join(ProjectGDB, indicators), "", "")
 
-                #arcpy.management.Copy(os.path.join(ProjectGDB, indicators), os.path.join(RegionGDB, f"{dataset_product_code}_{indicators}"), "", "")
+            msg = f"\t> Creating the {dataset_product_code}_{indicators} table"
+            logFile(log_file, msg); del msg
+
+            arcpy.management.CreateTable(RegionGDB, f"{dataset_product_code}_{indicators}", os.path.join(ProjectGDB, indicators), "", "")
 
             del RegionGDB, RegionScratchGDB, dataset_product_code, datasetcode
             del distributionprojectcode
 
-        del indicators, indicators_table
+        del layerspeciesyearimagename_table, indicators, indicators_table
 
     # ###--->>> Preprocessing Setup End
 
@@ -13141,7 +12117,8 @@ def mpHandlerCreateIndicatorsTable(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             msg = f"#-> Copying the {datasetcode} Indicators Table"
             logFile(log_file, msg); del msg
@@ -13184,7 +12161,8 @@ def mpHandlerCreateIndicatorsTable(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -13255,6 +12233,9 @@ def mpHandlerCreateIndicatorsTable(Sequential):
     # like normal code: if there is an exception, it will not be automatically
     # caught (and probably stop the program). This block is also optional.
     finally:
+
+        del multiprocessing
+
         # Get list of local keys that may need to be deleted.
         localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
@@ -13283,6 +12264,7 @@ def mpHandlerCreateIndicatorsTable(Sequential):
 
 def mpHandlerCreateMosaics(Sequential):
     try:
+        import multiprocessing
         # Uses the inspect module and a lamda to find name of this function
         function = function_name()
 
@@ -13326,7 +12308,8 @@ def mpHandlerCreateMosaics(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -13347,19 +12330,20 @@ def mpHandlerCreateMosaics(Sequential):
 
                 arcpy.management.CreateFileGDB(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel} Scratch")
 
-            msg = f"\t> Creating Table View: {os.path.basename(layerspeciesyearimagename_table)}"
-            logFile(log_file, msg); del msg
+            if not arcpy.Exists(os.path.join(RegionGDB, "LayerSpeciesYearImageName")):
+                msg = f"\t> Creating Table View: {os.path.basename(layerspeciesyearimagename_table)}"
+                logFile(log_file, msg); del msg
 
-            tableview = arcpy.management.MakeTableView(layerspeciesyearimagename_table, "table view", f"DatasetCode = '{datasetcode}'", RegionGDB)
-            arcpy.management.CopyRows(tableview, os.path.join(RegionGDB, "LayerSpeciesYearImageName"))
-            arcpy.management.Delete(tableview)
-            del tableview
-            arcpy.management.DeleteIdentical(
-                                             in_dataset=os.path.join(RegionGDB, "LayerSpeciesYearImageName"),
-                                             fields="ImageName",
-                                             xy_tolerance=None,
-                                             z_tolerance=0
-                                            )
+                tableview = arcpy.management.MakeTableView(layerspeciesyearimagename_table, "table view", f"DatasetCode = '{datasetcode}'", RegionGDB)
+                arcpy.management.CopyRows(tableview, os.path.join(RegionGDB, "LayerSpeciesYearImageName"))
+                arcpy.management.Delete(tableview)
+                del tableview
+                arcpy.management.DeleteIdentical(
+                                                 in_dataset=os.path.join(RegionGDB, "LayerSpeciesYearImageName"),
+                                                 fields="ImageName",
+                                                 xy_tolerance=None,
+                                                 z_tolerance=0
+                                                )
 
             del datasetcode, distributionprojectcode, dataset_product_code
             del RegionGDB, RegionScratchGDB
@@ -13421,7 +12405,8 @@ def mpHandlerCreateMosaics(Sequential):
             mosaicname              = datasets[i][19]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -13431,14 +12416,16 @@ def mpHandlerCreateMosaics(Sequential):
             logFile(log_file, msg); del msg
 
             with arcpy.EnvManager(scratchWorkspace = RegionScratchGDB, workspace = RegionGDB):
-                arcpy.management.Copy(f"{mosaicname}", os.path.join(ProjectGDB, f"{mosaicname}"))
+                if arcpy.Exists(f"{mosaicname}"):
+                    arcpy.management.Copy(f"{mosaicname}", os.path.join(ProjectGDB, f"{mosaicname}"))
 
             msg = f"#-> Copying the {mosaicname} CRF Dataset"
             logFile(log_file, msg); del msg
 
             #crf = os.path.join( ScratchFolder, f"{mosaicname}_CRF.crf")
             with arcpy.EnvManager(scratchWorkspace = RegionScratchGDB, workspace = ScratchFolder):
-                arcpy.management.Copy(f"{mosaicname.replace('_Mosaic', '')}.crf", os.path.join(CRF_FOLDER, f"{mosaicname.replace('_Mosaic', '')}.crf"))
+                if arcpy.Exists(f"{mosaicname.replace('_Mosaic', '')}.crf"):
+                    arcpy.management.Copy(f"{mosaicname.replace('_Mosaic', '')}.crf", os.path.join(CRF_FOLDER, f"{mosaicname.replace('_Mosaic', '')}_{SoftwareEnvironmentLevel}.crf"))
 
             del RegionGDB, RegionScratchGDB
             del datasetcode, distributionprojectcode, mosaicname
@@ -13457,7 +12444,8 @@ def mpHandlerCreateMosaics(Sequential):
             mosaicname              = datasets[i][19]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -13467,18 +12455,27 @@ def mpHandlerCreateMosaics(Sequential):
             logFile(log_file, msg); del msg
 
             #purgeGDB(RegionGDB)
-            arcpy.management.Delete(RegionGDB)
+            try:
+                arcpy.management.Delete(RegionGDB)
+            except:
+                pass
 
             msg = f"#-> Deleting the {datasetcode} Region Scratch GDB"
             logFile(log_file, msg); del msg
 
             #purgeGDB(RegionScratchGDB)
-            arcpy.management.Delete(RegionScratchGDB)
+            try:
+                arcpy.management.Delete(RegionScratchGDB)
+            except:
+                pass
 
             msg = f"#-> Deleting the {mosaicname.replace('_Mosaic', '')}.crf Dataset"
             logFile(log_file, msg); del msg
 
-            arcpy.management.Delete(os.path.join(ScratchFolder, f"{mosaicname.replace('_Mosaic', '')}.crf"))
+            try:
+                arcpy.management.Delete(os.path.join(ScratchFolder, f"{mosaicname.replace('_Mosaic', '')}.crf"))
+            except:
+                pass
 
             del RegionGDB, RegionScratchGDB
             del datasetcode, distributionprojectcode, mosaicname
@@ -13534,6 +12531,9 @@ def mpHandlerCreateMosaics(Sequential):
     # like normal code: if there is an exception, it will not be automatically
     # caught (and probably stop the program). This block is also optional.
     finally:
+
+        del multiprocessing
+
         # Get list of local keys that may need to be deleted.
         localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
@@ -13562,6 +12562,7 @@ def mpHandlerCreateMosaics(Sequential):
 
 def mpHandlerCreateRasters(Sequential):
     try:
+        import multiprocessing
         # Uses the inspect module and a lamda to find name of this function
         function = function_name()
 
@@ -13598,13 +12599,16 @@ def mpHandlerCreateRasters(Sequential):
 
     # ###--->>> Preprocessing Setup Start
 
+        layerspeciesyearimagename_table = os.path.join(ProjectGDB, "LayerSpeciesYearImageName")
+
         for i in range(len(datasets)):
             datasetcode             = datasets[i][0]
             tablename               = datasets[i][3]
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             msg = f"> Checking if there is a File GDB for region: {datasetcode} and if there is data"
             logFile(log_file, msg); del msg
@@ -13643,11 +12647,27 @@ def mpHandlerCreateRasters(Sequential):
 
                 arcpy.management.Copy(os.path.join(ProjectGDB, datasetcode_raster_mask), os.path.join(RegionGDB, datasetcode_raster_mask))
 
+            if not arcpy.Exists(os.path.join(RegionGDB, "LayerSpeciesYearImageName")):
+                msg = f"\t> Creating Table View: {os.path.basename(layerspeciesyearimagename_table)}"
+                logFile(log_file, msg); del msg
+
+                tableview = arcpy.management.MakeTableView(layerspeciesyearimagename_table, "table view", f"DatasetCode = '{datasetcode}'", RegionGDB)
+                arcpy.management.CopyRows(tableview, os.path.join(RegionGDB, "LayerSpeciesYearImageName"))
+                arcpy.management.Delete(tableview)
+                del tableview
+                arcpy.management.DeleteIdentical(
+                                                 in_dataset=os.path.join(RegionGDB, "LayerSpeciesYearImageName"),
+                                                 fields="ImageName",
+                                                 xy_tolerance=None,
+                                                 z_tolerance=0
+                                                )
+
             del datasetcode_raster_mask
             del datasetcode_sample_locations
 
             del RegionGDB, RegionScratchGDB, datasetcode, tablename
             del distributionprojectcode, dataset_product_code
+        del layerspeciesyearimagename_table
 
     # ###--->>> Preprocessing Setup End
 
@@ -13710,7 +12730,8 @@ def mpHandlerCreateRasters(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionScratchGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel} Scratch.gdb")
 
@@ -13781,6 +12802,9 @@ def mpHandlerCreateRasters(Sequential):
     # like normal code: if there is an exception, it will not be automatically
     # caught (and probably stop the program). This block is also optional.
     finally:
+
+        del multiprocessing
+
         # Get list of local keys that may need to be deleted.
         localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
@@ -13809,6 +12833,7 @@ def mpHandlerCreateRasters(Sequential):
 
 def mpHandlerCreateSampleLocationPoints(Sequential):
     try:
+        import multiprocessing
         # Uses the inspect module and a lamda to find name of this function
         function = function_name()
 
@@ -13849,7 +12874,8 @@ def mpHandlerCreateSampleLocationPoints(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             msg = f"> Checking if there is a File GDB for region: {dataset_product_code} and if there is data"
             logFile(log_file, msg); del msg
@@ -13934,7 +12960,8 @@ def mpHandlerCreateSampleLocationPoints(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -13968,7 +12995,8 @@ def mpHandlerCreateSampleLocationPoints(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -14038,6 +13066,9 @@ def mpHandlerCreateSampleLocationPoints(Sequential):
     # like normal code: if there is an exception, it will not be automatically
     # caught (and probably stop the program). This block is also optional.
     finally:
+
+        del multiprocessing
+
         # Get list of local keys that may need to be deleted.
         localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
@@ -14066,6 +13097,7 @@ def mpHandlerCreateSampleLocationPoints(Sequential):
 
 def mpHandlerCreateSpeciesRichnessRasters(Sequential):
     try:
+        import multiprocessing
         # Uses the inspect module and a lamda to find name of this function
         function = function_name()
 
@@ -14107,7 +13139,8 @@ def mpHandlerCreateSpeciesRichnessRasters(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -14240,7 +13273,8 @@ def mpHandlerCreateSpeciesRichnessRasters(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -14252,15 +13286,21 @@ def mpHandlerCreateSpeciesRichnessRasters(Sequential):
             logFile(log_file, msg); del msg
 
             #purgeGDB(RegionGDB)
-            arcpy.management.Delete(RegionGDB)
-            #shutil.rmtree(RegionGDB)
+            try:
+                arcpy.management.Delete(RegionGDB)
+                #shutil.rmtree(RegionGDB)
+            except:
+                pass
 
             msg = f"#-> Deleting the {dataset_product_code} Region Scratch GDB"
             logFile(log_file, msg); del msg
 
-            #purgeGDB(RegionScratchGDB)
-            arcpy.management.Delete(RegionScratchGDB)
-            #shutil.rmtree(RegionScratchGDB)
+            try:
+                #purgeGDB(RegionScratchGDB)
+                arcpy.management.Delete(RegionScratchGDB)
+                #shutil.rmtree(RegionScratchGDB)
+            except:
+                pass
 
             msg = f"#-> Deleting the {dataset_product_code} Region Scratch Folder"
             logFile(log_file, msg); del msg
@@ -14322,6 +13362,9 @@ def mpHandlerCreateSpeciesRichnessRasters(Sequential):
     # like normal code: if there is an exception, it will not be automatically
     # caught (and probably stop the program). This block is also optional.
     finally:
+
+        del multiprocessing
+
         # Get list of local keys that may need to be deleted.
         localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
@@ -14350,6 +13393,7 @@ def mpHandlerCreateSpeciesRichnessRasters(Sequential):
 
 def mpHandlerCreateSpeciesYearImageName(Sequential):
     try:
+        import multiprocessing
         # Uses the inspect module and a lamda to find name of this function
         function = function_name()
 
@@ -14426,7 +13470,8 @@ def mpHandlerCreateSpeciesYearImageName(Sequential):
             msg = f"> Checking if there is a File GDB for region: {tablename} and if there is data"
             logFile(log_file, msg); del msg
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -14530,7 +13575,8 @@ def mpHandlerCreateSpeciesYearImageName(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -14670,7 +13716,8 @@ def mpHandlerCreateSpeciesYearImageName(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -14743,6 +13790,9 @@ def mpHandlerCreateSpeciesYearImageName(Sequential):
     # like normal code: if there is an exception, it will not be automatically
     # caught (and probably stop the program). This block is also optional.
     finally:
+
+        del multiprocessing
+
         # Get list of local keys that may need to be deleted.
         localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
@@ -14771,6 +13821,7 @@ def mpHandlerCreateSpeciesYearImageName(Sequential):
 
 def mpHandlerCreateTables(Sequential):
     try:
+        import multiprocessing
         # Uses the inspect module and a lamda to find name of this function
         function = function_name()
 
@@ -14789,6 +13840,8 @@ def mpHandlerCreateTables(Sequential):
         msg = f"STARTING {function} ON {strftime('%a %b %d %I:%M:%S %p', localtime())}"
         logFile(log_file, msg); del msg
 
+    # ###--->>> Dataset Filter Start
+
         datasets = generateDatasets()
 
         datasets = [[r for r in group] for group in datasets if group[0] not in ['Datasets', 'DisMAP_Regions', 'Indicators', 'Species_Filter']]
@@ -14804,6 +13857,8 @@ def mpHandlerCreateTables(Sequential):
         if not datasets:
             print("###--->>> @@@ Something is wrong with the dataset selection @@@ <<<---###")
 
+    # ###--->>> Dataset Filter End
+
     # ###--->>> Preprocessing Setup Start
 
         arcpy.env.overwriteOutput = True
@@ -14817,7 +13872,8 @@ def mpHandlerCreateTables(Sequential):
             msg = f"> Checking if there is a File GDB for region: {datasetcode} and if there is data"
             logFile(log_file, msg); del msg
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -14835,36 +13891,6 @@ def mpHandlerCreateTables(Sequential):
 
                 arcpy.management.CreateFileGDB(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}")
 
-##            # Execute CreateTable
-##            arcpy.management.CreateTable(ProjectGDB, tablename, "", "", "")
-##
-##            dataset_product_code_table = os.path.join(ProjectGDB, tablename)
-##
-##            ReplaceDatasetTable = True
-##            if not arcpy.Exists(dataset_product_code_table) or ReplaceDatasetTable:
-##                tb_fields = [f.name for f in arcpy.ListFields(dataset_product_code_table) if f.type not in ['Geometry', 'OID']]
-##                # Distribution Project Codes: IDW, GLMME
-##                tb_definition = f"{distributionprojectcode}_Data"
-##                tb_definition_fields = table_definitions[tb_definition]
-##                fields = [f for f in tb_definition_fields if f not in tb_fields]
-##
-##                addFields(dataset_product_code_table, fields, field_definitions)
-##                del tb_fields, tb_definition_fields, fields, tb_definition
-##
-##                #msg = f'>-> Updating the field aliases for the {os.path.basename(dataset_product_code_table)} Table'
-##                #logFile(log_file, msg); del msg
-##                #alterFields(dataset_product_code_table)
-##            del ReplaceDatasetTable
-##
-##            xml_file = os.path.join(BASE_FOLDER, f"{tablename}.xml")
-##
-##            #arcpy.management.ExportXMLWorkspaceDocument(in_data, out_file, {export_type}, {storage_type}, {export_metadata})
-##            arcpy.management.ExportXMLWorkspaceDocument(in_data=dataset_product_code_table,
-##                                                        out_file=xml_file,
-##                                                        export_type= "SCHEMA_ONLY",
-##                                                        storage_type="NORMALIZED",
-##                                                        export_metadata="NO_METADATA")
-
             msg = f"\t> Importing XML schema for {tablename}"
             logFile(log_file, msg); del msg
 
@@ -14872,14 +13898,16 @@ def mpHandlerCreateTables(Sequential):
                 xml_file = os.path.join(SCHEMA_FOLDER, f"IDW_Data.xml")
             elif distributionprojectcode == "GLMME":
                 xml_file = os.path.join(SCHEMA_FOLDER, f"GLMME_Data.xml")
+            elif distributionprojectcode == "GFDL":
+                xml_file = os.path.join(SCHEMA_FOLDER, f"GFDL_Data.xml")
             else:
                 print("No table schema to import")
 
             #arcpy.management.ImportXMLWorkspaceDocument(target_geodatabase, in_file, {import_type}, {config_keyword})
-            arcpy.management.ImportXMLWorkspaceDocument(target_geodatabase=RegionGDB,
-                                                        in_file=xml_file,
-                                                        import_type="SCHEMA_ONLY",
-                                                        config_keyword="DEFAULTS",
+            arcpy.management.ImportXMLWorkspaceDocument(target_geodatabase = RegionGDB,
+                                                        in_file            = xml_file,
+                                                        import_type        = "SCHEMA_ONLY",
+                                                        config_keyword     = "DEFAULTS",
                                                        )
 
             #arcpy.management.Delete(xml_file)
@@ -14943,7 +13971,8 @@ def mpHandlerCreateTables(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -14968,6 +13997,7 @@ def mpHandlerCreateTables(Sequential):
 
             del RegionGDB, RegionScratchGDB
             del tablename, distributionprojectcode, dataset_product_code
+            del datasetcode
 
         # ##-->> Copy data from Scratch and Temporary GDB to Project GDB End
 
@@ -14980,7 +14010,8 @@ def mpHandlerCreateTables(Sequential):
             distributionprojectcode = datasets[i][12]
             del i
 
-            dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            #dataset_product_code = f"{datasetcode}_{distributionprojectcode}"
+            dataset_product_code = f"{datasetcode}" if distributionprojectcode in datasetcode else f"{datasetcode}_{distributionprojectcode}"
 
             RegionGDB = os.path.join(ScratchFolder, f"{dataset_product_code} {SoftwareEnvironmentLevel}.gdb")
 
@@ -15053,6 +14084,9 @@ def mpHandlerCreateTables(Sequential):
     # like normal code: if there is an exception, it will not be automatically
     # caught (and probably stop the program). This block is also optional.
     finally:
+
+        del multiprocessing
+
         # Get list of local keys that may need to be deleted.
         localKeys =  [key for key in locals().keys() if not any(key == k for k in ["function", "log_file"])]
 
@@ -16156,7 +15190,7 @@ def reorder_fields(table, out_table, field_order, add_missing=True):
                 add_mapping(field_name)
 
         # use merge with single input just to use new field_mappings
-        arcpy.Merge_management(table, out_table, new_mapping)
+        arcpy.management.Merge(table, out_table, new_mapping)
         return out_table
 
     except arcpy.ExecuteError:
@@ -16222,17 +15256,6 @@ def select_by_specie_no_years(table, unique_specie, log_file):
 # #
 def unique_field(table, field):
     with arcpy.da.SearchCursor(table, [field]) as cursor:
-        return sorted({row[0] for row in cursor})
-
-# #
-# Function: unique_fish
-#       Gets the unique fish species within a dataset
-# @param string table: The name of the layer that contains the fish information
-# @return array: a sorted array of unique fish species.
-# #
-def unique_fish(table):
-    arcpy.management.SelectLayerByAttribute( table, "CLEAR_SELECTION" )
-    with arcpy.da.SearchCursor(table, ["Species"]) as cursor:
         return sorted({row[0] for row in cursor})
 
 # #
@@ -16359,27 +15382,30 @@ if __name__ == '__main__':
         #DateCode = "20230501"
 
         # Software Environment Level
-        #SoftwareEnvironmentLevel = "Dev" # For use on Local laptop
+        SoftwareEnvironmentLevel = "Dev" # For use on Local laptop
         #SoftwareEnvironmentLevel = "Test" # For use on Local laptop and Windows Instance
-        SoftwareEnvironmentLevel = "Prod" # For use on Windows Instance
+        #SoftwareEnvironmentLevel = "Prod" # For use on Windows Instance
 
         # Set to True if we want to filter on certian one or more regions, else
         # False to process all regions
-        FilterDatasets = False # True False
+        FilterDatasets = True # True False
         # selected_datasets = 'AI_IDW','BSS_IDW','EBS_IDW','ENBS_IDW','NBS_IDW',
         #                    'GOA_IDW','GMEX_IDW','HI_IDW','NEUS_FAL_IDW',
         #                    'NEUS_SPR_IDW','SEUS_FAL_IDW','SEUS_SPR_IDW',
         #                    'SEUS_SUM_IDW','WC_ANN_IDW','WC_GLMME','WC_TRI_IDW',
         # Below are lists used to test different regions
-        #selected_datasets = ['WC_GLMME', ]
+        #selected_datasets = ['NEUS_SPR_IDW', 'WC_GLMME', 'WC_GFDL']
+        #selected_datasets = ['NEUS_SPR_IDW', 'WC_GLMME']
+        selected_datasets = ['NEUS_SPR_IDW']
+        #selected_datasets = ['WC_GFDL']
+        #selected_datasets = ['NBS_IDW']
 
         # Set to True if we want to filter on certian years, else False to
         # process all years
         #FilterYears = False
 
         # Set Gloabl cpu_num
-        cpu_num = multiprocessing.cpu_count() - 2
-        #cpu_num = multiprocessing.cpu_count()
+        cpu_num = os.cpu_count() - 2
 
         # The main() is for testing and project setup
         main()
@@ -16519,7 +15545,6 @@ if __name__ == '__main__':
 
     # ###--->>> Step #6
     # ###--->>> Import Sample Location CSV Tables Start
-        # ###--->>> Import Layer CSV Tables Start
 
         # Create Layer CSV Tables True or False
         CreateTables = False
@@ -16565,13 +15590,6 @@ if __name__ == '__main__':
     # ###--->>> Step #9
     # ###--->>> Create Biomass Rasters Start
 
-        FilterDatasets = False # True False
-        # selected_regions = 'AI_IDW','BSS_IDW','EBS_IDW','ENBS_IDW','NBS_IDW',
-        #                    'GOA_IDW','GMEX_IDW','HI_IDW','NEUS_FAL_IDW',
-        #                    'NEUS_SPR_IDW','SEUS_FAL_IDW','SEUS_SPR_IDW',
-        #                    'SEUS_SUM_IDW','WC_ANN_IDW','WC_GLMME','WC_TRI_IDW',
-        selected_datasets = ['WC_GLMME']
-
         # Generate Rasters True or False
         CreateRasters = False
         Sequential = False
@@ -16582,13 +15600,6 @@ if __name__ == '__main__':
 
     # ###--->>> Step #110
     # ###--->>> Indicators Table Start
-
-        FilterDatasets = False # True False
-        # selected_regions = 'AI_IDW','BSS_IDW','EBS_IDW','ENBS_IDW','NBS_IDW',
-        #                    'GOA_IDW','GMEX_IDW','HI_IDW','NEUS_FAL_IDW',
-        #                    'NEUS_SPR_IDW','SEUS_FAL_IDW','SEUS_SPR_IDW',
-        #                    'SEUS_SUM_IDW','WC_ANN_IDW','WC_GLMME','WC_TRI_IDW',
-        selected_datasets = ['WC_GLMME']
 
         # Populate Indicators Table True or False
         CreateIndicatorsTable = False
@@ -16617,24 +15628,15 @@ if __name__ == '__main__':
     # ###--->>> Step #12
     # ###--->>> Mosaics Start
 
-        FilterDatasets = False # True False
-        # selected_regions = 'AI_IDW','BSS_IDW','EBS_IDW','ENBS_IDW','NBS_IDW',
-        #                    'GOA_IDW','GMEX_IDW','HI_IDW','NEUS_FAL_IDW',
-        #                    'NEUS_SPR_IDW','SEUS_FAL_IDW','SEUS_SPR_IDW',
-        #                    'SEUS_SUM_IDW','WC_ANN_IDW','WC_GLMME','WC_TRI_IDW',
-        selected_datasets = ['WC_GLMME']
-
         # This function creates Mosaics that iterate over years
         # Create Species Richness Rasters = True or False
-        CreateMosaics = False
-        Sequential = False
+        CreateMosaics = True
+        Sequential = True
         if CreateMosaics:
             mpHandlerCreateMosaics(Sequential)
         del CreateMosaics, Sequential
         del mpHandlerCreateMosaics, mpCreateMosaics
-#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        # This function creates Mosaics that iterate by attributes
-#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
     # ###--->>> Mosaics End
 
     # ###--->>> Step #13
@@ -16773,13 +15775,10 @@ if __name__ == '__main__':
 
     # ###--->>> Table and Field Report End
 
-        # Clean-Up
-        del Version, DateCode
-
 # ###--->>>
 
         # Final benchmark
-        msg = f"ENDING {script_file} COMPLETED ON {strftime('%a %b %d %I:%M:%S %p', localtime())}"
+        msg = f"ENDING {script_file} (Version: {Version} Level: {SoftwareEnvironmentLevel}) COMPLETED ON {strftime('%a %b %d %I:%M:%S %p', localtime())}"
         logFile(log_file, msg); del msg
 
         # Elapsed time
@@ -16841,7 +15840,7 @@ if __name__ == '__main__':
         del time, datetime, math, numpy
         del os, inspect, function_name, function
         del localtime, strftime, gmtime
-        del multiprocessing, arcpy, sys, main
+        del arcpy, sys, main
 
         #del logging
 
@@ -16851,7 +15850,8 @@ if __name__ == '__main__':
         del unique_field, unique_species, unique_species_dict, unique_year
         del unique_years, unique_values, FilterSpecies
         del addFields, calculateCoreSpecies, importEPU, purgeGDB
-        del unique_fish, unique_fish_dict, LicenseError
+        #del unique_fish, unique_fish_dict, LicenseError
+        del unique_fish_dict, LicenseError
         del generateDatasets, createDatasetTable, createFolders
         del generateSpeciesFilter, generateMasterSpeciesInformation
         del createSpeciesFilterTable, generateSpeciesYearImageName
@@ -16859,6 +15859,7 @@ if __name__ == '__main__':
         del alterFields, init_processes, logFile, importMetadata
 
         # Remove declared globals
+        del Version, DateCode
         del BASE_FOLDER, IMAGE_FOLDER, CSV_DATA_FOLDER, DATASET_SHAPEFILE_FOLDER
         del CRF_FOLDER, LAYER_FOLDER, ProjectGIS, ProjectToolBox,
         del ProjectGDB, ProjectName, BathymetryGDB, ScratchGDB, ScratchFolder
@@ -16871,11 +15872,10 @@ if __name__ == '__main__':
         #del logger, formatter, ch, selected_years
         del SoftwareEnvironmentLevel, FilterDatasets, log_file_folder
         # del FilterYears
-        del cpu_num, SCHEMA_FOLDER #, timezones,
+        del cpu_num, SCHEMA_FOLDER, RFT_FOLDER #, timezones,
 
         # This is a list of local and global variables that are exclude from
         # lists of variables
-
 
         del log_file
 
