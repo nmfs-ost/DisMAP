@@ -1,1 +1,0 @@
-This is the Folder that the cleaned and process survey will go into at the end of running the Compile_Dismap.R script. 
