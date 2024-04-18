@@ -1,5 +1,7 @@
 # The Distribution Mapping and Analysis Portal (DisMAP) 
 
+# [The Distribution Mapping and Analysis Portal (DisMAP)](https://github.com/nmfs-fish-tools/DisMAP) <img src="https://www.google.com/url?sa=i&url=https%3A%2F%2Fapps-st.fisheries.noaa.gov%2Fdismap%2F&psig=AOvVaw3zIJ4BQICcgR2yTEvttKwd&ust=1713558777248000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCPDm_oPOzIUDFQAAAAAdAAAAABAE" alt="Logo." align="right" width="139" height="139"/>
+
 > This code is always in development. Find code used for various reports in the code [releases](https://github.com/nmfs-fish-tools/DisMAP/releases).
 
 The NOAA Fisheries Distribution Mapping and Analysis Portal (DisMAP) provides easy access to information to track and understand distributions of marine fish and macroinvertebrate species in the U.S. Marine Ecosystems. The portal currently provides access to distribution information for over 400 species collected in fishery-independent bottom trawl surveys conducted by NOAA Fisheries or its partners. The portal provides information on three key indicators used to track and explore shifts in species distributions:
