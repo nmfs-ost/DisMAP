@@ -1,31 +1,49 @@
-.Rproj.user
+# History files
 .Rhistory
+.Rapp.history
+.RDataTmp
+
+# Session Data files
 .RData
+
+# User-specific files
 .Ruserdata
 
-# ignore everything
-*
+# Example code in package build process
+*-Ex.R
 
-# but don't ignore files ending with slash = directories
-!*/
+# Output files from R CMD build
+/*.tar.gz
 
-# Except the following:
-!.gitignore
-!.gitattributes
-!README.md
-!Metadata.md
-!Metadata.doc
-!DisMAP Presentation June 21, 2022.docx
+# Output files from R CMD check
+/*.Rcheck/
 
-# and don't ignore files ending with ".php"
-# !*.py
+# RStudio files
+.Rproj.user/
 
-# R Code
-# !Data Processing - Rcode/*
+# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
+.httr-oauth
 
-# And except the following Python scripts
+# knitr and R markdown default cache directories
+*_cache/
+/cache/
 
-# Create DisMAP Datasets
-!ArcGIS Analysis - Python/Create DisMAP Biomass Datasets.py
-!ArcGIS Analysis - Python/Create DisMAP Datasets Latest.py
-!ArcGIS Analysis - Python/Create DisMAP Biomass Datasets 20230401.py
+# Temporary files created by R markdown
+*.utf8.md
+*.knit.md
+
+# R Environment Variables
+.Renviron
+
+#/data/
+#/output/
+#/img/old/
+#/notforgit/
+#/code/old/
+
+/code/.quarto/
+*.zip
+*.tex
+*.log
+*.markdown
+*.rmarkdown

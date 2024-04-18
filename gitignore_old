@@ -1,0 +1,31 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# ignore everything
+*
+
+# but don't ignore files ending with slash = directories
+!*/
+
+# Except the following:
+!.gitignore
+!.gitattributes
+!README.md
+!Metadata.md
+!Metadata.doc
+!DisMAP Presentation June 21, 2022.docx
+!data_processing_rcode/*
+# and don't ignore files ending with ".php"
+# !*.py
+
+# R Code
+# !Data Processing - Rcode/*
+
+# And except the following Python scripts
+
+# Create DisMAP Datasets
+!ArcGIS Analysis - Python/Create DisMAP Biomass Datasets.py
+!ArcGIS Analysis - Python/Create DisMAP Datasets Latest.py
+!ArcGIS Analysis - Python/Create DisMAP Biomass Datasets 20230401.py
