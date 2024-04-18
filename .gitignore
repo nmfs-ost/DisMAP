@@ -35,11 +35,10 @@
 # R Environment Variables
 .Renviron
 
-#/data/
-#/output/
-#/img/old/
-#/notforgit/
-#/code/old/
+/data_processing_rcode/data/
+/data_processing_rcode/output/
+/data_processing_rcode/notforgit/
+
 
 /code/.quarto/
 *.zip
