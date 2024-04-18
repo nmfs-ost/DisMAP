@@ -1,4 +1,4 @@
-# [The Distribution Mapping and Analysis Portal (DisMAP)](https://github.com/nmfs-fish-tools/DisMAP) <img src="https://www.google.com/url?sa=i&url=https%3A%2F%2Fapps-st.fisheries.noaa.gov%2Fdismap%2F&psig=AOvVaw3zIJ4BQICcgR2yTEvttKwd&ust=1713558777248000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCPDm_oPOzIUDFQAAAAAdAAAAABAE" alt="Logo." align="right" width="139" height="139"/>
+# [The Distribution Mapping and Analysis Portal (DisMAP)](https://github.com/nmfs-fish-tools/DisMAP) 
 
 > This code is always in development. Find code used for various reports in the code [releases](https://github.com/nmfs-fish-tools/DisMAP/releases).
 
