@@ -1,5 +1,4 @@
-## ---- DISMAP 04/18/2024 --- NOTE: need to double check SEUS and WCANN information (get different files depending on where on FRAM download the data from;
-# also look at FishGLOB code for some standard column names, and how they handled it... ) 
+## ---- DISMAP 04/18/2024 --- NOTE: need to double check SEUS and WCANN information (get different files depending on where on FRAM download the data from) 
 
 ## updated thru 2023 survey data for all regions except SEUS (which is thru 2022)
 ## added bottom temperature and SST to the files for all regions (note: West Coast raw data doesn't include these variables)
@@ -51,14 +50,12 @@ library(stringr)
 library(data.table) 
 
 
-# If running from R instead of RStudio, please set the working directory to the folder containing this script before running this script.
-# This script is designed to run within the following directory structure:
-# Directory 1 contains:
-# 1. compile_Dismap_Current.R script - this script
-# 2. data_raw directory - folder containing all raw data files
-# 3. data_clean directory - folder where the cleaned data will be saved to 
-# 4. 'plots' folder where to store the plots generated with HQ_DATA_ONLY == TRUE
-# 4. Additional R scripts used to download data, create data for mapping, and cleaning taxa 
+## The data_processing_rcode directory contains three folders (code, data, outputs)
+# 1. code - this folder contains all the Rscripts (including this Compile_Dismap_Current.R script) used to download and 
+    # process the data
+# 2. data directory - this is the folder containing all raw data files you downloaded using the Rscripts in the code folder
+# 3. output directory - folder where the cleaned data will be saved to. This folder includes subfolders for 
+      # data_clean, plots, the data generated for the python scripts by creat_data_for_map_generation.R, and by clean_taxa.R script
 
 # The zip file you downloaded created this directory structure for you.
 
@@ -73,14 +70,13 @@ HQ_DATA_ONLY <- TRUE
 
 # 2. View plots of removed strata for HQ_DATA. #OPTIONAL, DEFAULT:FALSE
 # It takes a while to generate these plots.
-HQ_PLOTS <- FALSE
+HQ_PLOTS <- TRUE
 
 # 3. Remove ai,ebs,gmex,goa,neus,seus,wcann,wctri, scot. Keep `dat`. #DEFAULT: FALSE 
 REMOVE_REGION_DATASETS <- FALSE
 
-# 4. Create graphs based on the data similar to those shown on the website and outputs them to pdf. #DEFAULT:FALSE
-PLOT_CHARTS <- FALSE
-# This used to be called OPTIONAL_PLOT_CHARTS, do I need to change it back?
+# # 4. Create graphs based on the data similar to those shown on the website and outputs them to pdf. #DEFAULT:FALSE
+# PLOT_CHARTS <- FALSE
 
 # 5. If you would like to write out the clean data, would you prefer it in Rdata or CSV form?  Note the CSV's are much larger than the Rdata files. #DEFAULT:TRUE, FALSE generates CSV's instead of Rdata.
 PREFER_RDATA <- TRUE
@@ -199,58 +195,39 @@ explode0 <- function(x, by=c("region")){
   # x <- copy(x)
   stopifnot(is.data.table(x))
   
-  # print(x[1]) #enable below line 204 to run a test of the function 
-  # x <- as.data.table(x)
-   # x <- as.data.table(trimmed_dat_fltr)[region=="Aleutian Islands"]
-  # setkey(x, sampleid, stratum, year, lat, lon, stratumarea, depth)
+  # print(x[1])
   
+  # x <- as.data.table(x)
+  # x <- as.data.table(trimmed_dat)[region=="Scotian Shelf Summer"]
+  # setkey(x, sampleid, stratum, year, lat, lon, stratumarea, depth)
   # group the data by these columns
-  setorder(x, haulid,  stratum, year, datetime, lat, lon, stratumarea, depth, sbt,
-           sst, vesselID, haul_dist, haul_dur, area_swept)
+  setorder(x, haulid, stratum, year, lat, lon, stratumarea, depth)
   
   # pull out all of the unique spp
   u.spp <- x[,as.character(unique(spp))]
   # pull out all of the unique common names
   u.cmmn <- x[,common[!duplicated(as.character(spp))]]
-  #pull out all of the unique kingdom through to genus names and worms_id
-  u.king<-x[,kingdom[!duplicated(as.character(spp))]]
-  u.phy<-x[,phylum[!duplicated(as.character(spp))]]
-  u.class<-x[,class[!duplicated(as.character(spp))]]
-  u.order<-x[,order[!duplicated(as.character(spp))]]
-  u.fam<-x[,family[!duplicated(as.character(spp))]]
-  u.gen<-x[,genus[!duplicated(as.character(spp))]]
-  u.worm<-x[,worms_id[!duplicated(as.character(spp))]]
   
   # pull out these location related columns and sort by haulid and year
-  x.loc <- x[,list(haulid, year, datetime, stratum, stratumarea, lat, lon, depth, 
-                   sbt, sst, vesselID, haul_dist, haul_dur, area_swept)]
+  x.loc <- x[,list(haulid, year, stratum, stratumarea, lat, lon, depth)]
   setkey(x.loc, haulid, year)
   
   # attatch all spp to all locations
-  x.skele <- x.loc[,list(spp=u.spp, common=u.cmmn, kingdom=u.king, phylum=u.phy, class=u.class,
-                         order=u.order, family=u.fam, genus=u.gen, worms_id=u.worm), by=eval(colnames(x.loc))]
+  x.skele <- x.loc[,list(spp=u.spp, common=u.cmmn), by=eval(colnames(x.loc))]
   setkey(x.skele, haulid, year, spp)
   x.skele <- unique(x.skele)
-  setcolorder(x.skele, c("haulid","year", "spp", "common", "stratum", "stratumarea","lat","lon","depth", "sbt",
-                         "sst", "vesselID", "haul_dist", "haul_dur", "area_swept", "kingdom", "phylum",
-                         "class", "order", "family", "genus", "worms_id"))
+  setcolorder(x.skele, c("haulid","year","spp", "common", "stratum", "stratumarea","lat","lon","depth"))
   
-   # pull in multiple observations of the same species 
-  x.spp.dat <- x[,list(haulid, year, spp, num, numcpue, wgt, wtcpue)]
+  # pull in multiple observations of the same species 
+  x.spp.dat <- x[,list(haulid, year, spp, wtcpue)]
   setkey(x.spp.dat, haulid, year, spp)
   x.spp.dat <- unique(x.spp.dat)
   
   out <- x.spp.dat[x.skele, allow.cartesian = TRUE]
   
   out$wtcpue[is.na(out$wtcpue)] <- 0
-  out$wgt[is.na(out$wgt)]<-0
-  out$num[is.na(out$num)]<-0
-  out$numcpue[is.na(out$numcpue)]<-0
- 
-  out$num<-ifelse(out$num == 0 & out$wgt>0, NA, out$num)
-  out$numcpue<-ifelse(out$numcpue == 0 & out$wgt>0, NA, out$numcpue)
   
-  out<-out[, c(1,2,27,9:19,3, 8, 4:7, 20:26)]
+  out
 }
 
 #convert factors to numeric
@@ -278,18 +255,18 @@ eventoodd <- function(x) {
 #### PULL IN AND EDIT RAW DATA FILES ####
 #--------------------------------------------------------------------------------------#
 
-#--------------------------------------------------------------------------------------#
 # Compile AI =====================================================
 print("Compile AI")
 
 # read in AI survey data file 
-ai_data <- read_csv(here::here("data_raw", "ai1991_2021.csv"))  %>% 
+ai_data <- read_csv(here::here("data", "ai1991_2021.csv")) %>%
+  select(Year, Cruise, Haul, `Vessel Id`, `Latitude Dd`, `Longitude Dd`, Stratum, `Cpue Kgha`,`Depth M`, `Scientific Name`, `Common Name`) %>% 
   # remove any extra white space from around spp and common names
   mutate(Stratum=as.integer(Stratum),
          `Common Name` = str_trim(`Common Name`), 
          `Scientific Name` = str_trim(`Scientific Name`)) 
 
-ai_strata <- read_csv(here::here("data_raw", "ai_strata.csv"), col_types = cols(NPFMCArea = col_character(),
+ai_strata <- read_csv(here::here("data", "ai_strata.csv"), col_types = cols(NPFMCArea = col_character(),
                                                                                 SubareaDescription = col_character(),
                                                                                 StratumCode = col_integer(),
                                                                                 DepthIntervalm = col_character(),
@@ -298,28 +275,18 @@ ai_strata <- read_csv(here::here("data_raw", "ai_strata.csv"), col_types = cols(
   select(StratumCode, Areakm2) %>% 
   rename(Stratum = StratumCode)
 
-
 ai <- left_join(ai_data, ai_strata, by = "Stratum") %>%
   # rename columns
   rename(year = Year, 
-         datetime = `Date Time`,
          lat = `Latitude Dd`, 
-         lon = `Longitude Dd`,
-         sbt=`Bottom Temperature C`,
-         sst=`Surface Temperature C`,
+         lon = `Longitude Dd`, 
          depth = `Depth M`, 
          spp = `Scientific Name`,
          common =`Common Name`,
          stratum = Stratum,
          stratumarea = Areakm2,
          vesselID = `Vessel Id`,
-         haul_dist = `Distance Fished Km`, #units Km
-         haul_dur = `Duration Hr`, #units in hours
-         area_swept = `Area Swept Ha`, #units in Ha
-         num = `Count`,
-         numcpue = `Cpue Noha`,
-         wgt = `Weight Kg`,
-         wtcpue = `Cpue Kgha`) #units = kg/hectare ( hectare = 0.01 km)
+         wtcpue = `Cpue Kgha`)
 # are there any strata in the data that are not in the strata file?
 stopifnot(nrow(filter(ai, is.na(stratumarea))) == 0)
 
@@ -354,28 +321,23 @@ ai <- ai %>%
     # catch S. variabilis and S. ciliatus (dusky + dark rockfish), combined into one complex
     spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp)
   ) %>% 
-  select(haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue) %>% 
+  select(haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>% 
   type_convert(col_types = cols(
     lat = col_double(),
     lon = col_double(),
     year = col_integer(),
     wtcpue = col_double(),
     spp = col_character(),
-    sbt = col_double(),
-    sst = col_double(), 
     depth = col_integer(),
     haulid = col_character()
   )) %>% 
-  group_by(haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp) %>% 
-  summarise(wtcpue = sumna(wtcpue),
-            numcpue=sumna(numcpue),
-            num = sumna(num),
-            wgt = sumna(wgt)) %>% 
+  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
+  summarise(wtcpue = sumna(wtcpue)) %>% 
   # Calculate a corrected longitude for Aleutians (all in western hemisphere coordinates)
   ungroup() %>% 
   mutate(lon = ifelse(lon > 0, lon - 360, lon), 
          region = "Aleutian Islands") %>% 
-  select(region, haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue)
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue)
 
 if (HQ_DATA_ONLY == TRUE){
   
@@ -423,17 +385,16 @@ if (HQ_DATA_ONLY == TRUE){
   
   if (HQ_PLOTS == TRUE){
     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-    ggsave(plot = temp, filename = here::here("plots", "ai_hq_dat_removed.png"))
+    ggsave(plot = temp, filename = here::here("output/plots", "ai_hq_dat_removed.png"))
     rm(temp)
   }
   rm(test, test2, p1, p2, p3, p4)
 }# clean up
-rm(ai_data, ai_strata)
+rm(ai_data, ai_strata, files, temp_fixed, temp_csv)
 
-#--------------------------------------------------------------------------------------#
 # Compile EBS ============================================================
 print("Compile EBS")
-files <- as.list(dir(pattern = "ebs", path = "data_raw", full.names = T))
+files <- as.list(dir(pattern = "ebs", path = "data", full.names = T))
 
 # exclude the strata file
 files <- files[-grep("strata", files)]
@@ -444,13 +405,14 @@ ebs_data <- files %>%
   map_dfr(read_csv) %>%
   # remove any data rows that have headers as data rows
   filter(!is.na(`Latitude Dd`)) %>% 
+  select(Year, Cruise, Haul, `Vessel Id`, `Latitude Dd`, `Longitude Dd`, Stratum, `Cpue Kgha`,`Depth M`, `Scientific Name`, `Common Name`) %>% 
   # remove any extra white space from around spp and common names
   mutate(Stratum=as.integer(Stratum),
          `Common Name` = str_trim(`Common Name`), 
          `Scientific Name` = str_trim(`Scientific Name`)) 
 
 # import the strata data
-ebs_strata <- read_csv(here::here("data_raw", "ebs_strata.csv"), col_types = cols(
+ebs_strata <- read_csv(here::here("data", "ebs_strata.csv"), col_types = cols(
   SubareaDescription = col_character(),
   StratumCode = col_integer(),
   Areakm2 = col_integer()
@@ -461,24 +423,15 @@ ebs_strata <- read_csv(here::here("data_raw", "ebs_strata.csv"), col_types = col
 ebs <- left_join(ebs_data, ebs_strata, by = "Stratum")%>%
   # rename columns
   rename(year = Year, 
-         datetime = `Date Time`,
          lat = `Latitude Dd`, 
-         lon = `Longitude Dd`,
-         sbt=`Bottom Temperature C`,
-         sst=`Surface Temperature C`,
+         lon = `Longitude Dd`, 
          depth = `Depth M`, 
          spp = `Scientific Name`,
          common =`Common Name`,
          stratum = Stratum,
          stratumarea = Areakm2,
          vesselID = `Vessel Id`,
-         haul_dist = `Distance Fished Km`, #units Km
-         haul_dur = `Duration Hr`, #units in hours
-         area_swept = `Area Swept Ha`, #units in Ha
-         num = `Count`,
-         numcpue = `Cpue Noha`,
-         wgt = `Weight Kg`,
-         wtcpue = `Cpue Kgha`) #units = kg/hectare ( hectare = 0.01 km)
+         wtcpue = `Cpue Kgha`)
 # are there any strata in the data that are not in the strata file?
 stopifnot(nrow(filter(ai, is.na(stratumarea))) == 0)
 
@@ -504,27 +457,21 @@ ebs <- ebs %>%
          spp = ifelse(grepl("Sebastes melanostictus", spp)|grepl("Sebastes aleutianus", spp), "Sebastes melanostictus and S. aleutianus", spp),
          spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp)) %>%
   # change from all character to fitting column types
-  select(haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue) %>% 
   type_convert(col_types = cols(
     lat = col_double(),
     lon = col_double(),
     year = col_integer(),
     wtcpue = col_double(),
     spp = col_character(),
-    sbt = col_double(),
-    sst = col_double(), 
     depth = col_integer(),
     haulid = col_character()
-  )) %>% 
-  group_by(haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp,) %>% 
-  summarise(wtcpue = sumna(wtcpue),
-            numcpue=sumna(numcpue),
-            num = sumna(num),
-            wgt = sumna(wgt)) %>% 
-  ungroup() %>% 
+  )) %>%  
+  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
+  summarise(wtcpue = sumna(wtcpue)) %>% 
+  # add region column
   mutate(region = "Eastern Bering Sea") %>% 
-  select(region, haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue)
-
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>% 
+  ungroup()
 
 if (HQ_DATA_ONLY == TRUE){
   # look at the graph and make sure decisions to keep or eliminate data make sense
@@ -568,7 +515,7 @@ if (HQ_DATA_ONLY == TRUE){
   
   if (HQ_PLOTS == TRUE){
     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-    ggsave(plot = temp, filename = here::here("plots", "ebs_hq_dat_removed.png"))
+    ggsave(plot = temp, filename = here::here("output/plots", "ebs_hq_dat_removed.png"))
     rm(temp)
   }
   rm(test, test2, p1, p2, p3, p4)
@@ -577,11 +524,10 @@ if (HQ_DATA_ONLY == TRUE){
 rm(files, ebs_data, ebs_strata)
 
 
-#--------------------------------------------------------------------------------------#
 # Compile GOA =============================================================
 print("Compile GOA")
 
-files <- as.list(dir(pattern = "goa", path = "data_raw", full.names = T))
+files <- as.list(dir(pattern = "goa", path = "data", full.names = T))
 
 # exclude the 2 strata files; the 1 and 2 elements
 files <- files[-grep("strata", files)]
@@ -591,14 +537,15 @@ goa_data <- files %>%
   # read in all of the csv's in the files list
   purrr::map_dfr(read_csv) %>%
   # remove any data rows that have headers as data rows
-  filter(!is.na(`Latitude Dd`)) %>%  
+  filter(!is.na(`Latitude Dd`)) %>% 
+  select(Year, Cruise, Haul, `Vessel Id`, `Latitude Dd`, `Longitude Dd`, Stratum, `Cpue Kgha`,`Depth M`, `Scientific Name`, `Common Name`) %>% 
   # remove any extra white space from around spp and common names
   mutate(Stratum=as.integer(Stratum),
          `Common Name` = str_trim(`Common Name`), 
          `Scientific Name` = str_trim(`Scientific Name`)) 
 
 #read in the goa strata data
-goa_strata <- read_csv(here::here("data_raw", "goa_strata.csv"), col_types = cols(
+goa_strata <- read_csv(here::here("data", "goa_strata.csv"), col_types = cols(
   SubareaDescription = col_character(),
   StratumCode = col_integer(),
   Areakm2 = col_integer()
@@ -609,24 +556,15 @@ goa_strata <- read_csv(here::here("data_raw", "goa_strata.csv"), col_types = col
 goa <- left_join(goa_data, goa_strata, by = "Stratum") %>%
   # rename columns
   rename(year = Year, 
-         datetime = `Date Time`,
          lat = `Latitude Dd`, 
-         lon = `Longitude Dd`,
-         sbt=`Bottom Temperature C`,
-         sst=`Surface Temperature C`,
+         lon = `Longitude Dd`, 
          depth = `Depth M`, 
          spp = `Scientific Name`,
          common =`Common Name`,
          stratum = Stratum,
          stratumarea = Areakm2,
          vesselID = `Vessel Id`,
-         haul_dist = `Distance Fished Km`, #units Km
-         haul_dur = `Duration Hr`, #units in hours
-         area_swept = `Area Swept Ha`, #units in Ha
-         num = `Count`,
-         numcpue = `Cpue Noha`,
-         wgt = `Weight Kg`,
-         wtcpue = `Cpue Kgha`) #units = kg/hectare ( hectare = 0.01 km)
+         wtcpue = `Cpue Kgha`)
 # are there any strata in the data that are not in the strata file?
 stopifnot(nrow(filter(ai, is.na(stratumarea))) == 0)
 
@@ -651,27 +589,20 @@ goa <- goa %>%
     spp = ifelse(grepl("Sebastes melanostictus", spp)|grepl("Sebastes aleutianus", spp), "Sebastes melanostictus and S. aleutianus", spp),
     spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp)) %>%
   # change from all character to fitting column types
-  select(haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue) %>% 
   type_convert(col_types = cols(
     lat = col_double(),
     lon = col_double(),
     year = col_integer(),
     wtcpue = col_double(),
     spp = col_character(),
-    sbt = col_double(),
-    sst = col_double(), 
     depth = col_integer(),
     haulid = col_character()
   )) %>% 
-  group_by(haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp,) %>% 
-  summarise(wtcpue = sumna(wtcpue),
-            numcpue=sumna(numcpue),
-            num = sumna(num),
-            wgt = sumna(wgt)) %>% 
-  ungroup() %>% 
+  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
+  summarise(wtcpue = sumna(wtcpue)) %>% 
   mutate(region = "Gulf of Alaska") %>% 
-  select(region, haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue)
-
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>% 
+  ungroup()
 
 if (HQ_DATA_ONLY == TRUE){
   # look at the graph and make sure decisions to keep or eliminate data make sense
@@ -722,7 +653,7 @@ if (HQ_DATA_ONLY == TRUE){
   
   if (HQ_PLOTS == TRUE){
     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-    ggsave(plot = temp, filename = here::here("plots", "goa_hq_dat_removed.png"))
+    ggsave(plot = temp, filename = here::here("output/plots", "goa_hq_dat_removed.png"))
     
     rm(temp)
   }
@@ -730,34 +661,25 @@ if (HQ_DATA_ONLY == TRUE){
 }
 rm(files, goa_data, goa_strata)
 
-#--------------------------------------------------------------------------------------#
 # Compile NBS =============================================================
 print("Compile NBS")
 #Note: there is no strata file for this survey. But the info in there is not used anyways
-nbs_data <- read_csv(here::here("data_raw", "nbs_survey.csv")) %>%
+nbs_data <- read_csv(here::here("data", "nbs_survey.csv")) %>%
+  select(Year, Cruise, Haul, `Vessel Id`, `Latitude Dd`, `Longitude Dd`, Stratum, `Cpue Kgha`,`Depth M`, `Scientific Name`, `Common Name`) %>% 
   # remove any extra white space from around spp and common names
   mutate(Stratum=as.integer(Stratum),
          `Common Name` = str_trim(`Common Name`), 
          `Scientific Name` = str_trim(`Scientific Name`)) %>%
   # rename columns
   rename(year = Year, 
-         datetime = `Date Time`,
          lat = `Latitude Dd`, 
-         lon = `Longitude Dd`,
-         sbt=`Bottom Temperature C`,
-         sst=`Surface Temperature C`,
+         lon = `Longitude Dd`, 
          depth = `Depth M`, 
          spp = `Scientific Name`,
          common =`Common Name`,
          stratum = Stratum,
          vesselID = `Vessel Id`,
-         haul_dist = `Distance Fished Km`, #units Km
-         haul_dur = `Duration Hr`, #units in hours
-         area_swept = `Area Swept Ha`, #units in Ha
-         num = `Count`,
-         numcpue = `Cpue Noha`,
-         wgt = `Weight Kg`,
-         wtcpue = `Cpue Kgha`) #units = kg/hectare ( hectare = 0.01 km)
+         wtcpue = `Cpue Kgha`)
 
 nbs <- nbs_data %>%
   mutate(
@@ -782,27 +704,21 @@ nbs <- nbs_data %>%
          spp = ifelse(grepl("Sebastes melanostictus", spp)|grepl("Sebastes aleutianus", spp), "Sebastes melanostictus and S. aleutianus", spp),
          spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp)) %>%
   # change from all character to fitting column types
-  select(haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue) %>% 
   type_convert(col_types = cols(
     lat = col_double(),
     lon = col_double(),
     year = col_integer(),
     wtcpue = col_double(),
     spp = col_character(),
-    sbt = col_double(),
-    sst = col_double(), 
     depth = col_integer(),
-    haulid = col_character()
-  )) %>% 
-  group_by(haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp,) %>% 
-  summarise(wtcpue = sumna(wtcpue),
-            numcpue=sumna(numcpue),
-            num = sumna(num),
-            wgt = sumna(wgt)) %>% 
-  ungroup() %>% 
+    haulid = col_character(),
+    startumarea=col_character()
+  ))  %>% 
+  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
+  summarise(wtcpue = sumna(wtcpue)) %>% 
   mutate(region = "Northern Bering Sea") %>% 
-  select(region, haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue)
-
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>% 
+  ungroup()
 
 if (HQ_DATA_ONLY == TRUE){
   # look at the graph and make sure decisions to keep or eliminate data make sense
@@ -846,7 +762,7 @@ if (HQ_DATA_ONLY == TRUE){
   
   if (HQ_PLOTS == TRUE){
     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-    ggsave(plot = temp, filename = here::here("plots", "nbs_hq_dat_removed.png"))
+    ggsave(plot = temp, filename = here::here("output/plots", "nbs_hq_dat_removed.png"))
     
     rm(temp)
   }
@@ -854,12 +770,11 @@ if (HQ_DATA_ONLY == TRUE){
 }
 rm(files, nbs_data, nbs_strata)
 
-#--------------------------------------------------------------------------------------#
 # # Compile BSSS ================================
 # #(Data will not update because the survey is no longer running since 2016)
 # print("Compile BSSS")
 # #Note: there is no strata file for this survey. But the info in there is not used anyways
-# bsss_data <- read_csv(here::here("data_raw", "EBSS_data.csv")) %>%
+# bsss_data <- read_csv(here::here("data", "EBSS_data.csv")) %>%
 #   select(Year, Cruise, Haul, `Vessel Id`, `Latitude Dd`, `Longitude Dd`, Stratum, `Cpue Kgha`,`Depth M`, `Scientific Name`, `Common Name`) %>% 
 #   # remove any extra white space from around spp and common names
 #   mutate(Stratum=as.integer(Stratum),
@@ -957,7 +872,7 @@ rm(files, nbs_data, nbs_strata)
 #   
 #   if (HQ_PLOTS == TRUE){
 #     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-#     ggsave(plot = temp, filename = here::here("plots", "bsss_hq_dat_removed.png"))
+#     ggsave(plot = temp, filename = here::here("output/plots", "bsss_hq_dat_removed.png"))
 #     
 #     rm(temp)
 #   }
@@ -966,11 +881,10 @@ rm(files, nbs_data, nbs_strata)
 # rm(files, bsss_data, bsss_strata)
 
 
-#--------------------------------------------------------------------------------------#
 # Compile WCTRI ===========================================================
 print("Compile WCTRI")
 
-wctri_catch <- read_csv(here::here("data_raw", "wctri_catch.csv"), col_types = cols(
+wctri_catch <- read_csv(here::here("data", "wctri_catch.csv"), col_types = cols(
   CRUISEJOIN = col_integer(),
   HAULJOIN = col_integer(),
   CATCHJOIN = col_integer(),
@@ -984,9 +898,10 @@ wctri_catch <- read_csv(here::here("data_raw", "wctri_catch.csv"), col_types = c
   SUBSAMPLE_CODE = col_character(),
   VOUCHER = col_character(),
   AUDITJOIN = col_integer()
-)) 
+)) %>% 
+  select(CRUISEJOIN, HAULJOIN, VESSEL, CRUISE, HAUL, SPECIES_CODE, WEIGHT)
 
-wctri_haul <- read_csv(here::here("data_raw", "wctri_haul.csv"), col_types = 
+wctri_haul <- read_csv(here::here("data", "wctri_haul.csv"), col_types = 
                          cols(
                            CRUISEJOIN = col_integer(),
                            HAULJOIN = col_integer(),
@@ -1018,9 +933,10 @@ wctri_haul <- read_csv(here::here("data_raw", "wctri_haul.csv"), col_types =
                            ACCESSORIES = col_integer(),
                            SUBSAMPLE = col_integer(),
                            AUDITJOIN = col_integer()
-                         )) 
+                         )) %>% 
+  select(CRUISEJOIN, HAULJOIN, VESSEL, CRUISE, HAUL, HAUL_TYPE, PERFORMANCE, START_TIME, DURATION, DISTANCE_FISHED, NET_WIDTH, STRATUM, START_LATITUDE, END_LATITUDE, START_LONGITUDE, END_LONGITUDE, STATIONID, BOTTOM_DEPTH)
 
-wctri_species <- read_csv(here::here("data_raw", "wctri_species.csv"), col_types = cols(
+wctri_species <- read_csv(here::here("data", "wctri_species.csv"), col_types = cols(
   SPECIES_CODE = col_integer(),
   SPECIES_NAME = col_character(),
   COMMON_NAME = col_character(),
@@ -1049,9 +965,7 @@ wctri <- wctri %>%
     # Add "strata" (define by lat, lon and depth bands) where needed # degree bins # 100 m bins # no need to use lon grids on west coast (so narrow)
     stratum = paste(floor(START_LATITUDE)+0.5, floor(BOTTOM_DEPTH/100)*100 + 50, sep= "-"), 
     # adjust for tow area # weight per hectare (10,000 m2)	
-    area_swept = 100*(DISTANCE_FISHED*(NET_WIDTH/1000)), #area swept in ha
-    numcpue = NUMBER_FISH/area_swept,
-    wtcpue = WEIGHT/area_swept
+    wtcpue = (WEIGHT*10000)/(DISTANCE_FISHED*1000*NET_WIDTH)
   )
 
 # Calculate stratum area where needed (use convex hull approach)
@@ -1069,17 +983,11 @@ wctri <- wctri %>%
 
 wctri <- wctri %>% 
   rename(
-    datetime=START_TIME,
+    svvessel = VESSEL,
     lat = START_LATITUDE, 
     lon = START_LONGITUDE,
-    sst = SURFACE_TEMPERATURE,
     depth = BOTTOM_DEPTH, 
-    spp = SPECIES_NAME,
-    vesselID = VESSEL,
-    haul_dist=DISTANCE_FISHED,
-    haul_dur=DURATION,
-    num=NUMBER_FISH,
-    wgt=WEIGHT
+    spp = SPECIES_NAME
   ) %>% 
   filter(
     spp != "" & 
@@ -1090,16 +998,12 @@ wctri <- wctri %>%
   # adjust spp names
   mutate(spp = ifelse(grepl("Lepidopsetta", spp), "Lepidopsetta sp.", spp),
          spp = ifelse(grepl("Bathyraja", spp), 'Bathyraja sp.', spp), 
-         spp = ifelse(grepl("Squalus", spp), 'Squalus suckleyi', spp),
-         sbt=NA) %>%
-  group_by(haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp) %>% 
-  summarise(wtcpue = sumna(wtcpue),
-            numcpue=sumna(numcpue),
-            num = sumna(num),
-            wgt = sumna(wgt)) %>% 
+         spp = ifelse(grepl("Squalus", spp), 'Squalus suckleyi', spp)) %>%
+  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
+  summarise(wtcpue = sumna(wtcpue)) %>% 
   # add region column
   mutate(region = "West Coast Triennial") %>% 
-  select(region, haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue) %>% 
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>% 
   ungroup()
 
 if (HQ_DATA_ONLY == TRUE){
@@ -1145,7 +1049,7 @@ if (HQ_DATA_ONLY == TRUE){
   
   if (HQ_PLOTS == TRUE){
     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-    ggsave(plot = temp, filename = here::here("plots", "wctri_hq_dat_removed.png"))
+    ggsave(plot = temp, filename = here::here("output/plots", "wctri_hq_dat_removed.png"))
     rm(temp)
   }
   rm(test, test2, p1, p2, p3, p4)
@@ -1153,10 +1057,9 @@ if (HQ_DATA_ONLY == TRUE){
 
 rm(wctri_catch, wctri_haul, wctri_species, wctri_strats)
 
-#--------------------------------------------------------------------------------------#
 # Compile WCANN ===========================================================
 print("Compile WCANN")
-wcann_catch <- read_csv(here::here("data_raw", "wcann_catch.csv"), col_types = cols(
+wcann_catch <- read_csv(here::here("data", "wcann_catch.csv"), col_types = cols(
   catch_id = col_integer(),
   common_name = col_character(),
   cpue_kg_per_ha_der = col_double(),
@@ -1185,9 +1088,10 @@ wcann_catch <- read_csv(here::here("data_raw", "wcann_catch.csv"), col_types = c
   vessel_id = col_integer(),
   year = col_integer(),
   year_stn_invalid = col_integer()
-)) 
+)) %>% 
+  select("trawl_id","year","longitude_dd","latitude_dd","depth_m","scientific_name","total_catch_wt_kg","cpue_kg_per_ha_der", "partition", "performance")
 
-wcann_haul <- read_csv(here::here("data_raw", "wcann_haul.csv"), col_types = cols(
+wcann_haul <- read_csv(here::here("data", "wcann_haul.csv"), col_types = cols(
   area_swept_ha_der = col_double(),
   date_yyyymmdd = col_integer(),
   depth_hi_prec_m = col_double(),
@@ -1212,25 +1116,23 @@ wcann_haul <- read_csv(here::here("data_raw", "wcann_haul.csv"), col_types = col
   vessel_id = col_integer(),
   year = col_integer(),
   year_stn_invalid = col_integer()
-))
+)) %>% 
+  select("trawl_id","year","longitude_hi_prec_dd","latitude_hi_prec_dd","depth_hi_prec_m","area_swept_ha_der", "performance")
+# It is ok to get warning message that missing column names filled in: 'X1' [1].
 
-
-wcann <- left_join(wcann_haul, wcann_catch, by = c(
-  "trawl_id", "year", "date_yyyymmdd", "station_code",
-  "performance","program","project","sampling_end_hhmmss",
-  "sampling_start_hhmmss","tow_end_timestamp","tow_start_timestamp",
-  "vessel","vessel_id","year_stn_invalid")) %>%
+wcann <- left_join(wcann_haul, wcann_catch, by = c("trawl_id", "year", "performance")) %>%
   filter(performance !='Unsatisfactory')
 
 wcann <- wcann %>% 
   mutate(
     # create haulid
     haulid = trawl_id,
+    # Add "strata" (define by lat, lon and depth bands) where needed # no need to use lon grids on west coast (so narrow)
+    #stratum = paste(floor(latitude_dd)+0.5, floor(depth_m/100)*100 + 50, sep= "-"), 
     # adjust for tow area # kg per hectare (10,000 m2)	
-    wtcpue = total_catch_wt_kg/area_swept_ha_der,
-    numcpue = total_catch_numbers/area_swept_ha_der
+    wtcpue = total_catch_wt_kg/area_swept_ha_der 
   )
-#add stratum based on lat and depth intervals
+
 wcann$stratum<-ifelse(wcann$latitude_dd <=35.5 & wcann$depth_m<=183, "35.5-183", 
                       ifelse(wcann$latitude_dd <= 35.5 & wcann$depth_m <= 549, "35.5-549",
                              ifelse(wcann$latitude_dd <= 35.5 & wcann$depth_m <= 1280, "35.5-1280",
@@ -1261,14 +1163,8 @@ wcann <- left_join(wcann, wcann_strats, by = "stratum")
 
 wcann <- wcann %>% 
   rename(lat = latitude_dd, 
-         lon = longitude_dd,
+         lon = longitude_dd, 
          depth = depth_m, 
-         num = total_catch_numbers,
-         wgt = total_catch_wt_kg,
-         haul_dur = sample_duration_hr_der,
-         area_swept = area_swept_ha_der,
-         vesselID = vessel_id,
-         datetime = date_yyyymmdd,
          spp = scientific_name) %>% 
   # remove non-fish
   filter(spp != "" &
@@ -1285,19 +1181,13 @@ wcann <- wcann %>%
   mutate(
     spp = ifelse(grepl("Lepidopsetta", spp), "Lepidopsetta sp.", spp),
     spp = ifelse(grepl("Bathyraja", spp), 'Bathyraja sp.', spp),
-    spp = ifelse(grepl("Poromitra", spp), 'Poromitra curilensis', spp),
-    sbt=NA,
-    sst=NA,
-    haul_dist=NA
+    spp = ifelse(grepl("Poromitra", spp), 'Poromitra curilensis', spp)
   ) %>%
-  group_by(haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp) %>% 
-  summarise(wtcpue = sumna(wtcpue),
-            numcpue=sumna(numcpue),
-            num = sumna(num),
-            wgt = sumna(wgt)) %>% 
+  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
+  summarise(wtcpue = sumna(wtcpue)) %>% 
   # add region column
   mutate(region = "West Coast Annual") %>% 
-  select(region, haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue) %>% 
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>% 
   ungroup()
 
 
@@ -1353,7 +1243,7 @@ if (HQ_DATA_ONLY == TRUE){
   
   if (HQ_PLOTS == TRUE){
     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-    ggsave(plot = temp, filename = here::here("plots", "wcann_hq_dat_removed.png"))
+    ggsave(plot = temp, filename = here::here("output/plots", "wcann_hq_dat_removed.png"))
     rm(temp)
   }
   rm(p1, p2)
@@ -1362,31 +1252,20 @@ if (HQ_DATA_ONLY == TRUE){
 # cleanup
 rm(wcann_catch, wcann_haul, wcann_strats)
 
-#--------------------------------------------------------------------------------------#
 # Compile GMEX ===========================================================
 print("Compile GMEX")
 
-gmex_station_raw <- read_lines(here::here("data_raw", "gmex_STAREC.csv"))
+gmex_station_raw <- read_lines(here::here("data", "gmex_STAREC.csv"))
 # remove oddly quoted characters
-# #gmex_station_clean <- str_replace_all(gmex_station_raw, "\\\\\\\"", "\\\"\\\"")
+#gmex_station_clean <- str_replace_all(gmex_station_raw, "\\\\\\\"", "\\\"\\\"")
 gmex_station_clean <- str_replace_all(gmex_station_raw, "\\\\\"", "")
-write_lines(gmex_station_clean, file = "gmex_station_raw.txt")
+#gmex_station_clean <- gsub('\"', "", gmex_station_clean)
 
-gmex_station <- read_csv(file = "gmex_station_raw.txt", 
-                         col_types = cols(.default = col_character())) %>% 
-  #output of new names...49 means The message is telling you that some of 
-  #the columns have no names and it's giving them one
-  select('STATIONID', 'CRUISEID', 'CRUISE_NO', 'P_STA_NO', 'TIME_ZN',
-         'TIME_MIL', 'S_LATD', 'S_LATM', 'S_LOND', 'S_LONM', 'E_LATD',
-         'E_LATM', 'E_LOND', 'E_LONM', 'STAT_ZONE', 'DEPTH_SSTA', 'MO_DAY_YR',
-         'VESSEL_SPD', 'COMSTAT','TEMP_SSURF','TEMP_BOT')
-
-#delete this file we temporarily made
-file.remove("gmex_station_raw.txt")
+gmex_station <- read_csv(gmex_station_clean, col_types = cols(.default = col_character())) %>% 
+  select('STATIONID', 'CRUISEID', 'CRUISE_NO', 'P_STA_NO', 'TIME_ZN', 'TIME_MIL', 'S_LATD', 'S_LATM', 'S_LOND', 'S_LONM', 'E_LATD', 'E_LATM', 'E_LOND', 'E_LONM', 'STAT_ZONE', 'DEPTH_SSTA', 'MO_DAY_YR', 'VESSEL_SPD', 'COMSTAT')
 
 problems <- problems(gmex_station) %>% 
   filter(!is.na(col))
-
 stopifnot(nrow(problems) == 0)
 
 gmex_station <- type_convert(gmex_station, col_types = cols(
@@ -1405,13 +1284,14 @@ gmex_station <- type_convert(gmex_station, col_types = cols(
   E_LOND = col_integer(),
   E_LONM = col_double(),
   DEPTH_SSTA = col_double(),
-  MO_DAY_YR = col_character(),
+  STAT_ZONE = col_double(),
+  MO_DAY_YR = col_date(format = ""),
   VESSEL_SPD = col_double(),
   COMSTAT = col_character()
 ))
 
 
-gmex_tow <-read_csv(here::here("data_raw", "gmex_INVREC.csv"), col_types = cols(
+gmex_tow <-read_csv(here::here("data", "gmex_INVREC.csv"), col_types = cols(
   INVRECID = col_integer(),
   STATIONID = col_integer(),
   CRUISEID = col_integer(),
@@ -1438,7 +1318,8 @@ gmex_tow <-read_csv(here::here("data_raw", "gmex_INVREC.csv"), col_types = cols(
   CRU_SEL_WT = col_double(),
   OTH_SMP_WT = col_double(),
   OTH_SEL_WT = col_double(),
-  COMBIO = col_character()
+  COMBIO = col_character(),
+  X28 = col_character()
 ))
 
 gmex_tow <- gmex_tow %>%
@@ -1447,10 +1328,10 @@ gmex_tow <- gmex_tow %>%
 
 problems <- problems(gmex_tow) %>% 
   filter(!is.na(col)) 
-#stopifnot(nrow(problems) == 2)
+stopifnot(nrow(problems) == 2)
 # 2 problems are that there are weird delimiters in the note column COMBIO, ignoring for now.
 
-gmex_spp <-read_csv(here::here("data_raw","gmex_NEWBIOCODESBIG.csv"), col_types = cols(
+gmex_spp <-read_csv(here::here("data","gmex_NEWBIOCODESBIG.csv"), col_types = cols(
   Key1 = col_integer(),
   TAXONOMIC = col_character(),
   CODE = col_integer(),
@@ -1466,8 +1347,7 @@ gmex_spp <-read_csv(here::here("data_raw","gmex_NEWBIOCODESBIG.csv"), col_types 
 problems <- problems(gmex_spp) %>% 
   filter(!is.na(col))
 stopifnot(nrow(problems) == 0)
-
-gmex_cruise <-read_csv(here::here("data_raw", "gmex_CRUISES.csv"), col_types = cols(.default = col_character())) %>% 
+gmex_cruise <-read_csv(here::here("data", "gmex_CRUISES.csv"), col_types = cols(.default = col_character())) %>% 
   select(CRUISEID, VESSEL, TITLE)
 
 # problems should be 0 obs
@@ -1476,9 +1356,8 @@ problems <- problems(gmex_cruise) %>%
 stopifnot(nrow(problems) == 0)
 gmex_cruise <- type_convert(gmex_cruise, col_types = cols(CRUISEID = col_integer(), VESSEL = col_integer(), TITLE = col_character()))
 
-gmex_bio <-read_csv(here::here("data_raw", "gmex_BGSREC.csv"), col_types = cols(.default = col_character())) %>% 
-  select('CRUISEID', 'STATIONID', 'VESSEL', 'CRUISE_NO', 'P_STA_NO',
-         'GENUS_BGS','CNT','CNTEXP', 'SPEC_BGS', 'BGSCODE', 'BIO_BGS', 'SELECT_BGS') %>%
+gmex_bio <-read_csv(here::here("data", "gmex_BGSREC.csv"), col_types = cols(.default = col_character())) %>% 
+  select('CRUISEID', 'STATIONID', 'VESSEL', 'CRUISE_NO', 'P_STA_NO', 'GENUS_BGS', 'SPEC_BGS', 'BGSCODE', 'BIO_BGS', 'SELECT_BGS') %>%
   # trim out young of year records (only useful for count data) and those with UNKNOWN species
   filter(BGSCODE != "T" | is.na(BGSCODE),
          GENUS_BGS != "UNKNOWN" | is.na(GENUS_BGS))  %>%
@@ -1590,54 +1469,42 @@ gmex <- gmex %>%
 
 gmex <- gmex %>% 
   rename(spp = TAXONOMIC,
-         depth = DEPTH_SSTA,
-         num=CNTEXP,
-         wgt=SELECT_BGS,
-         sbt = TEMP_BOT,
-         sst = TEMP_SSURF,
-         datetime=MO_DAY_YR,
-         vesselID=VESSEL) %>% 
+         depth = DEPTH_SSTA) %>% 
   # adjust for area towed
   mutate(
-    # kg per 10000m2. calc area trawled in ha: knots * 1.8 km/hr/knot * minutes * 1 hr/60 min * width of gear in feet * 0.0003048 km/ft # biomass per standard to
-    area_swept = (((VESSEL_SPD *1.852)*(MIN_FISH/60))*(GEAR_SIZE*0.0003048) * 100),
-    wtcpue= wgt/area_swept,
-    numcpue = num/area_swept,
-    haul_dist = (VESSEL_SPD *1.852)*(MIN_FISH/60),
-    haul_dur=MIN_FISH/60) %>% 
+    # kg per 10000m2. calc area trawled in m2: knots * 1.8 km/hr/knot * 1000 m/km * minutes * 1 hr/60 min * width of gear in feet * 0.3 m/ft # biomass per standard tow
+    wtcpue = 10000*SELECT_BGS/(VESSEL_SPD * 1.85200 * 1000 * MIN_FISH / 60 * GEAR_SIZE * 0.3048) 
+  ) %>% 
   # remove non-fish
   filter(
     spp != '' | !is.na(spp),
     # remove unidentified spp
     !spp %in% c('UNID CRUSTA', 'UNID OTHER', 'UNID.FISH', 'CRUSTACEA(INFRAORDER) BRACHYURA', 'MOLLUSCA AND UNID.OTHER #01', 'ALGAE', 'MISCELLANEOUS INVERTEBR', 'OTHER INVERTEBRATES')
-  ) %>%
+  ) %>% 
   # adjust spp names
   mutate(
-    spp = ifelse(GENUS_BGS == 'PELAGIA' & SPEC_BGS == 'NOCTUL', 'PELAGIA NOCTILUCA', spp),
-    BIO_BGS = ifelse(spp == "PELAGIA NOCTILUCA", 618030201, BIO_BGS),
-    spp = ifelse(GENUS_BGS == 'MURICAN' & SPEC_BGS == 'FULVEN', 'MURICANTHUS FULVESCENS', spp),
-    BIO_BGS = ifelse(spp == "MURICANTHUS FULVESCENS", 308011501, BIO_BGS),
-    spp = ifelse(grepl("APLYSIA", spp), "APLYSIA", spp),
-    spp = ifelse(grepl("AURELIA", spp), "AURELIA", spp),
-    spp = ifelse(grepl("BOTHUS", spp), "BOTHUS", spp),
-    spp = ifelse(grepl("CLYPEASTER", spp), "CLYPEASTER", spp),
-    spp = ifelse(grepl("CONUS", spp), "CONUS", spp),
-    spp = ifelse(grepl("CYNOSCION", spp), "CYNOSCION", spp),
+    spp = ifelse(GENUS_BGS == 'PELAGIA' & SPEC_BGS == 'NOCTUL', 'PELAGIA NOCTILUCA', spp), 
+    BIO_BGS = ifelse(spp == "PELAGIA NOCTILUCA", 618030201, BIO_BGS), 
+    spp = ifelse(GENUS_BGS == 'MURICAN' & SPEC_BGS == 'FULVEN', 'MURICANTHUS FULVESCENS', spp), 
+    BIO_BGS = ifelse(spp == "MURICANTHUS FULVESCENS", 308011501, BIO_BGS), 
+    spp = ifelse(grepl("APLYSIA", spp), "APLYSIA", spp), 
+    spp = ifelse(grepl("AURELIA", spp), "AURELIA", spp), 
+    spp = ifelse(grepl("BOTHUS", spp), "BOTHUS", spp), 
+    spp = ifelse(grepl("CLYPEASTER", spp), "CLYPEASTER", spp), 
+    spp = ifelse(grepl("CONUS", spp), "CONUS", spp), 
+    spp = ifelse(grepl("CYNOSCION", spp), "CYNOSCION", spp), 
     spp = ifelse(grepl("ECHINASTER", spp), "ECHINASTER", spp),
-    spp = ifelse(grepl("OPISTOGNATHUS", spp), "OPISTOGNATHUS", spp),
-    spp = ifelse(grepl("OPSANUS", spp), "OPSANUS", spp),
-    spp = ifelse(grepl("ROSSIA", spp), "ROSSIA", spp),
-    spp = ifelse(grepl("SOLENOCERA", spp), "SOLENOCERA", spp),
+    spp = ifelse(grepl("OPISTOGNATHUS", spp), "OPISTOGNATHUS", spp), 
+    spp = ifelse(grepl("OPSANUS", spp), "OPSANUS", spp), 
+    spp = ifelse(grepl("ROSSIA", spp), "ROSSIA", spp), 
+    spp = ifelse(grepl("SOLENOCERA", spp), "SOLENOCERA", spp), 
     spp = ifelse(grepl("TRACHYPENEUS", spp), "TRACHYPENEUS", spp)
-  ) %>%
-  group_by(haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp) %>%
-  summarise(wtcpue = sumna(wtcpue),
-            numcpue=sumna(numcpue),
-            num = sumna(num),
-            wgt = sumna(wgt)) %>%
+  ) %>% 
+  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
+  summarise(wtcpue = sumna(wtcpue)) %>% 
   # add region column
-  mutate(region = "Gulf of Mexico") %>%
-  select(region, haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue) %>%
+  mutate(region = "Gulf of Mexico") %>% 
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>% 
   ungroup()
 
 
@@ -1688,27 +1555,33 @@ if (HQ_DATA_ONLY == TRUE){
   
   if (HQ_PLOTS == TRUE){
     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-    ggsave(plot = temp, filename = here::here("plots", "gmex_hq_dat_removed.png"))
+    ggsave(plot = temp, filename = here::here("output/plots", "gmex_hq_dat_removed.png"))
     rm(temp)
   }
   rm(test, test2, p1, p2, p3, p4)
 }
 rm(gmex_bio, gmex_cruise, gmex_spp, gmex_station, gmex_tow, newspp, problems, gmex_station_raw, gmex_station_clean, gmex_strats, dups)
 
-#--------------------------------------------------------------------------------------#
 # Compile Northeast US ===========================================================
 print("Compile NEUS")
 ## 2023 update, NEFSC gave data set already with the conversions done 
 #read strata file
-neus_strata <- read_csv(here::here("data_raw", "neus_strata.csv"), col_types = cols(.default = col_character())) %>%
+neus_strata <- read_csv(here::here("data", "neus_strata.csv"), col_types = cols(.default = col_character())) %>%
   select(stratum, stratum_area) %>% 
   mutate(stratum = as.double(stratum)) %>%
   distinct()
 
 #read in catch file, which includes both spring and fall survey. Need to parse them out
-neus_catch <- read.csv("data_raw/NEFSC_BTS_ALLCATCHES.csv", header=T, sep=",")%>%
+neus_catch <- read.csv("data/NEFSC_BTS_ALLCATCHES.csv", header=T, sep=",")%>%
   filter(!is.na(SCINAME)) %>%
-  mutate(SVSPP = as.character(SVSPP)) %>%
+  mutate(SVSPP = as.character(SVSPP))
+neus_fall_catch<-neus_catch %>%
+  filter(SEASON=="FALL")
+neus_spring_catch<-neus_catch %>%
+  filter(SEASON=="SPRING")
+
+#NEUS fall
+neus_fall <- neus_fall_catch %>%
   rename(year = EST_YEAR,
          lat = DECDEG_BEGLAT, 
          lon = DECDEG_BEGLON, 
@@ -1716,41 +1589,21 @@ neus_catch <- read.csv("data_raw/NEFSC_BTS_ALLCATCHES.csv", header=T, sep=",")%>
          stratum = STRATUM,
          haulid = ID,
          spp = SCINAME,
-         wtcpue = CALIB_WT,
-         numcpue=CALIB_NUM,
-         vesselID=SVVESSEL)  %>%
+         wtcpue = CALIB_WT)  %>%
   mutate(
-    haulid= paste(CRUISE6,"0",stratum,"00",TOW, "0000")) %>%
+    haulid= paste(CRUISE6,"0",stratum,"00",TOW, "0000"),sep="") %>%
   mutate(stratum = as.double(stratum),
          lat = as.double(lat),
          lon = as.double(lon),
          depth = as.double(depth),
          haulid= as.character(haulid),
          wtcpue = as.double(wtcpue),
-         year = as.double(year)) %>%
-  mutate(sbt = NA,
-         sst= NA,
-         haul_dist=NA,
-         haul_dur=NA,
-         area_swept=NA,
-         num=NA,
-         wgt=NA,
-         datetime=NA)%>%
-  select(SEASON, haulid, year, datetime, lat, lon, stratum, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue)
+         year = as.double(year))
 
-neus_fall_catch<-neus_catch %>%
-  filter(SEASON=="FALL")
-neus_spring_catch<-neus_catch %>%
-  filter(SEASON=="SPRING")
-
-#NEUS fall
 # sum different sexes of same spp together
-neus_fall <- neus_fall_catch %>% 
-  group_by(haulid, year, datetime, lat, lon, stratum, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp)%>%
-  summarise(wtcpue = sumna(wtcpue),
-            numcpue=sumna(numcpue),
-            num = sumna(num),
-            wgt = sumna(wgt))
+neus_fall <- neus_fall %>% 
+  group_by(year, lat, lon, depth, haulid, STATION, stratum, spp) %>% 
+  summarise(wtcpue = sum(wtcpue))
 neus_fall <- ungroup(neus_fall)
 
 #join with strata
@@ -1762,7 +1615,7 @@ neus_fall <- neus_fall %>%
 neus_fall$region <- "Northeast US Fall"
 
 neus_fall<- neus_fall %>%
-  select(region, haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue) %>%
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>%
   # remove unidentified spp and non-species
   filter(
     !spp %in% c("TRASH SPECIES IN CATCH")) %>%
@@ -1829,19 +1682,34 @@ if (HQ_DATA_ONLY == TRUE){
   
   if (HQ_PLOTS == TRUE){
     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-    ggsave(plot = temp, filename = here::here("plots", "neusF_hq_dat_removed.png"))
+    ggsave(plot = temp, filename = here::here("output/plots", "neusF_hq_dat_removed.png"))
     rm(temp)
   }
   rm(test, test2, p1, p2, p3, p4)
 }
 
 #NEUS Spring
-neus_spring <- neus_spring_catch %>% group_by(haulid, year, datetime, lat, lon, stratum, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp)%>%
-  summarise(wtcpue = sumna(wtcpue),
-            numcpue=sumna(numcpue),
-            num = sumna(num),
-            wgt = sumna(wgt))
-neus_spring<- ungroup(neus_spring)
+neus_spring <- neus_spring_catch %>%
+  rename(year = EST_YEAR,
+         lat = DECDEG_BEGLAT, 
+         lon = DECDEG_BEGLON, 
+         depth = AVGDEPTH,
+         stratum = STRATUM,
+         haulid = ID,
+         spp = SCINAME,
+         wtcpue = EXPCATCHWT)  %>%  
+  mutate(haulid= paste(CRUISE6,"0",stratum,"00",TOW, "0000"),sep="") %>%
+  mutate(stratum = as.double(stratum),
+         lat = as.double(lat),
+         lon = as.double(lon),
+         depth = as.double(depth),
+         wtcpue = as.double(wtcpue))
+
+# sum different sexes of same spp together
+neus_spring <- neus_spring %>% 
+  group_by(year, lat, lon, depth, haulid, CRUISE6, STATION, stratum, spp) %>% 
+  summarise(wtcpue = sum(wtcpue)) 
+neus_spring <- ungroup(neus_spring)
 
 #join with strata
 neus_spring <- left_join(neus_spring, neus_strata, by = "stratum")
@@ -1856,7 +1724,7 @@ neus_spring <- neus_spring %>%
 neus_spring$region <- "Northeast US Spring"
 
 neus_spring <- neus_spring %>%
-  select(region, haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue) %>%
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>%
   # remove unidentified spp and non-species
   # remove non-fish
   filter(
@@ -1916,7 +1784,7 @@ if (HQ_DATA_ONLY == TRUE){
   
   if (HQ_PLOTS == TRUE){
     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-    ggsave(plot = temp, filename = here::here("plots", "neusS_hq_dat_removed.png"))
+    ggsave(plot = temp, filename = here::here("output/plots", "neusS_hq_dat_removed.png"))
     rm(temp)
   }
   rm(test, p1, p2, p3, p4)
@@ -1924,11 +1792,10 @@ if (HQ_DATA_ONLY == TRUE){
 
 rm(neus_strata)
 
-#--------------------------------------------------------------------------------------#
 # Compile SEUS ===========================================================
 print("Compile SEUS")
 # turns everything into a character so import as character anyway
-seus_catch <- read_csv(here::here("data_raw", "seus_catch.csv"), col_types = cols(.default = col_character())) %>% 
+seus_catch <- read_csv(unz(here::here("data", "seus_catch.csv.zip"), "seus_catch.csv"), col_types = cols(.default = col_character())) %>% 
   # remove symbols
   mutate_all(list(~str_replace(., "=", ""))) %>% 
   mutate_all(list(~str_replace(., '"', ''))) %>% 
@@ -1989,7 +1856,7 @@ seus_catch <- type_convert(seus_catch, col_types = cols(
   LASTUPDATED = col_character()
 ))
 
-seus_haul <- read_csv(here::here("data_raw", "seus_haul.csv"), col_types = cols(.default = col_character())) %>% 
+seus_haul <- read_csv(here::here("data", "seus_haul.csv"), col_types = cols(.default = col_character())) %>% 
   distinct(EVENTNAME, DEPTHSTART)  %>% 
   # remove symbols
   mutate_all(list(~str_replace(., "=", ""))) %>% 
@@ -2009,7 +1876,7 @@ seus_haul <- type_convert(seus_haul, col_types = cols(
 seus <- left_join(seus_catch, seus_haul, by = "EVENTNAME")
 
 # contains strata areas
-seus_strata <- read_csv(here::here("data_raw", "seus_strata.csv"), col_types = cols(
+seus_strata <- read_csv(here::here("data", "seus_strata.csv"), col_types = cols(
   STRATA = col_integer(),
   STRATAHECTARE = col_double()
 ))
@@ -2086,73 +1953,56 @@ start <- as.matrix(seus[,c("LONGITUDESTART", "LATITUDESTART")], nrow = nrow(seus
 end <- as.matrix(seus[,c("LONGITUDEEND", "LATITUDEEND")], nrow = nrow(seus), ncol = 2)
 # add distance to seus table
 seus <- seus %>%
-  mutate(distance_m = geosphere::distHaversine(p1 = start, p2 = end))
-seus<-seus %>%
-  mutate(
-    distance_km = distance_m / 1000.0, 
-    distance_mi = distance_m / 1609.344) %>% 
+  mutate(distance_m = geosphere::distHaversine(p1 = start, p2 = end),
+         distance_km = distance_m / 1000.0, 
+         distance_mi = distance_m / 1609.344) %>% 
   # calculate effort = mean area swept
   # EFFORT = 0 where the boat didn't move, distance_m = 0
-  mutate(EFFORT = (13.5 * distance_m)/10000, ## in hectares
+  mutate(EFFORT = (13.5 * distance_m)/10000, 
          # Create a unique haulid
          haulid = EVENTNAME, 
          # Extract year where needed
-         year = substr(EVENTNAME, 1,4),
-         DURATION=DURATION/60) %>% 
+         year = substr(EVENTNAME, 1,4)
+  ) %>% 
   rename(
     stratum = STRATA, 
-    datetime=DATE,
     lat = LATITUDESTART, 
     lon = LONGITUDESTART, 
-    sbt = TEMPBOTTOM,
-    sst = TEMPSURFACE,
     depth = DEPTHSTART, 
     spp = SPECIESSCIENTIFICNAME, 
-    stratumarea = STRATAHECTARE,
-    haul_dist=distance_km, 
-    haul_dur=DURATION,
-    area_swept=EFFORT,
-    vesselID=VESSELNAME)
+    stratumarea = STRATAHECTARE)
 
 seus$year <- as.integer(seus$year)
-seus$datetime<-as.character(seus$datetime)
-# seus<-seus %>% 
-#   select(SEASON, haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, 
-#                   haul_dur, area_swept, sbt, sst, depth, spp, NUMBERTOTAL, SPECIESTOTALWEIGHT)
 
 #In seus there are two 'COLLECTIONNUMBERS' per 'EVENTNAME', with no exceptions; EFFORT is always the same for each COLLECTIONNUMBER
 # We sum the two tows in seus
-seus <- seus %>% 
-  group_by(haulid, SEASON, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, 
-           haul_dur, area_swept, sbt, sst, depth, spp) %>% 
-  # adjust spp names (we want to sum over these genuses)
-  mutate(
-    spp = ifelse(grepl("ANCHOA", spp), "ANCHOA", spp), 
-    spp = ifelse(grepl("LIBINIA", spp), "LIBINIA", spp)) %>%
-  #now this accounts for both sides of the boat, and merging within specified genuses
-  summarise(wgt = sum(SPECIESTOTALWEIGHT),
-            num = sum(NUMBERTOTAL)) %>% 
-  mutate(wtcpue = wgt/(area_swept*2),
-         numcpue = num/(area_swept*2)) ##multiply by 2 because there are two tows, one on each side of the boat.  
+biomass <- seus %>% 
+  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, SEASON, spp, EFFORT) %>% 
+  summarise(biomass = sum(SPECIESTOTALWEIGHT)) %>% 
+  mutate(wtcpue = biomass/(EFFORT*2))
+
+seus <- left_join(seus, biomass, by = c("haulid", "stratum", "stratumarea", "year", "lat", "lon", "depth", "SEASON", "spp", "EFFORT"))
+# double check that column numbers haven't changed by more than 2.  
 
 seus <- seus %>% 
   # remove non-fish
   filter(
     !spp %in% c('MISCELLANEOUS INVERTEBRATES','XANTHIDAE','MICROPANOPE NUTTINGI','ALGAE','DYSPANOPEUS SAYI', 'PSEUDOMEDAEUS AGASSIZII')
   ) %>% 
+  # adjust spp names
+  mutate(
+    spp = ifelse(grepl("ANCHOA", spp), "ANCHOA", spp), 
+    spp = ifelse(grepl("LIBINIA", spp), "LIBINIA", spp)
+  )  %>% 
+  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp, SEASON) %>% 
+  summarise(wtcpue = sumna(wtcpue)) %>% 
   # add temporary region column that will be converted to seasonal
   mutate(region = "Southeast US") %>% 
-  select(region, SEASON, haulid, year, datetime, lat, lon, stratum, stratumarea, vesselID, haul_dist, 
-         haul_dur, area_swept, sbt, sst, depth, spp, num, numcpue, wgt, wtcpue) %>% 
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue, SEASON) %>% 
   ungroup()
 
 #remove infinite wtcpue values (where effort was 0, causes wtcpue to be inf)
 seus <- seus[!is.infinite(seus$wtcpue),]
-
-#check for duplicates
-count_seus <- seus %>%
-  group_by(haulid, spp) %>%
-  mutate(count = n())
 
 # now that lines have been removed from the main data set, can split out seasons
 # SEUS spring ====
@@ -2206,7 +2056,7 @@ if (HQ_DATA_ONLY == TRUE){
   
   if (HQ_PLOTS == TRUE){
     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-    ggsave(plot = temp, filename = here::here("plots", "seusSPR_hq_dat_removed.png"))
+    ggsave(plot = temp, filename = here::here("output/plots", "seusSPR_hq_dat_removed.png"))
     rm(temp)
   }
   rm(test, p1, p2, p3, p4)
@@ -2235,7 +2085,7 @@ if (HQ_DATA_ONLY == TRUE){
   
   if (HQ_PLOTS == TRUE){
     temp <- grid.arrange(p1, p2, nrow = 2)
-    ggsave(plot = temp, filename = here::here("plots", "seusSUM_hq_dat_removed.png"))
+    ggsave(plot = temp, filename = here::here("output/plots", "seusSUM_hq_dat_removed.png"))
     rm(temp)
   }
   rm(p1, p2)
@@ -2294,7 +2144,7 @@ if (HQ_DATA_ONLY == TRUE){
   
   if (HQ_PLOTS == TRUE){
     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-    ggsave(plot = temp, filename = here::here("plots", "seusFALL_hq_dat_removed.png"))
+    ggsave(plot = temp, filename = here::here("output/plots", "seusFALL_hq_dat_removed.png"))
     rm(temp)
   }
 }
@@ -2303,10 +2153,9 @@ rm(test, test2, p1, p2, p3, p4)
 
 rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, problems, change, seus)
 
-#--------------------------------------------------------------------------------------#
 # # COMPILE CANADIAN REGIONS ==================================================
 # # Compile Maritimes =========================================================
-# spp_files <- as.list(dir(pattern = "_SPP", path = "data_raw", full.names = T))
+# spp_files <- as.list(dir(pattern = "_SPP", path = "data", full.names = T))
 # mar_spp <- spp_files %>% 
 #   purrr::map_dfr(~ readr::read_csv(.x, col_types = cols(
 #     SPEC = col_character()
@@ -2317,7 +2166,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 #          SPEC = CODE) %>%
 #   distinct()
 # 
-# mission_files <- as.list(dir(pattern = "_MISSION", path = "data_raw", full.names = T))
+# mission_files <- as.list(dir(pattern = "_MISSION", path = "data", full.names = T))
 # mar_missions <- mission_files %>% 
 #   purrr::map_dfr(~ readr::read_csv(.x, col_types = cols(
 #     .default = col_double(),
@@ -2326,7 +2175,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 #     SEASON = col_character()
 #   )))
 # 
-# info_files <- as.list(dir(pattern = "_INF", path = "data_raw", full.names = T))
+# info_files <- as.list(dir(pattern = "_INF", path = "data", full.names = T))
 # mar_info <- info_files %>% 
 #   purrr::map_dfr(~ readr::read_csv(.x, col_types = cols(
 #     .default = col_double(),
@@ -2336,7 +2185,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 #     STRAT = col_character() 
 #   )))
 # 
-# catch_files <- as.list(dir(pattern = "_CATCH", path = "data_raw", full.names = T))
+# catch_files <- as.list(dir(pattern = "_CATCH", path = "data", full.names = T))
 # mar_catch <- catch_files %>% 
 #   purrr::map_dfr(~ readr::read_csv(.x, col_types = cols(
 #     .default = col_double(),
@@ -2562,7 +2411,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 #   
 #   if (HQ_PLOTS == TRUE){
 #     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-#     ggsave(plot = temp, filename = here::here("plots", "mar_hq_dat_removed.png"))
+#     ggsave(plot = temp, filename = here::here("output/plots", "mar_hq_dat_removed.png"))
 #   }
 # }
 # 
@@ -2572,10 +2421,10 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 # 
 # #Queen Charlotte Sound
 # 
-# files <- as.list(dir(pattern = "QCS", path = "data_raw", full.names = T))
+# files <- as.list(dir(pattern = "QCS", path = "data", full.names = T))
 # 
 # 
-# QCS_catch <- read_csv(here::here("data_raw", "QCS_catch.csv"), col_types = cols(
+# QCS_catch <- read_csv(here::here("data", "QCS_catch.csv"), col_types = cols(
 #   Survey.Year = col_integer(),
 #   Trip.identifier = col_integer(),
 #   Set.number = col_integer(),
@@ -2590,7 +2439,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 # )) %>% 
 #   select(Trip.identifier, Set.number,Survey.Year, ITIS.TSN, Species.code, Scientific.name, English.common.name, Catch.weight..kg.)
 # 
-# QCS_effort <- read_csv(here::here("data_raw", "QCS_effort.csv"), col_types = 
+# QCS_effort <- read_csv(here::here("data", "QCS_effort.csv"), col_types = 
 #                          cols(
 #                            Survey.Year = col_integer(),
 #                            Trip.identifier = col_integer(),
@@ -2694,7 +2543,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 # 
 # #West Coast Vancouver Island
 # 
-# WCV_catch <- read_csv(here::here("data_raw", "WCV_catch.csv"), col_types = cols(
+# WCV_catch <- read_csv(here::here("data", "WCV_catch.csv"), col_types = cols(
 #   Survey.Year = col_integer(),
 #   Trip.identifier = col_integer(),
 #   Set.number = col_integer(),
@@ -2709,7 +2558,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 # )) %>% 
 #   select(Trip.identifier, Set.number,Survey.Year, ITIS.TSN, Species.code, Scientific.name, English.common.name, Catch.weight..kg.)
 # 
-# WCV_effort <- read_csv(here::here("data_raw", "WCV_effort.csv"), col_types = 
+# WCV_effort <- read_csv(here::here("data", "WCV_effort.csv"), col_types = 
 #                          cols(
 #                            Survey.Year = col_integer(),
 #                            Trip.identifier = col_integer(),
@@ -2813,7 +2662,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 # 
 # #West Coast Haida Guai
 # 
-# WCHG_catch <- read_csv(here::here("data_raw", "WCHG_catch.csv"), col_types = cols(
+# WCHG_catch <- read_csv(here::here("data", "WCHG_catch.csv"), col_types = cols(
 #   Survey.Year = col_integer(),
 #   Trip.identifier = col_integer(),
 #   Set.number = col_integer(),
@@ -2828,7 +2677,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 # )) %>% 
 #   select(Trip.identifier, Set.number,Survey.Year, ITIS.TSN, Species.code, Scientific.name, English.common.name, Catch.weight..kg.)
 # 
-# WCHG_effort <- read_csv(here::here("data_raw", "WCHG_effort.csv"), col_types = 
+# WCHG_effort <- read_csv(here::here("data", "WCHG_effort.csv"), col_types = 
 #                           cols(
 #                             Survey.Year = col_integer(),
 #                             Trip.identifier = col_integer(),
@@ -2927,7 +2776,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 # 
 # #Hecate Strait
 # 
-# HS_catch <- read_csv(here::here("data_raw", "HS_catch.csv"), col_types = cols(
+# HS_catch <- read_csv(here::here("data", "HS_catch.csv"), col_types = cols(
 #   Survey.Year = col_integer(),
 #   Trip.identifier = col_integer(),
 #   Set.number = col_integer(),
@@ -2942,7 +2791,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 # )) %>% 
 #   select(Trip.identifier, Set.number,Survey.Year, ITIS.TSN, Species.code, Scientific.name, English.common.name, Catch.weight..kg.)
 # 
-# HS_effort <- read_csv(here::here("data_raw", "HS_effort.csv"), col_types = 
+# HS_effort <- read_csv(here::here("data", "HS_effort.csv"), col_types = 
 #                         cols(
 #                           Survey.Year = col_integer(),
 #                           Trip.identifier = col_integer(),
@@ -3040,7 +2889,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 # 
 # #Strait of Georgia
 # 
-# SOG_catch <- read_csv(here::here("data_raw", "SOG_catch.csv"), col_types = cols(
+# SOG_catch <- read_csv(here::here("data", "SOG_catch.csv"), col_types = cols(
 #   Survey.Year = col_integer(),
 #   Trip.identifier = col_integer(),
 #   Set.number = col_integer(),
@@ -3055,7 +2904,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 # )) %>% 
 #   select(Trip.identifier, Set.number,Survey.Year, ITIS.TSN, Species.code, Scientific.name, English.common.name, Catch.weight..kg.)
 # 
-# SOG_effort <- read_csv(here::here("data_raw", "SOG_effort.csv"), col_types = 
+# SOG_effort <- read_csv(here::here("data", "SOG_effort.csv"), col_types = 
 #                          cols(
 #                            Survey.Year = col_integer(),
 #                            Trip.identifier = col_integer(),
@@ -3266,7 +3115,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 #   
 #   if (HQ_PLOTS == TRUE){
 #     temp <- grid.arrange(p1, p2,p3,p4, nrow = 2)
-#     ggsave(plot = temp, filename = here::here("plots", "cpac_hq_dat_removed.png"))
+#     ggsave(plot = temp, filename = here::here("output/plots", "cpac_hq_dat_removed.png"))
 #   }
 # }
 # 
@@ -3280,7 +3129,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 # 
 # #GSL South
 # 
-# GSLsouth <- read_csv(here::here("data_raw", "GSLsouth.csv"))
+# GSLsouth <- read_csv(here::here("data", "GSLsouth.csv"))
 # 
 # GSLsouth$haulid <- paste(GSLsouth$year,GSLsouth$month,GSLsouth$day,GSLsouth$start.hour,GSLsouth$start.minute, sep="-")
 # 
@@ -3452,7 +3301,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 #   
 #   if (HQ_PLOTS == TRUE){
 #     temp <- grid.arrange(p1, p2,p3,p4, nrow = 2)
-#     ggsave(plot = temp, filename = here::here("plots", "GSLsouth_hq_dat_removed.png"))
+#     ggsave(plot = temp, filename = here::here("output/plots", "GSLsouth_hq_dat_removed.png"))
 #   }
 # }
 # 
@@ -3464,23 +3313,23 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 # 
 # #GSL North Sentinel
 # 
-# GSLnor_sent <- read.csv(here::here("data_raw", "GSLnorth_sentinel.csv"))
+# GSLnor_sent <- read.csv(here::here("data", "GSLnorth_sentinel.csv"))
 # 
 # #GSL North Gadus
 # 
-# GSLnor_gad <- read.csv(here::here("data_raw", "GSLnorth_gadus.csv"))
+# GSLnor_gad <- read.csv(here::here("data", "GSLnorth_gadus.csv"))
 # 
 # #GSL North Hammond
 # 
-# GSLnor_ham <- read.csv(here::here("data_raw", "GSLnorth_hammond.csv"))
+# GSLnor_ham <- read.csv(here::here("data", "GSLnorth_hammond.csv"))
 # 
 # #GSL North Needler
 # 
-# GSLnor_need <- read.csv(here::here("data_raw", "GSLnorth_needler.csv"))
+# GSLnor_need <- read.csv(here::here("data", "GSLnorth_needler.csv"))
 # 
 # #GSL North Teleost
 # 
-# GSLnor_tel <- read.csv(here::here("data_raw", "GSLnorth_teleost.csv"))
+# GSLnor_tel <- read.csv(here::here("data", "GSLnorth_teleost.csv"))
 # 
 # #Bind all datasets
 # 
@@ -3629,7 +3478,7 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 #   
 #   if (HQ_PLOTS == TRUE){
 #     temp <- grid.arrange(p1, p2,p3,p4, nrow = 2)
-#     ggsave(plot = temp, filename = here::here("plots", "GSLnorth_hq_dat_removed.png"))
+#     ggsave(plot = temp, filename = here::here("output/plots", "GSLnorth_hq_dat_removed.png"))
 #   }
 # }
 # 
@@ -3638,99 +3487,96 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 
 
 
+# Compile TAX ===============================================================
+print("Compile TAX")
 
-#--------------------------------------------------------------------------------------#
-#### MERGE DATA FILES AND CHECK SPECIES TAXONOMY ####
-#--------------------------------------------------------------------------------------#
-#MERGE DATASETS 
-# Create Master (unfilterd) Data Set ===========================================================
+tax <- read_csv(here::here("spptaxonomy_final.csv"), col_types = cols(
+  survey_name = col_character(),
+  valid_name = col_character(),
+  common = col_character(),
+  rank = col_character(),
+  family = col_character(),
+  order = col_character(),
+  class = col_character(),
+  citation = col_character(),
+  valid_authority = col_character(),
+  valid_AuthID = col_character(),
+  url = col_character(),
+  src_database= col_character())) 
+
+
+tax<- tax  %>% 
+  # remove any extra white space from around spp and common names
+  mutate(survey_name= str_squish(survey_name),
+         valid_name= str_squish(valid_name), 
+         common = str_squish(common)) %>%
+  select(c(survey_name, valid_name, common, rank, class)) %>%
+  distinct()
+
+
+if(isTRUE(WRITE_MASTER_DAT)){
+  save(ai, ebs, gmex, goa, neus_fall, neus_spring, seusFALL, seusSPRING, seusSUMMER, tax, wcann, wctri, file = here("output/data_clean", "individual-regions.rds"))
+}
+if(isTRUE(WRITE_MASTER_DAT)){
+  save(ai_fltr, ebs_fltr, gmex_fltr, goa_fltr, neus_fall_fltr, neus_spring_fltr, seusFALL_fltr, seusSPRING_fltr, seusSUMMER_fltr, tax, wcann_fltr, wctri_fltr, file = here("output/data_clean", "individual-regions-fltr.rds"))
+}
+
+
+# Master Data Set ===========================================================
 print("Join into Master Data Set")
+
+#Full unfiltered data set
 dat <- rbind(ai, ebs, gmex, goa, nbs, neus_fall, neus_spring, seusFALL, seusSPRING, seusSUMMER, wcann, wctri) %>% 
   # Remove NA values in wtcpue
   filter(!is.na(wtcpue)) %>%
-  # remove any extra white space from around spp names
-  mutate(spp = str_squish(spp),
-         spp = str_remove_all(spp," spp\\.| sp\\.| spp|"),
-         spp = str_to_sentence(str_to_lower(spp)))
+  # remove any extra white space from around spp and common names
+  mutate(spp= str_squish(spp))
 
-# Master "Filtered" dataset
-print("Join Master Filtered Data Set")
-dat_fltr <- rbind(ai_fltr, ebs_fltr, nbs_fltr, gmex_fltr, goa_fltr, neus_fall_fltr, neus_spring_fltr, seusFALL_fltr, seusSPRING_fltr, seusSUMMER_fltr, wcann_fltr, wctri_fltr) %>% 
-  # Remove NA values in wtcpue
-  filter(!is.na(wtcpue)) %>%
-  # remove any extra white space from around spp names
-  mutate(spp = str_squish(spp),
-         spp = str_remove_all(spp," spp\\.| sp\\.| spp|"),
-         spp = str_to_sentence(str_to_lower(spp)))
+#convert all taxa names to first word capitalzied and rest lowercase...
+dat$spp<-firstup(dat$spp)
 
-#START SPECIES CHECK----------------------------------------------------
-#Load in Clean Species Taxon data
-tax<-read.csv("tax_clean_9_29_23.csv", sep=",", header=T) %>%
-      mutate(survey_name= str_squish(survey_name),
-             accepted_name= str_squish(accepted_name),
-             common = str_squish(common))
-#
+#========================== start SPECIES CHECK =============
+#Species Taxon checkpoint before proceeding!!
 # Check if any new species are in survey data sets before proceeding....take the 'dat' file that combines the individual regions but before joined with 'spp_taxonomy' file
 dat_spp <- dat %>% 
   select(spp) %>% 
   distinct() %>% 
   mutate(spp_id = 1:nrow(.))
 
-# Anti-join this spp list to the survey_name column from the tax file to see which spp are not represented there
-not_in_tax <- anti_join(dat_spp, tax, by = c("spp" = "survey_name")) 
-if(nrow(not_in_tax)!=0){
-  warning('Potential new names: Check list')
-}
+# Anti-join this spp list to the taxon column from the spptaxonomy file to see which spp are not represented there
+not_in_tax <- anti_join(dat, tax, by = c("spp" = "survey_name")) %>% select("region", "spp") %>% distinct()
+not_in_tax<- not_in_tax %>% group_by(spp) %>% 
+  summarise_all(funs(toString(unique(na.omit(.)))))
+# write.csv(not_in_tax, "not_in_tax_1_23_22.csv")
 
-#Conduct auto-cleaning of taxa names and compare to previous cleaned file. 
-    print("Clean & Compile TAX")
-    source("clean_taxa.R")
-    
-    # Get WoRM's id for sourcing
-    wrm <- gnr_datasources() %>% 
-      filter(title == "World Register of Marine Species") %>% 
-      pull(id)
-    
-    # Set Survey code
-    All_srvy_code <- "All-svry"
-    
-    clean_auto <- clean_taxa(unique(dat$spp),
-                             input_survey = All_srvy_code,
-                             save = T, output="add", fishbase=T)
-    Flags<-anti_join(clean_auto, full_tax, by=c("taxa")) #28 entries that don't match. But that is ok. If more than 28 nonmatches in future then check-spp list
-    if(nrow(Flags)!=28){
-      warning('Potential new names: Check Flags list')
-    }
-#END SPECIES CHECK ---------------------------------------------------
-    
-#--------------------------------------------------------------------------------------#
-#### INTEGRATE CLEAN TAXA into SURVEY data ####
-#--------------------------------------------------------------------------------------#
-#Full unfiltered dataset
+#========================== end species name check ===========
+
+# add a case sensitive spp and common name
 dat <- left_join(dat, tax, by = c("spp" = "survey_name")) %>% 
-  rename(survey_name=spp) %>%
-      filter(grepl("Species", rank),
-             !grepl("Caretta caretta", accepted_name),
-             !grepl("Sagmatias obliquidens", accepted_name),
-             !grepl("Puffinus gravis", accepted_name),
-             !grepl("Phaeophyceae", class),
-             !grepl("Florideophyceae", class),
-             !grepl("Ulvophyceae", class)) %>%
-      distinct()
-dat<-dat %>%
-  rename(spp=accepted_name)
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, valid_name, common, rank, wtcpue) %>%
+  distinct() 
 
 #check for errors in name matching
-if(sum(dat$spp == 'NA') > 0 | sum(is.na(dat$spp)) > 0){
+if(sum(dat$valid_name == 'NA') > 0 | sum(is.na(dat$valid_name)) > 0){
   warning('>>create_master_table(): Did not match on some taxon [Variable: `tax`] names.')
 }
 
 # #if get warning, check for which spp have NA for name and common if check above fails
 spp_na<-dat %>%
-  filter(is.na(dat$accepted_name) & is.na(dat$common)) %>%
-  select(c("region", "survey_name", "accepted_name", "common")) %>% 
+  filter(is.na(dat$valid_name) & is.na(dat$common)) %>%
+  select(c("region", "spp", "valid_name", "common")) %>% 
   distinct()
 
+# spp_na_list<-unique(c(as.character(spp_na$spp)))
+# spp_na<-as.data.frame(spp_na)
+# sppNA_unique<-unique(spp_na[c("spp")])
+# write.csv(sppNA_unique, "sppNA_unique.csv")
+
+# #get list of higher order taxon names by region/survey and use to generate the list of higher order names to exclude later on 
+#   dat_HO_list<-dat %>% 
+#     filter(grepl("HigherOrder", rank)) %>%
+#     select(c("region", "valid_name", "rank")) %>%
+#     distinct()
 
 if(isTRUE(REMOVE_REGION_DATASETS)) {
   rm(ai, ebs, gmex, goa, neus_fall, neus_spring, seusFALL, seusSPRING, seusSUMMER, wcann, wctri, tax)
@@ -3738,25 +3584,34 @@ if(isTRUE(REMOVE_REGION_DATASETS)) {
 
 if(isTRUE(WRITE_MASTER_DAT)){
   if(isTRUE(PREFER_RDATA)){
-    saveRDS(dat, file = here("data_clean", "all-regions-full.rds"))
+    saveRDS(dat, file = here("output/data_clean", "all-regions-full.rds"))
   }else{
-    write_csv(dat, file =here("data_clean", "all-regions-full.csv"))
+    write_csv(dat, file =here("output/data_clean", "all-regions-full.csv"))
   }
 }
 
 
-# "Filtered" dataset
+# Master "Filtered" dataset
+dat_fltr <- rbind(ai_fltr, ebs_fltr, nbs_fltr, gmex_fltr, goa_fltr, neus_fall_fltr, neus_spring_fltr, seusFALL_fltr, seusSPRING_fltr, seusSUMMER_fltr, wcann_fltr, wctri_fltr) %>% 
+  # Remove NA values in wtcpue
+  filter(!is.na(wtcpue)) %>%
+  # remove any extra white space from around spp and common names
+  mutate(spp= str_squish(spp))
+#convert all taxa names to first word capitalzied and rest lowercase...
+dat_fltr$spp<-firstup(dat_fltr$spp)
+# add a case sensitive spp and common name and filter out Higher Level taxon names, the turtle, bird, and dolphin species, and plants/seaweed species. 
 dat_fltr <- left_join(dat_fltr, tax, by = c("spp" = "survey_name")) %>% 
-  rename(survey_name=spp,
-         spp=accepted_name) %>%
-  filter(grepl("Species", rank),
-         !grepl("Caretta caretta", spp),
-         !grepl("Sagmatias obliquidens", spp),
-         !grepl("Puffinus gravis", spp),
+  filter(!grepl("HigherOrder", rank),
+         !grepl("remove", rank),
+         !grepl("Caretta caretta", valid_name),
+         !grepl("Sagmatias obliquidens", valid_name),
+         !grepl("Puffinus gravis", valid_name),
          !grepl("Phaeophyceae", class),
          !grepl("Florideophyceae", class),
          !grepl("Ulvophyceae", class)) %>%
-  distinct()
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, valid_name, common, wtcpue) %>%
+  distinct() %>% 
+  rename(spp = valid_name) 
 
 #check for errors in name matching
 if(sum(dat_fltr$spp == 'NA') > 0 | sum(is.na(dat_fltr$spp)) > 0){
@@ -3773,19 +3628,19 @@ if(isTRUE(REMOVE_REGION_DATASETS)) {
 
 if(isTRUE(WRITE_MASTER_DAT)){
   if(isTRUE(PREFER_RDATA)){
-    saveRDS(dat_fltr, file = here("data_clean", "all-regions-full-fltr_3_17_23.rds"))
+    saveRDS(dat_fltr, file = here("output/data_clean", "all-regions-full-fltr_3_17_23.rds"))
   }else{
-    write_csv(dat_fltr,file=here("data_clean", "all-regions-full-fltr_3_17_23.csv"))
+    write_csv(dat_fltr,file=here("output/data_clean", "all-regions-full-fltr_3_17_23.csv"))
   }
 }
 
-#--------------------------------------------------------------------------------------#
-#### TRIM SPECIES IN FILTERED DATASET TO PERSISTENT SPECIES ####
-#--------------------------------------------------------------------------------------#
+
+# Trim species ===========================================================
 print("Trim species")
 
 ## FILTERED DATA
 # Find a standard set of species (present at least 3/4 of the years of the filtered data in a region)
+# this result differs from the original code because it does not include any species that have a pres value of 0.  It does, however, include speices for which the common name is NA.
 presyr <- present_every_year(dat_fltr, region, spp, common, year) 
 
 haulsyr<-num_hauls_year(dat_fltr, region, year)
@@ -3809,9 +3664,42 @@ spplist <- presyrsum %>%
   select(region, spp, common)
 
 spp_addin<-read.csv("Add_managed_spp.csv",header=T, sep=",")
-spplist<-rbind(spplist, spp_addin) 
+spplist<-rbind(spplist, spp_addin)
+# #remove flagged spp (load in Exclude species files )
+# setwd("~/transfer/DisMAP project/DisMAP_processing_code/spp_QAQC/exclude_spp")
+# ai_ex<-read.csv("ai_excludespp.csv")
+# goa_ex<-read.csv("goa_excludespp.csv")
+# ebs_ex<-read.csv("ebs_excludespp.csv")
+# wctri_ex<-read.csv("wctri_excludespp.csv")
+# wcann_ex<-read.csv("wcann_excludespp.csv")
+# gmex_ex<-read.csv("gmex_excludespp.csv")
+# SEUSs_ex<-read.csv("seusSPRING_excludespp.csv")
+# SEUSf_ex<-read.csv("seusFALL_excludespp.csv")
+# SUESsu_ex<-read.csv("seusSUMMER_excludespp.csv")
+# NEUSs_ex<-read.csv("neusS_excludespp.csv")
+# NEUSf_ex<-read.csv("neusF_excludespp.csv")
+# addsppex<-read.csv("sppList_add_exclude_12_21_22.csv")
+# names(gmex_ex) <- names(ai_ex) 
+# 
+# excludespp_list<-rbind(ai_ex, goa_ex, ebs_ex, wctri_ex, wcann_ex, 
+#                        SEUSs_ex, SEUSf_ex,SUESsu_ex, NEUSs_ex, NEUSf_ex, gmex_ex, addsppex) %>%
+#                 mutate(test.spp = str_trim(test.spp)) %>%
+#                 select(test.spp, region, exclude) %>%
+#                 distinct()
+# 
+# names(excludespp_list)[1] <- "spp"
+# spplist_exclude <- left_join(spplist, excludespp_list, by=c('region','spp'))
+# spplist_exclude$exclude <- ifelse(is.na(spplist_exclude$exclude),FALSE,spplist_exclude$exclude)
+# 
+# spplist_final <- filter(spplist_exclude, exclude == FALSE)
+#   ##what species were removed in the end
+#   spplist_remove<-filter(spplist_exclude, exclude == TRUE)
+#   #write.csv(spplist_removed, "sppList_REMOVED_11_22_22.csv")
+# 
+# spplist_final<-spplist_final[c(1,2,3)]
+# #write.csv(spplist_final, "sppList_Final_12_5_22.csv")
 
-# Trim dat_fltr to these species (for a given region, spp pair in spplist, in dat_fltr, keep only rows that match that region, spp pairing)
+# Trim dat to these species (for a given region, spp pair in spplist_final, in dat, keep only rows that match that region, spp pairing)
 trimmed_dat_fltr <- dat_fltr %>% 
   filter(paste(region, spp) %in% paste(spplist$region, spplist$spp))
 
@@ -3844,9 +3732,11 @@ trimmed_dat_fltr_sppUnique<-trimmed_dat_fltr %>%
   distinct()
 write.csv(trimmed_dat_fltr_sppUnique, "trimmed_Unique_species_list.csv")
 
+names(trimmed_dat_fltr)[2]<-"sampleid"
+
 if(isTRUE(WRITE_TRIMMED_DAT)){
   if(isTRUE(PREFER_RDATA)){
-    saveRDS(trimmed_dat_fltr, file = here("data_clean", "all-regions-trimmed-fltr.rds"))
+    saveRDS(trimmed_dat_fltr, file = here("output/data_clean", "all-regions-trimmed-fltr.rds"))
   }else{
     write_csv(trimmed_dat_fltr, "data_clean/all-regions-trimmed-fltr.csv")
   }
@@ -3863,9 +3753,9 @@ if (DAT_EXPLODED == TRUE){
   
   if(isTRUE(WRITE_DAT_EXPLODED)){
     if(isTRUE(PREFER_RDATA)){
-      lapply(dat_expl_spl, function(x) saveRDS(x, here::here("data_clean", paste0('dat_exploded_obis', x$region[1], '.rds')))) 
+      lapply(dat_expl_spl, function(x) saveRDS(x, here::here("output/data_clean", paste0('dat_exploded', x$region[1], '.rds')))) 
     }else{
-      lapply(dat_expl_spl, function(x) write_csv(x, gzfile(here::here("data_clean", paste0('dat_exploded_obis', x$region[1], '.csv.gz')))))
+      lapply(dat_expl_spl, function(x) write_csv(x, gzfile(here::here("output/data_clean", paste0('dat_exploded', x$region[1], '.csv.gz')))))
     }
   }
   
@@ -3875,11 +3765,8 @@ Sys.time()
 #clean up
 rm(dat_expl_spl)
 
-
-
-------------------------------------------------------------------------------------------------------------------------------------------
 ###################### CAN STOP HERE ##########################################
-CORE Species -- caught every year of survey =======
+## CORE Species -- caught every year of survey =======
 
 print("Core species")
 
