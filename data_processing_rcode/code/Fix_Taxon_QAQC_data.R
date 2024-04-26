@@ -2,9 +2,6 @@
 print("Clean & Compile TAX")
 source("clean_taxa.R")
 
-#load in existing full cleaned Taxa list 
-full_tax<-read.csv("taxa_analysis/Taxa_clean_to_Compare.csv", sep=",", header=T)
-
 # Get WoRM's id for sourcing
 wrm <- gnr_datasources() %>% 
   filter(title == "World Register of Marine Species") %>% 
@@ -24,10 +21,20 @@ dat<- dat %>%
     taxa2 = str_remove_all(taxa2," spp\\.| sp\\.| spp|"),
     taxa2 = str_to_sentence(str_to_lower(taxa2)))
 
+## check taxon names against WORMS
+#first need to split the dataset into smaller data frames to work with ... 
+ParentAccount <- dat_spp %>% select(-spp_id)
+# split you data in a list of 10 dataframes, each has 465 rows
+ParentAccount.ls <- split(ParentAccount, rep(1:10, each = 465)) 
+# save the files
+lapply(names(ParentAccount.ls),
+       function(x) {write.csv(ParentAccount.ls[[x]],
+                              file = paste("speciesList_split_", x, ".csv", sep = ""))})
+
 # Set Survey code
 All_srvy_code <- "All-svry"
 
-clean_auto <- clean_taxa(unique(dat$taxa2),
+clean_auto <- clean_taxa(unique(dat$spp),
                          input_survey = All_srvy_code,
                          save = T, output="add", fishbase=T)
 

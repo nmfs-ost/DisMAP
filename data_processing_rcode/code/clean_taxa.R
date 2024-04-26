@@ -1,3 +1,7 @@
+### NOTE: this script is not working as intended. For some species it doesnt recognzie the species name 
+#change in WORMS and matches it to the Genus level instead (e.g., Henricia aleutica should match to 
+#Henricia longispina aleutica but instead matches to the Henricia Genus)
+
 # ------------------------------------------ #
 # Function: clean taxa
 # Author: Juliano Palacios Abrantes | j.palacios@oceans.ubc
@@ -46,8 +50,8 @@
 # Example
 # ------------#
 
-# # Test for misspelled species
-# taxa <- c("Gadus morhua","plop", "Thunus alalonga","Octopus vulgaris")
+# # # Test for misspelled species
+# taxa <- c("Henricia aleutica","plop","THUNUS ALALONGA", "Octopus vulgaris")
 # # Call function
 # clean_taxa(taxon_list = taxa, input_survey = "Test", save = T, output = "over")
 
@@ -59,10 +63,6 @@
 # ------------#
 # Function
 # ------------#
-
-# clean_taxa(taxon_list)
-
-# taxon_list <- "Hemitripterus americanus"
 
 clean_taxa <- function(taxon_list, input_survey = "NA", save = F, output = NA, fishbase=TRUE){
   
@@ -299,8 +299,8 @@ clean_taxa <- function(taxon_list, input_survey = "NA", save = F, output = NA, f
   ##---------------##
   
   if(save == TRUE){
-    write.csv(output_df, "taxa_analysis/clean_taxon.csv")
-    write.csv(missing_data, "taxa_analysis/missing_taxon.csv")
+    write.csv(output_df, "output/taxa_qaqc/clean_taxon.csv")
+    write.csv(missing_data, "output/taxa_qaqc/missing_taxon.csv")
   }
   
 

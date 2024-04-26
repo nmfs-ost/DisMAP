@@ -66,7 +66,7 @@ library(data.table)
 # Answer the following questions using all caps TRUE or FALSE to direct the actions of the script =====================================
 
 # 1. Some strata and years have very little data, should they be removed and saved as fltr data? #DEFAULT: TRUE. 
-HQ_DATA_ONLY <- TRUE
+HQ_DATA_ONLY <- FALSE
 
 # 2. View plots of removed strata for HQ_DATA. #OPTIONAL, DEFAULT:FALSE
 # It takes a while to generate these plots.
@@ -255,89 +255,96 @@ eventoodd <- function(x) {
 #### PULL IN AND EDIT RAW DATA FILES ####
 #--------------------------------------------------------------------------------------#
 
-# Compile AI =====================================================
-print("Compile AI")
+# Compile AFSC Bottom Trawl Data =====================================================
+print("Compile Alaska")
 
-# read in AI survey data file 
-ai_data <- read_csv(here::here("data", "ai1991_2021.csv")) %>%
-  select(Year, Cruise, Haul, `Vessel Id`, `Latitude Dd`, `Longitude Dd`, Stratum, `Cpue Kgha`,`Depth M`, `Scientific Name`, `Common Name`) %>% 
-  # remove any extra white space from around spp and common names
-  mutate(Stratum=as.integer(Stratum),
-         `Common Name` = str_trim(`Common Name`), 
-         `Scientific Name` = str_trim(`Scientific Name`)) 
+# Load data --------------------------------------------------------------------
 
-ai_strata <- read_csv(here::here("data", "ai_strata.csv"), col_types = cols(NPFMCArea = col_character(),
-                                                                                SubareaDescription = col_character(),
-                                                                                StratumCode = col_integer(),
-                                                                                DepthIntervalm = col_character(),
-                                                                                Areakm2 = col_integer()
-))  %>% 
-  select(StratumCode, Areakm2) %>% 
-  rename(Stratum = StratumCode)
+catch <- readr::read_csv(file = here::here("data/gap_products_foss_catch.csv"))[,-1] # remove "row number" column
+haul <- readr::read_csv(file = here::here("data/gap_products_foss_haul.csv"))[,-1] # remove "row number" column
+species <- readr::read_csv(file = here::here("data/gap_products_foss_species.csv"))[,-1] # remove "row number" column
 
-ai <- left_join(ai_data, ai_strata, by = "Stratum") %>%
-  # rename columns
-  rename(year = Year, 
-         lat = `Latitude Dd`, 
-         lon = `Longitude Dd`, 
-         depth = `Depth M`, 
-         spp = `Scientific Name`,
-         common =`Common Name`,
-         stratum = Stratum,
-         stratumarea = Areakm2,
-         vesselID = `Vessel Id`,
-         wtcpue = `Cpue Kgha`)
-# are there any strata in the data that are not in the strata file?
-stopifnot(nrow(filter(ai, is.na(stratumarea))) == 0)
+# Wrangle data -----------------------------------------------------------------
+ak_full <- 
+  # join haul and catch data to unique species by survey table
+  dplyr::left_join(haul, catch, by="HAULJOIN") %>% 
+  # join species data to unique species by survey table
+  dplyr::left_join(species, by="SPECIES_CODE") %>% 
+  # modify zero-filled rows
+  dplyr::mutate(
+    CPUE_KGKM2 = ifelse(is.na(CPUE_KGKM2), 0, CPUE_KGKM2), # just in case
+    CPUE_KGHA = CPUE_KGKM2/100, # Hectares
+    CPUE_NOKM2 = ifelse(is.na(CPUE_NOKM2), 0, CPUE_NOKM2), # just in case
+    CPUE_NOHA = CPUE_NOKM2/100, # Hectares
+    COUNT = ifelse(is.na(COUNT), 0, COUNT),
+    WEIGHT_KG = ifelse(is.na(WEIGHT_KG), 0, WEIGHT_KG), # just in case
+    region = dplyr::case_when( 
+      SURVEY_DEFINITION_ID == 78 ~ "Bering Sea Slope Survey", 
+      SURVEY_DEFINITION_ID == 47 ~ "Gulf of Alaska", 
+      SURVEY_DEFINITION_ID == 52 ~ "Aleutian Islands", 
+      SURVEY_DEFINITION_ID == 98 ~ "Eastern Bering Sea", 
+      SURVEY_DEFINITION_ID == 143 ~ "Northern Bering Sea"
+    )) 
 
-# the following chunk of code reformats and fixes this region's data
-ai <- ai %>% 
-  mutate(
-    # add species names for two rockfish complexes
-    spp = ifelse(grepl("Rougheye and Blackspotted Rockfish Unid.", common), "Sebastes melanostictus and S. aleutianus", spp),
-    spp = ifelse(grepl("Dusky and Dark Rockfishes Unid.", common), "Sebastes variabilis and S. ciliatus", spp), 
-    # Create a unique haulid
-    haulid = paste(formatC(vesselID, width=3, flag=0), Cruise, formatC(Haul, width=3, flag=0), sep='-'), 
-    # change -9999 wtcpue to NA
-    wtcpue = ifelse(wtcpue == "-9999", NA, wtcpue)) %>% 
-  # remove rows that are eggs
-  filter(spp != "" &
-           # remove all spp that contain the word "egg"
-           !grepl("egg", spp),
-         !grepl("Polychaete tubes", spp)) %>% 
-  # adjust spp names
-  mutate(
-    # catch A. stomias and A. evermanii (as of 2018 both spp appear as "valid" so not sure why they are being changed)
-    spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp), 
-    # catch L. polystryxa (valid in 2018), and L. bilineata (valid in 2018)
-    spp = ifelse(grepl("Lepidopsetta", spp), "Lepidopsetta sp.", spp),
-    # catch M. jaok (valid in 2018), M. niger (valid in 2018), M. polyacanthocephalus (valid in 2018), M. quadricornis (valid in 2018), M. verrucosus (changed to scorpius), M. scorpioides (valid in 2018), M. scorpius (valid in 2018) (M. scorpius is in the data set but not on the list so it is excluded from the change)
-    #spp = ifelse(grepl("Myoxocephalus", spp ) & !grepl("scorpius", spp), "Myoxocephalus sp.", spp),
-    # catch B. maculata (valid in 2018), abyssicola (valid in 2018), aleutica (valid in 2018), interrupta (valid in 2018), lindbergi (valid in 2018), mariposa (valid in 2018), minispinosa (valid in 2018), parmifera (valid in 2018), smirnovi (valid in 2018), cf parmifera (Orretal), spinosissima (valid in 2018), taranetzi (valid in 2018), trachura (valid in 2018), violacea (valid in 2018)
-    # B. panthera is not on the list of spp to change
-    spp = ifelse(grepl("Bathyraja", spp), 'Bathyraja sp.', spp),
-    # catch S. melanostictus and S. aleutianus (blackspotted & rougheye), combined into one complex
-    spp = ifelse(grepl("Sebastes melanostictus", spp)|grepl("Sebastes aleutianus", spp), "Sebastes melanostictus and S. aleutianus", spp),
-    # catch S. variabilis and S. ciliatus (dusky + dark rockfish), combined into one complex
-    spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp)
-  ) %>% 
-  select(haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>% 
-  type_convert(col_types = cols(
-    lat = col_double(),
-    lon = col_double(),
-    year = col_integer(),
-    wtcpue = col_double(),
-    spp = col_character(),
-    depth = col_integer(),
-    haulid = col_character()
-  )) %>% 
-  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
-  summarise(wtcpue = sumna(wtcpue)) %>% 
-  # Calculate a corrected longitude for Aleutians (all in western hemisphere coordinates)
-  ungroup() %>% 
-  mutate(lon = ifelse(lon > 0, lon - 360, lon), 
-         region = "Aleutian Islands") %>% 
-  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue)
+ak_full<- ak_full %>%
+    dplyr::rename(year = YEAR, 
+                  haulid = HAULJOIN,
+                  lat = LATITUDE_DD_START, 
+                  lon = LONGITUDE_DD_START, 
+                  stratum = STRATUM, 
+                  depth = DEPTH_M, 
+                  spp = SCIENTIFIC_NAME, 
+                  common = COMMON_NAME, 
+                  wtcpue = CPUE_KGHA) %>% 
+     dplyr::mutate(
+        stratumarea = NA, # removed above because the new data tables dont provide this
+        # Calculate a corrected longitude for Aleutians (all in western hemisphere coordinates)
+        lon = ifelse(lon > 0, lon - 360, lon), 
+        # adjust spp names
+        # add species names for two rockfish complexes
+        spp = ifelse(grepl("rougheye and blackspotted rockfish unid.", common), "Sebastes melanostictus and S. aleutianus", spp),
+        spp = ifelse(grepl("dusky and dark rockfishes unid.", common), "Sebastes variabilis and S. ciliatus", spp), 
+        # catch A. stomias and A. evermanii (grouped together due to idenfication issues early on in dataset)
+        spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp),
+        # catch L. polystryxa (valid in 2018), and L. bilineata (valid in 2018)
+        spp = ifelse(grepl("Lepidopsetta", spp), "Lepidopsetta sp.", spp),
+        # group together because of identification issues: catch M. jaok (valid in 2018), M. niger (valid in 2018), M. polyacanthocephalus (valid in 2018), M. quadricornis (valid in 2018), M. verrucosus (changed to scorpius), M. scorpioides (valid in 2018), M. scorpius (valid in 2018) (M. scorpius is in the data set but not on the list so it is excluded from the change)
+        spp = ifelse(grepl("Myoxocephalus", spp ) & !grepl("scorpius", spp), "Myoxocephalus sp.", spp),
+        # catch B. maculata (valid in 2018), abyssicola (valid in 2018), aleutica (valid in 2018), interrupta (valid in 2018), lindbergi (valid in 2018), mariposa (valid in 2018), minispinosa (valid in 2018), parmifera (valid in 2018), smirnovi (valid in 2018), cf parmifera (Orretal), spinosissima (valid in 2018), taranetzi (valid in 2018), trachura (valid in 2018), violacea (valid in 2018)
+        # B. panthera is not on the list of spp to change
+        spp = ifelse(grepl("Bathyraja", spp), 'Bathyraja sp.', spp),
+        # catch S. melanostictus and S. aleutianus (blackspotted & rougheye), combined into one complex
+        spp = ifelse(grepl("Sebastes melanostictus", spp)|grepl("Sebastes aleutianus", spp), "Sebastes melanostictus and S. aleutianus", spp),
+        # catch S. variabilis and S. ciliatus (dusky + dark rockfish), combined into one complex
+        spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp), 
+        spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp)
+      ) %>% 
+      # remove rows that are eggs, shells, etc (they will have NA for scientific name)
+      dplyr::filter(spp != "" &
+        # remove any additional rows where spp contains the word "egg"
+        !grepl("egg", spp),
+          !grepl("Polychaete tubes", spp)) %>% 
+      readr::type_convert(col_types = cols(
+        lat = col_double(),
+        lon = col_double(),
+        year = col_integer(),
+        wtcpue = col_double(),
+        spp = col_character(),
+        depth = col_integer(),
+        haulid = col_character()
+      )) %>% 
+      dplyr::group_by(region, haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
+      dplyr::summarise(wtcpue = sum(wtcpue, na.rm = TRUE)) %>% 
+      dplyr::select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>%
+      dplyr::ungroup()
+
+# clean up
+rm(comb, haul, catch)
+
+# now that main data set has been compiled and cleaned/standardized, can split out the different surveys
+### Aleutian Islands survey -----
+ai <- ak_full %>% 
+  dplyr::filter(region == "Aleutian Islands")
 
 if (HQ_DATA_ONLY == TRUE){
   
@@ -389,89 +396,11 @@ if (HQ_DATA_ONLY == TRUE){
     rm(temp)
   }
   rm(test, test2, p1, p2, p3, p4)
-}# clean up
-rm(ai_data, ai_strata, files, temp_fixed, temp_csv)
+}
 
-# Compile EBS ============================================================
-print("Compile EBS")
-files <- as.list(dir(pattern = "ebs", path = "data", full.names = T))
-
-# exclude the strata file
-files <- files[-grep("strata", files)]
-
-# combine all of the data files into one table
-ebs_data <- files %>% 
-  # read in all of the csv's in the files list
-  map_dfr(read_csv) %>%
-  # remove any data rows that have headers as data rows
-  filter(!is.na(`Latitude Dd`)) %>% 
-  select(Year, Cruise, Haul, `Vessel Id`, `Latitude Dd`, `Longitude Dd`, Stratum, `Cpue Kgha`,`Depth M`, `Scientific Name`, `Common Name`) %>% 
-  # remove any extra white space from around spp and common names
-  mutate(Stratum=as.integer(Stratum),
-         `Common Name` = str_trim(`Common Name`), 
-         `Scientific Name` = str_trim(`Scientific Name`)) 
-
-# import the strata data
-ebs_strata <- read_csv(here::here("data", "ebs_strata.csv"), col_types = cols(
-  SubareaDescription = col_character(),
-  StratumCode = col_integer(),
-  Areakm2 = col_integer()
-)) %>% 
-  select(StratumCode, Areakm2) %>% 
-  rename(Stratum = StratumCode)
-
-ebs <- left_join(ebs_data, ebs_strata, by = "Stratum")%>%
-  # rename columns
-  rename(year = Year, 
-         lat = `Latitude Dd`, 
-         lon = `Longitude Dd`, 
-         depth = `Depth M`, 
-         spp = `Scientific Name`,
-         common =`Common Name`,
-         stratum = Stratum,
-         stratumarea = Areakm2,
-         vesselID = `Vessel Id`,
-         wtcpue = `Cpue Kgha`)
-# are there any strata in the data that are not in the strata file?
-stopifnot(nrow(filter(ai, is.na(stratumarea))) == 0)
-
-ebs <- ebs %>% 
-  mutate(
-    # add species names for two rockfish complexes
-    spp = ifelse(grepl("Rougheye and Blackspotted Rockfish Unid.", common), "Sebastes melanostictus and S. aleutianus", spp),
-    spp = ifelse(grepl("Dusky and Dark Rockfishes Unid.", common), "Sebastes variabilis and S. ciliatus", spp), 
-    # Create a unique haulid
-    haulid = paste(formatC(vesselID, width=3, flag=0), Cruise, formatC(Haul, width=3, flag=0), sep='-'), 
-    # convert -9999 to NA 
-    wtcpue = ifelse(wtcpue == "-9999", NA, wtcpue)) %>%  
-  # remove eggs
-  filter(spp != '' &
-           !grepl("egg", spp),
-         !grepl("Polychaete tubes", spp)) %>% 
-  # adjust spp names
-  mutate(spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp), 
-         spp = ifelse(grepl("Lepidopsetta", spp), "Lepidopsetta sp.", spp),
-         # spp = ifelse(grepl("Myoxocephalus", spp), "Myoxocephalus sp.", spp),
-         spp = ifelse(grepl("Bathyraja", spp), 'Bathyraja sp.', spp), 
-         spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp),
-         spp = ifelse(grepl("Sebastes melanostictus", spp)|grepl("Sebastes aleutianus", spp), "Sebastes melanostictus and S. aleutianus", spp),
-         spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp)) %>%
-  # change from all character to fitting column types
-  type_convert(col_types = cols(
-    lat = col_double(),
-    lon = col_double(),
-    year = col_integer(),
-    wtcpue = col_double(),
-    spp = col_character(),
-    depth = col_integer(),
-    haulid = col_character()
-  )) %>%  
-  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
-  summarise(wtcpue = sumna(wtcpue)) %>% 
-  # add region column
-  mutate(region = "Eastern Bering Sea") %>% 
-  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>% 
-  ungroup()
+### Eastern Bering Sea survey -----
+ebs <- ak_full %>% 
+  dplyr::filter(region == "Eastern Bering Sea")
 
 if (HQ_DATA_ONLY == TRUE){
   # look at the graph and make sure decisions to keep or eliminate data make sense
@@ -520,89 +449,10 @@ if (HQ_DATA_ONLY == TRUE){
   }
   rm(test, test2, p1, p2, p3, p4)
 }
-# clean up
-rm(files, ebs_data, ebs_strata)
 
-
-# Compile GOA =============================================================
-print("Compile GOA")
-
-files <- as.list(dir(pattern = "goa", path = "data", full.names = T))
-
-# exclude the 2 strata files; the 1 and 2 elements
-files <- files[-grep("strata", files)]
-
-# combine all of the data files into one table
-goa_data <- files %>% 
-  # read in all of the csv's in the files list
-  purrr::map_dfr(read_csv) %>%
-  # remove any data rows that have headers as data rows
-  filter(!is.na(`Latitude Dd`)) %>% 
-  select(Year, Cruise, Haul, `Vessel Id`, `Latitude Dd`, `Longitude Dd`, Stratum, `Cpue Kgha`,`Depth M`, `Scientific Name`, `Common Name`) %>% 
-  # remove any extra white space from around spp and common names
-  mutate(Stratum=as.integer(Stratum),
-         `Common Name` = str_trim(`Common Name`), 
-         `Scientific Name` = str_trim(`Scientific Name`)) 
-
-#read in the goa strata data
-goa_strata <- read_csv(here::here("data", "goa_strata.csv"), col_types = cols(
-  SubareaDescription = col_character(),
-  StratumCode = col_integer(),
-  Areakm2 = col_integer()
-)) %>% 
-  select(StratumCode, Areakm2) %>% 
-  rename(Stratum = StratumCode)
-
-goa <- left_join(goa_data, goa_strata, by = "Stratum") %>%
-  # rename columns
-  rename(year = Year, 
-         lat = `Latitude Dd`, 
-         lon = `Longitude Dd`, 
-         depth = `Depth M`, 
-         spp = `Scientific Name`,
-         common =`Common Name`,
-         stratum = Stratum,
-         stratumarea = Areakm2,
-         vesselID = `Vessel Id`,
-         wtcpue = `Cpue Kgha`)
-# are there any strata in the data that are not in the strata file?
-stopifnot(nrow(filter(ai, is.na(stratumarea))) == 0)
-
-goa <- goa %>%
-  mutate(
-    # add species names for two rockfish complexes
-    spp = ifelse(grepl("Rougheye and Blackspotted Rockfish Unid.", common), "Sebastes melanostictus and S. aleutianus", spp),
-    spp = ifelse(grepl("Dusky and Dark Rockfishes Unid.", common), "Sebastes variabilis and S. ciliatus", spp), 
-    # Create a unique haulid
-    haulid = paste(formatC(vesselID, width=3, flag=0), Cruise, formatC(Haul, width=3, flag=0), sep='-'),    
-    wtcpue = ifelse(wtcpue == "-9999", NA, wtcpue)) %>% 
-  # remove non-fish
-  filter(
-    spp != '' & 
-      !grepl("egg", spp),
-    !grepl("Polychaete tubes", spp)) %>% 
-  # adjust spp names
-  mutate(
-    spp = ifelse(grepl("Lepidopsetta", spp), "Lepidopsetta sp.", spp),
-    #spp = ifelse(grepl("Myoxocephalus", spp), "Myoxocephalus sp.", spp),
-    spp = ifelse(grepl("Bathyraja", spp) & !grepl("panthera", spp),'Bathyraja sp.', spp), 
-    spp = ifelse(grepl("Sebastes melanostictus", spp)|grepl("Sebastes aleutianus", spp), "Sebastes melanostictus and S. aleutianus", spp),
-    spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp)) %>%
-  # change from all character to fitting column types
-  type_convert(col_types = cols(
-    lat = col_double(),
-    lon = col_double(),
-    year = col_integer(),
-    wtcpue = col_double(),
-    spp = col_character(),
-    depth = col_integer(),
-    haulid = col_character()
-  )) %>% 
-  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
-  summarise(wtcpue = sumna(wtcpue)) %>% 
-  mutate(region = "Gulf of Alaska") %>% 
-  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>% 
-  ungroup()
+### Gulf of Alaska survey -----
+goa <- ak_full %>% 
+  dplyr::filter(region == "Gulf of Alaska")
 
 if (HQ_DATA_ONLY == TRUE){
   # look at the graph and make sure decisions to keep or eliminate data make sense
@@ -659,66 +509,10 @@ if (HQ_DATA_ONLY == TRUE){
   }
   rm(test, test2, p1, p2, p3, p4)
 }
-rm(files, goa_data, goa_strata)
 
-# Compile NBS =============================================================
-print("Compile NBS")
-#Note: there is no strata file for this survey. But the info in there is not used anyways
-nbs_data <- read_csv(here::here("data", "nbs_survey.csv")) %>%
-  select(Year, Cruise, Haul, `Vessel Id`, `Latitude Dd`, `Longitude Dd`, Stratum, `Cpue Kgha`,`Depth M`, `Scientific Name`, `Common Name`) %>% 
-  # remove any extra white space from around spp and common names
-  mutate(Stratum=as.integer(Stratum),
-         `Common Name` = str_trim(`Common Name`), 
-         `Scientific Name` = str_trim(`Scientific Name`)) %>%
-  # rename columns
-  rename(year = Year, 
-         lat = `Latitude Dd`, 
-         lon = `Longitude Dd`, 
-         depth = `Depth M`, 
-         spp = `Scientific Name`,
-         common =`Common Name`,
-         stratum = Stratum,
-         vesselID = `Vessel Id`,
-         wtcpue = `Cpue Kgha`)
-
-nbs <- nbs_data %>%
-  mutate(
-    # add species names for two rockfish complexes
-    spp = ifelse(grepl("Rougheye and Blackspotted Rockfish Unid.", common), "Sebastes melanostictus and S. aleutianus", spp),
-    spp = ifelse(grepl("Dusky and Dark Rockfishes Unid.", common), "Sebastes variabilis and S. ciliatus", spp), 
-    # Create a unique haulid
-    stratumarea=NA,
-    haulid = paste(formatC(vesselID, width=3, flag=0), Cruise, formatC(Haul, width=3, flag=0), sep='-'),    
-    wtcpue = ifelse(wtcpue == "-9999", NA, wtcpue)) %>% 
-  # remove non-fish
-  filter(
-    spp != '' & 
-      !grepl("egg", spp),
-    !grepl("Polychaete tubes", spp)) %>% 
-  # adjust spp names
-  mutate(spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp), 
-         spp = ifelse(grepl("Lepidopsetta", spp), "Lepidopsetta sp.", spp),
-         # spp = ifelse(grepl("Myoxocephalus", spp), "Myoxocephalus sp.", spp),
-         spp = ifelse(grepl("Bathyraja", spp), 'Bathyraja sp.', spp), 
-         spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp),
-         spp = ifelse(grepl("Sebastes melanostictus", spp)|grepl("Sebastes aleutianus", spp), "Sebastes melanostictus and S. aleutianus", spp),
-         spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp)) %>%
-  # change from all character to fitting column types
-  type_convert(col_types = cols(
-    lat = col_double(),
-    lon = col_double(),
-    year = col_integer(),
-    wtcpue = col_double(),
-    spp = col_character(),
-    depth = col_integer(),
-    haulid = col_character(),
-    startumarea=col_character()
-  ))  %>% 
-  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
-  summarise(wtcpue = sumna(wtcpue)) %>% 
-  mutate(region = "Northern Bering Sea") %>% 
-  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>% 
-  ungroup()
+### Northern Bering Sea survey -----
+nbs <- ak_full %>% 
+  dplyr::filter(region == "Northern Bering Sea")
 
 if (HQ_DATA_ONLY == TRUE){
   # look at the graph and make sure decisions to keep or eliminate data make sense
@@ -768,118 +562,6 @@ if (HQ_DATA_ONLY == TRUE){
   }
   rm(test, test2, p1, p2, p3, p4)
 }
-rm(files, nbs_data, nbs_strata)
-
-# # Compile BSSS ================================
-# #(Data will not update because the survey is no longer running since 2016)
-# print("Compile BSSS")
-# #Note: there is no strata file for this survey. But the info in there is not used anyways
-# bsss_data <- read_csv(here::here("data", "EBSS_data.csv")) %>%
-#   select(Year, Cruise, Haul, `Vessel Id`, `Latitude Dd`, `Longitude Dd`, Stratum, `Cpue Kgha`,`Depth M`, `Scientific Name`, `Common Name`) %>% 
-#   # remove any extra white space from around spp and common names
-#   mutate(Stratum=as.integer(Stratum),
-#          `Common Name` = str_trim(`Common Name`), 
-#          `Scientific Name` = str_trim(`Scientific Name`)) %>%
-#   # rename columns
-#   rename(year = Year, 
-#          lat = `Latitude Dd`, 
-#          lon = `Longitude Dd`, 
-#          depth = `Depth M`, 
-#          spp = `Scientific Name`,
-#          common =`Common Name`,
-#          stratum = Stratum,
-#          vesselID = `Vessel Id`,
-#          wtcpue = `Cpue Kgha`)
-# 
-# bsss <- bsss_data %>%
-#   mutate(
-#     # add species names for two rockfish complexes
-#     spp = ifelse(grepl("Rougheye and Blackspotted Rockfish Unid.", common), "Sebastes melanostictus and S. aleutianus", spp),
-#     spp = ifelse(grepl("Dusky and Dark Rockfishes Unid.", common), "Sebastes variabilis and S. ciliatus", spp), 
-#     # Create a unique haulid
-#     stratumarea=NA,
-#     haulid = paste(formatC(vesselID, width=3, flag=0), Cruise, formatC(Haul, width=3, flag=0), sep='-'),    
-#     wtcpue = ifelse(wtcpue == "-9999", NA, wtcpue)) %>% 
-#   # remove non-fish
-#   filter(
-#     spp != '' & 
-#       !grepl("egg", spp),
-#     !grepl("Polychaete tubes", spp)) %>% 
-#   # adjust spp names
-#   mutate(spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp), 
-#          spp = ifelse(grepl("Lepidopsetta", spp), "Lepidopsetta sp.", spp),
-#          # spp = ifelse(grepl("Myoxocephalus", spp), "Myoxocephalus sp.", spp),
-#          spp = ifelse(grepl("Bathyraja", spp), 'Bathyraja sp.', spp), 
-#          spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp),
-#          spp = ifelse(grepl("Sebastes melanostictus", spp)|grepl("Sebastes aleutianus", spp), "Sebastes melanostictus and S. aleutianus", spp),
-#          spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp)) %>%
-#   # change from all character to fitting column types
-#   type_convert(col_types = cols(
-#     lat = col_double(),
-#     lon = col_double(),
-#     year = col_integer(),
-#     wtcpue = col_double(),
-#     spp = col_character(),
-#     depth = col_integer(),
-#     haulid = col_character(),
-#     startumarea=col_character()
-#   ))  %>% 
-#   group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
-#   summarise(wtcpue = sumna(wtcpue)) %>% 
-#   mutate(region = "Bering Sea Slope Survey") %>% 
-#   select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>% 
-#   ungroup()
-# 
-# if (HQ_DATA_ONLY == TRUE){
-#   # look at the graph and make sure decisions to keep or eliminate data make sense
-#   
-#   p1 <- bsss %>% 
-#     select(stratum, year) %>% 
-#     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
-#     geom_jitter()
-#   
-#   p2 <- bsss %>%
-#     select(lat, lon) %>% 
-#     ggplot(aes(x = lon, y = lat)) +
-#     geom_jitter()
-#   
-#   test <- bsss %>%
-#     select(stratum, year) %>% 
-#     distinct() %>% 
-#     group_by(stratum) %>% 
-#     summarise(count = n())%>%
-#     filter(count >= 5)  
-#   
-#   # how many rows will be lost if only stratum trawled ever year aare kept?
-#   test2 <- bsss %>% 
-#     filter(stratum %in% test$stratum)
-#   nrow(bsss) - nrow(test2)
-#   # percent that will be lost
-#   print ((nrow(bsss) - nrow(test2))/nrow(bsss))
-#   
-#   bsss_fltr <- bsss %>% 
-#     filter(stratum %in% test$stratum)
-#   
-#   p3 <-  bsss_fltr %>% 
-#     select(stratum, year) %>% 
-#     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
-#     geom_jitter()
-#   
-#   p4 <- bsss_fltr %>%
-#     select(lat, lon) %>% 
-#     ggplot(aes(x = lon, y = lat)) +
-#     geom_jitter()
-#   
-#   if (HQ_PLOTS == TRUE){
-#     temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
-#     ggsave(plot = temp, filename = here::here("output/plots", "bsss_hq_dat_removed.png"))
-#     
-#     rm(temp)
-#   }
-#   rm(test, test2, p1, p2, p3, p4)
-# }
-# rm(files, bsss_data, bsss_strata)
-
 
 # Compile WCTRI ===========================================================
 print("Compile WCTRI")
@@ -1059,7 +741,7 @@ rm(wctri_catch, wctri_haul, wctri_species, wctri_strats)
 
 # Compile WCANN ===========================================================
 print("Compile WCANN")
-wcann_catch <- read_csv(here::here("data", "wcann_catch.csv"), col_types = cols(
+wcann_catch <- read_csv(here::here("data/2023_data_archive", "wcann_catch.csv"), col_types = cols(
   catch_id = col_integer(),
   common_name = col_character(),
   cpue_kg_per_ha_der = col_double(),
@@ -1091,7 +773,7 @@ wcann_catch <- read_csv(here::here("data", "wcann_catch.csv"), col_types = cols(
 )) %>% 
   select("trawl_id","year","longitude_dd","latitude_dd","depth_m","scientific_name","total_catch_wt_kg","cpue_kg_per_ha_der", "partition", "performance")
 
-wcann_haul <- read_csv(here::here("data", "wcann_haul.csv"), col_types = cols(
+wcann_haul <- read_csv(here::here("data/2023_data_archive", "wcann_haul.csv"), col_types = cols(
   area_swept_ha_der = col_double(),
   date_yyyymmdd = col_integer(),
   depth_hi_prec_m = col_double(),
@@ -1254,19 +936,9 @@ rm(wcann_catch, wcann_haul, wcann_strats)
 
 # Compile GMEX ===========================================================
 print("Compile GMEX")
-
-gmex_station_raw <- read_lines(here::here("data", "gmex_STAREC.csv"))
-# remove oddly quoted characters
-#gmex_station_clean <- str_replace_all(gmex_station_raw, "\\\\\\\"", "\\\"\\\"")
-gmex_station_clean <- str_replace_all(gmex_station_raw, "\\\\\"", "")
-#gmex_station_clean <- gsub('\"', "", gmex_station_clean)
-
-gmex_station <- read_csv(gmex_station_clean, col_types = cols(.default = col_character())) %>% 
+##Read in data
+gmex_station <- read_csv(here::here("data/2023_data_archive", "gmex_STAREC.csv"), col_types = cols(.default = col_character())) %>% 
   select('STATIONID', 'CRUISEID', 'CRUISE_NO', 'P_STA_NO', 'TIME_ZN', 'TIME_MIL', 'S_LATD', 'S_LATM', 'S_LOND', 'S_LONM', 'E_LATD', 'E_LATM', 'E_LOND', 'E_LONM', 'STAT_ZONE', 'DEPTH_SSTA', 'MO_DAY_YR', 'VESSEL_SPD', 'COMSTAT')
-
-problems <- problems(gmex_station) %>% 
-  filter(!is.na(col))
-stopifnot(nrow(problems) == 0)
 
 gmex_station <- type_convert(gmex_station, col_types = cols(
   STATIONID = col_integer(),
@@ -1285,13 +957,16 @@ gmex_station <- type_convert(gmex_station, col_types = cols(
   E_LONM = col_double(),
   DEPTH_SSTA = col_double(),
   STAT_ZONE = col_double(),
-  MO_DAY_YR = col_date(format = ""),
+  MO_DAY_YR = col_date(format = "%d/%m/%Y"),
   VESSEL_SPD = col_double(),
   COMSTAT = col_character()
 ))
 
+names(gmex_station)<-tolower(names(gmex_station))
 
-gmex_tow <-read_csv(here::here("data", "gmex_INVREC.csv"), col_types = cols(
+gmex_tow <-readr::read_delim(here::here("data/2023_data_archive","gmex_INVREC.csv"),
+                             delim = ',', escape_backslash = T, escape_double = F) 
+gmex_tow<-type_convert(gmex_tow, col_types = cols(
   INVRECID = col_integer(),
   STATIONID = col_integer(),
   CRUISEID = col_integer(),
@@ -1321,53 +996,12 @@ gmex_tow <-read_csv(here::here("data", "gmex_INVREC.csv"), col_types = cols(
   COMBIO = col_character(),
   X28 = col_character()
 ))
-
 gmex_tow <- gmex_tow %>%
-  select('STATIONID', 'CRUISE_NO', 'P_STA_NO', 'INVRECID', 'GEAR_SIZE', 'GEAR_TYPE', 'MESH_SIZE', 'MIN_FISH', 'OP') %>%
+  select('STATIONID', 'VESSEL', 'CRUISE_NO', 'P_STA_NO', 'INVRECID', 'GEAR_SIZE', 'GEAR_TYPE', 'MESH_SIZE', 'MIN_FISH', 'OP') %>%
   filter(GEAR_TYPE=='ST')
 
-problems <- problems(gmex_tow) %>% 
-  filter(!is.na(col)) 
-stopifnot(nrow(problems) == 2)
-# 2 problems are that there are weird delimiters in the note column COMBIO, ignoring for now.
-
-gmex_spp <-read_csv(here::here("data","gmex_NEWBIOCODESBIG.csv"), col_types = cols(
-  Key1 = col_integer(),
-  TAXONOMIC = col_character(),
-  CODE = col_integer(),
-  TAXONSIZECODE = col_character(),
-  isactive = col_integer(),
-  common_name = col_character(),
-  tsn = col_integer(),
-  tsn_accepted = col_integer()
-)) %>% 
-  select(-tsn_accepted)
-
-# problems should be 0 obs
-problems <- problems(gmex_spp) %>% 
-  filter(!is.na(col))
-stopifnot(nrow(problems) == 0)
-gmex_cruise <-read_csv(here::here("data", "gmex_CRUISES.csv"), col_types = cols(.default = col_character())) %>% 
-  select(CRUISEID, VESSEL, TITLE)
-
-# problems should be 0 obs
-problems <- problems(gmex_cruise) %>% 
-  filter(!is.na(col))
-stopifnot(nrow(problems) == 0)
-gmex_cruise <- type_convert(gmex_cruise, col_types = cols(CRUISEID = col_integer(), VESSEL = col_integer(), TITLE = col_character()))
-
-gmex_bio <-read_csv(here::here("data", "gmex_BGSREC.csv"), col_types = cols(.default = col_character())) %>% 
-  select('CRUISEID', 'STATIONID', 'VESSEL', 'CRUISE_NO', 'P_STA_NO', 'GENUS_BGS', 'SPEC_BGS', 'BGSCODE', 'BIO_BGS', 'SELECT_BGS') %>%
-  # trim out young of year records (only useful for count data) and those with UNKNOWN species
-  filter(BGSCODE != "T" | is.na(BGSCODE),
-         GENUS_BGS != "UNKNOWN" | is.na(GENUS_BGS))  %>%
-  # remove the few rows that are still duplicates
-  distinct()
-
-# problems should be 0 obs
-problems <- problems(gmex_bio) %>% 
-  filter(!is.na(col))
-stopifnot(nrow(problems) == 0)
+gmex_bio <-readr::read_delim(here::here("data/2023_data_archive","gmex_BGSREC.csv"),
+                             delim = ',', escape_backslash = T, escape_double = F)
 
 gmex_bio <- type_convert(gmex_bio, cols(
   CRUISEID = col_integer(),
@@ -1382,52 +1016,175 @@ gmex_bio <- type_convert(gmex_bio, cols(
   SELECT_BGS = col_double()
 ))
 
-# make two combined records where 2 different species share the same species code
-newspp <- tibble(
-  Key1 = c(503,5770), 
-  TAXONOMIC = c('ANTHIAS TENUIS AND WOODSI', 'MOLLUSCA AND UNID.OTHER #01'), 
-  CODE = c(170026003, 300000000), 
-  TAXONSIZECODE = NA, 
-  isactive = -1, 
-  common_name = c('threadnose and swallowtail bass', 'molluscs or unknown'), 
-  tsn = NA) 
+gmex_cruise <-read_csv(here::here("data/2023_data_archive", "gmex_CRUISES.csv"), col_types = cols(.default = col_character())) %>% 
+  select(CRUISEID, VESSEL, TITLE)
 
-# remove the duplicates that were just combined  
-gmex_spp <- gmex_spp %>% 
-  distinct(CODE, .keep_all = T)
-# add the combined records on to the end. trim out extra columns from gmexspp
-gmex_spp <- rbind(gmex_spp, newspp) %>% 
-  select(CODE, TAXONOMIC) %>% 
-  rename(BIO_BGS = CODE)
 
-# merge tow information with catch data, but only for shrimp trawl tows (ST)
-gmex <- left_join(gmex_bio, gmex_tow, by = c("STATIONID", "CRUISE_NO", "P_STA_NO")) %>% 
+gmex_cruise <- type_convert(gmex_cruise, col_types = cols(CRUISEID = col_integer(), VESSEL = col_integer(), TITLE = col_character()))
+names(gmex_cruise)<-tolower(names(gmex_cruise))
+
+gmex_spp <-read_csv(here::here("data","BCT_NFR_01182023.csv"))
+problems(gmex_spp)
+names(gmex_spp)<-tolower(names(gmex_spp))
+gmex_spp<-dplyr::select(gmex_spp,biocode,ciu_biocode,taxon)
+
+##Resolve issues 
+#Issue 1: Proper way to Merge the Tow (invrec) and bio (bgsrec) tables
+  # The proper way to link the invrec table to the bgsrec is supposed to use the invrecid 
+# variable as the primary key. However, the bgsrec table has null invrecid for data collected
+# under previous data collection systems. The invrec and bgsrec tables can be linked using 
+# the vessel, cruise_no and p_sta_no variables as a primary key. Unfortunately, there are
+# a series stations where the Oregon II (Vessel 4 Cruise_No = 0284) towed standard 
+# shrimp trawls (ST) side by side (port/starboard) with experimental trawls (ES). Therefore, 
+# linking the invrec and bgsrec tabls based on the vessel, cruise_no and p_sta_no variables 
+# will lead to all catch records for both the shrimp and experimental trawls being linked
+# to both trawls. The bgsrec also contains records for catches not associated with invrec table
+# records. These are from reef fish cruises. The following codes creates a modified bgsrec table
+# that updates the null invrecid for older data and performs some checks. 
+
+names(gmex_tow) <- tolower(names(gmex_tow))
+names(gmex_bio) <- tolower(names(gmex_bio))
+#create bgsrec_invrecid_fix
+#get only stationid and invrecid from invrec table
+get_stationid_invrecid <- gmex_tow %>% dplyr::select(stationid, invrecid) %>% rename(inv_invrecid = invrecid)
+
+#extract bgsrec table records with missing invrecid and update based on stationid from get_stationid_invrecid
+bgsrec_null_invrecid <- gmex_bio %>% 
+  dplyr::filter(is.na(invrecid)) %>%
+  dplyr::left_join(get_stationid_invrecid, by = 'stationid') %>%
+  dplyr::mutate(invrecid = inv_invrecid) %>% dplyr::select(-inv_invrecid)
+
+#Extracts any remaining bgsrec table records with null invrecid. These should all be
+#associated with reef fish cruises at this point.
+bgsrec_null_check1 <- bgsrec_null_invrecid %>%
+  dplyr::filter(is.na(invrecid))
+
+#extract bgsrec table records with valid invrecid
+bgsrec_with_invrecid <- gmex_bio %>%
+  dplyr::filter(!is.na(invrecid))
+
+#Stack bgsrec_null_invrec now updated with valid invrecid and bgsrec_with_invrecid
+gmex_bio_mod <- bgsrec_null_invrecid %>%
+  dplyr::bind_rows(bgsrec_with_invrecid) %>%
+  #Remove null invrecid which should only include those in bgsrec_null_check1
+  dplyr::filter(!is.na(invrecid)) %>% 
+  dplyr::arrange(bgsid)
+
+#Check to make sure only records with invrecs are present - should have 0 rows
+bgsrec_null_check2 <- gmex_bio_mod %>% filter(is.na(invrecid))
+
+#drop unwanted data objects
+rm(bgsrec_null_invrecid,bgsrec_null_check1,bgsrec_null_check2,bgsrec_with_invrecid,get_stationid_invrecid, gmex_bio)
+# garbace collect to free up memory
+gc()
+
+#Issues 2: Taxonomic coding 
+# (3-1) The newbiocodesbig table does not fully contain all code/taxonomic names found in the bgsrec table:
+# (3-2) the bgsrec table has a few instances of invalid bio_bgs (biocode) values; and
+# (3-3) multiple code/taxonomic combinations may refer to the same organisms under different names. For example,
+# 189040204/MONACANTHUS HISPIDUS, 189040305/STEPHANOLEPIS HISPIDA, 189040306/STEPHANOLEPIS HISPIDUS
+# and 189040307/STEPHANOLEPIS HISPIDA (current) have all been used to identify Planehead Filefish due to 
+# changes in taxonomy. The bsgrec file reflects the code/taxonomic use at time of data ingest.
+# The provided master biocode table (MBT) will allow translation of the vast majority cases where multiple
+# code/taxonomic refer to the same organism. The process relies on the use of the biocode,
+# ciu_biocode and taxon variables in the MBT. The MBT biocode variable in numeric form is equivalent to the
+# code (character) variable in the newbiocodesbig and bio_bgs (character) variable in the bgsrec tables.
+# Similarly the taxon variable in the MBT table is equivalent to taxonomic in the newbiocodesbig table.
+# The MBT also has a rb_biocode (replaced by biocode) variable which is the numeric biocode that
+# replaces a inactive (inactive = 1 variable) biocode, and allows me to track changes over time.
+# Since multiple changes may have occurred, the ciu_biocode (currently in use biocode) value ties multiple records
+# that are now inactive to the current active biocode. Inactive biocodes have the variable inactive set to zero.
+# Using the example above, the ciu_biocode that ties together records of Planehead Filefish is 189040307.
+# The following script updates bgsrec table code to ciu_biocode via the MBT table. The rb_biocode variable is not
+# needed for this purpose.
+
+# starting with our gmex_bio_mod from above
+gmex_bio_utax1 <- gmex_bio_mod %>%
+  #convert bgsrec table bio_bgs varialbe to numeric integer
+  dplyr::mutate(bio_bgs = as.integer(bio_bgs)) %>%
+  #rename bio_bgs to biocode to allow for easier manipulation with master biocode table (mbt)
+  dplyr::rename(biocode = bio_bgs) %>%
+  ### take care of Issue 3-2 ###
+  # fix invalid zero code and make it the code (999999998) for unidentified specimen
+  dplyr::mutate(biocode = ifelse(biocode == 0,999999998,biocode)) %>%
+  # fix invalid unidentified fish code 100000001 to proper code
+  dplyr::mutate(biocode = ifelse(biocode == 100000001,100000000,biocode)) %>%  
+  # fix invalid unidentified crustacean code 200000001 to proper code
+  dplyr::mutate(biocode = ifelse(biocode == 200000001,200000000,biocode)) %>%
+  # fix invalid unidentified crustacean code 300000001  and 300000001 to proper code
+  dplyr::mutate(biocode = ifelse(biocode == 300000001,300000000,biocode)) %>%   
+  dplyr::mutate(biocode = ifelse(biocode == 300000002,300000000,biocode)) %>%  
+  ### take care of Issue 3-3 ### 
+  #update older inactive biocodes to those currently in use (ciu_biocode)
+  dplyr::left_join(dplyr::select(gmex_spp,biocode,taxon,ciu_biocode), by = "biocode") %>%
+  #rename taxon to bgs taxon to keep the original name associated with a biocode 
+  dplyr::rename(bgs_taxon = taxon) %>%
+  #do a left join to bring in taxon associated with ciu_taxon
+  dplyr::left_join(dplyr::select(gmex_spp,biocode,taxon), by = c("ciu_biocode" = "biocode"))
+
+### Issue 3: Problematic Taxa with taxonomic issues or problematic separation in the field###
+# Collapse taxa with known identification issues and collapse all sponge to single category
+# Note this process needs to be implemented after the ciu_biocode update as the statements
+# rely on the ciu_biocode. The statements undergo a review with each updated version of the
+# MBT
+gmex_bio_utax2 <- gmex_bio_utax1 %>%
+  #Take care of squid and species complexes...
+  #Update the squid genus Loligo and all species under genus Doryteuthis to the genus Dortyteuthis
+  mutate(ciu_biocode = ifelse(ciu_biocode %in% c(347020200,347021001,347021002,347021003),347021000,ciu_biocode)) %>%
+  mutate(taxon = ifelse(ciu_biocode %in% c(347021000),'DORYTEUTHIS',taxon)) %>%
+  #Update batfish species to Halieutichthys
+  mutate(ciu_biocode = ifelse(ciu_biocode >= 195050401 & ciu_biocode <= 195050405,195050400,ciu_biocode)) %>%
+  mutate(taxon = ifelse(ciu_biocode %in% c(195050400),'HALIEUTICHTHYS',taxon)) %>%
+  #Update all jellfishy in the genus Aurelia to the genus Aurelia
+  mutate(ciu_biocode = ifelse(ciu_biocode >= 618010101 & ciu_biocode <= 618010105,618010100,ciu_biocode)) %>%
+  mutate(taxon = ifelse(ciu_biocode %in% c(618010100),'AURELIA',taxon)) %>%
+  #Update all lionfishes species to the genus Pterois
+  mutate(ciu_biocode = ifelse(ciu_biocode %in% c(168011901,168011902),168011900,ciu_biocode)) %>%
+  mutate(taxon = ifelse(ciu_biocode %in% c(168011900),'PTEROIS',taxon)) %>%
+  #smoothhounds (Mustelus) Managed as species complex, our ids are OK now but in the past assumptions made %>%
+  mutate(ciu_biocode = ifelse(ciu_biocode %in% c(108031101,108031102,108031103,108031104),108031100,ciu_biocode)) %>%
+  mutate(taxon = ifelse(ciu_biocode %in% c(108031100),'MUSTELUS',taxon)) %>%
+  #lump all sponge identifications to Porifera
+  mutate(ciu_biocode = ifelse(ciu_biocode >= 613000000 & ciu_biocode < 616000000,613000000,ciu_biocode)) %>%
+  mutate(taxon = ifelse(ciu_biocode %in% c(613000000),'PORIFERA',taxon)) %>%
+  #handle out of order Porifera  Demospngiae and Agelas and Agelas and Agelasidae in coral numbers
+  mutate(ciu_biocode = ifelse(ciu_biocode %in% c(999997000,999997020,617170000,617170100),613000000,ciu_biocode)) %>%
+  mutate(taxon = ifelse(ciu_biocode %in% c(613000000),'PORIFERA',taxon)) %>%
+  #Collapse all shrimp species in Rimnapenaeus as they are not consistently seperated in the field
+  mutate(ciu_biocode = ifelse(ciu_biocode %in% c(228012001,228012002),228012000,ciu_biocode)) %>%
+  mutate(taxon = ifelse(ciu_biocode %in% c(228012000),'RIMAPENAEUS',taxon)) %>%
+  #Astropecten species have changed, distribution overlap with major east west differences
+  mutate(biocode = ifelse(biocode >= 691010101 & biocode <= 691010112,691010100,biocode)) %>%
+  mutate(taxon = ifelse(biocode %in% c(691010100),'ASTROPECTEN',taxon))  
+
+## MERGE the corrected catch/tow/species information from above with cruise information, but only for shrimp trawl tows (ST)
+gmex <- left_join(gmex_bio_utax2, gmex_tow, by = c("stationid","vessel", "cruise_no", "p_sta_no", "invrecid")) %>%
   # add station location and related data
-  left_join(gmex_station, by = c("CRUISEID", "STATIONID", "CRUISE_NO", "P_STA_NO")) %>% 
-  # add scientific name
-  left_join(gmex_spp, by = "BIO_BGS") %>% 
+  left_join(gmex_station, by = c("cruiseid", "stationid", "cruise_no", "p_sta_no")) %>%
   # add cruise title
-  left_join(gmex_cruise, by = c("CRUISEID", "VESSEL"))
+  left_join(gmex_cruise, by = c("cruiseid", "vessel")) %>% 
+  #filter out YOY (denoted by BSGCODE=T) since they are useful for counts by not weights
+  filter(bgscode != "T"| is.na(bgscode))
 
 gmex <- gmex %>% 
   # Trim to high quality SEAMAP summer trawls, based off the subset used by Jeff Rester's GS_TRAWL_05232011.sas
-  filter(grepl("Summer", TITLE) & 
-           GEAR_SIZE == 40 & 
-           MESH_SIZE == 1.63 &
+  filter(grepl("Summer", title) & 
+           gear_size == 40 & 
+           mesh_size == 1.63 &
            # OP has no letter value
-           !grepl("[A-Z]", OP)) %>% 
+           !grepl("[A-Z]", op)) %>% 
   mutate(
     # Create a unique haulid
-    haulid = paste(formatC(VESSEL, width=3, flag=0), formatC(CRUISE_NO, width=3, flag=0), formatC(P_STA_NO, width=5, flag=0, format='d'), sep='-'), 
+    haulid = paste(formatC(vessel, width=3, flag=0), formatC(cruise_no, width=3, flag=0), formatC(p_sta_no, width=5, flag=0, format='d'), sep='-'), 
     # Extract year where needed
-    year = year(MO_DAY_YR),
+    year = year(mo_day_yr),
     # Calculate decimal lat and lon, depth in m, where needed
-    S_LATD = ifelse(S_LATD == 0, NA, S_LATD), 
-    S_LOND = ifelse(S_LOND == 0, NA, S_LOND), 
-    E_LATD = ifelse(E_LATD == 0, NA, E_LATD), 
-    E_LOND = ifelse(E_LOND == 0, NA, E_LOND),
-    lat = rowMeans(cbind(S_LATD + S_LATM/60, E_LATD + E_LATM/60), na.rm=T), 
-    lon = -rowMeans(cbind(S_LOND + S_LONM/60, E_LOND + E_LONM/60), na.rm=T), 
+    s_latd = ifelse(s_latd == 0, NA, s_latd), 
+    s_lond = ifelse(s_lond == 0, NA, s_lond), 
+    e_latd = ifelse(e_latd == 0, NA, e_latd), 
+    e_lond = ifelse(e_lond == 0, NA, e_lond),
+    lat = rowMeans(cbind(s_latd + s_latm/60, e_latd + e_latm/60), na.rm=T), 
+    lon = -rowMeans(cbind(s_lond + s_lonm/60, e_lond + e_lonm/60), na.rm=T), 
     # Add "strata" (define by STAT_ZONE and depth bands)
     # degree bins, # degree bins, # 100 m bins
     #stratum = paste(STAT_ZONE, floor(depth/100)*100 + 50, sep= "-")
@@ -1435,19 +1192,19 @@ gmex <- gmex %>%
 
 #add stratum code defined by STAT_ZONE and depth bands (note depth in recorded as m, and depth bands based on 0-20 fathoms
 # and 21-60 fathoms))
-gmex$depth_zone<-ifelse(gmex$DEPTH_SSTA<=36.576, "20", 
-                        ifelse(gmex$DEPTH_SSTA>36.576, "60", NA))
+gmex$depth_zone<-ifelse(gmex$depth_ssta<=36.576, "20", 
+                        ifelse(gmex$depth_ssta>36.576, "60", NA))
 gmex<-gmex %>%
-  mutate(stratum = paste(STAT_ZONE, depth_zone, sep= "-"))
+  mutate(stratum = paste(stat_zone, depth_zone, sep= "-"))
 # fix speed
 # Trim out or fix speed and duration records
 # trim out tows of 0, >60, or unknown minutes
 gmex <- gmex %>% 
-  filter(MIN_FISH <= 60 & MIN_FISH > 0 & !is.na(MIN_FISH)) %>% 
+  filter(min_fish <= 60 & min_fish  > 0 & !is.na(min_fish )) %>% 
   # fix typo according to Jeff Rester: 30 = 3	
-  mutate(VESSEL_SPD = ifelse(VESSEL_SPD == 30, 3, VESSEL_SPD)) %>% 
+  mutate(vessel_spd = ifelse(vessel_spd == 30, 3, vessel_spd)) %>% 
   # trim out vessel speeds 0, unknown, or >5 (need vessel speed to calculate area trawled)
-  filter(VESSEL_SPD <= 5 & VESSEL_SPD > 0  & !is.na(VESSEL_SPD))
+  filter(vessel_spd <= 5 & vessel_spd > 0  & !is.na(vessel_spd))
 
 gmex_strats <- gmex %>%
   group_by(stratum) %>% 
@@ -1465,15 +1222,15 @@ dups <- gmex %>%
 
 # remove the identified tows from the dataset
 gmex <- gmex %>%
-  filter(!haulid %in% dups$haulid & !grepl("PORT", COMSTAT))
+  filter(!haulid %in% dups$haulid & !grepl("PORT", comstat))
 
 gmex <- gmex %>% 
-  rename(spp = TAXONOMIC,
-         depth = DEPTH_SSTA) %>% 
+  rename(spp = taxon,
+         depth = depth_ssta) %>% 
   # adjust for area towed
   mutate(
     # kg per 10000m2. calc area trawled in m2: knots * 1.8 km/hr/knot * 1000 m/km * minutes * 1 hr/60 min * width of gear in feet * 0.3 m/ft # biomass per standard tow
-    wtcpue = 10000*SELECT_BGS/(VESSEL_SPD * 1.85200 * 1000 * MIN_FISH / 60 * GEAR_SIZE * 0.3048) 
+    wtcpue = 10000*select_bgs/(vessel_spd * 1.85200 * 1000 * min_fish / 60 * gear_size * 0.3048) 
   ) %>% 
   # remove non-fish
   filter(
@@ -1481,32 +1238,12 @@ gmex <- gmex %>%
     # remove unidentified spp
     !spp %in% c('UNID CRUSTA', 'UNID OTHER', 'UNID.FISH', 'CRUSTACEA(INFRAORDER) BRACHYURA', 'MOLLUSCA AND UNID.OTHER #01', 'ALGAE', 'MISCELLANEOUS INVERTEBR', 'OTHER INVERTEBRATES')
   ) %>% 
-  # adjust spp names
-  mutate(
-    spp = ifelse(GENUS_BGS == 'PELAGIA' & SPEC_BGS == 'NOCTUL', 'PELAGIA NOCTILUCA', spp), 
-    BIO_BGS = ifelse(spp == "PELAGIA NOCTILUCA", 618030201, BIO_BGS), 
-    spp = ifelse(GENUS_BGS == 'MURICAN' & SPEC_BGS == 'FULVEN', 'MURICANTHUS FULVESCENS', spp), 
-    BIO_BGS = ifelse(spp == "MURICANTHUS FULVESCENS", 308011501, BIO_BGS), 
-    spp = ifelse(grepl("APLYSIA", spp), "APLYSIA", spp), 
-    spp = ifelse(grepl("AURELIA", spp), "AURELIA", spp), 
-    spp = ifelse(grepl("BOTHUS", spp), "BOTHUS", spp), 
-    spp = ifelse(grepl("CLYPEASTER", spp), "CLYPEASTER", spp), 
-    spp = ifelse(grepl("CONUS", spp), "CONUS", spp), 
-    spp = ifelse(grepl("CYNOSCION", spp), "CYNOSCION", spp), 
-    spp = ifelse(grepl("ECHINASTER", spp), "ECHINASTER", spp),
-    spp = ifelse(grepl("OPISTOGNATHUS", spp), "OPISTOGNATHUS", spp), 
-    spp = ifelse(grepl("OPSANUS", spp), "OPSANUS", spp), 
-    spp = ifelse(grepl("ROSSIA", spp), "ROSSIA", spp), 
-    spp = ifelse(grepl("SOLENOCERA", spp), "SOLENOCERA", spp), 
-    spp = ifelse(grepl("TRACHYPENEUS", spp), "TRACHYPENEUS", spp)
-  ) %>% 
   group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
   summarise(wtcpue = sumna(wtcpue)) %>% 
   # add region column
   mutate(region = "Gulf of Mexico") %>% 
   select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>% 
   ungroup()
-
 
 
 if (HQ_DATA_ONLY == TRUE){
@@ -1524,7 +1261,7 @@ if (HQ_DATA_ONLY == TRUE){
   
   
   test <- gmex %>% 
-    filter(year >= 2008, year !=2022) %>% 
+    filter(year >= 2008, year !=2023) %>% 
     select(stratum, year) %>% 
     distinct() %>% 
     group_by(stratum) %>% 
@@ -1541,7 +1278,7 @@ if (HQ_DATA_ONLY == TRUE){
   
   gmex_fltr <- gmex %>%
     filter(stratum %in% test$stratum) %>%
-    filter(year>=2008, year!=2022) 
+    filter(year>=2008, year!=2023) 
   
   p3 <- gmex_fltr %>% 
     select(stratum, year) %>% 
@@ -1560,19 +1297,19 @@ if (HQ_DATA_ONLY == TRUE){
   }
   rm(test, test2, p1, p2, p3, p4)
 }
-rm(gmex_bio, gmex_cruise, gmex_spp, gmex_station, gmex_tow, newspp, problems, gmex_station_raw, gmex_station_clean, gmex_strats, dups)
+rm(gmex_bio, gmex_cruise, gmex_spp, gmex_station, gmex_tow, problems,gmex_bio_mod, gmex_bio_utax2, gmex_bio_utax1, dups)
 
 # Compile Northeast US ===========================================================
 print("Compile NEUS")
 ## 2023 update, NEFSC gave data set already with the conversions done 
 #read strata file
-neus_strata <- read_csv(here::here("data", "neus_strata.csv"), col_types = cols(.default = col_character())) %>%
+neus_strata <- read_csv(here::here("data/2023_data_archive", "neus_strata.csv"), col_types = cols(.default = col_character())) %>%
   select(stratum, stratum_area) %>% 
   mutate(stratum = as.double(stratum)) %>%
   distinct()
 
 #read in catch file, which includes both spring and fall survey. Need to parse them out
-neus_catch <- read.csv("data/NEFSC_BTS_ALLCATCHES.csv", header=T, sep=",")%>%
+neus_catch <- read.csv("data/2023_data_archive/NEFSC_BTS_ALLCATCHES.csv", header=T, sep=",")%>%
   filter(!is.na(SCINAME)) %>%
   mutate(SVSPP = as.character(SVSPP))
 neus_fall_catch<-neus_catch %>%
@@ -1625,7 +1362,7 @@ neus_fall<- neus_fall %>%
     !grepl("EGG", spp), 
     !grepl("UNIDENTIFIED", spp),
     !grepl("UNKNOWN", spp),
-    !grepl("NO FISH BUT GOOD TOW", spp),
+    !grepl("NO FISH BUT GOOD TOW", spp), ## FLAG. should this tow be kept in somehow?
     !grepl("DELPHINIDAE", spp)) %>%
   # remove any extra white space from around spp names
   mutate(spp = str_trim(spp))
@@ -1795,7 +1532,7 @@ rm(neus_strata)
 # Compile SEUS ===========================================================
 print("Compile SEUS")
 # turns everything into a character so import as character anyway
-seus_catch <- read_csv(unz(here::here("data", "seus_catch.csv.zip"), "seus_catch.csv"), col_types = cols(.default = col_character())) %>% 
+seus_catch <- read_csv(unz(here::here("data/2023_data_archive", "seus_catch.csv.zip"), "seus_catch.csv"), col_types = cols(.default = col_character())) %>% 
   # remove symbols
   mutate_all(list(~str_replace(., "=", ""))) %>% 
   mutate_all(list(~str_replace(., '"', ''))) %>% 
@@ -1856,7 +1593,7 @@ seus_catch <- type_convert(seus_catch, col_types = cols(
   LASTUPDATED = col_character()
 ))
 
-seus_haul <- read_csv(here::here("data", "seus_haul.csv"), col_types = cols(.default = col_character())) %>% 
+seus_haul <- read_csv(here::here("data/2023_data_archive", "seus_haul.csv"), col_types = cols(.default = col_character())) %>% 
   distinct(EVENTNAME, DEPTHSTART)  %>% 
   # remove symbols
   mutate_all(list(~str_replace(., "=", ""))) %>% 
@@ -1876,11 +1613,10 @@ seus_haul <- type_convert(seus_haul, col_types = cols(
 seus <- left_join(seus_catch, seus_haul, by = "EVENTNAME")
 
 # contains strata areas
-seus_strata <- read_csv(here::here("data", "seus_strata.csv"), col_types = cols(
+seus_strata <- read_csv(here::here("data/2023_data_archive", "seus_strata.csv"), col_types = cols(
   STRATA = col_integer(),
   STRATAHECTARE = col_double()
 ))
-
 
 #Create STRATA column
 seus <- seus %>% 
@@ -3490,29 +3226,30 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 # Compile TAX ===============================================================
 print("Compile TAX")
 
-tax <- read_csv(here::here("spptaxonomy_final.csv"), col_types = cols(
+tax <- read_csv(here::here("spp_taxonomy_mater_key.csv"), col_types = cols(
   survey_name = col_character(),
-  valid_name = col_character(),
+  accepted_name = col_character(),
   common = col_character(),
-  rank = col_character(),
-  family = col_character(),
-  order = col_character(),
+  kingdom = col_character(),
+  phylum = col_character(),
   class = col_character(),
-  citation = col_character(),
-  valid_authority = col_character(),
-  valid_AuthID = col_character(),
-  url = col_character(),
-  src_database= col_character())) 
+  order = col_character(),
+  family = col_character(),
+  genus = col_character(),
+  rank = col_character(),
+  worms_id = col_character(),
+  SpecCode = col_character())) 
 
 
 tax<- tax  %>% 
   # remove any extra white space from around spp and common names
   mutate(survey_name= str_squish(survey_name),
-         valid_name= str_squish(valid_name), 
+         valid_name= str_squish(accepted_name), 
          common = str_squish(common)) %>%
-  select(c(survey_name, valid_name, common, rank, class)) %>%
+  select(c(survey_name, valid_name, common, rank, class, filtercat)) %>%
   distinct()
 
+tax$survey_name<-firstup(tax$survey_name)
 
 if(isTRUE(WRITE_MASTER_DAT)){
   save(ai, ebs, gmex, goa, neus_fall, neus_spring, seusFALL, seusSPRING, seusSUMMER, tax, wcann, wctri, file = here("output/data_clean", "individual-regions.rds"))
@@ -3543,17 +3280,16 @@ dat_spp <- dat %>%
   distinct() %>% 
   mutate(spp_id = 1:nrow(.))
 
-# Anti-join this spp list to the taxon column from the spptaxonomy file to see which spp are not represented there
-not_in_tax <- anti_join(dat, tax, by = c("spp" = "survey_name")) %>% select("region", "spp") %>% distinct()
+# Anti-join this spp list to the taxon column from the tax file to see which spp are not represented there
+not_in_tax <- anti_join(dat_spp, tax, by = c("spp" = "survey_name")) 
 not_in_tax<- not_in_tax %>% group_by(spp) %>% 
   summarise_all(funs(toString(unique(na.omit(.)))))
-# write.csv(not_in_tax, "not_in_tax_1_23_22.csv")
 
 #========================== end species name check ===========
 
 # add a case sensitive spp and common name
 dat <- left_join(dat, tax, by = c("spp" = "survey_name")) %>% 
-  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, valid_name, common, rank, wtcpue) %>%
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, accepted_name, common, rank, wtcpue) %>%
   distinct() 
 
 #check for errors in name matching
@@ -3563,8 +3299,8 @@ if(sum(dat$valid_name == 'NA') > 0 | sum(is.na(dat$valid_name)) > 0){
 
 # #if get warning, check for which spp have NA for name and common if check above fails
 spp_na<-dat %>%
-  filter(is.na(dat$valid_name) & is.na(dat$common)) %>%
-  select(c("region", "spp", "valid_name", "common")) %>% 
+  filter(is.na(dat$accepted_name) & is.na(dat$common)) %>%
+  select(c("region", "spp", "accepted_name", "common")) %>% 
   distinct()
 
 # spp_na_list<-unique(c(as.character(spp_na$spp)))
@@ -3601,8 +3337,7 @@ dat_fltr <- rbind(ai_fltr, ebs_fltr, nbs_fltr, gmex_fltr, goa_fltr, neus_fall_fl
 dat_fltr$spp<-firstup(dat_fltr$spp)
 # add a case sensitive spp and common name and filter out Higher Level taxon names, the turtle, bird, and dolphin species, and plants/seaweed species. 
 dat_fltr <- left_join(dat_fltr, tax, by = c("spp" = "survey_name")) %>% 
-  filter(!grepl("HigherOrder", rank),
-         !grepl("remove", rank),
+  filter(!grepl("remove", filtercat),
          !grepl("Caretta caretta", valid_name),
          !grepl("Sagmatias obliquidens", valid_name),
          !grepl("Puffinus gravis", valid_name),
@@ -3665,40 +3400,6 @@ spplist <- presyrsum %>%
 
 spp_addin<-read.csv("Add_managed_spp.csv",header=T, sep=",")
 spplist<-rbind(spplist, spp_addin)
-# #remove flagged spp (load in Exclude species files )
-# setwd("~/transfer/DisMAP project/DisMAP_processing_code/spp_QAQC/exclude_spp")
-# ai_ex<-read.csv("ai_excludespp.csv")
-# goa_ex<-read.csv("goa_excludespp.csv")
-# ebs_ex<-read.csv("ebs_excludespp.csv")
-# wctri_ex<-read.csv("wctri_excludespp.csv")
-# wcann_ex<-read.csv("wcann_excludespp.csv")
-# gmex_ex<-read.csv("gmex_excludespp.csv")
-# SEUSs_ex<-read.csv("seusSPRING_excludespp.csv")
-# SEUSf_ex<-read.csv("seusFALL_excludespp.csv")
-# SUESsu_ex<-read.csv("seusSUMMER_excludespp.csv")
-# NEUSs_ex<-read.csv("neusS_excludespp.csv")
-# NEUSf_ex<-read.csv("neusF_excludespp.csv")
-# addsppex<-read.csv("sppList_add_exclude_12_21_22.csv")
-# names(gmex_ex) <- names(ai_ex) 
-# 
-# excludespp_list<-rbind(ai_ex, goa_ex, ebs_ex, wctri_ex, wcann_ex, 
-#                        SEUSs_ex, SEUSf_ex,SUESsu_ex, NEUSs_ex, NEUSf_ex, gmex_ex, addsppex) %>%
-#                 mutate(test.spp = str_trim(test.spp)) %>%
-#                 select(test.spp, region, exclude) %>%
-#                 distinct()
-# 
-# names(excludespp_list)[1] <- "spp"
-# spplist_exclude <- left_join(spplist, excludespp_list, by=c('region','spp'))
-# spplist_exclude$exclude <- ifelse(is.na(spplist_exclude$exclude),FALSE,spplist_exclude$exclude)
-# 
-# spplist_final <- filter(spplist_exclude, exclude == FALSE)
-#   ##what species were removed in the end
-#   spplist_remove<-filter(spplist_exclude, exclude == TRUE)
-#   #write.csv(spplist_removed, "sppList_REMOVED_11_22_22.csv")
-# 
-# spplist_final<-spplist_final[c(1,2,3)]
-# #write.csv(spplist_final, "sppList_Final_12_5_22.csv")
-
 # Trim dat to these species (for a given region, spp pair in spplist_final, in dat, keep only rows that match that region, spp pairing)
 trimmed_dat_fltr <- dat_fltr %>% 
   filter(paste(region, spp) %in% paste(spplist$region, spplist$spp))
