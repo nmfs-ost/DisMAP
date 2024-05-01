@@ -1,5 +1,5 @@
 ## For [SEUS]
-# 1. Using Chrome or Firefox (not Safari) visit the website: ("https://www2.dnr.sc.gov/seamap/Account/LogOn?ReturnUrl=%2fseamap%2fReports")makarp Z!_Gm>iJXo
+# 1. Using Chrome or Firefox (not Safari) visit the website: ("https://www2.dnr.sc.gov/seamap/Account/LogOn?ReturnUrl=%2fseamap%2fReports")
 # 2. Login by creating your own account.
 # 3. Click on Coastal Trawl Survey Extraction.
 # 4. Select "Event Information" from the drop down menu.
