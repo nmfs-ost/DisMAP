@@ -1,5 +1,5 @@
 
-OUTPUT_CSV_DIRECTORY = "~/transfer/DisMAP project/DisMAP_processing_code/Python/fish_data_csvs_04_23"
+OUTPUT_CSV_DIRECTORY = "~/transfer/DisMAP project/DisMAP/data_processing_rcode/output/python"
 
 # dat.exploded should have already be created
 

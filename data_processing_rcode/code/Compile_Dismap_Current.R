@@ -1,4 +1,4 @@
-## ---- DISMAP 04/18/2024 --- NOTE: need to double check SEUS and WCANN information (get different files depending on where on FRAM download the data from) 
+## ---- DISMAP 05/16/2024 --- NOTE: need to double check SEUS and WCANN information (get different files depending on where on FRAM download the data from) 
 
 ## updated thru 2023 survey data for all regions except SEUS (which is thru 2022)
 ## added bottom temperature and SST to the files for all regions (note: West Coast raw data doesn't include these variables)
@@ -7,26 +7,26 @@
 #### LOAD LIBRARIES AND FUNCTIONS ####
 #--------------------------------------------------------------------------------------#
 ## Testing changes ##
-# install.packages("devtools")
+install.packages("devtools")
 library(devtools)
-# install.packages("readr")
-# install.packages("here")
-# install.packages("purrr") 
-# install.packages("stringr")
-# install.packages("forcats") 
-# install.packages("tidyr")
-# install.packages("ggplot2") 
-# install.packages("dplyr")
-# install.packages("tibble") 
-# install.packages("lubridate")
-# install.packages("PBSmapping") 
-# install.packages("data.table") 
-# install.packages("gridExtra") 
-# install.packages("questionr") 
-# install.packages("geosphere") 
-# install.packages("taxize")
-# install.packages("worrms")
-# install.packages("rfishbase")
+install.packages("readr")
+install.packages("here")
+install.packages("purrr")
+install.packages("stringr")
+install.packages("forcats")
+install.packages("tidyr")
+install.packages("ggplot2")
+install.packages("dplyr")
+install.packages("tibble")
+install.packages("lubridate")
+install.packages("PBSmapping")
+install.packages("data.table")
+install.packages("gridExtra")
+install.packages("questionr")
+install.packages("geosphere")
+install.packages("taxize")
+install.packages("worrms")
+install.packages("rfishbase")
 
 
 # Load required packages 
@@ -260,9 +260,9 @@ print("Compile Alaska")
 
 # Load data --------------------------------------------------------------------
 
-catch <- readr::read_csv(file = here::here("data/gap_products_foss_catch.csv"))[,-1] # remove "row number" column
-haul <- readr::read_csv(file = here::here("data/gap_products_foss_haul.csv"))[,-1] # remove "row number" column
-species <- readr::read_csv(file = here::here("data/gap_products_foss_species.csv"))[,-1] # remove "row number" column
+catch <- readr::read_csv(file = here::here("data/AK_gap_products_foss_catch.csv"))[,-1] # remove "row number" column
+haul <- readr::read_csv(file = here::here("data/AK_gap_products_foss_haul.csv"))[,-1] # remove "row number" column
+species <- readr::read_csv(file = here::here("data/AK_gap_products_foss_species.csv"))[,-1] # remove "row number" column
 
 # Wrangle data -----------------------------------------------------------------
 ak_full <- 
@@ -339,7 +339,7 @@ ak_full<- ak_full %>%
       dplyr::ungroup()
 
 # clean up
-rm(comb, haul, catch)
+rm(haul, catch)
 
 # now that main data set has been compiled and cleaned/standardized, can split out the different surveys
 ### Aleutian Islands survey -----
@@ -741,7 +741,7 @@ rm(wctri_catch, wctri_haul, wctri_species, wctri_strats)
 
 # Compile WCANN ===========================================================
 print("Compile WCANN")
-wcann_catch <- read_csv(here::here("data/2023_data_archive", "wcann_catch.csv"), col_types = cols(
+wcann_catch <- read_csv(here::here("data", "wcann_catch.csv"), col_types = cols(
   catch_id = col_integer(),
   common_name = col_character(),
   cpue_kg_per_ha_der = col_double(),
@@ -773,7 +773,7 @@ wcann_catch <- read_csv(here::here("data/2023_data_archive", "wcann_catch.csv"),
 )) %>% 
   select("trawl_id","year","longitude_dd","latitude_dd","depth_m","scientific_name","total_catch_wt_kg","cpue_kg_per_ha_der", "partition", "performance")
 
-wcann_haul <- read_csv(here::here("data/2023_data_archive", "wcann_haul.csv"), col_types = cols(
+wcann_haul <- read_csv(here::here("data", "wcann_haul.csv"), col_types = cols(
   area_swept_ha_der = col_double(),
   date_yyyymmdd = col_integer(),
   depth_hi_prec_m = col_double(),
@@ -937,7 +937,7 @@ rm(wcann_catch, wcann_haul, wcann_strats)
 # Compile GMEX ===========================================================
 print("Compile GMEX")
 ##Read in data
-gmex_station <- read_csv(here::here("data/2023_data_archive", "gmex_STAREC.csv"), col_types = cols(.default = col_character())) %>% 
+gmex_station <- read_csv(here::here("data", "gmex_STAREC.csv"), col_types = cols(.default = col_character())) %>% 
   select('STATIONID', 'CRUISEID', 'CRUISE_NO', 'P_STA_NO', 'TIME_ZN', 'TIME_MIL', 'S_LATD', 'S_LATM', 'S_LOND', 'S_LONM', 'E_LATD', 'E_LATM', 'E_LOND', 'E_LONM', 'STAT_ZONE', 'DEPTH_SSTA', 'MO_DAY_YR', 'VESSEL_SPD', 'COMSTAT')
 
 gmex_station <- type_convert(gmex_station, col_types = cols(
@@ -964,7 +964,7 @@ gmex_station <- type_convert(gmex_station, col_types = cols(
 
 names(gmex_station)<-tolower(names(gmex_station))
 
-gmex_tow <-readr::read_delim(here::here("data/2023_data_archive","gmex_INVREC.csv"),
+gmex_tow <-readr::read_delim(here::here("data","gmex_INVREC.csv"),
                              delim = ',', escape_backslash = T, escape_double = F) 
 gmex_tow<-type_convert(gmex_tow, col_types = cols(
   INVRECID = col_integer(),
@@ -1000,7 +1000,7 @@ gmex_tow <- gmex_tow %>%
   select('STATIONID', 'VESSEL', 'CRUISE_NO', 'P_STA_NO', 'INVRECID', 'GEAR_SIZE', 'GEAR_TYPE', 'MESH_SIZE', 'MIN_FISH', 'OP') %>%
   filter(GEAR_TYPE=='ST')
 
-gmex_bio <-readr::read_delim(here::here("data/2023_data_archive","gmex_BGSREC.csv"),
+gmex_bio <-readr::read_delim(here::here("data","gmex_BGSREC.csv"),
                              delim = ',', escape_backslash = T, escape_double = F)
 
 gmex_bio <- type_convert(gmex_bio, cols(
@@ -1016,14 +1016,14 @@ gmex_bio <- type_convert(gmex_bio, cols(
   SELECT_BGS = col_double()
 ))
 
-gmex_cruise <-read_csv(here::here("data/2023_data_archive", "gmex_CRUISES.csv"), col_types = cols(.default = col_character())) %>% 
+gmex_cruise <-read_csv(here::here("data", "gmex_CRUISES.csv"), col_types = cols(.default = col_character())) %>% 
   select(CRUISEID, VESSEL, TITLE)
 
 
 gmex_cruise <- type_convert(gmex_cruise, col_types = cols(CRUISEID = col_integer(), VESSEL = col_integer(), TITLE = col_character()))
 names(gmex_cruise)<-tolower(names(gmex_cruise))
 
-gmex_spp <-read_csv(here::here("data","BCT_NFR_01182023.csv"))
+gmex_spp <-read_csv(here::here("data","gmex_BCT_NFR_01182023.csv"))
 problems(gmex_spp)
 names(gmex_spp)<-tolower(names(gmex_spp))
 gmex_spp<-dplyr::select(gmex_spp,biocode,ciu_biocode,taxon)
@@ -1261,12 +1261,12 @@ if (HQ_DATA_ONLY == TRUE){
   
   
   test <- gmex %>% 
-    filter(year >= 2008, year !=2023) %>% 
+    filter(year >= 2010, year!=2023) %>% #switched to 2010 and after since 2008-2009 were experimental years
     select(stratum, year) %>% 
     distinct() %>% 
     group_by(stratum) %>% 
     summarise(count = n()) %>%
-    filter(count >=12)
+    filter(count >=10) # removes strata that are poorly sampled through time
   
   # how many rows will be lost if years where all strata sampled (>2008) are kept?
   test2 <- gmex %>% 
@@ -1278,7 +1278,7 @@ if (HQ_DATA_ONLY == TRUE){
   
   gmex_fltr <- gmex %>%
     filter(stratum %in% test$stratum) %>%
-    filter(year>=2008, year!=2023) 
+    filter(year>=2010, year != 2023) 
   
   p3 <- gmex_fltr %>% 
     select(stratum, year) %>% 
@@ -1303,13 +1303,13 @@ rm(gmex_bio, gmex_cruise, gmex_spp, gmex_station, gmex_tow, problems,gmex_bio_mo
 print("Compile NEUS")
 ## 2023 update, NEFSC gave data set already with the conversions done 
 #read strata file
-neus_strata <- read_csv(here::here("data/2023_data_archive", "neus_strata.csv"), col_types = cols(.default = col_character())) %>%
+neus_strata <- read_csv(here::here("data", "neus_strata.csv"), col_types = cols(.default = col_character())) %>%
   select(stratum, stratum_area) %>% 
   mutate(stratum = as.double(stratum)) %>%
   distinct()
 
 #read in catch file, which includes both spring and fall survey. Need to parse them out
-neus_catch <- read.csv("data/2023_data_archive/NEFSC_BTS_ALLCATCHES.csv", header=T, sep=",")%>%
+neus_catch <- read.csv("data/NEFSC_BTS_ALLCATCHES_May2024.csv", header=T, sep=",")%>%
   filter(!is.na(SCINAME)) %>%
   mutate(SVSPP = as.character(SVSPP))
 neus_fall_catch<-neus_catch %>%
@@ -1391,8 +1391,8 @@ if (HQ_DATA_ONLY == TRUE){
     select(stratum, year) %>% 
     distinct() %>% 
     group_by(stratum) %>% 
-    summarise(count = n()) %>%
-    filter(count >= 47)
+    summarise(count = n())%>%
+    filter(count >= 46) 
   
   # how many rows will be lost if only stratum trawled ever year are kept (47 years)?
   test2 <- neus_fall %>% 
@@ -1532,7 +1532,7 @@ rm(neus_strata)
 # Compile SEUS ===========================================================
 print("Compile SEUS")
 # turns everything into a character so import as character anyway
-seus_catch <- read_csv(unz(here::here("data/2023_data_archive", "seus_catch.csv.zip"), "seus_catch.csv"), col_types = cols(.default = col_character())) %>% 
+seus_catch <- read_csv(here::here("data", "seus_catch.csv"), col_types = cols(.default = col_character())) %>% 
   # remove symbols
   mutate_all(list(~str_replace(., "=", ""))) %>% 
   mutate_all(list(~str_replace(., '"', ''))) %>% 
@@ -1593,7 +1593,7 @@ seus_catch <- type_convert(seus_catch, col_types = cols(
   LASTUPDATED = col_character()
 ))
 
-seus_haul <- read_csv(here::here("data/2023_data_archive", "seus_haul.csv"), col_types = cols(.default = col_character())) %>% 
+seus_haul <- read_csv(here::here("data", "seus_haul.csv"), col_types = cols(.default = col_character())) %>% 
   distinct(EVENTNAME, DEPTHSTART)  %>% 
   # remove symbols
   mutate_all(list(~str_replace(., "=", ""))) %>% 
@@ -1613,7 +1613,7 @@ seus_haul <- type_convert(seus_haul, col_types = cols(
 seus <- left_join(seus_catch, seus_haul, by = "EVENTNAME")
 
 # contains strata areas
-seus_strata <- read_csv(here::here("data/2023_data_archive", "seus_strata.csv"), col_types = cols(
+seus_strata <- read_csv(here::here("data", "seus_strata.csv"), col_types = cols(
   STRATA = col_integer(),
   STRATAHECTARE = col_double()
 ))
@@ -1767,7 +1767,7 @@ if (HQ_DATA_ONLY == TRUE){
     distinct() %>% 
     group_by(stratum) %>% 
     summarise(count = n()) %>%
-    filter(count >= 29)
+    filter(count >= 29) # strata sampled in 90% of years!
   
   # how many rows will be lost if only stratum trawled ever year are kept?
   test2 <- seusSPRING %>% 
@@ -1778,7 +1778,7 @@ if (HQ_DATA_ONLY == TRUE){
   # 6% are removed
   
   seusSPRING_fltr <- seusSPRING %>%
-    filter(stratum %in% test$stratum) 
+    filter(stratum %in% test$stratum)
   
   p3 <- seusSPRING_fltr %>% 
     select(stratum, year) %>% 
@@ -3261,7 +3261,6 @@ if(isTRUE(WRITE_MASTER_DAT)){
 
 # Master Data Set ===========================================================
 print("Join into Master Data Set")
-
 #Full unfiltered data set
 dat <- rbind(ai, ebs, gmex, goa, nbs, neus_fall, neus_spring, seusFALL, seusSPRING, seusSUMMER, wcann, wctri) %>% 
   # Remove NA values in wtcpue
@@ -3299,8 +3298,8 @@ if(sum(dat$valid_name == 'NA') > 0 | sum(is.na(dat$valid_name)) > 0){
 
 # #if get warning, check for which spp have NA for name and common if check above fails
 spp_na<-dat %>%
-  filter(is.na(dat$accepted_name) & is.na(dat$common)) %>%
-  select(c("region", "spp", "accepted_name", "common")) %>% 
+  filter(is.na(dat$valid_name) & is.na(dat$common)) %>%
+  select(c("region", "spp", "valid_name", "common")) %>% 
   distinct()
 
 # spp_na_list<-unique(c(as.character(spp_na$spp)))
@@ -3344,7 +3343,7 @@ dat_fltr <- left_join(dat_fltr, tax, by = c("spp" = "survey_name")) %>%
          !grepl("Phaeophyceae", class),
          !grepl("Florideophyceae", class),
          !grepl("Ulvophyceae", class)) %>%
-  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, valid_name, common, wtcpue) %>%
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, accepted_name, common, wtcpue) %>%
   distinct() %>% 
   rename(spp = valid_name) 
 

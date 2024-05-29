@@ -1,6 +1,12 @@
 #' ---
 #' title: "Download NEUS"
 #' ---
+## As of 2023 the NEFSC is changing how they host their data, so for now need to reach out directly to: 
+## Philip Politis and Catherine Foley to get the data (Jan of each year)
+
+
+
+### NO LONGER WHERE DATA IS STORED
 #' Download the spring and fall bottom trawl survey files from below links using the WinSCP app and save the zipped file to data_raw folder
 #' [Fall]
 #' (https://inport.nmfs.noaa.gov/inport/item/22560) -- go to the Distribution 1 and 2 links to get the files (note: only seems to work in internet explorer or Edge)
@@ -12,8 +18,6 @@
 #' [Distribution 1](ftp://ftp.nefsc.noaa.gov/pub/dropoff/PARR/PEMAD/ESB/22561)
 #' [Distribution 2](ftp://ftp.nefsc.noaa.gov/pub/dropoff/PARR/PEMAD/ESB/SVDBS) ## this is same as Fall so only need to download one of them
 
-## As of 2023 the NEFSC is changing how they host their data, so for now need to reach out directly to: 
-## Philip Politis and Catherine Foley to get the data (Jan of each year)
 
 ## ----neus----------------------------------------------------------------
 unzip(here("data_raw/SVDBS_SupportTables.zip"), exdir = here("data_raw"))
