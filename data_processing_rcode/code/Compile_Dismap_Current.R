@@ -1,7 +1,6 @@
-## ---- DISMAP 05/16/2024 --- NOTE: need to double check SEUS and WCANN information (get different files depending on where on FRAM download the data from) 
+## ---- DISMAP 05/29/2024 --- 
 
-## updated thru 2023 survey data for all regions except SEUS (which is thru 2022)
-## added bottom temperature and SST to the files for all regions (note: West Coast raw data doesn't include these variables)
+## updated thru 2023 survey data for all regions except SEUS and Gmex(which is thru 2022)
 
 #--------------------------------------------------------------------------------------#
 #### LOAD LIBRARIES AND FUNCTIONS ####
