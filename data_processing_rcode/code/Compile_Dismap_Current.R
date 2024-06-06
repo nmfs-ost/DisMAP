@@ -1,4 +1,4 @@
-## ---- DISMAP 05/29/2024 --- 
+## ---- DISMAP 06/6/2024 --- 
 
 ## updated thru 2023 survey data for all regions except SEUS and Gmex(which is thru 2022)
 
@@ -65,7 +65,7 @@ library(data.table)
 # Answer the following questions using all caps TRUE or FALSE to direct the actions of the script =====================================
 
 # 1. Some strata and years have very little data, should they be removed and saved as fltr data? #DEFAULT: TRUE. 
-HQ_DATA_ONLY <- FALSE
+HQ_DATA_ONLY <- TRUE
 
 # 2. View plots of removed strata for HQ_DATA. #OPTIONAL, DEFAULT:FALSE
 # It takes a while to generate these plots.
@@ -421,15 +421,17 @@ if (HQ_DATA_ONLY == TRUE){
     summarise(count = n())  %>% 
     filter(count >= 12)
   
-  # how many rows will be lost if only years where all stratum sampled are kept?
+  # how many rows will be lost if only years where all stratum sampled are kept? and start timeseries in 1987
   test2 <- ebs %>% 
-    filter(year %in% test$year)
+    filter(year %in% test$year) %>%
+    filter(year != 1985)
   nrow(ebs) - nrow(test2)
   # percent that will be lost
   print((nrow(ebs) - nrow(test2))/nrow(ebs))
   # 8% of rows are removed
   ebs_fltr <- ebs %>% 
-    filter(year %in% test$year) 
+    filter(year %in% test$year)%>%
+    filter(year != 1985)
   
   p3 <- ebs_fltr %>% 
     select(stratum, year) %>% 
@@ -814,26 +816,26 @@ wcann <- wcann %>%
     wtcpue = total_catch_wt_kg/area_swept_ha_der 
   )
 
-wcann$stratum<-ifelse(wcann$latitude_dd <=35.5 & wcann$depth_m<=183, "35.5-183", 
-                      ifelse(wcann$latitude_dd <= 35.5 & wcann$depth_m <= 549, "35.5-549",
-                             ifelse(wcann$latitude_dd <= 35.5 & wcann$depth_m <= 1280, "35.5-1280",
-                                    ifelse(wcann$latitude_dd <= 35.5 & wcann$depth_m > 1280, "35.5-2000",
-                                           ifelse(wcann$latitude_dd <=40.5 & wcann$depth_m<=183, "40.5-183", 
-                                                  ifelse(wcann$latitude_dd <= 40.5 & wcann$depth_m <= 549, "40.5-549",
-                                                         ifelse(wcann$latitude_dd <= 40.5 & wcann$depth_m <= 1280, "40.5-1280",
-                                                                ifelse(wcann$latitude_dd <= 40.5 & wcann$depth_m > 1280, "40.5-2000",
-                                                                       ifelse(wcann$latitude_dd <=43.5 & wcann$depth_m<=183, "43.5-183", 
-                                                                              ifelse(wcann$latitude_dd <= 43.5 & wcann$depth_m <= 549, "43.5-549",
-                                                                                     ifelse(wcann$latitude_dd <= 43.5 & wcann$depth_m <= 1280, "43.5-1280",
-                                                                                            ifelse(wcann$latitude_dd <= 43.5 & wcann$depth_m > 1280, "43.5-2000",
+wcann$stratum<-ifelse(wcann$latitude_dd <=35.5 & wcann$depth_hi_prec_m<=183, "35.5-183", 
+                      ifelse(wcann$latitude_dd <= 35.5 & wcann$depth_hi_prec_m <= 549, "35.5-549",
+                             ifelse(wcann$latitude_dd <= 35.5 & wcann$depth_hi_prec_m <= 1280, "35.5-1280",
+                                    ifelse(wcann$latitude_dd <= 35.5 & wcann$depth_hi_prec_m > 1280, "35.5-2000",
+                                           ifelse(wcann$latitude_dd <=40.5 & wcann$depth_hi_prec_m<=183, "40.5-183", 
+                                                  ifelse(wcann$latitude_dd <= 40.5 & wcann$depth_hi_prec_m<= 549, "40.5-549",
+                                                         ifelse(wcann$latitude_dd <= 40.5 & wcann$depth_hi_prec_m <= 1280, "40.5-1280",
+                                                                ifelse(wcann$latitude_dd <= 40.5 & wcann$depth_hi_prec_m > 1280, "40.5-2000",
+                                                                       ifelse(wcann$latitude_dd <=43.5 & wcann$depth_hi_prec_m<=183, "43.5-183", 
+                                                                              ifelse(wcann$latitude_dd <= 43.5 & wcann$depth_hi_prec_m <= 549, "43.5-549",
+                                                                                     ifelse(wcann$latitude_dd <= 43.5 & wcann$depth_hi_prec_m <= 1280, "43.5-1280",
+                                                                                            ifelse(wcann$latitude_dd <= 43.5 & wcann$depth_hi_prec_m > 1280, "43.5-2000",
                                                                                                    # ifelse(wcann$latitude_dd <=47.5 & wcann$depth_m<=183, "47.5-183", 
                                                                                                    #        ifelse(wcann$latitude_dd <= 47.5 & wcann$depth_m <= 549, "47.5-549",
                                                                                                    #               ifelse(wcann$latitude_dd <= 47.5 & wcann$depth_m <= 1280, "47.5-1280",
                                                                                                    #                      ifelse(wcann$latitude_dd <= 47.5 & wcann$depth_m > 1280, "47.5-2000",
-                                                                                                   ifelse(wcann$latitude_dd <=50.5 & wcann$depth_m<=183, "50.5-183", 
-                                                                                                          ifelse(wcann$latitude_dd <= 50.5 & wcann$depth_m <= 549, "50.5-549",
-                                                                                                                 ifelse(wcann$latitude_dd <= 50.5 & wcann$depth_m <= 1280, "50.5-1280",
-                                                                                                                        ifelse(wcann$latitude_dd <= 50.5 & wcann$depth_m > 1280, "50.5-2000",NA))))))))))))))))
+                                                                                                   ifelse(wcann$latitude_dd <=50.5 & wcann$depth_hi_prec_m<=183, "50.5-183", 
+                                                                                                          ifelse(wcann$latitude_dd <= 50.5 & wcann$depth_hi_prec_m <= 549, "50.5-549",
+                                                                                                                 ifelse(wcann$latitude_dd <= 50.5 & wcann$depth_hi_prec_m <= 1280, "50.5-1280",
+                                                                                                                        ifelse(wcann$latitude_dd <= 50.5 & wcann$depth_hi_prec_m > 1280, "50.5-2000",NA))))))))))))))))
 wcann_strats <- wcann %>%
   filter(!is.na(wtcpue)) %>% 
   group_by(stratum) %>% 
@@ -845,7 +847,7 @@ wcann <- left_join(wcann, wcann_strats, by = "stratum")
 wcann <- wcann %>% 
   rename(lat = latitude_dd, 
          lon = longitude_dd, 
-         depth = depth_m, 
+         depth = depth_hi_prec_m, 
          spp = scientific_name) %>% 
   # remove non-fish
   filter(spp != "" &
@@ -899,7 +901,7 @@ if (HQ_DATA_ONLY == TRUE){
     distinct() %>% 
     group_by(stratum) %>% 
     summarise(count = n()) %>%
-    filter(count>=19)
+    filter(count>=20)
   
   # how many rows will be lost if only stratum trawled ever year are kept?
   test2 <- wcann %>% 
@@ -907,7 +909,7 @@ if (HQ_DATA_ONLY == TRUE){
   nrow(wcann) - nrow(test2)
   # percent that will be lost
   print((nrow(wcann) - nrow(test2))/nrow(wcann))
-  # 23% of rows are removed
+  
   wcann_fltr <- wcann %>% 
     #filter(year != 2019)%>% 
     filter(stratum %in% test$stratum)
@@ -1393,14 +1395,14 @@ if (HQ_DATA_ONLY == TRUE){
     summarise(count = n())%>%
     filter(count >= 46) 
   
-  # how many rows will be lost if only stratum trawled ever year are kept (47 years)?
+  # how many rows will be lost if only stratum trawled fairly consistently (>46 years - so all but 2 of the years) are kept?
   test2 <- neus_fall %>% 
     filter(year != 2017, year > 1973) %>% 
     filter(stratum %in% test$stratum)
   nrow(neus_fall) - nrow(test2)
   # percent that will be lost
   print((nrow(neus_fall) - nrow(test2))/nrow(neus_fall))
-  # When bad strata are removed after bad years we only lose 38%
+  # When bad strata are removed after bad years we only lose 34%
   
   neus_fall_fltr <- neus_fall %>%
     filter(year != 2017, year > 1973) %>% 
@@ -1497,7 +1499,7 @@ if (HQ_DATA_ONLY == TRUE){
   
   # how many rows will be lost if only stratum trawled ALMOST ever year are kept?
   test2 <- neus_spring %>% 
-    filter(year != 2020,year != 2014, year != 1975, year > 1973) %>%
+    filter(year!= 2023, year != 2020,year != 2014, year != 1975, year > 1973) %>%
     filter(stratum %in% test$stratum)
   nrow(neus_spring) - nrow(test2)
   # percent that will be lost
@@ -1505,7 +1507,7 @@ if (HQ_DATA_ONLY == TRUE){
   # When bad strata are removed after bad years we only lose 35%
   
   neus_spring_fltr <- neus_spring %>%
-    filter(year != 2020,year != 2014, year != 1975, year > 1973) %>% 
+    filter(year!= 2023, year != 2020,year != 2014, year != 1975, year > 1973) %>% 
     filter(stratum %in% test$stratum) 
   
   p3 <- neus_spring_fltr %>% 
@@ -1720,10 +1722,11 @@ seus <- left_join(seus, biomass, by = c("haulid", "stratum", "stratumarea", "yea
 # double check that column numbers haven't changed by more than 2.  
 
 seus <- seus %>% 
-  # remove non-fish
+  # remove non-fish and records with no species or common name
   filter(
     !spp %in% c('MISCELLANEOUS INVERTEBRATES','XANTHIDAE','MICROPANOPE NUTTINGI','ALGAE','DYSPANOPEUS SAYI', 'PSEUDOMEDAEUS AGASSIZII')
   ) %>% 
+  filter(!is.na(spp)) %>%
   # adjust spp names
   mutate(
     spp = ifelse(grepl("ANCHOA", spp), "ANCHOA", spp), 
@@ -1766,7 +1769,7 @@ if (HQ_DATA_ONLY == TRUE){
     distinct() %>% 
     group_by(stratum) %>% 
     summarise(count = n()) %>%
-    filter(count >= 29) # strata sampled in 90% of years!
+    filter(count >= 29) # strata sampled all but a few year!!
   
   # how many rows will be lost if only stratum trawled ever year are kept?
   test2 <- seusSPRING %>% 
@@ -1806,26 +1809,39 @@ seusSUMMER <- seus %>%
 
 if (HQ_DATA_ONLY == TRUE){
   # look at the graph and make sure decisions to keep or eliminate data make sense
-  #no need to filter, but rename dataset for consistency
-  seusSUMMER_fltr <- seusSUMMER
-  p1 <- seusSUMMER_fltr %>% 
+  
+  p1 <- seusSUMMER %>% 
     select(stratum, year) %>% 
     ggplot(aes(x = as.factor(stratum), y = as.factor(year))) +
     geom_jitter()
   
-  p2 <- seusSUMMER_fltr %>%
+  p2 <- seusSUMMER %>%
+    select(lat, lon) %>% 
+    ggplot(aes(x = lon, y = lat)) +
+    geom_jitter()
+  
+  #2021 was poorly sampled, so should be removed from data
+  seusSUMMER_fltr <- seusSUMMER %>%
+    filter(year!=2021)
+  
+  p3 <- seusSUMMER_fltr %>% 
+    select(stratum, year) %>% 
+    ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
+    geom_jitter()
+  
+  p4 <- seusSUMMER_fltr %>%
     select(lat, lon) %>% 
     ggplot(aes(x = lon, y = lat)) +
     geom_jitter()
   
   if (HQ_PLOTS == TRUE){
-    temp <- grid.arrange(p1, p2, nrow = 2)
+    temp <- grid.arrange(p1, p2, p3, p4, nrow = 2)
     ggsave(plot = temp, filename = here::here("output/plots", "seusSUM_hq_dat_removed.png"))
     rm(temp)
   }
-  rm(p1, p2)
+  rm(p1, p2, p3, p4)
 }
-# no missing data
+
 
 # SEUS fall ====
 seusFALL <- seus %>% 
@@ -1833,25 +1849,9 @@ seusFALL <- seus %>%
   select(-SEASON) %>% 
   mutate(region = "Southeast US Fall")
 
-
 # how many rows will be lost if only stratum trawled ever year are kept?
 if (HQ_DATA_ONLY == TRUE){
-  test <- seusFALL %>%
-    filter(year != 2018,  year != 2019) %>%
-    select(stratum, year) %>%
-    distinct() %>%
-    group_by(stratum) %>%
-    summarise(count = n()) %>%
-    filter(count >= 27)
-  
-  test2 <- seusFALL %>% 
-    filter(year != 2018,  year != 2019) %>%
-    filter(stratum %in% test$stratum)
-  nrow(seusFALL) - nrow(test2)
-  # percent that will be lost
-  print((nrow(seusFALL) - nrow(test2))/nrow(seusFALL))
-  # 5.1% are removed
-  
+ 
   p1 <- seusFALL %>% 
     select(stratum, year) %>% 
     ggplot(aes(x = as.factor(stratum), y = as.factor(year))) +
@@ -1862,8 +1862,24 @@ if (HQ_DATA_ONLY == TRUE){
     ggplot(aes(x = lon, y = lat)) +
     geom_jitter()
   
+  test <- seusFALL %>%
+    #filter(year != 2018,  year != 2019) %>%
+    select(stratum, year) %>%
+    distinct() %>%
+    group_by(stratum) %>%
+    summarise(count = n()) %>%
+    filter(count >= 31)
+  
+  test2 <- seusFALL %>% 
+    #filter(year != 2018,  year != 2019) %>%
+    filter(stratum %in% test$stratum)
+  nrow(seusFALL) - nrow(test2)
+  # percent that will be lost
+  print((nrow(seusFALL) - nrow(test2))/nrow(seusFALL))
+  # 5.1% are removed
+  
   seusFALL_fltr <- seusFALL  %>%
-    filter(year != 2018,  year != 2019) %>%
+    #filter(year != 2018,  year != 2019) %>%
     filter(stratum %in% test$stratum)
   
   # plot the results after editing
@@ -3274,7 +3290,7 @@ dat$spp<-firstup(dat$spp)
 #Species Taxon checkpoint before proceeding!!
 # Check if any new species are in survey data sets before proceeding....take the 'dat' file that combines the individual regions but before joined with 'spp_taxonomy' file
 dat_spp <- dat %>% 
-  select(spp) %>% 
+  select(spp,region) %>% 
   distinct() %>% 
   mutate(spp_id = 1:nrow(.))
 
@@ -3287,7 +3303,7 @@ not_in_tax<- not_in_tax %>% group_by(spp) %>%
 
 # add a case sensitive spp and common name
 dat <- left_join(dat, tax, by = c("spp" = "survey_name")) %>% 
-  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, accepted_name, common, rank, wtcpue) %>%
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, valid_name, common, rank, wtcpue) %>%
   distinct() 
 
 #check for errors in name matching
