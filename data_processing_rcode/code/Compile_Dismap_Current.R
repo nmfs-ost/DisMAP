@@ -3358,7 +3358,7 @@ dat_fltr <- left_join(dat_fltr, tax, by = c("spp" = "survey_name")) %>%
          !grepl("Phaeophyceae", class),
          !grepl("Florideophyceae", class),
          !grepl("Ulvophyceae", class)) %>%
-  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, accepted_name, common, wtcpue) %>%
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, valid_name, common, wtcpue) %>%
   distinct() %>% 
   rename(spp = valid_name) 
 
@@ -3369,7 +3369,7 @@ if(sum(dat_fltr$spp == 'NA') > 0 | sum(is.na(dat_fltr$spp)) > 0){
 #if get warning, check for which spp have NA for name and common if check above fails
 spp_na<-dat_fltr %>%
   filter(is.na(dat_fltr$spp) & is.na(dat_fltr$common))
-# rm(spp_na)
+ rm(spp_na)
 
 if(isTRUE(REMOVE_REGION_DATASETS)) {
   rm(ai_fltr, ebs_fltr, gmex_fltr, goa_fltr, neus_fall_fltr, neus_spring_fltr, seusFALL_fltr, seusSPRING_fltr, seusSUMMER_fltr, wcann_fltr, wctri_fltr, tax)
@@ -3377,7 +3377,7 @@ if(isTRUE(REMOVE_REGION_DATASETS)) {
 
 if(isTRUE(WRITE_MASTER_DAT)){
   if(isTRUE(PREFER_RDATA)){
-    saveRDS(dat_fltr, file = here("output/data_clean", "all-regions-full-fltr_3_17_23.rds"))
+    saveRDS(dat_fltr, file = here("output/data_clean", "all-regions-full-fltr_6_7_24.rds"))
   }else{
     write_csv(dat_fltr,file=here("output/data_clean", "all-regions-full-fltr_3_17_23.csv"))
   }
@@ -3412,15 +3412,16 @@ spplist <- presyrsum %>%
   filter(presyr >= (maxyrs * 3/4)) %>% 
   select(region, spp, common)
 
-spp_addin<-read.csv("Add_managed_spp.csv",header=T, sep=",")
-spplist<-rbind(spplist, spp_addin)
+spp_addin<-read.csv("data/Add_managed_spp.csv",header=T, sep=",")
+spplist<-rbind(spplist, spp_addin) %>%
+  distinct()
 # Trim dat to these species (for a given region, spp pair in spplist_final, in dat, keep only rows that match that region, spp pairing)
 trimmed_dat_fltr <- dat_fltr %>% 
   filter(paste(region, spp) %in% paste(spplist$region, spplist$spp))
 
 #add an EBS+NBS combined region =========================
 #select years from compiled EBS that match the NBS survey years
-years<-c(2010, 2017, 2019, 2021, 2022)
+years<-c(2010, 2017, 2019, 2021, 2022, 2023)
 enbs_trimmed<-trimmed_dat_fltr %>% filter(region %in% c("Eastern Bering Sea", "Northern Bering Sea"),
                                           year %in% years) %>%
   mutate(region="Bering Sea Combined")
@@ -3439,15 +3440,17 @@ trimmed_dat_fltr<-rbind(trimmed_dat_fltr, enbs_trimmed)
 
 trimmed_dat_fltr_spp<-trimmed_dat_fltr %>% 
   select(spp, common, region) %>%
-  distinct()
-write.csv(trimmed_dat_fltr_spp, "trimmed_species_region_list.csv")
+  distinct() %>%
+  group_by(spp, common) %>%
+  summarise_all(funs(toString(unique(na.omit(.)))))
+  
+write.csv(trimmed_dat_fltr_spp, file = here("output/data_clean", "trimmed_species_region_list.csv"))
 
 trimmed_dat_fltr_sppUnique<-trimmed_dat_fltr %>% 
   select(spp, common) %>%
   distinct()
-write.csv(trimmed_dat_fltr_sppUnique, "trimmed_Unique_species_list.csv")
+write.csv(trimmed_dat_fltr_sppUnique, file = here("output/data_clean", "trimmed_Unique_species_list.csv"))
 
-names(trimmed_dat_fltr)[2]<-"sampleid"
 
 if(isTRUE(WRITE_TRIMMED_DAT)){
   if(isTRUE(PREFER_RDATA)){
@@ -3510,37 +3513,6 @@ spplist_core <- presyrsum %>%
   filter(presyr >= maxyrs) %>% 
   select(region, spp, common)
 
-# #remove flagged spp (load in Exclude species files )
-# setwd("~/transfer/DisMAP project/DisMAP_processing_code/spp_QAQC/exclude_spp")
-# ai_ex<-read.csv("ai_excludespp.csv")
-# goa_ex<-read.csv("goa_excludespp.csv")
-# ebs_ex<-read.csv("ebs_excludespp.csv")
-# wctri_ex<-read.csv("wctri_excludespp.csv")
-# wcann_ex<-read.csv("wcann_excludespp.csv")
-# gmex_ex<-read.csv("gmex_excludespp.csv")
-# SEUSs_ex<-read.csv("seusSPRING_excludespp.csv")
-# SEUSf_ex<-read.csv("seusFALL_excludespp.csv")
-# SUESsu_ex<-read.csv("seusSUMMER_excludespp.csv")
-# NEUSs_ex<-read.csv("neusS_excludespp.csv")
-# NEUSf_ex<-read.csv("neusF_excludespp.csv")
-# addsppex<-read.csv("sppList_add_exclude_12_21_22.csv")
-# names(gmex_ex) <- names(ai_ex) 
-# 
-# excludespp_list<-rbind(ai_ex, goa_ex, ebs_ex, wctri_ex, wcann_ex, 
-#                        SEUSs_ex, SEUSf_ex,SUESsu_ex, NEUSs_ex, NEUSf_ex, gmex_ex, addsppex) %>%
-#   mutate(test.spp = str_trim(test.spp)) %>%
-#   select(test.spp, region, exclude) %>%
-#   distinct()
-# names(excludespp_list)[1] <- "spp"
-# 
-# spplist_exclude <- left_join(spplist, excludespp_list, by=c('region','spp'))
-# spplist_exclude$exclude <- ifelse(is.na(spplist_exclude$exclude),FALSE,spplist_exclude$exclude)
-# 
-# spplist_final_Core <- filter(spplist_exclude, exclude == FALSE)
-# spplist_remove_1<-filter(spplist_exclude, exclude == TRUE)
-# 
-# spplist_final_Core<-spplist_final_Core[c(1,2,3)]
-
 # Summary information about # of species in this analysis================
 #number of unique species across all regions
 dfuniq<-unique(spplist[c("spp", "common", "region")]) %>%
@@ -3552,8 +3524,9 @@ dfuniq<-unique(spplist[c("spp", "common", "region")]) %>%
 
 dfuniq_Core<-unique(spplist_core[c("spp", "common")])
 length(dfuniq_Core)
-#number of unique species within each region 
-spp_reg_counts<-spplist%>%
+
+#number of unique species within each regional survey (caught 3/4 or years)
+spp_reg_counts<-spplist %>%
   group_by(region)%>%
   summarise(distinct_spp=n_distinct(spp))
 
@@ -3563,16 +3536,22 @@ spp_reg_counts_Core<-spplist_core%>%
   summarise(spp_all_yrs=n_distinct(spp))
 
 num_spp_summary<-left_join(spp_reg_counts, spp_reg_counts_Core, by=c("region"))
-write.csv(num_spp_summary, "summary_unique_spp_table.csv")
-write.csv(spplist_core, "core_spp_list.csv")
+write.csv(num_spp_summary, file=here("output/data_clean", "summary_unique_spp_table.csv"))
+write.csv(spplist_core, file=here("output/data_clean","core_spp_list.csv"))
 
-filter_table<-read.csv("filter_table_final.csv", header=T, sep=",")
-missing_spp<-anti_join(filter_table, dfuniq, by=c("spp", "FilterSubRegion"="region"))
-#filter_table_final<-anti_join(filter_table_3_17, missing_spp, by=c("spp", "common", "FilterSubRegion"))
-# write.csv(missing_spp, "missing_NE_spp_3_17_23.csv")
-# write.csv(filter_table_final, "filter_table_final.csv")   
-miss_filter<-anti_join(dfuniq, filter_table, by=c("spp", "region"="FilterSubRegion"))
-write.csv(miss_filter, "add_to_filter.csv")
+## compare with the Master Filter Table for the filter functionality on the portal 
+filter_table<-read.csv("filter_table_final_5_31_23.csv", header=T, sep=",")
+spp_to_remove<-anti_join(filter_table, dfuniq, by=c("spp", "FilterSubRegion"="region"))
+ #remove these species from the filter table 
+filter_table_revised<-anti_join(filter_table, spp_to_remove)
+
+miss_filter<-anti_join(dfuniq, filter_table, by=c("spp", "region"="FilterSubRegion")) %>%
+  rename(FilterSubRegion=region)
+
+Filter_table_updated<-bind_rows(filter_table_revised, miss_filter)
+write.csv(Filter_table_updated, file=here("output/data_clean", "Final_Filter_Table.csv"))
+
+
 
 ##GET LIST OF SPECIES AND TAXON REMOVED 
 # Master "Filtered" dataset

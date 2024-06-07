@@ -45,7 +45,7 @@ print ("[Local]: wctri_csv.csv output successfully")
 write.csv(wcann_csv, file.path(OUTPUT_CSV_DIRECTORY, "wcann_csv.csv")) 
 print ("[Local]: wcann_csv.csv output successfully")
 
-write.csv(gmex_csv, file.path(OUTPUT_CSV_DIRECTORY, "gmex_csv_new.csv")) 
+write.csv(gmex_csv, file.path(OUTPUT_CSV_DIRECTORY, "gmex_csv.csv")) 
 print ("[Local]: gmex_csv.csv output successfully")
 
 write.csv(seus_spr_csv, file.path(OUTPUT_CSV_DIRECTORY, "seus_spr_csv.csv")) 
