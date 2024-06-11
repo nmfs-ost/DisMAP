@@ -1,0 +1,41 @@
+,spp,common,FilterRegion,FilterSubRegion,Reason Added
+1,Anchoa spp.,Anchovies,US East Coast,Southeast,Decided to keep higher level Anchoa complex in analysis 
+2,Arctoraja parmifera,Alaska skate,Alaska,Northern Bering Sea,"Name change, no longer included in Bathyraja complex "
+3,Bothus robinsi,Twospot flounder,Gulf of Mexico,Gulf of Mexico,Result of fixing bsgcodes in GMEX data processing step 
+4,Chilomycterus schoepfii,Striped burrfish,Gulf of Mexico,Gulf of Mexico,Naming fix
+5,Citharichthys macrops,Spotted whiff,Gulf of Mexico,Gulf of Mexico,Now meets prevalence criteria
+6,Cyclopsetta fimbriata,Spotfin flounder,Gulf of Mexico,Gulf of Mexico,Result of fixing bsgcodes in GMEX data processing step 
+7,Cynoscion arenarius,Sand weakfish,Gulf of Mexico,Gulf of Mexico,Result of fixing bsgcodes in GMEX data processing step 
+8,Cynoscion nothus,Silver seatrout,Gulf of Mexico,Gulf of Mexico,Result of fixing bsgcodes in GMEX data processing step 
+9,Doryteuthis sp,Inshore Squid sp.,Gulf of Mexico,Gulf of Mexico,"Doryteuthis combined to a genus complex, and now reported as Doryteuthis sp"
+10,Doryteuthis sp,Inshore Squid sp.,US East Coast,Southeast,Name change from Loligo sp to Doryteuthis sp
+11,Eucinostomus gula,Silver jenny,Gulf of Mexico,Gulf of Mexico,Now meets prevalence criteria
+12,Euvola marensis,Paper scallop,Gulf of Mexico,Gulf of Mexico,Name change
+13,Haemulon plumierii,White grunt,Gulf of Mexico,Gulf of Mexico,Result of fixing bsgcodes in GMEX data processing step 
+14,Halieutichthys sp,Batfished,Gulf of Mexico,Gulf of Mexico,"Halieutichthys combined to a genus complex, and now reported as Halieutichthys sp"
+15,Harengula jaguana,Scaled sardine,US East Coast,Southeast,
+16,Leucoraja erinaceus,Little skate,US East Coast,Northeast,
+17,Limulus polyphemus,Horseshoe crab,US East Coast,Southeast,
+18,Lithodes couesi,Scarlet king crab,US West Coast,West Coast,
+19,Microstomus bathybius,Deep-sea sole,US West Coast,West Coast,
+20,Moreiradromia antillensis,Hairy sponge crab,Gulf of Mexico,Gulf of Mexico,
+21,Myzopsetta ferruginea,Yellowtail flounder,US East Coast,Northeast,
+22,Myzopsetta proboscidea,Longhead dab,Alaska,Eastern Bering Sea,
+23,Myzopsetta proboscidea,Longhead dab,Alaska,Northern Bering Sea,
+24,Nearchaster (Nearchaster) aciculosus,Needle spined fragile star,US West Coast,West Coast,
+25,Nicholsina usta,Emerald parrotfish,Gulf of Mexico,Gulf of Mexico,
+26,Ogcocephalus parvus,Roughback batfish,Gulf of Mexico,Gulf of Mexico,
+27,Pareques umbrosus,Cubbyu,Gulf of Mexico,Gulf of Mexico,
+28,Rostroraja texana,Roundel skate,Gulf of Mexico,Gulf of Mexico,
+29,Saurida normani,Shortjaw lizardfish,Gulf of Mexico,Gulf of Mexico,
+30,Scorpaena agassizii,Longfin scorpionfish,Gulf of Mexico,Gulf of Mexico,
+31,Sebastes melanostictus and S. aleutianus,Blackspotted and rougheye rockfish,Alaska,Aleutian Islands,
+32,Sebastes melanostictus and S. aleutianus,Blackspotted and rougheye rockfish,Alaska,Gulf of Alaska,
+33,Serranus notospilus,Saddle bass,Gulf of Mexico,Gulf of Mexico,
+34,Serranus phoebe,Tattler,Gulf of Mexico,Gulf of Mexico,
+35,Solenocera atlantidis,Dwarf humpback shrimp,Gulf of Mexico,Gulf of Mexico,
+36,Solenocera vioscai,Humpback shrimp,Gulf of Mexico,Gulf of Mexico,
+37,Stylocidaris affinis,Pencil urchin,Gulf of Mexico,Gulf of Mexico,
+38,Symphurus diomedeanus,Spottedfin tonguefish,Gulf of Mexico,Gulf of Mexico,
+39,Urophycis floridana,Southern hake,Gulf of Mexico,Gulf of Mexico,
+40,Xyrichtys novacula,Pearly razorfish,Gulf of Mexico,Gulf of Mexico,

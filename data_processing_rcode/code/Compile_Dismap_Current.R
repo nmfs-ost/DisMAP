@@ -1,4 +1,4 @@
-## ---- DISMAP 06/6/2024 --- 
+## ---- DISMAP 06/10/2024 --- 
 
 ## updated thru 2023 survey data for all regions except SEUS and Gmex(which is thru 2022)
 
@@ -69,7 +69,7 @@ HQ_DATA_ONLY <- TRUE
 
 # 2. View plots of removed strata for HQ_DATA. #OPTIONAL, DEFAULT:FALSE
 # It takes a while to generate these plots.
-HQ_PLOTS <- TRUE
+HQ_PLOTS <- FALSE
 
 # 3. Remove ai,ebs,gmex,goa,neus,seus,wcann,wctri, scot. Keep `dat`. #DEFAULT: FALSE 
 REMOVE_REGION_DATASETS <- FALSE
@@ -304,19 +304,18 @@ ak_full<- ak_full %>%
         spp = ifelse(grepl("rougheye and blackspotted rockfish unid.", common), "Sebastes melanostictus and S. aleutianus", spp),
         spp = ifelse(grepl("dusky and dark rockfishes unid.", common), "Sebastes variabilis and S. ciliatus", spp), 
         # catch A. stomias and A. evermanii (grouped together due to idenfication issues early on in dataset)
-        spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp),
+        # spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp), #doesn't apply to all regions
         # catch L. polystryxa (valid in 2018), and L. bilineata (valid in 2018)
         spp = ifelse(grepl("Lepidopsetta", spp), "Lepidopsetta sp.", spp),
-        # group together because of identification issues: catch M. jaok (valid in 2018), M. niger (valid in 2018), M. polyacanthocephalus (valid in 2018), M. quadricornis (valid in 2018), M. verrucosus (changed to scorpius), M. scorpioides (valid in 2018), M. scorpius (valid in 2018) (M. scorpius is in the data set but not on the list so it is excluded from the change)
-        spp = ifelse(grepl("Myoxocephalus", spp ) & !grepl("scorpius", spp), "Myoxocephalus sp.", spp),
-        # catch B. maculata (valid in 2018), abyssicola (valid in 2018), aleutica (valid in 2018), interrupta (valid in 2018), lindbergi (valid in 2018), mariposa (valid in 2018), minispinosa (valid in 2018), parmifera (valid in 2018), smirnovi (valid in 2018), cf parmifera (Orretal), spinosissima (valid in 2018), taranetzi (valid in 2018), trachura (valid in 2018), violacea (valid in 2018)
-        # B. panthera is not on the list of spp to change
+        # # group together because of identification issues: catch M. jaok (valid in 2018), M. niger (valid in 2018), M. polyacanthocephalus (valid in 2018), M. quadricornis (valid in 2018), M. verrucosus (changed to scorpius), M. scorpioides (valid in 2018), M. scorpius (valid in 2018) (M. scorpius is in the data set but not on the list so it is excluded from the change)
+        # spp = ifelse(grepl("Myoxocephalus", spp ) & !grepl("scorpius", spp), "Myoxocephalus sp.", spp),
+        # catch B. maculata (valid in 2018), abyssicola (valid in 2018), aleutica (valid in 2018), interrupta (valid in 2018), lindbergi (valid in 2018), mariposa (valid in 2018), minispinosa (valid in 2018), smirnovi (valid in 2018), cf parmifera (Orretal), spinosissima (valid in 2018), taranetzi (valid in 2018), trachura (valid in 2018), violacea (valid in 2018)
         spp = ifelse(grepl("Bathyraja", spp), 'Bathyraja sp.', spp),
         # catch S. melanostictus and S. aleutianus (blackspotted & rougheye), combined into one complex
         spp = ifelse(grepl("Sebastes melanostictus", spp)|grepl("Sebastes aleutianus", spp), "Sebastes melanostictus and S. aleutianus", spp),
         # catch S. variabilis and S. ciliatus (dusky + dark rockfish), combined into one complex
-        spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp), 
-        spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp)
+        spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp) 
+        #spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp) #doesn't apply to all regions
       ) %>% 
       # remove rows that are eggs, shells, etc (they will have NA for scientific name)
       dplyr::filter(spp != "" &
@@ -343,7 +342,9 @@ rm(haul, catch)
 # now that main data set has been compiled and cleaned/standardized, can split out the different surveys
 ### Aleutian Islands survey -----
 ai <- ak_full %>% 
-  dplyr::filter(region == "Aleutian Islands")
+  dplyr::filter(region == "Aleutian Islands") %>%
+  dplyr::mutate(# catch A. stomias and A. evermanii (grouped together due to idenfication issues early on in dataset)
+    spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp))
 
 if (HQ_DATA_ONLY == TRUE){
   
@@ -399,7 +400,10 @@ if (HQ_DATA_ONLY == TRUE){
 
 ### Eastern Bering Sea survey -----
 ebs <- ak_full %>% 
-  dplyr::filter(region == "Eastern Bering Sea")
+  dplyr::filter(region == "Eastern Bering Sea")%>%
+  dplyr::mutate(# catch A. stomias and A. evermanii (grouped together due to idenfication issues early on in dataset)
+    spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp), 
+    spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp))
 
 if (HQ_DATA_ONLY == TRUE){
   # look at the graph and make sure decisions to keep or eliminate data make sense
@@ -513,7 +517,10 @@ if (HQ_DATA_ONLY == TRUE){
 
 ### Northern Bering Sea survey -----
 nbs <- ak_full %>% 
-  dplyr::filter(region == "Northern Bering Sea")
+  dplyr::filter(region == "Northern Bering Sea") %>%
+  dplyr::mutate(# catch A. stomias and A. evermanii (grouped together due to idenfication issues early on in dataset)
+    spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp), 
+    spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp))
 
 if (HQ_DATA_ONLY == TRUE){
   # look at the graph and make sure decisions to keep or eliminate data make sense
@@ -1130,12 +1137,12 @@ gmex_bio_utax1 <- gmex_bio_mod %>%
 # MBT
 gmex_bio_utax2 <- gmex_bio_utax1 %>%
   #Take care of squid and species complexes...
-  #Update the squid genus Loligo and all species under genus Doryteuthis to the genus Dortyteuthis
+  #Update the squid genus Loligo and all species under genus Doryteuthis to the genus Doryteuthis
   mutate(ciu_biocode = ifelse(ciu_biocode %in% c(347020200,347021001,347021002,347021003),347021000,ciu_biocode)) %>%
-  mutate(taxon = ifelse(ciu_biocode %in% c(347021000),'DORYTEUTHIS',taxon)) %>%
-  #Update batfish species to Halieutichthys
+  mutate(taxon = ifelse(ciu_biocode %in% c(347021000),'DORYTEUTHIS SP',taxon)) %>%
+  # #Update batfish species to Halieutichthys
   mutate(ciu_biocode = ifelse(ciu_biocode >= 195050401 & ciu_biocode <= 195050405,195050400,ciu_biocode)) %>%
-  mutate(taxon = ifelse(ciu_biocode %in% c(195050400),'HALIEUTICHTHYS',taxon)) %>%
+  mutate(taxon = ifelse(ciu_biocode %in% c(195050400),'HALIEUTICHTHYS SP',taxon)) %>%
   #Update all jellfishy in the genus Aurelia to the genus Aurelia
   mutate(ciu_biocode = ifelse(ciu_biocode >= 618010101 & ciu_biocode <= 618010105,618010100,ciu_biocode)) %>%
   mutate(taxon = ifelse(ciu_biocode %in% c(618010100),'AURELIA',taxon)) %>%
@@ -1144,7 +1151,7 @@ gmex_bio_utax2 <- gmex_bio_utax1 %>%
   mutate(taxon = ifelse(ciu_biocode %in% c(168011900),'PTEROIS',taxon)) %>%
   #smoothhounds (Mustelus) Managed as species complex, our ids are OK now but in the past assumptions made %>%
   mutate(ciu_biocode = ifelse(ciu_biocode %in% c(108031101,108031102,108031103,108031104),108031100,ciu_biocode)) %>%
-  mutate(taxon = ifelse(ciu_biocode %in% c(108031100),'MUSTELUS',taxon)) %>%
+  mutate(taxon = ifelse(ciu_biocode %in% c(108031100),'MUSTELUS SP',taxon)) %>%
   #lump all sponge identifications to Porifera
   mutate(ciu_biocode = ifelse(ciu_biocode >= 613000000 & ciu_biocode < 616000000,613000000,ciu_biocode)) %>%
   mutate(taxon = ifelse(ciu_biocode %in% c(613000000),'PORIFERA',taxon)) %>%
@@ -3351,7 +3358,7 @@ dat_fltr <- rbind(ai_fltr, ebs_fltr, nbs_fltr, gmex_fltr, goa_fltr, neus_fall_fl
 dat_fltr$spp<-firstup(dat_fltr$spp)
 # add a case sensitive spp and common name and filter out Higher Level taxon names, the turtle, bird, and dolphin species, and plants/seaweed species. 
 dat_fltr <- left_join(dat_fltr, tax, by = c("spp" = "survey_name")) %>% 
-  filter(!grepl("remove", filtercat),
+  filter(!grepl("Remove", filtercat),
          !grepl("Caretta caretta", valid_name),
          !grepl("Sagmatias obliquidens", valid_name),
          !grepl("Puffinus gravis", valid_name),
@@ -3539,18 +3546,27 @@ num_spp_summary<-left_join(spp_reg_counts, spp_reg_counts_Core, by=c("region"))
 write.csv(num_spp_summary, file=here("output/data_clean", "summary_unique_spp_table.csv"))
 write.csv(spplist_core, file=here("output/data_clean","core_spp_list.csv"))
 
-## compare with the Master Filter Table for the filter functionality on the portal 
+## compare with the Master Filter Table for the filter functionality on the portal
 filter_table<-read.csv("filter_table_final_5_31_23.csv", header=T, sep=",")
 spp_to_remove<-anti_join(filter_table, dfuniq, by=c("spp", "FilterSubRegion"="region"))
- #remove these species from the filter table 
-filter_table_revised<-anti_join(filter_table, spp_to_remove)
-
+# write.csv(spp_to_remove, "spp_removed_filter_6_10_24.csv")
+#  #remove these species from the filter table 
+# filter_table_revised<-anti_join(filter_table, spp_to_remove)
+# 
 miss_filter<-anti_join(dfuniq, filter_table, by=c("spp", "region"="FilterSubRegion")) %>%
   rename(FilterSubRegion=region)
+# 
+# Filter_table_updated<-bind_rows(filter_table_revised, miss_filter)
+# #write.csv(Filter_table_updated, file=here("output/data_clean", "Final_Filter_Table.csv"))
 
-Filter_table_updated<-bind_rows(filter_table_revised, miss_filter)
-write.csv(Filter_table_updated, file=here("output/data_clean", "Final_Filter_Table.csv"))
+## Compare old and new filter table to see which species were removed and which were added! 
+old_table<-read.csv("filter_table_final_5_31_23.csv", header=T, sep=",")
+new_table<- read.csv("output/data_clean/Final_Filter_Table.csv", header=T, sep=",")
 
+spp_added<-anti_join(new_table, old_table, by= c("spp", "FilterSubRegion"))
+write.csv(spp_added, "spp_added_to_filter_6_10_24.csv")
+spp_removed<-anti_join(old_table, new_table, by= c("spp", "FilterSubRegion"))
+write.csv(spp_removed, "spp_removed_from_filter_6_10_24.csv")
 
 
 ##GET LIST OF SPECIES AND TAXON REMOVED 
