@@ -52,10 +52,10 @@ library(data.table)
 
 ## The data_processing_rcode directory contains three folders (code, data, outputs)
 # 1. code - this folder contains all the Rscripts (including this Compile_Dismap_Current.R script) used to download and 
-    # process the data
+# process the data
 # 2. data directory - this is the folder containing all raw data files you downloaded using the Rscripts in the code folder
 # 3. output directory - folder where the cleaned data will be saved to. This folder includes subfolders for 
-      # data_clean, plots, the data generated for the python scripts by creat_data_for_map_generation.R, and by clean_taxa.R script
+# data_clean, plots, the data generated for the python scripts by creat_data_for_map_generation.R, and by clean_taxa.R script
 
 # The zip file you downloaded created this directory structure for you.
 
@@ -286,56 +286,57 @@ ak_full <-
       SURVEY_DEFINITION_ID == 143 ~ "Northern Bering Sea"
     )) 
 
+
 ak_full<- ak_full %>%
-    dplyr::rename(year = YEAR, 
-                  haulid = HAULJOIN,
-                  lat = LATITUDE_DD_START, 
-                  lon = LONGITUDE_DD_START, 
-                  stratum = STRATUM, 
-                  depth = DEPTH_M, 
-                  spp = SCIENTIFIC_NAME, 
-                  common = COMMON_NAME, 
-                  wtcpue = CPUE_KGHA) %>% 
-     dplyr::mutate(
-        stratumarea = NA, # removed above because the new data tables dont provide this
-        # Calculate a corrected longitude for Aleutians (all in western hemisphere coordinates)
-        lon = ifelse(lon > 0, lon - 360, lon), 
-        # adjust spp names
-        # add species names for two rockfish complexes
-        spp = ifelse(grepl("rougheye and blackspotted rockfish unid.", common), "Sebastes melanostictus and S. aleutianus", spp),
-        spp = ifelse(grepl("dusky and dark rockfishes unid.", common), "Sebastes variabilis and S. ciliatus", spp), 
-        # catch A. stomias and A. evermanii (grouped together due to idenfication issues early on in dataset)
-        # spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp), #doesn't apply to all regions
-        # catch L. polystryxa (valid in 2018), and L. bilineata (valid in 2018)
-        spp = ifelse(grepl("Lepidopsetta", spp), "Lepidopsetta sp.", spp),
-        # # group together because of identification issues: catch M. jaok (valid in 2018), M. niger (valid in 2018), M. polyacanthocephalus (valid in 2018), M. quadricornis (valid in 2018), M. verrucosus (changed to scorpius), M. scorpioides (valid in 2018), M. scorpius (valid in 2018) (M. scorpius is in the data set but not on the list so it is excluded from the change)
-        # spp = ifelse(grepl("Myoxocephalus", spp ) & !grepl("scorpius", spp), "Myoxocephalus sp.", spp),
-        # catch B. maculata (valid in 2018), abyssicola (valid in 2018), aleutica (valid in 2018), interrupta (valid in 2018), lindbergi (valid in 2018), mariposa (valid in 2018), minispinosa (valid in 2018), smirnovi (valid in 2018), cf parmifera (Orretal), spinosissima (valid in 2018), taranetzi (valid in 2018), trachura (valid in 2018), violacea (valid in 2018)
-        spp = ifelse(grepl("Bathyraja", spp), 'Bathyraja sp.', spp),
-        # catch S. melanostictus and S. aleutianus (blackspotted & rougheye), combined into one complex
-        spp = ifelse(grepl("Sebastes melanostictus", spp)|grepl("Sebastes aleutianus", spp), "Sebastes melanostictus and S. aleutianus", spp),
-        # catch S. variabilis and S. ciliatus (dusky + dark rockfish), combined into one complex
-        spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp) 
-        #spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp) #doesn't apply to all regions
-      ) %>% 
-      # remove rows that are eggs, shells, etc (they will have NA for scientific name)
-      dplyr::filter(spp != "" &
-        # remove any additional rows where spp contains the word "egg"
-        !grepl("egg", spp),
-          !grepl("Polychaete tubes", spp)) %>% 
-      readr::type_convert(col_types = cols(
-        lat = col_double(),
-        lon = col_double(),
-        year = col_integer(),
-        wtcpue = col_double(),
-        spp = col_character(),
-        depth = col_integer(),
-        haulid = col_character()
-      )) %>% 
-      dplyr::group_by(region, haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
-      dplyr::summarise(wtcpue = sum(wtcpue, na.rm = TRUE)) %>% 
-      dplyr::select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>%
-      dplyr::ungroup()
+  dplyr::rename(year = YEAR, 
+                haulid = HAULJOIN,
+                lat = LATITUDE_DD_START, 
+                lon = LONGITUDE_DD_START, 
+                stratum = STRATUM, 
+                depth = DEPTH_M, 
+                spp = SCIENTIFIC_NAME, 
+                common = COMMON_NAME, 
+                wtcpue = CPUE_KGHA) %>% 
+  dplyr::mutate(
+    stratumarea = NA, # removed above because the new data tables dont provide this
+    # Calculate a corrected longitude for Aleutians (all in western hemisphere coordinates)
+    lon = ifelse(lon > 0, lon - 360, lon), 
+    # adjust spp names
+    # add species names for two rockfish complexes
+    spp = ifelse(grepl("rougheye and blackspotted rockfish unid.", common), "Sebastes melanostictus and S. aleutianus", spp),
+    spp = ifelse(grepl("dusky and dark rockfishes unid.", common), "Sebastes variabilis and S. ciliatus", spp), 
+    # catch A. stomias and A. evermanii (grouped together due to identification issues early on in dataset)
+    # spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp), #doesn't apply to all regions
+    # catch L. polystryxa (valid in 2018), and L. bilineata (valid in 2018)
+    spp = ifelse(grepl("Lepidopsetta", spp), "Lepidopsetta sp.", spp),
+    # # group together because of identification issues: catch M. jaok (valid in 2018), M. niger (valid in 2018), M. polyacanthocephalus (valid in 2018), M. quadricornis (valid in 2018), M. verrucosus (changed to scorpius), M. scorpioides (valid in 2018), M. scorpius (valid in 2018) (M. scorpius is in the data set but not on the list so it is excluded from the change)
+    # spp = ifelse(grepl("Myoxocephalus", spp ) & !grepl("scorpius", spp), "Myoxocephalus sp.", spp),
+    # catch B. maculata (valid in 2018), abyssicola (valid in 2018), aleutica (valid in 2018), interrupta (valid in 2018), lindbergi (valid in 2018), mariposa (valid in 2018), minispinosa (valid in 2018), smirnovi (valid in 2018), cf parmifera (Orretal), spinosissima (valid in 2018), taranetzi (valid in 2018), trachura (valid in 2018), violacea (valid in 2018)
+    spp = ifelse(grepl("Bathyraja", spp), 'Bathyraja sp.', spp),
+    # catch S. melanostictus and S. aleutianus (blackspotted & rougheye), combined into one complex
+    spp = ifelse(grepl("Sebastes melanostictus", spp)|grepl("Sebastes aleutianus", spp), "Sebastes melanostictus and S. aleutianus", spp),
+    # catch S. variabilis and S. ciliatus (dusky + dark rockfish), combined into one complex
+    spp = ifelse(grepl("Sebastes variabilis", spp)|grepl("Sebastes ciliatus", spp), "Sebastes variabilis and S. ciliatus", spp) 
+    #spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp) #doesn't apply to all regions
+  ) %>% 
+  # remove rows that are eggs, shells, etc (they will have NA for scientific name)
+  dplyr::filter(spp != "" &
+                  # remove any additional rows where spp contains the word "egg"
+                  !grepl("egg", spp),
+                !grepl("Polychaete tubes", spp)) %>% 
+  readr::type_convert(col_types = cols(
+    lat = col_double(),
+    lon = col_double(),
+    year = col_integer(),
+    wtcpue = col_double(),
+    spp = col_character(),
+    depth = col_integer(),
+    haulid = col_character()
+  )) %>% 
+  dplyr::group_by(region, haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
+  dplyr::summarise(wtcpue = sum(wtcpue, na.rm = TRUE)) %>% 
+  dplyr::select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>%
+  dplyr::ungroup()
 
 # clean up
 rm(haul, catch)
@@ -344,8 +345,12 @@ rm(haul, catch)
 ### Aleutian Islands survey -----
 ai <- ak_full %>% 
   dplyr::filter(region == "Aleutian Islands") %>%
-  dplyr::mutate(# catch A. stomias and A. evermanii (grouped together due to idenfication issues early on in dataset)
-    spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp))
+  dplyr::mutate(# catch A. stomias and A. evermanii (grouped together due to identification issues early on in dataset)
+    spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp)) %>% 
+  dplyr::group_by(region, haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
+  dplyr::summarise(wtcpue = sum(wtcpue, na.rm = TRUE)) %>% 
+  dplyr::select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>%
+  dplyr::ungroup()
 
 if (HQ_DATA_ONLY == TRUE){
   
@@ -404,7 +409,11 @@ ebs <- ak_full %>%
   dplyr::filter(region == "Eastern Bering Sea")%>%
   dplyr::mutate(# catch A. stomias and A. evermanii (grouped together due to idenfication issues early on in dataset)
     spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp), 
-    spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp))
+    spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp))%>% 
+  dplyr::group_by(region, haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
+  dplyr::summarise(wtcpue = sum(wtcpue, na.rm = TRUE)) %>% 
+  dplyr::select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>%
+  dplyr::ungroup()
 
 if (HQ_DATA_ONLY == TRUE){
   # look at the graph and make sure decisions to keep or eliminate data make sense
@@ -521,7 +530,11 @@ nbs <- ak_full %>%
   dplyr::filter(region == "Northern Bering Sea") %>%
   dplyr::mutate(# catch A. stomias and A. evermanii (grouped together due to idenfication issues early on in dataset)
     spp = ifelse(grepl("Atheresthes", spp), "Atheresthes stomias and A. evermanni", spp), 
-    spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp))
+    spp = ifelse(grepl("Hippoglossoides", spp), "Hippoglossoides elassodon and H. robustus", spp)) %>% 
+  dplyr::group_by(region, haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>% 
+  dplyr::summarise(wtcpue = sum(wtcpue, na.rm = TRUE)) %>% 
+  dplyr::select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>%
+  dplyr::ungroup()
 
 if (HQ_DATA_ONLY == TRUE){
   # look at the graph and make sure decisions to keep or eliminate data make sense
@@ -1039,7 +1052,7 @@ gmex_spp<-dplyr::select(gmex_spp,biocode,ciu_biocode,taxon)
 
 ##Resolve issues 
 #Issue 1: Proper way to Merge the Tow (invrec) and bio (bgsrec) tables
-  # The proper way to link the invrec table to the bgsrec is supposed to use the invrecid 
+# The proper way to link the invrec table to the bgsrec is supposed to use the invrecid 
 # variable as the primary key. However, the bgsrec table has null invrecid for data collected
 # under previous data collection systems. The invrec and bgsrec tables can be linked using 
 # the vessel, cruise_no and p_sta_no variables as a primary key. Unfortunately, there are
@@ -1204,8 +1217,9 @@ gmex <- gmex %>%
 gmex$depth_zone<-ifelse(gmex$depth_ssta<=36.576, "20", 
                         ifelse(gmex$depth_ssta>36.576, "60", NA))
 gmex<-gmex %>%
-  mutate(stratum = paste(stat_zone, depth_zone, sep= "-"))
-# fix speed
+  mutate(stratum = paste(stat_zone, depth_zone, sep= "-")) 
+
+# # fix speed
 # Trim out or fix speed and duration records
 # trim out tows of 0, >60, or unknown minutes
 gmex <- gmex %>% 
@@ -1289,12 +1303,44 @@ if (HQ_DATA_ONLY == TRUE){
     filter(stratum %in% test$stratum) %>%
     filter(year>=2010, year != 2023) 
   
+  #### #filter out the points that are outside of the standard survey extent
+  # library(sf)
+  # library(sp)
+  # shape<-read_sf(dsn="~/transfer/DisMAP project/IDW_survey_shapefiles/GMEX_IDW", layer="GMEX_IDW_Region")
+  # plot(shape)
+  # points<-gmex_fltr %>%
+  #   sf::st_as_sf(coords=c("lon", "lat"))
+  # st_crs(points)<-4326
+  # shape<-sf::st_transform(shape, CRS("+proj=longlat"))
+  # st_crs(shape)<-4326
+  # 
+  # library(tmap)
+  # tmap::qtm(points)
+  # ponts_in_boundary<-st_intersection(points, shape)
+  # tmap::qtm(ponts_in_boundary)
+  # gmex_coords <- unlist(st_geometry(ponts_in_boundary)) %>% 
+  #   matrix(ncol=2,byrow=TRUE) %>% 
+  #   as_tibble() %>% 
+  #   setNames(c("lon","lat"))
+  # gmex_bind<-bind_cols(ponts_in_boundary, gmex_coords)
+  # gmex_fltr<-as.data.frame(gmex_bind) %>%
+  #   select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue)
+  # 
+  # plot_new<-gmex_fltr %>%
+  #   select(lat, lon)
+  # # plot_old<-gmex_fltr %>%
+  # #   select(lat, lon)
+  # ggplot()+
+  #   geom_sf(data=shape, color="red")+
+  #   geom_point(data=plot, aes(x = lon, y = lat), color="blue")
+  #   # geom_point(data=plot_new, aes(x = lon, y = lat), color="green")
+  
   p3 <- gmex_fltr %>% 
     select(stratum, year) %>% 
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
     geom_jitter()
   
-  p4 <- gmex_fltr%>%
+  p4 <- gmex_fltr %>%
     select(lat, lon) %>% 
     ggplot(aes(x = lon, y = lat)) +
     geom_jitter()
@@ -1640,7 +1686,7 @@ seus <- left_join(seus, seus_strata, by = "STRATA")
 seus <- seus %>% 
   mutate(DATE = as.Date(DATE, "%m-%d-%Y"), 
          MONTH = month(DATE)) %>%
-  # create season column
+  # create season column -- FLAG, in 2023 the survey was conducted in two "seasons" see here for details: https://seamap.org/seamap-sa-coastal-trawl/
   mutate(SEASON = NA, 
          SEASON = ifelse(MONTH >= 1 & MONTH <= 3, "winter", SEASON), 
          SEASON = ifelse(MONTH >= 4 & MONTH <= 6, "spring", SEASON),
@@ -1719,17 +1765,12 @@ seus <- seus %>%
 
 seus$year <- as.integer(seus$year)
 
-#In seus there are two 'COLLECTIONNUMBERS' per 'EVENTNAME', with no exceptions; EFFORT is always the same for each COLLECTIONNUMBER
-# We sum the two tows in seus
-biomass <- seus %>% 
-  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, SEASON, spp, EFFORT) %>% 
-  summarise(biomass = sum(SPECIESTOTALWEIGHT)) %>% 
-  mutate(wtcpue = biomass/(EFFORT*2))
-
-seus <- left_join(seus, biomass, by = c("haulid", "stratum", "stratumarea", "year", "lat", "lon", "depth", "SEASON", "spp", "EFFORT"))
-# double check that column numbers haven't changed by more than 2.  
-
+#In seus there are two 'COLLECTIONNUMBERS' per 'EVENTNAME', with no exceptions,
+#for each side of the boat;
+#EFFORT is always the same for each COLLECTIONNUMBER
+# We sum the two tows in seus (port and starboard tows), and this steps deletes any haul id x spp duplicates
 seus <- seus %>% 
+  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp, SEASON, EFFORT) %>%
   # remove non-fish and records with no species or common name
   filter(
     !spp %in% c('MISCELLANEOUS INVERTEBRATES','XANTHIDAE','MICROPANOPE NUTTINGI','ALGAE','DYSPANOPEUS SAYI', 'PSEUDOMEDAEUS AGASSIZII')
@@ -1740,8 +1781,9 @@ seus <- seus %>%
     spp = ifelse(grepl("ANCHOA", spp), "ANCHOA", spp), 
     spp = ifelse(grepl("LIBINIA", spp), "LIBINIA", spp)
   )  %>% 
-  group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp, SEASON) %>% 
-  summarise(wtcpue = sumna(wtcpue)) %>% 
+  #now this accounts for both sides of the boat, and merging within specified gensuses
+  summarise(biomass = sumna(SPECIESTOTALWEIGHT)) %>% 
+  mutate(wtcpue=biomass/(EFFORT*2)) %>% 
   # add temporary region column that will be converted to seasonal
   mutate(region = "Southeast US") %>% 
   select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue, SEASON) %>% 
@@ -1859,7 +1901,7 @@ seusFALL <- seus %>%
 
 # how many rows will be lost if only stratum trawled ever year are kept?
 if (HQ_DATA_ONLY == TRUE){
- 
+  
   p1 <- seusFALL %>% 
     select(stratum, year) %>% 
     ggplot(aes(x = as.factor(stratum), y = as.factor(year))) +
@@ -3377,7 +3419,7 @@ if(sum(dat_fltr$spp == 'NA') > 0 | sum(is.na(dat_fltr$spp)) > 0){
 #if get warning, check for which spp have NA for name and common if check above fails
 spp_na<-dat_fltr %>%
   filter(is.na(dat_fltr$spp) & is.na(dat_fltr$common))
- rm(spp_na)
+rm(spp_na)
 
 if(isTRUE(REMOVE_REGION_DATASETS)) {
   rm(ai_fltr, ebs_fltr, gmex_fltr, goa_fltr, neus_fall_fltr, neus_spring_fltr, seusFALL_fltr, seusSPRING_fltr, seusSUMMER_fltr, wcann_fltr, wctri_fltr, tax)
@@ -3391,139 +3433,140 @@ if(isTRUE(WRITE_MASTER_DAT)){
   }
 }
 
- # Expanded Survey Dataset=================================================
- print ("Expanded dataset")
- presyr <- present_every_year(dat_fltr, region, spp, common, year) 
- 
- haulsyr<-num_hauls_year(dat_fltr, region, year)
- 
- preshaul<-left_join(presyr, haulsyr, by=c("region", "year")) %>%
-   mutate(proportion=((pres/hauls)*100)) %>%
-   filter(proportion>=5)
- 
- # years in which spp was present in >= 5% of tows
- presyrsum <- num_year_present(preshaul, region, spp, common)
- 
- # max num years of survey in each region
- maxyrs <- max_year_surv(presyrsum, region)
- 
- # merge in max years
- presyrsum <- left_join(presyrsum, maxyrs, by = "region")
- # write.csv(presyrsum, "presyrsum_11_22_22.csv")
- # retain all spp present at >5% of tows in at least 2 of the available years in a survey
- spplist <- presyrsum %>% 
-   filter(presyr >= 2) %>% 
-   select(region, spp, common)
- 
- spp_addin<-read.csv("data/Add_managed_spp.csv",header=T, sep=",")
- spplist<-rbind(spplist, spp_addin) %>%
-   distinct()
- 
- # Trim dat to these species (for a given region, spp pair in spplist_final, in dat, keep only rows that match that region, spp pairing)
- trimmed_dat_fltr_expanded <- dat_fltr %>% 
-   filter(paste(region, spp) %in% paste(spplist$region, spplist$spp))
- 
- # Trim species (for IDW analysis)===========================================================
- print("Trim species")
- 
- ## FILTERED DATA
- # Find a standard set of species (present at least 3/4 of the years of the filtered data in a region)
- # this result differs from the original code because it does not include any species that have a pres value of 0.  It does, however, include species for which the common name is NA.
- presyr <- present_every_year(dat_fltr, region, spp, common, year) 
- 
- haulsyr<-num_hauls_year(dat_fltr, region, year)
- 
- preshaul<-left_join(presyr, haulsyr, by=c("region", "year")) %>%
-   mutate(proportion=((pres/hauls)*100)) %>%
-   filter(proportion>=5)
- 
- # years in which spp was present in >= 5% of tows
- presyrsum <- num_year_present(preshaul, region, spp, common)
- 
- # max num years of survey in each region
- maxyrs <- max_year_surv(presyrsum, region)
- 
- # merge in max years
- presyrsum <- left_join(presyrsum, maxyrs, by = "region")
- # write.csv(presyrsum, "presyrsum_11_22_22.csv")
- # retain all spp present at least 3/4 of the available years in a survey
- spplist <- presyrsum %>% 
-   filter(presyr >= (maxyrs * 3/4)) %>% 
-   select(region, spp, common)
- 
- spp_addin<-read.csv("data/Add_managed_spp.csv",header=T, sep=",")
- spplist2<-rbind(spplist, spp_addin) %>%
-   distinct() %>%
-   mutate(DistributionProjectName="NMFS/Rutgers IDW Interpolation")
- ## use this spp list after explode 0 to add a column indicating that these species should be kept for IDW 
- 
- #add an EBS+NBS combined region =========================
- #select years from compiled EBS that match the NBS survey years
- years<-c(2010, 2017, 2019, 2021, 2022, 2023)
- enbs_trimmed<- trimmed_dat_fltr_expanded  %>% filter(region %in% c("Eastern Bering Sea", "Northern Bering Sea"),
-                                                      year %in% years) %>%
-   mutate(region="Bering Sea Combined")
- 
- p1 <- enbs_trimmed %>% 
-   select(stratum, year) %>% 
-   ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
-   geom_jitter()
- 
- p2 <- enbs_trimmed %>%
-   select(lat, lon) %>% 
-   ggplot(aes(x = lon, y = lat)) +
-   geom_jitter()
- 
- trimmed_dat_fltr_expanded <-rbind(trimmed_dat_fltr_expanded, enbs_trimmed)
- 
- if(isTRUE(WRITE_TRIMMED_DAT)){
-   if(isTRUE(PREFER_RDATA)){
-     saveRDS(trimmed_dat_fltr_expanded, file = here("output/data_clean", "all-regions-trimmed-fltr.rds"))
-   }else{
-     write_csv(trimmed_dat_fltr_expanded, "data_clean/all-regions-trimmed-fltr.csv")
-   }
- }
- 
- # Dat_exploded -  Add 0's ======================================================
- print("Dat exploded") 
- # these Sys.time() flags are here::here to see how long this section of code takes to run.
- Sys.time()
- # This takes about 10 minutes
- if (DAT_EXPLODED == TRUE){
-   dat.exploded <- as.data.table(trimmed_dat_fltr_expanded)[,explode0(.SD), by="region"]
-   dat_expl_spl <- split(dat.exploded, dat.exploded$region, drop = FALSE)
-   
-   if(isTRUE(WRITE_DAT_EXPLODED)){
-     if(isTRUE(PREFER_RDATA)){
-       lapply(dat_expl_spl, function(x) saveRDS(x, here::here("output/data_clean", paste0('dat_exploded', x$region[1], '.rds')))) 
-     }else{
-       lapply(dat_expl_spl, function(x) write_csv(x, gzfile(here::here("output/data_clean", paste0('dat_exploded', x$region[1], '.csv.gz')))))
-     }
-   }
-   
- }
- Sys.time()
- 
- #clean up
- rm(dat_expl_spl)
- 
- ## Add the DistributionProjectName column to dat.exploded
- #use the spplist2 to indicate which species should be kept for IDW as opposed to which are for both IDW and expanded survey module
- dat.exploded<-left_join(dat.exploded, spplist2, by=c("spp","common","region"))
- 
- spp_IDW<-dat.exploded %>%
-   filter(DistributionProjectName=="NMFS/Rutgers IDW Interpolation") %>%
-   select(spp, common) %>%
-   distinct()
- 
- spp_survey<-dat.exploded %>%
-   select(spp, common, region) %>%
-   distinct()
- 
- #stop and.... 
- ## Go to Update_Filter_Table.R
- ## GO TO create_data_for_map_generation.R now 
- 
+
+# Expanded Survey Dataset=================================================
+print ("Expanded dataset")
+presyr <- present_every_year(dat_fltr, region, spp, common, year) 
+
+haulsyr<-num_hauls_year(dat_fltr, region, year)
+
+preshaul<-left_join(presyr, haulsyr, by=c("region", "year")) %>%
+  mutate(proportion=((pres/hauls)*100)) %>%
+  filter(proportion>=5)
+
+# years in which spp was present in >= 5% of tows
+presyrsum <- num_year_present(preshaul, region, spp, common)
+
+# max num years of survey in each region
+maxyrs <- max_year_surv(presyrsum, region)
+
+# merge in max years
+presyrsum <- left_join(presyrsum, maxyrs, by = "region")
+# write.csv(presyrsum, "presyrsum_11_22_22.csv")
+# retain all spp present at >5% of tows in at least 2 of the available years in a survey
+spplist <- presyrsum %>% 
+  filter(presyr >= 2) %>% 
+  select(region, spp, common)
+
+spp_addin<-read.csv("data/Add_managed_spp.csv",header=T, sep=",")
+spplist<-rbind(spplist, spp_addin) %>%
+  distinct()
+
+# Trim dat to these species (for a given region, spp pair in spplist_final, in dat, keep only rows that match that region, spp pairing)
+trimmed_dat_fltr_expanded <- dat_fltr %>% 
+  filter(paste(region, spp) %in% paste(spplist$region, spplist$spp))
+
+# Trim species (for IDW analysis)===========================================================
+print("Trim species")
+
+## FILTERED DATA
+# Find a standard set of species (present at least 3/4 of the years of the filtered data in a region)
+# this result differs from the original code because it does not include any species that have a pres value of 0.  It does, however, include species for which the common name is NA.
+presyr <- present_every_year(dat_fltr, region, spp, common, year) 
+
+haulsyr<-num_hauls_year(dat_fltr, region, year)
+
+preshaul<-left_join(presyr, haulsyr, by=c("region", "year")) %>%
+  mutate(proportion=((pres/hauls)*100)) %>%
+  filter(proportion>=5)
+
+# years in which spp was present in >= 5% of tows
+presyrsum <- num_year_present(preshaul, region, spp, common)
+
+# max num years of survey in each region
+maxyrs <- max_year_surv(presyrsum, region)
+
+# merge in max years
+presyrsum <- left_join(presyrsum, maxyrs, by = "region")
+# write.csv(presyrsum, "presyrsum_11_22_22.csv")
+# retain all spp present at least 3/4 of the available years in a survey
+spplist <- presyrsum %>% 
+  filter(presyr >= (maxyrs * 3/4)) %>% 
+  select(region, spp, common)
+
+spp_addin<-read.csv("data/Add_managed_spp.csv",header=T, sep=",")
+spplist2<-rbind(spplist, spp_addin) %>%
+  distinct() %>%
+  mutate(DistributionProjectName="NMFS/Rutgers IDW Interpolation")
+## use this spp list after explode 0 to add a column indicating that these species should be kept for IDW 
+
+#add an EBS+NBS combined region =========================
+#select years from compiled EBS that match the NBS survey years
+years<-c(2010, 2017, 2019, 2021, 2022, 2023)
+enbs_trimmed<- trimmed_dat_fltr_expanded  %>% filter(region %in% c("Eastern Bering Sea", "Northern Bering Sea"),
+                                                     year %in% years) %>%
+  mutate(region="Bering Sea Combined")
+
+p1 <- enbs_trimmed %>% 
+  select(stratum, year) %>% 
+  ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
+  geom_jitter()
+
+p2 <- enbs_trimmed %>%
+  select(lat, lon) %>% 
+  ggplot(aes(x = lon, y = lat)) +
+  geom_jitter()
+
+trimmed_dat_fltr_expanded <-rbind(trimmed_dat_fltr_expanded, enbs_trimmed)
+
+if(isTRUE(WRITE_TRIMMED_DAT)){
+  if(isTRUE(PREFER_RDATA)){
+    saveRDS(trimmed_dat_fltr_expanded, file = here("output/data_clean", "all-regions-trimmed-fltr.rds"))
+  }else{
+    write_csv(trimmed_dat_fltr_expanded, "data_clean/all-regions-trimmed-fltr.csv")
+  }
+}
+
+# Dat_exploded -  Add 0's ======================================================
+print("Dat exploded") 
+# these Sys.time() flags are here::here to see how long this section of code takes to run.
+Sys.time()
+# This takes about 10 minutes
+if (DAT_EXPLODED == TRUE){
+  dat.exploded <- as.data.table(trimmed_dat_fltr_expanded)[,explode0(.SD), by="region"]
+  dat_expl_spl <- split(dat.exploded, dat.exploded$region, drop = FALSE)
+  
+  if(isTRUE(WRITE_DAT_EXPLODED)){
+    if(isTRUE(PREFER_RDATA)){
+      lapply(dat_expl_spl, function(x) saveRDS(x, here::here("output/data_clean", paste0('dat_exploded', x$region[1], '.rds')))) 
+    }else{
+      lapply(dat_expl_spl, function(x) write_csv(x, gzfile(here::here("output/data_clean", paste0('dat_exploded', x$region[1], '.csv.gz')))))
+    }
+  }
+  
+}
+Sys.time()
+
+#clean up
+rm(dat_expl_spl)
+
+## Add the DistributionProjectName column to dat.exploded
+#use the spplist2 to indicate which species should be kept for IDW as opposed to which are for both IDW and expanded survey module
+dat.exploded<-left_join(dat.exploded, spplist2, by=c("spp","common","region"))
+
+spp_IDW<-dat.exploded %>%
+  filter(DistributionProjectName=="NMFS/Rutgers IDW Interpolation") %>%
+  select(spp, common) %>%
+  distinct()
+
+spp_survey<-dat.exploded %>%
+  select(spp, common, region) %>%
+  distinct()
+
+#stop and.... 
+## Go to Update_Filter_Table.R
+## GO TO create_data_for_map_generation.R now 
+
 ###################### CAN STOP HERE ##########################################
 ## CORE Species -- caught every year of survey =======
 
@@ -3537,7 +3580,7 @@ presyr <- present_every_year(dat_fltr, region, spp, common, year)
 haulsyr<-num_hauls_year(dat_fltr, region, year)
 
 preshaul<-left_join(presyr, haulsyr, by=c("region", "year")) %>%
-  mutate(proportion=((pres/hauls)*100)) %>%
+  mutate(proportion=((pres/hauls)*100))%>%
   filter(proportion>=5)
 
 # years in which spp was present in >= 5% of tows
@@ -3577,12 +3620,13 @@ spp_reg_counts_Core<-spplist_core%>%
   summarise(spp_all_yrs=n_distinct(spp))
 
 num_spp_summary<-left_join(spp_reg_counts, spp_reg_counts_Core, by=c("region"))
-write.csv(num_spp_summary, file=here("output/data_clean", "summary_unique_spp_table.csv"))
-write.csv(spplist_core, file=here("output/data_clean","core_spp_list.csv"))
+write.csv(num_spp_summary, file=here("output/data_clean", "summary_unique_spp_table_7_24_24.csv"))
+write.csv(spplist_core, file=here("output/data_clean","core_spp_list_7_24_24.csv"))
 
 ## compare with the Master Filter Table for the filter functionality on the portal
-filter_table<-read.csv("filter_table_final_5_31_23.csv", header=T, sep=",")
+filter_table<-read.csv("Species_Filter.csv", header=T, sep=",")
 spp_to_remove<-anti_join(filter_table, dfuniq, by=c("spp", "FilterSubRegion"="region"))
+
 # write.csv(spp_to_remove, "spp_removed_filter_6_10_24.csv")
 #  #remove these species from the filter table 
 # filter_table_revised<-anti_join(filter_table, spp_to_remove)
