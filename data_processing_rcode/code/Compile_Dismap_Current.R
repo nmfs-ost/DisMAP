@@ -1,4 +1,5 @@
 ## ---- DISMAP 11/25/2024 
+## updated srcipt to include "expanded survey data" for the new Survey Data Module 
 
 ## updated thru 2023 survey data for all regions except SEUS and Gmex(which is thru 2022)
 
@@ -3390,106 +3391,139 @@ if(isTRUE(WRITE_MASTER_DAT)){
   }
 }
 
-
-# Trim species ===========================================================
-print("Trim species")
-
-## FILTERED DATA
-# Find a standard set of species (present at least 3/4 of the years of the filtered data in a region)
-# this result differs from the original code because it does not include any species that have a pres value of 0.  It does, however, include speices for which the common name is NA.
-presyr <- present_every_year(dat_fltr, region, spp, common, year) 
-
-haulsyr<-num_hauls_year(dat_fltr, region, year)
-
-preshaul<-left_join(presyr, haulsyr, by=c("region", "year")) %>%
-  mutate(proportion=((pres/hauls)*100)) %>%
-  filter(proportion>=5)
-
-# years in which spp was present in >= 5% of tows
-presyrsum <- num_year_present(preshaul, region, spp, common)
-
-# max num years of survey in each region
-maxyrs <- max_year_surv(presyrsum, region)
-
-# merge in max years
-presyrsum <- left_join(presyrsum, maxyrs, by = "region")
-# write.csv(presyrsum, "presyrsum_11_22_22.csv")
-# retain all spp present at least 3/4 of the available years in a survey
-spplist <- presyrsum %>% 
-  filter(presyr >= (maxyrs * 3/4)) %>% 
-  select(region, spp, common)
-
-spp_addin<-read.csv("data/Add_managed_spp.csv",header=T, sep=",")
-spplist<-rbind(spplist, spp_addin) %>%
-  distinct()
-# Trim dat to these species (for a given region, spp pair in spplist_final, in dat, keep only rows that match that region, spp pairing)
-trimmed_dat_fltr <- dat_fltr %>% 
-  filter(paste(region, spp) %in% paste(spplist$region, spplist$spp))
-
-#add an EBS+NBS combined region =========================
-#select years from compiled EBS that match the NBS survey years
-years<-c(2010, 2017, 2019, 2021, 2022, 2023)
-enbs_trimmed<-trimmed_dat_fltr %>% filter(region %in% c("Eastern Bering Sea", "Northern Bering Sea"),
-                                          year %in% years) %>%
-  mutate(region="Bering Sea Combined")
-
-p1 <- enbs_trimmed %>% 
-  select(stratum, year) %>% 
-  ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
-  geom_jitter()
-
-p2 <- enbs_trimmed %>%
-  select(lat, lon) %>% 
-  ggplot(aes(x = lon, y = lat)) +
-  geom_jitter()
-
-trimmed_dat_fltr<-rbind(trimmed_dat_fltr, enbs_trimmed)
-
-trimmed_dat_fltr_spp<-trimmed_dat_fltr %>% 
-  select(spp, common, region) %>%
-  distinct() %>%
-  group_by(spp, common) %>%
-  summarise_all(funs(toString(unique(na.omit(.)))))
-  
-write.csv(trimmed_dat_fltr_spp, file = here("output/data_clean", "trimmed_species_region_list.csv"))
-
-trimmed_dat_fltr_sppUnique<-trimmed_dat_fltr %>% 
-  select(spp, common) %>%
-  distinct()
-write.csv(trimmed_dat_fltr_sppUnique, file = here("output/data_clean", "trimmed_Unique_species_list.csv"))
-
-
-if(isTRUE(WRITE_TRIMMED_DAT)){
-  if(isTRUE(PREFER_RDATA)){
-    saveRDS(trimmed_dat_fltr, file = here("output/data_clean", "all-regions-trimmed-fltr.rds"))
-  }else{
-    write_csv(trimmed_dat_fltr, "data_clean/all-regions-trimmed-fltr.csv")
-  }
-}
-
-# Dat_exploded -  Add 0's ======================================================
-print("Dat exploded") 
-# these Sys.time() flags are here::here to see how long this section of code takes to run.
-Sys.time()
-# This takes about 10 minutes
-if (DAT_EXPLODED == TRUE){
-  dat.exploded <- as.data.table(trimmed_dat_fltr)[,explode0(.SD), by="region"]
-  dat_expl_spl <- split(dat.exploded, dat.exploded$region, drop = FALSE)
-  
-  if(isTRUE(WRITE_DAT_EXPLODED)){
-    if(isTRUE(PREFER_RDATA)){
-      lapply(dat_expl_spl, function(x) saveRDS(x, here::here("output/data_clean", paste0('dat_exploded', x$region[1], '.rds')))) 
-    }else{
-      lapply(dat_expl_spl, function(x) write_csv(x, gzfile(here::here("output/data_clean", paste0('dat_exploded', x$region[1], '.csv.gz')))))
-    }
-  }
-  
-}
-Sys.time()
-
-#clean up
-rm(dat_expl_spl)
-
+ # Expanded Survey Dataset=================================================
+ print ("Expanded dataset")
+ presyr <- present_every_year(dat_fltr, region, spp, common, year) 
+ 
+ haulsyr<-num_hauls_year(dat_fltr, region, year)
+ 
+ preshaul<-left_join(presyr, haulsyr, by=c("region", "year")) %>%
+   mutate(proportion=((pres/hauls)*100)) %>%
+   filter(proportion>=5)
+ 
+ # years in which spp was present in >= 5% of tows
+ presyrsum <- num_year_present(preshaul, region, spp, common)
+ 
+ # max num years of survey in each region
+ maxyrs <- max_year_surv(presyrsum, region)
+ 
+ # merge in max years
+ presyrsum <- left_join(presyrsum, maxyrs, by = "region")
+ # write.csv(presyrsum, "presyrsum_11_22_22.csv")
+ # retain all spp present at >5% of tows in at least 2 of the available years in a survey
+ spplist <- presyrsum %>% 
+   filter(presyr >= 2) %>% 
+   select(region, spp, common)
+ 
+ spp_addin<-read.csv("data/Add_managed_spp.csv",header=T, sep=",")
+ spplist<-rbind(spplist, spp_addin) %>%
+   distinct()
+ 
+ # Trim dat to these species (for a given region, spp pair in spplist_final, in dat, keep only rows that match that region, spp pairing)
+ trimmed_dat_fltr_expanded <- dat_fltr %>% 
+   filter(paste(region, spp) %in% paste(spplist$region, spplist$spp))
+ 
+ # Trim species (for IDW analysis)===========================================================
+ print("Trim species")
+ 
+ ## FILTERED DATA
+ # Find a standard set of species (present at least 3/4 of the years of the filtered data in a region)
+ # this result differs from the original code because it does not include any species that have a pres value of 0.  It does, however, include species for which the common name is NA.
+ presyr <- present_every_year(dat_fltr, region, spp, common, year) 
+ 
+ haulsyr<-num_hauls_year(dat_fltr, region, year)
+ 
+ preshaul<-left_join(presyr, haulsyr, by=c("region", "year")) %>%
+   mutate(proportion=((pres/hauls)*100)) %>%
+   filter(proportion>=5)
+ 
+ # years in which spp was present in >= 5% of tows
+ presyrsum <- num_year_present(preshaul, region, spp, common)
+ 
+ # max num years of survey in each region
+ maxyrs <- max_year_surv(presyrsum, region)
+ 
+ # merge in max years
+ presyrsum <- left_join(presyrsum, maxyrs, by = "region")
+ # write.csv(presyrsum, "presyrsum_11_22_22.csv")
+ # retain all spp present at least 3/4 of the available years in a survey
+ spplist <- presyrsum %>% 
+   filter(presyr >= (maxyrs * 3/4)) %>% 
+   select(region, spp, common)
+ 
+ spp_addin<-read.csv("data/Add_managed_spp.csv",header=T, sep=",")
+ spplist2<-rbind(spplist, spp_addin) %>%
+   distinct() %>%
+   mutate(DistributionProjectName="NMFS/Rutgers IDW Interpolation")
+ ## use this spp list after explode 0 to add a column indicating that these species should be kept for IDW 
+ 
+ #add an EBS+NBS combined region =========================
+ #select years from compiled EBS that match the NBS survey years
+ years<-c(2010, 2017, 2019, 2021, 2022, 2023)
+ enbs_trimmed<- trimmed_dat_fltr_expanded  %>% filter(region %in% c("Eastern Bering Sea", "Northern Bering Sea"),
+                                                      year %in% years) %>%
+   mutate(region="Bering Sea Combined")
+ 
+ p1 <- enbs_trimmed %>% 
+   select(stratum, year) %>% 
+   ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
+   geom_jitter()
+ 
+ p2 <- enbs_trimmed %>%
+   select(lat, lon) %>% 
+   ggplot(aes(x = lon, y = lat)) +
+   geom_jitter()
+ 
+ trimmed_dat_fltr_expanded <-rbind(trimmed_dat_fltr_expanded, enbs_trimmed)
+ 
+ if(isTRUE(WRITE_TRIMMED_DAT)){
+   if(isTRUE(PREFER_RDATA)){
+     saveRDS(trimmed_dat_fltr_expanded, file = here("output/data_clean", "all-regions-trimmed-fltr.rds"))
+   }else{
+     write_csv(trimmed_dat_fltr_expanded, "data_clean/all-regions-trimmed-fltr.csv")
+   }
+ }
+ 
+ # Dat_exploded -  Add 0's ======================================================
+ print("Dat exploded") 
+ # these Sys.time() flags are here::here to see how long this section of code takes to run.
+ Sys.time()
+ # This takes about 10 minutes
+ if (DAT_EXPLODED == TRUE){
+   dat.exploded <- as.data.table(trimmed_dat_fltr_expanded)[,explode0(.SD), by="region"]
+   dat_expl_spl <- split(dat.exploded, dat.exploded$region, drop = FALSE)
+   
+   if(isTRUE(WRITE_DAT_EXPLODED)){
+     if(isTRUE(PREFER_RDATA)){
+       lapply(dat_expl_spl, function(x) saveRDS(x, here::here("output/data_clean", paste0('dat_exploded', x$region[1], '.rds')))) 
+     }else{
+       lapply(dat_expl_spl, function(x) write_csv(x, gzfile(here::here("output/data_clean", paste0('dat_exploded', x$region[1], '.csv.gz')))))
+     }
+   }
+   
+ }
+ Sys.time()
+ 
+ #clean up
+ rm(dat_expl_spl)
+ 
+ ## Add the DistributionProjectName column to dat.exploded
+ #use the spplist2 to indicate which species should be kept for IDW as opposed to which are for both IDW and expanded survey module
+ dat.exploded<-left_join(dat.exploded, spplist2, by=c("spp","common","region"))
+ 
+ spp_IDW<-dat.exploded %>%
+   filter(DistributionProjectName=="NMFS/Rutgers IDW Interpolation") %>%
+   select(spp, common) %>%
+   distinct()
+ 
+ spp_survey<-dat.exploded %>%
+   select(spp, common, region) %>%
+   distinct()
+ 
+ #stop and.... 
+ ## Go to Update_Filter_Table.R
+ ## GO TO create_data_for_map_generation.R now 
+ 
 ###################### CAN STOP HERE ##########################################
 ## CORE Species -- caught every year of survey =======
 
