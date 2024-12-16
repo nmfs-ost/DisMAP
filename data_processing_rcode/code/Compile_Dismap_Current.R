@@ -3490,12 +3490,12 @@ maxyrs <- max_year_surv(presyrsum, region)
 presyrsum <- left_join(presyrsum, maxyrs, by = "region")
 # write.csv(presyrsum, "presyrsum_11_22_22.csv")
 # retain all spp present at least 3/4 of the available years in a survey
-spplist <- presyrsum %>% 
+spplist_IDW <- presyrsum %>% 
   filter(presyr >= (maxyrs * 3/4)) %>% 
   select(region, spp, common)
 
 spp_addin<-read.csv("data/Add_managed_spp.csv",header=T, sep=",")
-spplist2<-rbind(spplist, spp_addin) %>%
+spplist2<-rbind(spplist_IDW, spp_addin) %>%
   distinct() %>%
   mutate(DistributionProjectName="NMFS/Rutgers IDW Interpolation")
 ## use this spp list after explode 0 to add a column indicating that these species should be kept for IDW 
@@ -3610,7 +3610,7 @@ dfuniq_Core<-unique(spplist_core[c("spp", "common")])
 length(dfuniq_Core)
 
 #number of unique species within each regional survey (caught 3/4 or years)
-spp_reg_counts<-spplist %>%
+spp_reg_counts<-spp_survey %>%
   group_by(region)%>%
   summarise(distinct_spp=n_distinct(spp))
 
