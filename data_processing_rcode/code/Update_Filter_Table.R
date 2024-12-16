@@ -1,5 +1,5 @@
 ##Use this script to update the Filter Table when data is updated, and check if any new species need to be described in the table 
-Filter_list<-read.csv("Species_Filter.csv", header=T, sep=",")
+Filter_list<-read.csv("Filter_list_Expanded_Survey.csv", header=T, sep=",")
 
 #change region name for matching with filter table 
 spp_survey2<-spp_survey
@@ -22,7 +22,6 @@ spp_survey2<- spp_survey2 %>%
   filter(FilterSubRegion!="Bering Sea Combined")
 
 Filter_updated<-left_join(spp_survey2, Filter_list, by=c("spp", "common", "FilterSubRegion")) 
-Filter_updated$DistributionProjectName<-ifelse(!is.na(Filter_updated$FilterRegion), "NMFS/Rutgers IDW Interpolation", "Not for IDW")
 write.csv(Filter_updated, "Filter_list_Expanded_Survey.csv")
 
 
