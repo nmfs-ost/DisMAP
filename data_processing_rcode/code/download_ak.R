@@ -60,7 +60,7 @@ data <- jsonlite::fromJSON(base::rawToChar(res$content))
 catch_spp <- data$items  %>%
   dplyr::select(-links) # necessary for API accounting, but not part of the dataset
 
-write.csv(x = species,
+write.csv(x = catch_spp,
           here::here("data_processing_rcode/data/gap_products_foss_species.csv"))
 
 ## Download Catch Data ---------------------------------------------------------
@@ -95,10 +95,10 @@ write.csv(x = catch,
 # # Zero-Filled Data -----------------------------------------------------------
 #
 # dat <- dplyr::full_join(
-#   afsc_haul,
-#   afsc_catch) %>%
+#   haul,
+#   catch) %>%
 #   dplyr::full_join(
-#     afsc_species)  %>%
+#    catch_spp)  %>%
 #   # modify zero-filled rows
 #   dplyr::mutate(
 #     cpue_kgkm2 = ifelse(is.na(cpue_kgkm2), 0, cpue_kgkm2),
