@@ -16,8 +16,6 @@ import inspect
 
 import arcpy # third-parties second
 
-sys.path.append(os.path.dirname(__file__))
-
 def line_info(msg):
     f = inspect.currentframe()
     i = inspect.getframeinfo(f.f_back)
@@ -57,7 +55,7 @@ def worker(project_gdb="", csv_file=""):
     try:
         # Test if passed workspace exists, if not raise SystemExit
         if not arcpy.Exists(project_gdb) or not arcpy.Exists(csv_file):
-            raise SystemExit(line_info(f"{os.path.basename(project_gdb)} OR {os.path.basename(csv_file)} is missing!!"))
+            raise SystemExit(f"{os.path.basename(project_gdb)} OR {os.path.basename(csv_file)} is missing!!")
 
         # Imports
         import dismap
@@ -92,14 +90,14 @@ def worker(project_gdb="", csv_file=""):
         #print(field_csv_dtypes)
         #print(field_gdb_dtypes)
 
-        arcpy.AddMessage(f"\tCreating Table: {table_name}")
+        print(f"\tCreating Table: {table_name}")
         arcpy.management.CreateTable(project_gdb, f"{table_name}", "", "", table_name.replace("_", " "))
-        arcpy.AddMessage("\t{0}\n".format(arcpy.GetMessages().replace("\n", '\n\t')))
+        print("\t{0}\n".format(arcpy.GetMessages().replace("\n", '\n\t')))
 
         import pandas as pd
         import numpy as np
         import warnings
-        arcpy.AddMessage(f"> Importing {table_name} CSV Table")
+        print(f"> Importing {table_name} CSV Table")
         #csv_table = f"{table_name}.csv"
         # https://pandas.pydata.org/pandas-docs/stable/getting_started/intro_tutorials/09_timeseries.html?highlight=datetime
         # https://www.tutorialsandyou.com/python/numpy-data-types-66.html
@@ -137,7 +135,7 @@ def worker(project_gdb="", csv_file=""):
         #df.fillna(np.nan)
         #df = df.replace({np.nan: None})
 
-        arcpy.AddMessage(f">-> Creating the {table_name} Geodatabase Table")
+        print(f">-> Creating the {table_name} Geodatabase Table")
         try:
             array = np.array(np.rec.fromrecords(df.values), dtype = field_gdb_dtypes)
         except:
@@ -156,22 +154,22 @@ def worker(project_gdb="", csv_file=""):
             traceback.print_exc()
             raise Exception
 
-        arcpy.AddMessage(f">-> Copying the {table_name} Table from memory to the GDB")
+        print(f">-> Copying the {table_name} Table from memory to the GDB")
         fields = [f.name for f in arcpy.ListFields(tmp_table) if f.type == "String"]
         for field in fields:
             arcpy.management.CalculateField(tmp_table, field=field, expression=f"None if !{field}! == '' else !{field}!")
-            arcpy.AddMessage("Calculate Field:\t{0}\n".format(arcpy.GetMessages().replace("\n", '\n\t')))
+            print("Calculate Field:\t{0}\n".format(arcpy.GetMessages().replace("\n", '\n\t')))
             del field
         del fields
 
         arcpy.management.CopyRows(tmp_table, rf"{project_gdb}\{table_name}", "")
-        arcpy.AddMessage("Copy Rows:\t{0}\n".format(arcpy.GetMessages().replace("\n", '\n\t')))
+        print("Copy Rows:\t{0}\n".format(arcpy.GetMessages().replace("\n", '\n\t')))
         # Remove the temporary table
         arcpy.management.Delete(tmp_table)
         del tmp_table
 
         arcpy.conversion.ExportTable(in_table = rf"{project_gdb}\{table_name}", out_table  = rf"{csv_data_folder}\_{table_name}.csv", where_clause="", use_field_alias_as_name = "NOT_USE_ALIAS")
-        arcpy.AddMessage("Export Table:\t{0}\n".format(arcpy.GetMessages().replace("\n", '\n\t')))
+        print("Export Table:\t{0}\n".format(arcpy.GetMessages().replace("\n", '\n\t')))
         del pd, np, warnings
 
         # Alter Fields
@@ -182,11 +180,9 @@ def worker(project_gdb="", csv_file=""):
         # Export Metadata
         #
 
-        arcpy.AddMessage(f"Compacting the {os.path.basename(project_gdb)} GDB")
+        print(f"Compacting the {os.path.basename(project_gdb)} GDB")
         arcpy.management.Compact(project_gdb)
-        arcpy.AddMessage("\t"+arcpy.GetMessages().replace("\n", "\n\t"))
-
-        results = [rf"{project_gdb}\{table_name}"]
+        print("\t"+arcpy.GetMessages().replace("\n", "\n\t"))
 
         # Basic variables
         del table_name, csv_data_folder, project_folder, scratch_workspace
@@ -195,39 +191,17 @@ def worker(project_gdb="", csv_file=""):
         # Function parameters
         del project_gdb, csv_file
 
-    except KeyboardInterrupt:
-        raise SystemExit
-    except arcpy.ExecuteWarning:
-        traceback.print_exc()
-        arcpy.AddWarning(arcpy.GetMessages())
-    except arcpy.ExecuteError:
-        traceback.print_exc()
-        arcpy.AddError(arcpy.GetMessages())
-    except Exception as e:
-        print(e)
-        traceback.print_exc()
-        raise Exception
-    except SystemExit as se:
-        print(se)
-        traceback.print_exc()
     except:
         traceback.print_exc()
-        raise Exception
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                pass
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            raise SystemExit(traceback.print_exc())
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
     finally:
-        if "results" in locals().keys(): del results
+        pass
 
-def update_datecode(csv_file="", project=""):
+def update_datecode(csv_file="", project_name=""):
     try:
         # Imports
         import dismap
@@ -235,12 +209,6 @@ def update_datecode(csv_file="", project=""):
 
         import pandas as pd
         import warnings
-
-        # Test if passed workspace exists, if not raise SystemExit
-        if not arcpy.Exists(csv_file):
-            raise SystemExit(line_info(f"{os.path.basename(csv_file)} is missing!!"))
-        else:
-            pass
 
         # Set History and Metadata logs, set serverity and message level
         arcpy.SetLogHistory(True) # Look in %AppData%\Roaming\Esri\ArcGISPro\ArcToolbox\History
@@ -259,8 +227,8 @@ def update_datecode(csv_file="", project=""):
 
         field_csv_dtypes = dismap.dTypesCSV(csv_data_folder, table_name)
 
-        arcpy.AddMessage(f"\tUpdating CSV file: {os.path.basename(csv_file)}")
-        #arcpy.AddMessage(f"\t\t{csv_file}")
+        print(f"\tUpdating CSV file: {os.path.basename(csv_file)}")
+        #print(f"\t\t{csv_file}")
 
         # C:\. . .\ArcGIS\Pro\bin\Python\envs\arcgispro-py3\lib\site-packages\numpy\lib\arraysetops.py:583:
         # FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
@@ -279,184 +247,120 @@ def update_datecode(csv_file="", project=""):
 
         old_date_code = df.DateCode.unique()[0]
 
-        arcpy.AddMessage(f"\tOld Date Code: {old_date_code}")
-        arcpy.AddMessage(f"\tNew Date Code: {dismap.date_code(project)}")
+        print(f"\tOld Date Code: {old_date_code}")
+        print(f"\tNew Date Code: {dismap.date_code(project_name)}")
 
-        df = df.replace(regex = old_date_code, value = dismap.date_code(project))
+        df = df.replace(regex = old_date_code, value = dismap.date_code(project_name))
 
         df.to_csv(path_or_buf = f"{csv_file}", sep = ',')
 
         del df, pd, warnings
         del old_date_code
 
-        arcpy.AddMessage(f"\tCompleted updating CSV file: {os.path.basename(csv_file)}")
-
-        results = [csv_file]
+        print(f"\tCompleted updating CSV file: {os.path.basename(csv_file)}")
 
         # Variables infunction
         del field_csv_dtypes, table_name, csv_data_folder
         # Imports
         del dismap
         # Function parameters
-        del csv_file, project
+        del csv_file, project_name
 
-    except KeyboardInterrupt:
-        raise SystemExit
-    except arcpy.ExecuteWarning:
-        arcpy.AddWarning(str(traceback.print_exc()) + arcpy.GetMessages())
-        raise SystemExit
-    except arcpy.ExecuteError:
-        arcpy.AddError(str(traceback.print_exc()) + arcpy.GetMessages())
-        raise SystemExit
-    except SystemExit as se:
-        arcpy.AddError(str(se))
-        raise SystemExit
     except:
-        arcpy.AddError(str(traceback.print_exc()))
-        raise SystemExit
+        traceback.print_exc()
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            raise SystemExit(traceback.print_exc())
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
     finally:
-        if "results" in locals().keys(): del results
+        pass
 
-def main(project):
+def main(base_project_folder="", project_name=""):
     try:
         from import_datasets_species_filter_csv_data import worker
 
         arcpy.env.overwriteOutput          = True
         arcpy.env.parallelProcessingFactor = "100%"
 
-        project_gdb = rf"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\{project}\{project}.gdb"
-        project_folder = os.path.dirname(project_gdb)
-        csv_data_folder = rf"{project_folder}\CSV Data"
-
+        project_folder      = rf"{base_project_folder}\{project_name}"
+        base_project_file   = rf"{base_project_folder}\DisMAP.aprx"
+        project_gdb         = rf"{base_project_folder}\{project_name}\{project_name}.gdb"
+        csv_data_folder     = rf"{project_folder}\CSV Data"
         datasets_csv        = rf"{csv_data_folder}\Datasets.csv"
         species_filter_csv  = rf"{csv_data_folder}\Species_Filter.csv"
         survey_metadata_csv = rf"{csv_data_folder}\DisMAP_Survey_Info.csv"
+
+        #print(species_filter_csv)
+        #print(project_gdb)
+        #print(arcpy.Exists(species_filter_csv))
+        #print(arcpy.Exists(project_gdb))
 
         del project_folder, csv_data_folder
 
         Backup = False
         if Backup:
-            arcpy.AddMessage("Making a backup")
+            print("Making a backup")
             arcpy.management.Copy(project_gdb, project_gdb.replace(".gdb", f"_Backup.gdb"))
-            arcpy.AddMessage("\t"+arcpy.GetMessages(0).replace("\n", "\n\t"))
+            print("\t"+arcpy.GetMessages(0).replace("\n", "\n\t"))
 
-            arcpy.AddMessage("Compacting the backup")
+            print("Compacting the backup")
             arcpy.management.Compact(project_gdb.replace(".gdb", f"_Backup.gdb"))
-            arcpy.AddMessage("\t"+arcpy.GetMessages(0).replace("\n", "\n\t"))
+            print("\t"+arcpy.GetMessages(0).replace("\n", "\n\t"))
         del Backup
 
-        results = []
+        UpdateDatecode = False
+        if UpdateDatecode:
+            # Update DateCode
+            update_datecode(csv_file=datasets_csv, project_name=project_name)
+        del UpdateDatecode
 
-        try:
+        DatasetsCSVFile = False
+        if DatasetsCSVFile:
+            # Datasets CSV File
+            #print(datasets_csv)
+            worker(project_gdb=project_gdb, csv_file=datasets_csv)
+        del DatasetsCSVFile
 
-            UpdateDatecode = False
-            if UpdateDatecode:
-                # Update DateCode
-                update_datecode(csv_file=datasets_csv, project=project)
-            del UpdateDatecode
+        SpeciesFilterCSVFile = False
+        if SpeciesFilterCSVFile:
+            # Species Filter CSV File
+            #print(species_filter_csv)
+            #print(project_gdb)
+            worker(project_gdb=project_gdb, csv_file=species_filter_csv)
+        del SpeciesFilterCSVFile
 
-            DatasetsCSVFile = False
-            if DatasetsCSVFile:
-                # Datasets CSV File
-                arcpy.AddMessage(datasets_csv)
-                result = worker(project_gdb=project_gdb, csv_file=datasets_csv)
-                if result:
-                    results.extend(result)
-                del result
-            del DatasetsCSVFile
+        DisMAPSurveyInfoFile = False
+        if DisMAPSurveyInfoFile:
+            # DisMAP Survey Info File
+            #print(survey_metadata_csv)
+            worker(project_gdb=project_gdb, csv_file=survey_metadata_csv)
+        del DisMAPSurveyInfoFile
 
-            SpeciesFilterCSVFile = True
-            if SpeciesFilterCSVFile:
-                # Species Filter CSV File
-                arcpy.AddMessage(species_filter_csv)
-                result = worker(project_gdb=project_gdb, csv_file=species_filter_csv)
-                if result:
-                    results.extend(result)
-                del result
-            del SpeciesFilterCSVFile
-
-            DisMAPSurveyInfoFile = False
-            if DisMAPSurveyInfoFile:
-                # DisMAP Survey Info File
-                arcpy.AddMessage(survey_metadata_csv)
-                try:
-                    result = worker(project_gdb=project_gdb, csv_file=survey_metadata_csv)
-                    if result:
-                        results.extend(result)
-                    del result
-                except:
-                    pass
-            del DisMAPSurveyInfoFile
-
-        except Exception as e:
-            print(e)
-
-        if results:
-            print(results)
-
-##        if results:
-##            if type(results).__name__ == "bool":
-##                arcpy.AddMessage(f"'Results' is a {type(results).__name__}" )
-##                arcpy.AddMessage(f"Result: {results}")
-##            elif type(results).__name__ == "str":
-##                arcpy.AddMessage(f"'Results' is a {type(results).__name__}" )
-##                arcpy.AddMessage(f"Result: {results}")
-##            elif type(results).__name__ == "list":
-##                if type(results[0]).__name__ == "list":
-##                        results = [r for rt in results for r in rt]
-##                arcpy.AddMessage(f"'Results' is a {type(results).__name__}" )
-##                for result in results:
-##                    arcpy.AddMessage(f"Result: {result}")
-##                del result
-##            else:
-##                arcpy.AddMessage(f"No results returned!!!")
-##        else:
-##            arcpy.AddMessage(f"No results in '{inspect.stack()[0][3]}'")
-
+        del base_project_file
         del datasets_csv, species_filter_csv, survey_metadata_csv
         del project_gdb
         del worker
-        del project
 
-    except KeyboardInterrupt:
-        raise SystemExit
-    except arcpy.ExecuteWarning:
-        arcpy.AddWarning(str(traceback.print_exc()) + arcpy.GetMessages())
-        raise SystemExit
-    except arcpy.ExecuteError:
-        arcpy.AddError(str(traceback.print_exc()) + arcpy.GetMessages())
-        raise SystemExit
-    except SystemExit as se:
-        arcpy.AddError(str(se))
-        raise SystemExit
+        # Function parameters
+        del base_project_folder, project_name
+
     except:
-        arcpy.AddError(str(traceback.print_exc()))
-        raise SystemExit
+        traceback.print_exc()
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            raise SystemExit(traceback.print_exc())
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
     finally:
-        if "results" in locals().keys(): del results
+        pass
 
 if __name__ == "__main__":
     try:
+        # Append the location of this scrip to the System Path
+        #sys.path.append(os.path.dirname(__file__))
+        sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
         # Import this Python module
         import import_datasets_species_filter_csv_data
         importlib.reload(import_datasets_species_filter_csv_data)
@@ -467,14 +371,15 @@ if __name__ == "__main__":
         print(f"Python Version: {sys.version} Environment: {os.path.basename(sys.exec_prefix)}")
         print(f"{'-' * 90}\n")
 
-        #project = "May 1 2024"
-        #project = "July 1 2024"
-        project = "December 1 2024"
+        base_project_folder = rf"{os.path.dirname(os.path.dirname(__file__))}"
+        #project_name = "May 1 2024"
+        #project_name = "July 1 2024"
+        project_name = "December 1 2024"
 
         # Tested on 7/30/2024 -- PASSED
-        main(project=project)
+        main(base_project_folder=base_project_folder, project_name=project_name)
 
-        del project
+        del base_project_folder, project_name
 
         from time import localtime, strftime
         print(f"\n{'-' * 90}")
@@ -482,16 +387,10 @@ if __name__ == "__main__":
         print(f"{'-' * 90}")
         del localtime, strftime
 
-    except SystemExit:
-        pass
     except:
         traceback.print_exc()
     else:
-        leave_out_keys = ["leave_out_keys"]
-        leave_out_keys.extend([name for name, obj in inspect.getmembers(sys.modules[__name__]) if inspect.isfunction(obj) or inspect.ismodule(obj)])
-        remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-        if remaining_keys:
-            arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[1][3]}': ##--> '{', '.join(remaining_keys)}' <--##")
-        del leave_out_keys, remaining_keys
+        pass
     finally:
         pass
+
