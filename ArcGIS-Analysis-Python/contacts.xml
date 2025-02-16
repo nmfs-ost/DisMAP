@@ -1,0 +1,868 @@
+<contacts>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>3322cd1ce38dbe160bb0ff4c0b87548afa78c344</editorDigest>
+    <rpIndName>Dan Lawson</rpIndName>
+    <rpOrgName>Long Beach Branch, Protected Resources Division, West Coast Region, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Branch Chief</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>501 West Ocean Boulevard, Suite 4200</delPoint>
+        <city>Long Beach</city>
+        <adminArea>CA</adminArea>
+        <postCode>90802</postCode>
+        <eMailAdd>dan.lawson@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">503-230-5400</voiceNum>
+        <faxNum>206-526-6528</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 PST/PDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/west-coast-region</linkage>
+        <protocol>REST Service</protocol>
+        <orName>West Coast Region NOAA Fisheries</orName>
+        <orDesc>About the West Coast Region of NOAA Fisheries</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Dan Lawson (use this one)</displayName>
+    <editorSave>True</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>4b7dfedb0b552a7fee6fd3eedd19a7ceee490114</editorDigest>
+    <rpIndName>Jeffrey A. Seminoff</rpIndName>
+    <rpOrgName>Marine Mammal and Turtle Division, Southwest Fisheries Science Center, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Program Lead, Marine Turtle Ecology and Assessment</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>8901 La Jolla Shores Drive</delPoint>
+        <city>La Jolla </city>
+        <adminArea>CA</adminArea>
+        <postCode>92037-1508</postCode>
+        <eMailAdd>jeffrey.seminoff@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">858-546-7152</voiceNum>
+        <faxNum>858-546-7152</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 PST/PDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/marine-mammal-and-turtle-division-southwest-fisheries-science-center</linkage>
+        <orName>Marine Mammal and Turtle Division, Southwest Fisheries Science Center, NOAA Fisheries</orName>
+        <orDesc>About the Marine Mammal and Turtle Division of the Southwest Fisheries Science Center</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Jeffrey A. Seminoff (use this one)</displayName>
+    <editorSave>True</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>31c1e44fa8a686ad40cb2a52f297f7cdfe9d9843</editorDigest>
+    <rpIndName>Jennifer Schultz</rpIndName>
+    <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Fisheries Biologist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>jennifer.schultz@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8400</voiceNum>
+        <faxNum>301-427-8400</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/office-protected-resources</linkage>
+        <protocol>REST Service</protocol>
+        <orName>Fisheries OPR</orName>
+        <orDesc>NOAA Fisheries Office of Protected Resources</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Jennifer Schultz (use this one)</displayName>
+    <editorSave>True</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>31c1e44fa8a686ad40cb2a52f297f7cdfe9d9843</editorDigest>
+    <rpIndName>Jennifer Schultz</rpIndName>
+    <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Fisheries Biologist</rpPosName>
+    <displayName>Jennifer Schultz</displayName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>jennifer.schultz@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8400</voiceNum>
+        <faxNum>301-427-8400</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/office-protected-resources</linkage>
+        <protocol>REST Service</protocol>
+        <orName>Fisheries OPR</orName>
+        <orDesc>NOAA Fisheries Office of Protected Resources</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Jennifer Schultz</displayName>
+    <editorSave>False</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>c74540fe60a77687dee66d9f61d9465ddcf1cde5</editorDigest>
+    <rpIndName>Jennifer Schultz</rpIndName>
+    <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>jennifer.schultz@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8400</voiceNum>
+        <faxNum>301-427-8400</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/office-protected-resources</linkage>
+        <protocol>REST Service</protocol>
+        <orName>Fisheries OPR</orName>
+        <orDesc>NOAA Fisheries Office of Protected Resources</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Jennifer Schultz</displayName>
+    <editorSave>False</editorSave>
+    <rpPosName>
+    </rpPosName>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>31c1e44fa8a686ad40cb2a52f297f7cdfe9d9843</editorDigest>
+    <rpIndName>Jennifer Schultz</rpIndName>
+    <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Fisheries Biologist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>jennifer.schultz@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8400</voiceNum>
+        <faxNum>301-427-8400</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/office-protected-resources</linkage>
+        <protocol>REST Service</protocol>
+        <orName>Fisheries OPR</orName>
+        <orDesc>NOAA Fisheries Office of Protected Resources</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Jennifer Schultz</displayName>
+    <editorSave>False</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>6414d02ffa07b807e99be25fa2b34b98872d356c</editorDigest>
+    <rpIndName>John F Kennedy</rpIndName>
+    <rpOrgName>NMFS Office of Science and Technology</rpOrgName>
+    <rpPosName>GIS Specialist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8149</voiceNum>
+        <faxNum>301-713-4137</faxNum>
+      </cntPhone>
+      <cntHours>0930 - 2030 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>http://www.st.nmfs.noaa.gov/</linkage>
+        <orName>Fisheries OST</orName>
+        <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>John F Kennedy (use this one)</displayName>
+    <editorSave>True</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>6414d02ffa07b807e99be25fa2b34b98872d356c</editorDigest>
+    <rpIndName>John F Kennedy</rpIndName>
+    <rpOrgName>NMFS Office of Science and Technology</rpOrgName>
+    <rpPosName>GIS Specialist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8149</voiceNum>
+        <faxNum>301-713-4137</faxNum>
+      </cntPhone>
+      <cntHours>0930 - 2030 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>http://www.st.nmfs.noaa.gov/</linkage>
+        <orName>Fisheries OST</orName>
+        <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>John F Kennedy</displayName>
+    <editorSave>False</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>6414d02ffa07b807e99be25fa2b34b98872d356c</editorDigest>
+    <rpIndName>John F Kennedy</rpIndName>
+    <rpOrgName>NMFS Office of Science and Technology</rpOrgName>
+    <rpPosName>GIS Specialist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8149</voiceNum>
+        <faxNum>301-713-4137</faxNum>
+      </cntPhone>
+      <cntHours>0930 - 2030 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>http://www.st.nmfs.noaa.gov/</linkage>
+        <orName>Fisheries OST</orName>
+        <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>John F Kennedy</displayName>
+    <editorSave>False</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>6414d02ffa07b807e99be25fa2b34b98872d356c</editorDigest>
+    <rpIndName>John F Kennedy</rpIndName>
+    <rpOrgName>NMFS Office of Science and Technology</rpOrgName>
+    <rpPosName>GIS Specialist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8149</voiceNum>
+        <faxNum>301-713-4137</faxNum>
+      </cntPhone>
+      <cntHours>0930 - 2030 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>http://www.st.nmfs.noaa.gov/</linkage>
+        <orName>Fisheries OST</orName>
+        <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>John F Kennedy</displayName>
+    <editorSave>False</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>4d6ac6700325be72c82d9f4339f72952007ae3a2</editorDigest>
+    <rpIndName>John F Kennedy</rpIndName>
+    <rpOrgName>NMFS Office of Science and Technology</rpOrgName>
+    <rpPosName>GIS Specialist</rpPosName>
+    <rpCntInfo editorExpand="False">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>john.f.kennedy@noaa.gov</eMailAdd>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8149</voiceNum>
+        <faxNum>301-713-4137</faxNum>
+      </cntPhone>
+      <cntHours>0930 - 1630 MST/MDT</cntHours>
+      <cntOnlineRes>
+        <linkage>http://www.st.nmfs.noaa.gov/</linkage>
+        <orName>Fisheries OST</orName>
+        <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+	<displayName>John F Kennedy</displayName>
+    <editorSave>False</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>0c411573c92eb63d614097cff0ef9360fa4a8b4a</editorDigest>
+    <rpIndName>Jonathan Molineaux</rpIndName>
+    <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Fisheries Biologist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>jonathan.molineaux@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8400</voiceNum>
+        <faxNum>301-427-8400</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/office-protected-resources</linkage>
+        <protocol>REST Service</protocol>
+        <orName>Fisheries OPR</orName>
+        <orDesc>NOAA Fisheries Office of Protected Resources</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Jonathan Molineaux (use this one)</displayName>
+    <editorSave>True</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>0c411573c92eb63d614097cff0ef9360fa4a8b4a</editorDigest>
+    <rpIndName>Jonathan Molineaux</rpIndName>
+    <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Fisheries Biologist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>jonathan.molineaux@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8400</voiceNum>
+        <faxNum>301-427-8400</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/office-protected-resources</linkage>
+        <protocol>REST Service</protocol>
+        <orName>Fisheries OPR</orName>
+        <orDesc>NOAA Fisheries Office of Protected Resources</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Jonathan Molineaux</displayName>
+    <editorSave>False</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>badc8d32b28a031395212b2fd530e24e508a83ed</editorDigest>
+    <rpIndName>Department of Commerce (DOC), National Oceanic and Atmospheric Administration (NOAA), National Marine Fisheries Service (NMFS)</rpIndName>
+    <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Fisheries Biologist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>nikki.wildart@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8443</voiceNum>
+        <faxNum>301-427-8443</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/office-protected-resources</linkage>
+        <protocol>REST Service</protocol>
+        <orName>Fisheries OPR</orName>
+        <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Department of Commerce (DOC), National Oceanic and Atmospheric Administration (NOAA), National Marine Fisheries Service (NMFS) (use this one)</displayName>
+    <editorSave>True</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>0c411573c92eb63d614097cff0ef9360fa4a8b4a</editorDigest>
+    <rpIndName>Jonathan Molineaux</rpIndName>
+    <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Fisheries Biologist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>jonathan.molineaux@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8400</voiceNum>
+        <faxNum>301-427-8400</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/office-protected-resources</linkage>
+        <protocol>REST Service</protocol>
+        <orName>Fisheries OPR</orName>
+        <orDesc>NOAA Fisheries Office of Protected Resources</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Jonathan Molineaux</displayName>
+    <editorSave>False</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>0c411573c92eb63d614097cff0ef9360fa4a8b4a</editorDigest>
+    <rpIndName>Jonathan Molineaux</rpIndName>
+    <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Fisheries Biologist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>jonathan.molineaux@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8400</voiceNum>
+        <faxNum>301-427-8400</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/office-protected-resources</linkage>
+        <protocol>REST Service</protocol>
+        <orName>Fisheries OPR</orName>
+        <orDesc>NOAA Fisheries Office of Protected Resources</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Jonathan Molineaux</displayName>
+    <editorSave></editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>a15328be33df7de67fff7c4f7b97464b5b447bc7</editorDigest>
+    <rpIndName>Marc Romano</rpIndName>
+    <rpOrgName>National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Biologist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>street</delPoint>
+        <city>city</city>
+        <adminArea>state</adminArea>
+        <postCode>zip</postCode>
+        <eMailAdd>marc.romano@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-xxx</voiceNum>
+        <faxNum>301-427-xxxx</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>http://www.st.nmfs.noaa.gov/</linkage>
+        <orName>Fisheries OST</orName>
+        <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Marc Romano (use this one)</displayName>
+    <editorSave>True</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>d617272578de83b0a7e8baf8ff5f61249c87a82b</editorDigest>
+    <rpIndName>Melissa Ann Karp</rpIndName>
+    <rpOrgName>NMFS Office of Science and Technology</rpOrgName>
+    <rpPosName>Fisheries Science Coordinator</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Hwy</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>melissa.karp@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8202</voiceNum>
+        <faxNum>301-713-4137</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>http://www.st.nmfs.noaa.gov/</linkage>
+        <orName>Fisheries OST</orName>
+        <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Melissa Ann Karp (use this one)</displayName>
+    <editorSave>True</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>d617272578de83b0a7e8baf8ff5f61249c87a82b</editorDigest>
+    <rpIndName>Melissa Ann Karp</rpIndName>
+    <rpOrgName>NMFS Office of Science and Technology</rpOrgName>
+    <rpPosName>Fisheries Science Coordinator</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Hwy</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>melissa.karp@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8202</voiceNum>
+        <faxNum>301-713-4137</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>http://www.st.nmfs.noaa.gov/</linkage>
+        <orName>Fisheries OST</orName>
+        <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Melissa Ann Karp</displayName>
+    <editorSave>False</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>3f941717b7ae726708ae2ee2efea26b414941ab9</editorDigest>
+    <rpIndName>Nikki Wildart</rpIndName>
+    <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Biologist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910</postCode>
+        <eMailAdd>nikki.wildart@noaa.gov</eMailAdd>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8443</voiceNum>
+        <faxNum>301-427-8443</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+    </rpCntInfo>
+    <cntOnlineRes>
+      <linkage>http://www.st.nmfs.noaa.gov/</linkage>
+      <orName>Fisheries OST</orName>
+      <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+      <orFunct>
+        <OnFunctCd value="002" />
+      </orFunct>
+    </cntOnlineRes>
+    <displayName>Nikki Wildart (use this one)</displayName>
+    <editorSave>True</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>3f941717b7ae726708ae2ee2efea26b414941ab9</editorDigest>
+    <rpIndName>Nikki Wildart</rpIndName>
+    <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Biologist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910</postCode>
+        <eMailAdd>nikki.wildart@noaa.gov</eMailAdd>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8443</voiceNum>
+        <faxNum>301-427-8443</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+    </rpCntInfo>
+    <cntOnlineRes>
+      <linkage>http://www.st.nmfs.noaa.gov/</linkage>
+      <orName>Fisheries OST</orName>
+      <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+      <orFunct>
+        <OnFunctCd value="002" />
+      </orFunct>
+    </cntOnlineRes>
+    <displayName>Nikki Wildart</displayName>
+    <editorSave>False</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>3f941717b7ae726708ae2ee2efea26b414941ab9</editorDigest>
+    <rpIndName>Nikki Wildart</rpIndName>
+    <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Biologist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910</postCode>
+        <eMailAdd>nikki.wildart@noaa.gov</eMailAdd>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8443</voiceNum>
+        <faxNum>301-427-8443</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+    </rpCntInfo>
+    <cntOnlineRes>
+      <linkage>http://www.st.nmfs.noaa.gov/</linkage>
+      <orName>Fisheries OST</orName>
+      <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+      <orFunct>
+        <OnFunctCd value="002" />
+      </orFunct>
+    </cntOnlineRes>
+    <displayName>Nikki Wildart</displayName>
+    <editorSave>False</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>1b196342c3f29b700a4679f8743dbf1b3d041ba1</editorDigest>
+    <rpIndName>Nikki Wildart</rpIndName>
+    <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Biologist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>nikki.wildart@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8443</voiceNum>
+        <faxNum>301-427-8443</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/office-protected-resources</linkage>
+        <protocol>REST Service</protocol>
+        <orName>Fisheries OPR</orName>
+        <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Nikki Wildart</displayName>
+    <editorSave>False</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>b8a6e3ccdffab1c91cd0b8a8fec9df6f67c4973a</editorDigest>
+    <rpIndName>Office of Protected Resources, National Marine Fisheries Service</rpIndName>
+    <rpOrgName>Department of Commerce (DOC), National Oceanic and Atmospheric Administration (NOAA), National Marine Fisheries Service (NMFS)</rpOrgName>
+    <rpPosName>Fisheries Biologist</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <postCode>20910-3282</postCode>
+        <eMailAdd>nikki.wildart@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8443</voiceNum>
+        <faxNum>301-427-8443</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/office-protected-resources</linkage>
+        <protocol>REST Service</protocol>
+        <orName>Fisheries OPR</orName>
+        <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Department of Commerce (DOC), National Oceanic and Atmospheric Administration (NOAA), National Marine Fisheries Service (NMFS) (use this one)</displayName>
+    <editorSave>True</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>912d6133c6dfb5d2bbccb31cc8a5270d55c4a1f7</editorDigest>
+    <rpIndName>Susan Wang</rpIndName>
+    <rpOrgName>Protected Resources Division, West Coast Region, National Marine Fisheries Service</rpOrgName>
+    <rpPosName>Black Abalone Recovery Coordinator</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>501 West Ocean Boulevard, Suite 4200</delPoint>
+        <city>Long Beach</city>
+        <adminArea>CA</adminArea>
+        <postCode>90802</postCode>
+        <eMailAdd>susan.wang@noaa.gov</eMailAdd>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">562 980-4199</voiceNum>
+        <faxNum>562 980-4199</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 PST/PDT</cntHours>
+      <cntOnlineRes>
+        <linkage>https://www.fisheries.noaa.gov/about/west-coast-region&lt;/linkage&gt;</linkage>
+        <protocol>REST Service</protocol>
+        <orName>West Coast Region NOAA Fisheries</orName>
+        <orDesc>About the West Coast Region of NOAA Fisheries</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Susan Wang (use this one)</displayName>
+    <editorSave>True</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>252b2bb10e125cdaacbff5ddc3dbe956ccb01516</editorDigest>
+    <rpIndName>Timothy J Haverland</rpIndName>
+    <rpOrgName>NMFS Office of Science and Technology</rpOrgName>
+    <rpPosName>GIS App Developer</rpPosName>
+    <rpCntInfo editorFillOnly="True" editorExpand="True">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <eMailAdd>tim.haverland@noaa.gov</eMailAdd>
+        <postCode>20910-3282</postCode>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8137</voiceNum>
+        <faxNum>301-713-4137</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>http://www.st.nmfs.noaa.gov/</linkage>
+        <orName>Fisheries OST</orName>
+        <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Timothy J Haverland (use this one)</displayName>
+    <editorSave>True</editorSave>
+  </contact>
+  <contact>
+    <editorSource>external</editorSource>
+    <editorDigest>7fe0400aa5b605de630df67e5411025cbea5a8e5</editorDigest>
+    <rpIndName>Timothy J Haverland</rpIndName>
+    <rpOrgName>NMFS Office of Science and Technology</rpOrgName>
+    <rpPosName>GIS App Developer</rpPosName>
+    <rpCntInfo editorExpand="False">
+      <cntAddress addressType="both">
+        <delPoint>1315 East West Highway</delPoint>
+        <city>Silver Spring</city>
+        <adminArea>MD</adminArea>
+        <eMailAdd>tim.haverland@noaa.gov</eMailAdd>
+        <postCode>20910-3282 </postCode>
+        <country>US</country>
+      </cntAddress>
+      <cntPhone>
+        <voiceNum tddtty="">301-427-8137</voiceNum>
+        <faxNum>301-713-4137</faxNum>
+      </cntPhone>
+      <cntHours>0700 - 1800 EST/EDT</cntHours>
+      <cntOnlineRes>
+        <linkage>http://www.st.nmfs.noaa.gov/</linkage>
+        <orName>Fisheries OST</orName>
+        <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+        <orFunct>
+          <OnFunctCd value="002" />
+        </orFunct>
+      </cntOnlineRes>
+    </rpCntInfo>
+    <displayName>Timothy J Haverland</displayName>	
+    <editorSave>False</editorSave>
+  </contact>
+</contacts>

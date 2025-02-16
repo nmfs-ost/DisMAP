@@ -21,83 +21,399 @@ def line_info(msg):
     i = inspect.getframeinfo(f.f_back)
     return f"Script: {os.path.basename(i.filename)}\n\tNear Line: {i.lineno}\n\tFunction: {i.function}\n\tMessage: {msg}"
 
-def parse_xml_file_format_and_save(xml_file=""):
-    root_dict = {"Esri"       :  0, "dataIdInfo" :  1, "mdChar"      :  2,
-                 "mdContact"  :  3, "mdDateSt"   :  4, "mdFileID"    :  5,
-                 "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
-                 "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
-                 "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
-                 "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
-                 "spatRepInfo" : 18, "Binary"     : 19,}
-
-    from lxml import etree
-    parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
-    tree = etree.parse(xml_file, parser=parser) # To parse from a string, use the fromstring() function instead.
-    del parser
-    root = tree.getroot()
-    for child in root.xpath("."):
-        child[:] = sorted(child, key=lambda x: root_dict[x.tag])
-        del child
-    del root
-    etree.indent(tree, space='   ')
-    tree.write(xml_file, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True)
-    del tree
-    del xml_file, etree
-    return True
-
-def print_xml_file(xml_file=""):
-    root_dict = {"Esri"       :  0, "dataIdInfo" :  1, "mdChar"      :  2,
-                 "mdContact"  :  3, "mdDateSt"   :  4, "mdFileID"    :  5,
-                 "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
-                 "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
-                 "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
-                 "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
-                 "spatRepInfo" : 18, "Binary"     : 19,}
-
-    from lxml import etree
-    parser = etree.XMLParser(encoding='utf-8', remove_blank_text=True)
-    tree = etree.parse(xml_file, parser=parser) # To parse from a string, use the fromstring() function instead.
-    del parser
-    root = tree.getroot()
-    for child in root.xpath("."):
-        child[:] = sorted(child, key=lambda x: root_dict[x.tag])
-        del child
-    del root
-    etree.indent(tree, space='   ')
-    print(etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
-    del tree
-    del xml_file, etree
-    return True
-
 def _add_basic_metadata(dataset_name, dataset_md, metadata_dictionary):
     try:
         if "_Sample_Locations" in dataset_name:
             if "WC_Sample_Locations" == dataset_name:
-                dataset_name = "WC_IDW_Sample_Locations"
+                dataset_name = "WC_ANN_IDW_Sample_Locations"
             elif "_IDW_Sample_Locations" not in dataset_name:
                 dataset_name = dataset_name.replace("_Sample_Locations", "_IDW_Sample_Locations")
             else:
                 pass
-                #dataset_name = dataset_name
+                dataset_name = dataset_name
 
         #if dataset_name.endswith(".crf"):
         #    dataset_name = dataset_name.replace(".crf", "_crf")
 
         if dataset_name in metadata_dictionary:
-            dataset_md.title             = metadata_dictionary[dataset_name]["Dataset Service Title"]
-            dataset_md.tags              = metadata_dictionary[dataset_name]["Tags"]
-            dataset_md.summary           = metadata_dictionary[dataset_name]["Summary"]
-            dataset_md.description       = metadata_dictionary[dataset_name]["Description"]
-            dataset_md.credits           = metadata_dictionary[dataset_name]["Credits"]
-            dataset_md.accessConstraints = metadata_dictionary[dataset_name]["Access Constraints"]
-            dataset_md.save()
+            try:
+                #dataset_md.synchronize("ALWAYS")
+                #dataset_md.save()
+                #dataset_md.reload()
+                dataset_md.title             = metadata_dictionary[dataset_name]["Dataset Service Title"]
+                dataset_md.tags              = metadata_dictionary[dataset_name]["Tags"]
+                dataset_md.summary           = metadata_dictionary[dataset_name]["Summary"]
+                dataset_md.description       = metadata_dictionary[dataset_name]["Description"]
+                dataset_md.credits           = metadata_dictionary[dataset_name]["Credits"]
+                dataset_md.accessConstraints = metadata_dictionary[dataset_name]["Access Constraints"]
+                dataset_md.save()
+            except:
+                traceback.print_exc()
         else:
             print(f"###--->>> {dataset_name} <<<---### not in metadata dictionary")
 
         return dataset_md
+    except Exception:
+        traceback.print_exc()
     except:
         traceback.print_exc()
         raise Exception
+
+def update_contacts(base_project_file="", project_name=""):
+    try:
+        # Imports
+        from lxml import etree
+        from io import StringIO
+        import copy
+        from arcpy import metadata as md
+
+        import dismap
+        importlib.reload(dismap)
+        from dismap import dataset_title_dict, parse_xml_file_format_and_save
+
+        arcpy.env.overwriteOutput          = True
+        arcpy.env.parallelProcessingFactor = "100%"
+        arcpy.SetLogMetadata(True)
+        arcpy.SetSeverityLevel(2)
+        arcpy.SetMessageLevels(['NORMAL']) # NORMAL, COMMANDSYNTAX, DIAGNOSTICS, PROJECTIONTRANSFORMATION
+
+        base_project_folder = rf"{os.path.dirname(base_project_file)}"
+        base_project_file   = rf"{base_project_folder}\DisMAP.aprx"
+        project_folder      = rf"{base_project_folder}\{project_name}"
+        project_gdb         = rf"{project_folder}\{project_name}.gdb"
+        metadata_folder     = rf"{project_folder}\Template Metadata"
+        crfs_folder         = rf"{project_folder}\CRFs"
+        scratch_folder      = rf"{project_folder}\Scratch"
+
+        if not os.path.isdir(metadata_folder): os.mkdir(metadata_folder)
+
+        root_dict = {"Esri"       :  0, "dataIdInfo" :  1, "mdChar"      :  2,
+                     "mdContact"  :  3, "mdDateSt"   :  4, "mdFileID"    :  5,
+                     "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
+                     "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
+                     "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
+                     "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
+                     "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
+
+        RoleCd_dict = {"001" : "Resource Provider", "002" : "Custodian",
+                       "003" : "Owner",             "004" : "User",
+                       "005" : "Distributor",       "006" : "Originator",
+                       "007" : "Point of Contact",  "008" : "Principal Investigator",
+                       "009" : "Processor",         "010" : "Publisher",
+                       "011" : "Author",            "012" : "Collaborator",
+                       "013" : "Editor",            "014" : "Mediator",
+                       "015" : "Rights Holder",}
+
+        metadata_dictionary = dataset_title_dict(project_gdb)
+
+        workspaces = [project_gdb, crfs_folder]
+
+        contacts_xml = rf"{os.environ['USERPROFILE']}\Documents\ArcGIS\Descriptions\contacts.xml"
+        parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
+        contacts_xml_tree = etree.parse(contacts_xml, parser=parser) # To parse from a string, use the fromstring() function instead.
+        del parser
+        del contacts_xml
+        contacts_xml_root = contacts_xml_tree.getroot()
+        #etree.indent(contacts_xml_root, space="  ")
+        #print(etree.tostring(contacts_xml_root, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
+
+        for workspace in workspaces:
+
+            arcpy.env.workspace        = workspace
+            arcpy.env.scratchWorkspace = rf"{scratch_folder}\scratch.gdb"
+
+            datasets = list()
+
+            walk = arcpy.da.Walk(workspace)
+
+            for dirpath, dirnames, filenames in walk:
+                for filename in filenames:
+                    datasets.append(os.path.join(dirpath, filename))
+                    del filename
+                del dirpath, dirnames, filenames
+            del walk
+
+            for dataset_path in sorted(datasets):
+                #print(dataset_path)
+                dataset_name = os.path.basename(dataset_path)
+
+                #print(f"Dataset Name:     {dataset_name}")
+                #print(f"\tDataset Location: {os.path.basename(os.path.dirname(dataset_path))}")
+
+                dataset_md = md.Metadata(dataset_path)
+                dataset_md_xml = dataset_md.xml
+                del dataset_md
+
+                # Parse the XML
+                parser = etree.XMLParser(remove_blank_text=True, encoding='UTF-8')
+                tree = etree.parse(StringIO(dataset_md_xml), parser=parser)
+                root = tree.getroot()
+                del parser, dataset_md_xml
+
+                # print(etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
+                # etree.indent(tree, space='   ')
+                # tree.write(xml_file, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True)
+
+                print(f"Dataset Name: {dataset_name}")
+
+                contact_parents = root.xpath(f".//eMailAdd/text()/ancestor::*//rpIndName/text()/ancestor::*//rpIndName/..")
+                #contact_parents = copy.deepcopy(root.xpath(f".//eMailAdd/text()/ancestor::*//rpIndName/text()/ancestor::*//rpIndName/.."))
+                #contact_parents = root.xpath(f".//eMailAdd/text()/ancestor::rpCntInfo/..")
+
+                if len(contact_parents) > 0:
+                    #count = 0
+                    for contact_parent in contact_parents:
+                        #count+=1
+                        old_contact_parent = contact_parent.tag
+                        print(f"\tContact Parent: {old_contact_parent}")
+                        #print(etree.tostring(contact_parent, encoding="utf-8",  method='xml', pretty_print=True).decode())
+
+
+                        if isinstance(contact_parent.find(f"./rpCntInfo"), type(None)):
+                            _xml = etree.XML('<rpCntInfo><cntAddress addressType="both"><delPoint></delPoint><city></city><adminArea></adminArea> \
+                                              <postCode></postCode><eMailAdd></eMailAdd><country></country></cntAddress><cntPhone><voiceNum tddtty=""></voiceNum> \
+                                              <faxNum></faxNum></cntPhone><cntHours></cntHours><cntOnlineRes><linkage></linkage><protocol>REST Service</protocol> \
+                                              <orName></orName><orDesc></orDesc><orFunct><OnFunctCd value="002"></OnFunctCd></orFunct></cntOnlineRes></rpCntInfo>')
+                            # Append element
+                            contact_parent.append(_xml)
+                            del _xml
+
+                        if not isinstance(contact_parent.find(f".//eMailAdd"), type(None)):
+                            email_address = contact_parent.find(f".//eMailAdd")
+                            #print(f"\t\tEmail Address: {email_address}")
+                            if not email_address.text:
+                                _user_name = contact_parent.find(f"./rpIndName").text
+                                _email_address = _user_name.lower().replace(" ", ".") + "@noaa.gov"
+                                email_address.text = _email_address
+                                del _email_address, _user_name
+                            else:
+                                pass
+                        else:
+                            pass
+                            _rpCntInfo = contact_parent.find(f".//rpCntInfo")
+                            _cntAddress = _rpCntInfo.find(f".//cntAddress")
+                            _user_name = contact_parent.find(f"./rpIndName").text
+                            #print(f"\t\tUser Name:     {_user_name}")
+                            _email_address = _user_name.lower().replace(" ", ".") + "@noaa.gov"
+                            _xml = etree.XML(f'<eMailAdd>{_email_address}</eMailAdd>')
+                            # Append element
+                            _cntAddress.append(_xml)
+                            del _xml, _user_name, _email_address, _cntAddress, _rpCntInfo
+
+                        if old_contact_parent == "citRespParty":
+                            if not isinstance(contact_parent.find(f"./role"), type(None)):
+                                user_role = contact_parent.find(f".//RoleCd")
+                                user_role.set("value", "002")
+                            else:
+                                _xml = etree.XML('<role><RoleCd value="002"/></role>')
+                                # Append element
+                                contact_parent.append(_xml)
+                                del _xml
+
+                        if old_contact_parent == "idPoC":
+                            if not isinstance(contact_parent.find(f"./role"), type(None)):
+                                user_role = contact_parent.find(f".//RoleCd")
+                                user_role.set("value", "007")
+                            else:
+                                _xml = etree.XML('<role><RoleCd value="007"/></role>')
+                                # Append element
+                                contact_parent.append(_xml)
+                                del _xml
+
+##                            if not isinstance(contact_parent.find(f".//eMailAdd"), type(None)):
+##                                email_address = contact_parent.find(f".//eMailAdd")
+##                                #print(f"\t\tEmail Address: {email_address}")
+##                                if not email_address.text:
+##                                    _user_name = contact_parent.find(f"./rpIndName").text
+##                                    _email_address = _user_name.lower().replace(" ", ".") + "@noaa.gov"
+##                                    email_address.text = _email_address
+##                                    del _email_address, _user_name
+##                                else:
+##                                    pass
+##                            else:
+##                                pass
+##                                _rpCntInfo = contact_parent.find(f".//rpCntInfo")
+##                                _cntAddress = _rpCntInfo.find(f".//cntAddress")
+##                                _user_name = contact_parent.find(f"./rpIndName").text
+##                                #print(f"\t\tUser Name:     {_user_name}")
+##                                _email_address = _user_name.lower().replace(" ", ".") + "@noaa.gov"
+##                                _xml = etree.XML(f'<eMailAdd>{_email_address}</eMailAdd>')
+##                                # Append element
+##                                _cntAddress.append(_xml)
+##                                del _xml, _user_name, _cntAddress, _rpCntInfo
+
+                        if old_contact_parent == "distorCont":
+                            if not isinstance(contact_parent.find(f"./role"), type(None)):
+                                user_role = contact_parent.find(f".//RoleCd")
+                                user_role.set("value", "005")
+                            else:
+                                _xml = etree.XML('<role><RoleCd value="005"/></role>')
+                                # Append element
+                                contact_parent.append(_xml)
+                                del _xml
+
+                        if old_contact_parent == "mdContact":
+                            if not isinstance(contact_parent.find(f"./role"), type(None)):
+                                user_role = contact_parent.find(f".//RoleCd")
+                                user_role.set("value", "011")
+                            else:
+                                _xml = etree.XML('<role><RoleCd value="011"/></role>')
+                                # Append element
+                                contact_parent.append(_xml)
+                                del _xml
+
+                        if old_contact_parent == "stepProc":
+                            if not isinstance(contact_parent.find(f"./role"), type(None)):
+                                user_role = contact_parent.find(f".//RoleCd")
+                                user_role.set("value", "009")
+                            else:
+                                _xml = etree.XML('<role><RoleCd value="009"/></role>')
+                                # Append element
+                                contact_parent.append(_xml)
+                                del _xml
+
+
+                        #if count == 1:
+                        #    _xml = etree.XML('<role><RoleCd value="011"/></role>')
+                        #    # Append element
+                        #    contact_root[0].append(_xml)
+                        #    # Change element name
+                        #    contact_parent.tag = "mdContact"
+                        #    del _xml
+                        #elif count == 2:
+                        #    _xml = etree.XML('<role><RoleCd value="005"/></role>')
+                        #    contact_root[0].append(_xml)
+                        #    contact_parent.tag = "distributor"
+                        #    del _xml
+                        #elif count == 3:
+                        #    _xml = etree.XML('<role><RoleCd value="002"/></role>')
+                        #    contact_root[0].append(_xml)
+                        #    contact_parent.tag = "citRespParty"
+                        #    del _xml
+                        #elif count == 4:
+                        #    _xml = etree.XML('<role><RoleCd value="007"/></role>')
+                        #    contact_root[0].append(_xml)
+                        #    contact_parent.tag = "idPoC"
+                        #    del _xml
+
+
+
+                        if not isinstance(contact_parent.find(f"./rpIndName"), type(None)):
+                            user_name = contact_parent.find(f"./rpIndName").text
+                            print(f"\t\tUser Name:     {user_name}")
+                        else:
+                            user_name = ""
+
+                        if not isinstance(contact_parent.find(f".//eMailAdd"), type(None)):
+                            email_address = contact_parent.find(f".//eMailAdd").text
+                            print(f"\t\tEmail Address: {email_address}")
+                        else:
+                            email_address = ""
+                        if not isinstance(contact_parent.find(f".//RoleCd"), type(None)):
+                            user_role = contact_parent.find(f".//RoleCd")
+                            print(f"\t\tRole:          {user_role.attrib}")
+                        else:
+                            user_role = ""
+
+
+##                            #if count == 1:
+##                            #    _xml = etree.XML('<role><RoleCd value="011"/></role>')
+##                            #    # Append element
+##                            #    contact_root[0].append(_xml)
+##                            #    # Change element name
+##                            #    contact_parent.tag = "mdContact"
+##                            #    del _xml
+##                            #elif count == 2:
+##                            #    _xml = etree.XML('<role><RoleCd value="005"/></role>')
+##                            #    contact_root[0].append(_xml)
+##                            #    contact_parent.tag = "distributor"
+##                            #    del _xml
+##                            #elif count == 3:
+##                            #    _xml = etree.XML('<role><RoleCd value="002"/></role>')
+##                            #    contact_root[0].append(_xml)
+##                            #    contact_parent.tag = "citRespParty"
+##                            #    del _xml
+##                            #elif count == 4:
+##                            #    _xml = etree.XML('<role><RoleCd value="007"/></role>')
+##                            #    contact_root[0].append(_xml)
+##                            #    contact_parent.tag = "idPoC"
+##                            #    del _xml
+##                            #User Name:     John F Kennedy
+##                            #Email Address: john.f.kennedy@noaa.gov
+##                            #Role:          {'value': '011'}
+##                            #   <role><RoleCd value="011"/></role>
+##                            #User Name:     Timothy J Haverland
+##                            #Email Address: tim.haverland@noaa.gov
+##                            #Role:          {'value': '005'}
+##                            #   <role><RoleCd value="005"/></role>
+##                            #User Name:     Timothy J Haverland
+##                            #Email Address: tim.haverland@noaa.gov
+##                            #Role:          {'value': '002'}
+##                            #   <role><RoleCd value="002"/></role>
+##                            #User Name:     Melissa Ann Karp
+##                            #Email Address: melissa.karp@noaa.gov
+##                            #Role:          {'value': '007'}
+##                            #   <role><RoleCd value="007"/></role>
+
+                        contact_root = root.xpath(f".//eMailAdd[text()='{email_address}']/ancestor::{old_contact_parent}/rpIndName[text()='{user_name}']/..")
+                        #contact_root = copy.deepcopy(root.xpath(f".//eMailAdd[text()='{email_address}']/ancestor::{old_contact_parent}/rpIndName[text()='{user_name}']/.."))
+                        #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', pretty_print=True).decode())
+                        #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', pretty_print=True).decode())
+
+                        new_contact_root = contacts_xml_root.xpath(f".//eMailAdd[text()='{email_address}']/ancestor::contact/rpIndName[text()='{user_name}']/ancestor::contact/editorSave[text()='True']/..")
+
+                        if len(new_contact_root) == 1:
+                            new_contact = copy.deepcopy(new_contact_root[0])
+                            new_contact.tag = old_contact_parent
+                            #new_contact.append(contact_root[0].find(f".//role"))
+                            #print(etree.tostring(new_contact, encoding="utf-8",  method='xml', pretty_print=True).decode())
+
+                            contact_root[0].getparent().replace(contact_root[0], new_contact)
+                            #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', pretty_print=True).decode())
+
+                            del new_contact
+
+                        del new_contact_root, contact_root
+                        del user_role, email_address, user_name
+                        del old_contact_parent, contact_parent
+
+                dataset_md = md.Metadata(dataset_path)
+                dataset_md.xml = etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode()
+                dataset_md.save()
+                dataset_md.synchronize("ALWAYS")
+                del dataset_md
+
+                del contact_parents
+                del dataset_name, dataset_path
+                del root, tree
+            del datasets
+            del workspace
+
+        # Variables set in function
+        del contacts_xml_root, contacts_xml_tree
+        del RoleCd_dict, root_dict
+        del project_gdb, base_project_folder, metadata_folder
+        del project_folder, scratch_folder, crfs_folder
+        del metadata_dictionary, workspaces
+
+        # Imports
+        del dismap, dataset_title_dict, parse_xml_file_format_and_save
+        del md, etree, StringIO, copy
+
+        # Function Parameters
+        del base_project_file, project_name
+
+    except Exception:
+        traceback.print_exc()
+    except:
+        traceback.print_exc()
+    else:
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
+    finally:
+        pass
 
 def create_basic_template_xml_files(base_project_file="", project_name=""):
     try:
@@ -166,6 +482,11 @@ def create_basic_template_xml_files(base_project_file="", project_name=""):
                     parse_xml_file_format_and_save(datasets_table_template)
                     del datasets_table_template
 
+##                    target_file_path = rf"{project_folder}\InPort Metadata\datasets_table_template.xml"
+##                    custom_xslt_path = rf"{project_folder}\InPort Metadata\ArcGIS2InPort.xsl"
+##                    dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
+##                    del target_file_path, custom_xslt_path
+
                     del dataset_md
 
                 elif "Species_Filter" == dataset_name:
@@ -183,6 +504,11 @@ def create_basic_template_xml_files(base_project_file="", project_name=""):
                     dataset_md.saveAsXML(species_filter_table_template, "REMOVE_ALL_SENSITIVE_INFO")
                     parse_xml_file_format_and_save(species_filter_table_template)
                     del species_filter_table_template
+
+##                    target_file_path = rf"{project_folder}\InPort Metadata\species_filter_table_template.xml"
+##                    custom_xslt_path = rf"{project_folder}\InPort Metadata\ArcGIS2InPort.xsl"
+##                    dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
+##                    del target_file_path, custom_xslt_path
 
                     del dataset_md
 
@@ -206,6 +532,11 @@ def create_basic_template_xml_files(base_project_file="", project_name=""):
                     dataset_md.saveAsXML(indicators_template, "REMOVE_ALL_SENSITIVE_INFO")
                     parse_xml_file_format_and_save(indicators_template)
                     del indicators_template
+
+##                    target_file_path = rf"{project_folder}\InPort Metadata\indicators_template.xml"
+##                    custom_xslt_path = rf"{project_folder}\InPort Metadata\ArcGIS2InPort.xsl"
+##                    dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
+##                    del target_file_path, custom_xslt_path
 
                     del dataset_md
 
@@ -243,6 +574,11 @@ def create_basic_template_xml_files(base_project_file="", project_name=""):
                     parse_xml_file_format_and_save(dismap_survey_info_template)
                     del dismap_survey_info_template
 
+##                    target_file_path = rf"{project_folder}\InPort Metadata\dismap_survey_info_template.xml"
+##                    custom_xslt_path = rf"{project_folder}\InPort Metadata\ArcGIS2InPort.xsl"
+##                    dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
+##                    del target_file_path, custom_xslt_path
+
                     del dataset_md
 
                 elif dataset_name.endswith("Boundary"):
@@ -260,6 +596,24 @@ def create_basic_template_xml_files(base_project_file="", project_name=""):
                     dataset_md.saveAsXML(boundary_template, "REMOVE_ALL_SENSITIVE_INFO")
                     parse_xml_file_format_and_save(boundary_template)
                     del boundary_template
+
+                    del dataset_md
+
+                elif dataset_name.endswith("Boundary_Line"):
+
+                    print(f"\t{dataset_name}")
+
+                    dataset_md = md.Metadata(dataset_path)
+
+                    _add_basic_metadata(dataset_name, dataset_md, metadata_dictionary)
+
+                    dataset_md.synchronize("ALWAYS")
+                    dataset_md.save()
+
+                    boundary_line_template = rf"{metadata_folder}\boundary_line_template.xml"
+                    dataset_md.saveAsXML(boundary_line_template, "REMOVE_ALL_SENSITIVE_INFO")
+                    parse_xml_file_format_and_save(boundary_line_template)
+                    del boundary_line_template
 
                     del dataset_md
 
@@ -344,10 +698,19 @@ def create_basic_template_xml_files(base_project_file="", project_name=""):
 
                     dataset_md.synchronize("ALWAYS")
                     dataset_md.save()
+
                     sample_locations_template = rf"{metadata_folder}\sample_locations_template.xml"
                     dataset_md.saveAsXML(sample_locations_template, "REMOVE_ALL_SENSITIVE_INFO")
                     parse_xml_file_format_and_save(sample_locations_template)
                     del sample_locations_template
+
+##                    target_file_path = rf"{project_folder}\InPort Metadata\sample_locations_template.xml"
+##                    custom_xslt_path = rf"{project_folder}\InPort Metadata\ArcGIS2InPort.xsl"
+##                    try:
+##                        dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
+##                    except RuntimeError:
+##                        pass
+##                    del target_file_path, custom_xslt_path
 
                     del dataset_md
 
@@ -387,24 +750,6 @@ def create_basic_template_xml_files(base_project_file="", project_name=""):
 
                     del dataset_md
 
-                elif dataset_name.endswith("Boundary_Line"):
-
-                    print(f"\t{dataset_name}")
-
-                    dataset_md = md.Metadata(dataset_path)
-
-                    _add_basic_metadata(dataset_name, dataset_md, metadata_dictionary)
-
-                    dataset_md.synchronize("ALWAYS")
-                    dataset_md.save()
-
-                    boundary_line_template = rf"{metadata_folder}\boundary_line_template.xml"
-                    dataset_md.saveAsXML(boundary_line_template, "REMOVE_ALL_SENSITIVE_INFO")
-                    parse_xml_file_format_and_save(boundary_line_template)
-                    del boundary_line_template
-
-                    del dataset_md
-
                 elif dataset_name.endswith("Survey_Area"):
 
                     print(f"\t{dataset_name}")
@@ -438,6 +783,11 @@ def create_basic_template_xml_files(base_project_file="", project_name=""):
                     dataset_md.saveAsXML(dismap_regions_template, "REMOVE_ALL_SENSITIVE_INFO")
                     parse_xml_file_format_and_save(dismap_regions_template)
                     del dismap_regions_template
+
+##                    target_file_path = rf"{project_folder}\InPort Metadata\dismap_regions_template.xml"
+##                    custom_xslt_path = rf"{project_folder}\InPort Metadata\ArcGIS2InPort.xsl"
+##                    dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
+##                    del target_file_path, custom_xslt_path
 
                     del dataset_md
 
@@ -529,6 +879,11 @@ def create_basic_template_xml_files(base_project_file="", project_name=""):
                     parse_xml_file_format_and_save(mosaic_template)
                     del mosaic_template
 
+##                    target_file_path = rf"{project_folder}\InPort Metadata\mosaic_template.xml"
+##                    custom_xslt_path = rf"{project_folder}\InPort Metadata\ArcGIS2InPort.xsl"
+##                    dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
+##                    del target_file_path, custom_xslt_path
+
                     del dataset_md
 
                 elif dataset_name.endswith(".crf"):
@@ -546,6 +901,11 @@ def create_basic_template_xml_files(base_project_file="", project_name=""):
                     dataset_md.saveAsXML(crf_template, "REMOVE_ALL_SENSITIVE_INFO")
                     parse_xml_file_format_and_save(crf_template)
                     del crf_template
+
+##                    target_file_path = rf"{project_folder}\InPort Metadata\crf_template.xml"
+##                    custom_xslt_path = rf"{project_folder}\InPort Metadata\ArcGIS2InPort.xsl"
+##                    dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
+##                    del target_file_path, custom_xslt_path
 
                     del dataset_md
 
@@ -591,10 +951,8 @@ def create_basic_template_xml_files(base_project_file="", project_name=""):
 
                 del dataset_name, dataset_path
 
+            del datasets
             del workspace
-
-
-        del datasets
 
         # Variables set in function
         del project_gdb, base_project_folder, metadata_folder
@@ -609,7 +967,7 @@ def create_basic_template_xml_files(base_project_file="", project_name=""):
         del base_project_file, project_name
 
     except Exception:
-        pass
+        traceback.print_exc()
     except:
         traceback.print_exc()
     else:
@@ -705,13 +1063,11 @@ def import_basic_template_xml_files(base_project_file="", project_name=""):
                     parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
-                    target_file_path = rf"{inport_md_folder}\Table\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
-
-                    dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    parse_xml_file_format_and_save(target_file_path)
-
-                    del target_file_path, custom_xslt_path
+##                    target_file_path = rf"{inport_md_folder}\Table\{dataset_name}.xml"
+##                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
+##                    dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
+##                    parse_xml_file_format_and_save(target_file_path)
+##                    del target_file_path, custom_xslt_path
 
                     del dataset_md
 
@@ -2365,30 +2721,46 @@ def main(base_project_folder="", project_name=""):
         del Backup
 
         try:
+            UpdateContacts = True
+            if UpdateContacts:
+                update_contacts(base_project_file, project_name)
+            else:
+                pass
+            del UpdateContacts
 
-            CreateBasicTemplateXMLFiles = True
+            CreateBasicTemplateXMLFiles = False
             if CreateBasicTemplateXMLFiles:
                 create_basic_template_xml_files(base_project_file, project_name)
+            else:
+                pass
             del CreateBasicTemplateXMLFiles
 
             ImportBasicTemplateXmlFiles = False
             if ImportBasicTemplateXmlFiles:
                 import_basic_template_xml_files(base_project_file, project_name)
+            else:
+                pass
             del ImportBasicTemplateXmlFiles
 
             CreateThumbnails = False
             if CreateThumbnails:
                create_thumbnails(base_project_file, project_name)
+            else:
+                pass
             del CreateThumbnails
 
             CreateMaps = False
             if CreateMaps:
                 create_maps(base_project_file, project_name, dataset=rf"{project_gdb}\DisMAP_Regions")
+            else:
+                pass
             del CreateMaps
 
             ExportToInportXmlFiles = False
             if ExportToInportXmlFiles:
-                result = export_to_inport_xml_files(base_project_file, project_name)
+                export_to_inport_xml_files(base_project_file, project_name)
+            else:
+                pass
             del ExportToInportXmlFiles
 
         except Exception as e:

@@ -135,6 +135,9 @@ def worker(project_gdb="", csv_file=""):
         #df.fillna(np.nan)
         #df = df.replace({np.nan: None})
 
+        # Alternatively, apply to all columns at once
+        df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+
         print(f">-> Creating the {table_name} Geodatabase Table")
         try:
             array = np.array(np.rec.fromrecords(df.values), dtype = field_gdb_dtypes)

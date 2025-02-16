@@ -1,0 +1,22 @@
+<RoleCd value="001"></RoleCd> -->> Resource Provider
+<RoleCd value="002"></RoleCd> -->> Custodian
+<RoleCd value="003"></RoleCd> -->> Owner
+<RoleCd value="004"></RoleCd> -->> User
+<RoleCd value="005"></RoleCd> -->> Distributor
+<RoleCd value="006"></RoleCd> -->> Originator
+<RoleCd value="007"></RoleCd> -->> Point of Contact
+<RoleCd value="008"></RoleCd> -->> Principal Investigator
+<RoleCd value="009"></RoleCd> -->> Processor
+<RoleCd value="010"></RoleCd> -->> Publisher
+<RoleCd value="011"></RoleCd> -->> Author
+<RoleCd value="012"></RoleCd> -->> Collaborator
+<RoleCd value="013"></RoleCd> -->> Editor
+<RoleCd value="014"></RoleCd> -->> Mediator
+<RoleCd value="015"></RoleCd> -->> Rights Holder
+
+RoleCd_dict = {"001" : "Resource Provider","002" : "Custodian","003" : "Owner",
+               "004" : "User","005" : "Distributor","006" : "Originator",
+               "007" : "Point of Contact","008" : "Principal Investigator",
+               "009" : "Processor","010" : "Publisher","011" : "Author",
+               "012" : "Collaborator","013" : "Editor","014" : 
+               "Mediator","015" : "Rights Holder",}

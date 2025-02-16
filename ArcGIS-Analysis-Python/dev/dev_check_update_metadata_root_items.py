@@ -82,7 +82,8 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
                      "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
                      "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
                      "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
-                     "eainfo"     : 15, "Binary"     : 16,}
+                     "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
+                     "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
 
         # Parse the XML
         parser = etree.XMLParser(remove_blank_text=True, encoding='UTF-8')
@@ -1603,13 +1604,13 @@ def insert_xml_elements(fc_metadata_xml_file=""):
         #               ###--->>> Esri section Start <<<---###
         # ######################################################################
 
-
         root_dict = {"Esri"       :  0, "dataIdInfo" :  1, "mdChar"      :  2,
                      "mdContact"  :  3, "mdDateSt"   :  4, "mdFileID"    :  5,
                      "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
                      "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
                      "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
-                     "eainfo"     : 15, "Binary"     : 16,}
+                     "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
+                     "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
 
         for key in root_dict:
             print(f"Inserting: {key}")
@@ -2161,7 +2162,8 @@ def check_update_metadata_root_items(project_gdb=""):
                          "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
                          "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
                          "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
-                         "eainfo"     : 15, "Binary"     : 16, }
+                         "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
+                         "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
 
             for key in root_dict:
                 element = root.xpath(f"./{key}")
@@ -2443,7 +2445,8 @@ def update_eainfo(project_gdb=""):
                          "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
                          "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
                          "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
-                         "eainfo"     : 15, "Binary"     : 16, }
+                         "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
+                         "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
 
             _eainfo_root = root.xpath('./eainfo')[0]
 
@@ -2533,7 +2536,8 @@ def update_dataIdInfo(project_gdb=""):
                      "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
                      "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
                      "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
-                     "eainfo"     : 15, "Binary"     : 16, }
+                     "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
+                     "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
 
         esri_dict ={"CreaDate" : 0,  "CreaTime" : 1, "ArcGISFormat" : 2,
                     "ArcGISStyle" : 3, "SyncOnce" : 4, "DataProperties" : 5,
@@ -2822,6 +2826,183 @@ def update_dataIdInfo(project_gdb=""):
     finally:
         pass
 
+def update_contacts(project_gdb=""):
+    try:
+        # Imports
+        from lxml import etree
+        from io import StringIO
+        import copy
+        from arcpy import metadata as md
+
+        # Project modules
+        from src.project_tools import pretty_format_xml_file
+
+        arcpy.env.overwriteOutput          = True
+        arcpy.env.parallelProcessingFactor = "100%"
+        arcpy.SetLogMetadata(True)
+        arcpy.SetSeverityLevel(2)
+        arcpy.SetMessageLevels(['NORMAL']) # NORMAL, COMMANDSYNTAX, DIAGNOSTICS, PROJECTIONTRANSFORMATION
+
+        project_folder = os.path.dirname(project_gdb)
+        scratch_folder      = rf"{project_folder}\Scratch"
+
+        root_dict = {"Esri"       :  0, "dataIdInfo" :  1, "mdChar"      :  2,
+                     "mdContact"  :  3, "mdDateSt"   :  4, "mdFileID"    :  5,
+                     "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
+                     "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
+                     "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
+                     "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
+                     "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
+
+        RoleCd_dict = {"001" : "Resource Provider", "002" : "Custodian",
+                       "003" : "Owner",             "004" : "User",
+                       "005" : "Distributor",       "006" : "Originator",
+                       "007" : "Point of Contact",  "008" : "Principal Investigator",
+                       "009" : "Processor",         "010" : "Publisher",
+                       "011" : "Author",            "012" : "Collaborator",
+                       "013" : "Editor",            "014" : "Mediator",
+                       "015" : "Rights Holder",}
+
+        workspaces = [project_gdb]
+
+        contacts_xml = rf"{os.environ['USERPROFILE']}\Documents\ArcGIS\Descriptions\contacts.xml"
+        parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
+        contacts_xml_tree = etree.parse(contacts_xml, parser=parser) # To parse from a string, use the fromstring() function instead.
+        del parser
+        del contacts_xml
+        contacts_xml_root = contacts_xml_tree.getroot()
+        #etree.indent(contacts_xml_root, space="  ")
+        #print(etree.tostring(contacts_xml_root, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
+
+        for workspace in workspaces:
+
+            arcpy.env.workspace        = workspace
+            arcpy.env.scratchWorkspace = rf"{scratch_folder}\scratch.gdb"
+
+            datasets = list()
+
+            walk = arcpy.da.Walk(workspace)
+
+            for dirpath, dirnames, filenames in walk:
+                for filename in filenames:
+                    datasets.append(os.path.join(dirpath, filename))
+                    del filename
+                del dirpath, dirnames, filenames
+            del walk
+
+            for dataset_path in sorted(datasets):
+                #print(dataset_path)
+                dataset_name = os.path.basename(dataset_path)
+
+                #print(f"Dataset Name:     {dataset_name}")
+                #print(f"\tDataset Location: {os.path.basename(os.path.dirname(dataset_path))}")
+
+                dataset_md = md.Metadata(dataset_path)
+                dataset_md_xml = dataset_md.xml
+                del dataset_md
+
+                # Parse the XML
+                parser = etree.XMLParser(remove_blank_text=True, encoding='UTF-8')
+                tree = etree.parse(StringIO(dataset_md_xml), parser=parser)
+                root = tree.getroot()
+                del parser, dataset_md_xml
+
+                # print(etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
+                # etree.indent(tree, space='   ')
+                # tree.write(xml_file, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True)
+
+                print(f"Dataset Name: {dataset_name}")
+
+                contact_parents = root.xpath(f".//eMailAdd/text()/ancestor::*//rpIndName/text()/ancestor::*//rpIndName/..")
+                #contact_parents = copy.deepcopy(root.xpath(f".//eMailAdd/text()/ancestor::*//rpIndName/text()/ancestor::*//rpIndName/.."))
+                #contact_parents = root.xpath(f".//eMailAdd/text()/ancestor::rpCntInfo/..")
+
+                if len(contact_parents) > 0:
+                    #count = 0
+                    for contact_parent in contact_parents:
+                        #count+=1
+                        old_contact_parent = contact_parent.tag
+                        #print(old_contact_parent)
+                        #print(etree.tostring(contact_parent, encoding="utf-8",  method='xml', pretty_print=True).decode())
+
+                        user_name = contact_parent.find(f"./rpIndName").text
+                        print(f"\tUser Name:     {user_name}")
+                        email_address = contact_parent.find(f".//eMailAdd").text
+                        print(f"\tEmail Address: {email_address}")
+                        user_role = contact_parent.find(f".//RoleCd")
+                        print(f"\tRole:          {user_role.attrib}")
+
+                        contact_root = root.xpath(f".//eMailAdd[text()='{email_address}']/ancestor::{old_contact_parent}/rpIndName[text()='{user_name}']/..")
+                        #contact_root = copy.deepcopy(root.xpath(f".//eMailAdd[text()='{email_address}']/ancestor::{old_contact_parent}/rpIndName[text()='{user_name}']/.."))
+                        #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', pretty_print=True).decode())
+
+                        #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', pretty_print=True).decode())
+
+                        new_contact_root = contacts_xml_root.xpath(f".//eMailAdd[text()='{email_address}']/ancestor::contact/rpIndName[text()='{user_name}']/ancestor::contact/editorSave[text()='True']/..")
+
+                        if len(new_contact_root) == 1:
+                            new_contact = copy.deepcopy(new_contact_root[0])
+                            new_contact.tag = old_contact_parent
+                            new_contact.append(contact_root[0].find(f".//role"))
+                            #print(etree.tostring(new_contact, encoding="utf-8",  method='xml', pretty_print=True).decode())
+
+                            #contact_root[0].getparent().replace(contact_root[0], new_contact)
+                            #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', pretty_print=True).decode())
+
+                            del new_contact
+
+                        del new_contact_root, contact_root
+                        del user_role, email_address, user_name
+                        del old_contact_parent, contact_parent
+
+                dataset_md = md.Metadata(dataset_path)
+                dataset_md.xml = etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode()
+                dataset_md.save()
+                dataset_md.synchronize("ALWAYS")
+                del dataset_md
+
+                del contact_parents
+                del dataset_name, dataset_path
+                del root, tree
+
+                #dataset_md = md.Metadata(dataset_path)
+                #dataset_md.xml = etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode()
+                #dataset_md.save()
+                #dataset_md.synchronize("ALWAYS")
+                #del dataset_md
+
+                #del dataset_md_xml
+                #del dataset_name, dataset_path
+                #del root, tree
+
+            del datasets
+            del workspace
+
+        # Variables set in function
+        del contacts_xml_root, contacts_xml_tree
+        del RoleCd_dict, root_dict
+        del project_gdb, project_folder, scratch_folder
+        del workspaces
+
+        # Imports
+
+        del md, etree, StringIO, copy
+
+        # Function Parameters
+        del base_project_file, project_name
+
+    except Exception:
+        traceback.print_exc()
+    except:
+        traceback.print_exc()
+    else:
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
+    finally:
+        pass
+
 def main(project_gdb=""):
     try:
         from time import gmtime, localtime, strftime, time
@@ -2851,12 +3032,17 @@ def main(project_gdb=""):
             update_eainfo(project_gdb=project_gdb)
         del UpdateEainfo
 
-        UpdateDataIdInfo = True
+        UpdateDataIdInfo = False
         if UpdateDataIdInfo:
             update_dataIdInfo(project_gdb=project_gdb)
         del UpdateDataIdInfo
 
-
+        UpdateContacts = False
+        if UpdateContacts:
+            update_contacts(project_gdb=project_gdb)
+        else:
+            pass
+        del UpdateContacts
 
         #from lxml import etree
         #dataset_md_xml = r'C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\ArcPy Studies\XML\nmfs-species-range-metatdata\WhaleNorthAtlanticRight_20201215.xml'

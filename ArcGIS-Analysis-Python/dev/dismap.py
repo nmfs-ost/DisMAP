@@ -23,53 +23,80 @@ def line_info(msg):
     i = inspect.getframeinfo(f.f_back)
     return f"Script: {os.path.basename(i.filename)}\n\tNear Line: {i.lineno}\n\tFunction: {i.function}\n\tMessage: {msg}"
 
-def parse_xml_file_format_and_save(xml_file=""):
-    root_dict = {"Esri"       :  0, "dataIdInfo" :  1, "mdChar"      :  2,
-                 "mdContact"  :  3, "mdDateSt"   :  4, "mdFileID"    :  5,
-                 "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
-                 "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
-                 "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
-                 "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
-                 "spatRepInfo" : 18, "Binary"     : 19,}
+def parse_xml_file_format_and_save(xml_file="", sort=False):
+    try:
+        root_dict = {"Esri"       :  0, "dataIdInfo" :  1, "mdChar"      :  2,
+                     "mdContact"  :  3, "mdDateSt"   :  4, "mdFileID"    :  5,
+                     "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
+                     "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
+                     "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
+                     "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
+                     "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
 
-    from lxml import etree
-    parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
-    tree = etree.parse(xml_file, parser=parser) # To parse from a string, use the fromstring() function instead.
-    del parser
-    root = tree.getroot()
-    for child in root.xpath("."):
-        child[:] = sorted(child, key=lambda x: root_dict[x.tag])
-        del child
-    del root
-    etree.indent(tree, space='   ')
-    tree.write(xml_file, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True)
-    del tree
-    del xml_file, etree
-    return True
+        from lxml import etree
 
-def print_xml_file(xml_file=""):
-    root_dict = {"Esri"       :  0, "dataIdInfo" :  1, "mdChar"      :  2,
-                 "mdContact"  :  3, "mdDateSt"   :  4, "mdFileID"    :  5,
-                 "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
-                 "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
-                 "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
-                 "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
-                 "spatRepInfo" : 18, "Binary"     : 19,}
+        parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
+        tree = etree.parse(xml_file, parser=parser) # To parse from a string, use the fromstring() function instead.
+        del parser
 
-    from lxml import etree
-    parser = etree.XMLParser(encoding='utf-8', remove_blank_text=True)
-    tree = etree.parse(xml_file, parser=parser) # To parse from a string, use the fromstring() function instead.
-    del parser
-    root = tree.getroot()
-    for child in root.xpath("."):
-        child[:] = sorted(child, key=lambda x: root_dict[x.tag])
-        del child
-    del root
-    etree.indent(tree, space='   ')
-    print(etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
-    del tree
-    del xml_file, etree
-    return True
+        if sort:
+            root = tree.getroot()
+            for child in root.xpath("."):
+                child[:] = sorted(child, key=lambda x: root_dict[x.tag])
+                del child
+            del root
+        del sort
+        etree.indent(tree, space='   ')
+        tree.write(xml_file, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True)
+        del tree
+        del xml_file, etree
+        del root_dict
+    except:
+        traceback.print_exc()
+    else:
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
+    finally:
+        pass
+
+def print_xml_file(xml_file="", sort=False):
+    try:
+        root_dict = {"Esri"       :  0, "dataIdInfo" :  1, "mdChar"      :  2,
+                     "mdContact"  :  3, "mdDateSt"   :  4, "mdFileID"    :  5,
+                     "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
+                     "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
+                     "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
+                     "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
+                     "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
+
+        from lxml import etree
+        parser = etree.XMLParser(encoding='utf-8', remove_blank_text=True)
+        tree = etree.parse(xml_file, parser=parser) # To parse from a string, use the fromstring() function instead.
+        del parser
+
+        if sort:
+            root = tree.getroot()
+            for child in root.xpath("."):
+                child[:] = sorted(child, key=lambda x: root_dict[x.tag])
+                del child
+            del root
+        del sort
+        etree.indent(tree, space='   ')
+        print(etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
+        del tree
+        del xml_file, etree
+        del root_dict
+    except:
+        traceback.print_exc()
+    else:
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
+    finally:
+        pass
 
 def add_fields(csv_data_folder="", in_table=""):
     try:
@@ -828,6 +855,28 @@ def dataset_title_dict(project_gdb=""):
 
                     del table_name, sample_locations_fc, sample_locations_fcs, sample_locations_fcst
 
+                    table_name            = f"{dataset_code}"
+                    sample_locations_fc   = f"{table_name}_{point_feature_type.replace(' ', '_')}"
+                    sample_locations_fcs  = f"{table_name}_{point_feature_type.replace(' ', '_')}_{date_code(project)}"
+                    feature_service_title = f"{region} {season} {point_feature_type} {date_code(project)}"
+                    sample_locations_fcst = f"{feature_service_title.replace('  ',' ')}"
+                    del feature_service_title
+
+                    datasets_dict[sample_locations_fc] = {"Dataset Service"       : sample_locations_fcs,
+                                                          "Dataset Service Title" : sample_locations_fcst,
+                                                          "Tags"                  : tags,
+                                                          "Summary"               : f"{summary}. These layers provide information on the spatial extent/boundaries of the bottom trawl surveys. Information on species distributions is of paramount importance for understanding and preparing for climate-change impacts, and plays a key role in climate-ready fisheries management.",
+                                                          "Description"           : f"This survey points layer provides information on both the locations where species are caught in several NOAA Fisheries surveys and the amount (i.e., biomass weight catch per unit effort, standardized to kg/ha) of each species that was caught at each location. Information on species distributions is of paramount importance for understanding and preparing for climate-change impacts, and plays a key role in climate-ready fisheries management.",
+                                                          "Credits"               : _credits,
+                                                          "Access Constraints"    : access_constraints}
+
+                    #print(f"\tSample Locations FC:   {sample_locations_fc}")
+                    #print(f"\tSample Locations FCS:  {sample_locations_fcs}")
+                    #print(f"\tSample Locations FST:  {sample_locations_fcst}")
+
+                    del table_name, sample_locations_fc, sample_locations_fcs, sample_locations_fcst
+
+
                 elif distribution_project_code != "IDW":
 
                     #table_name            = f"{dataset_code}_TABLE"
@@ -915,6 +964,29 @@ def dataset_title_dict(project_gdb=""):
 
                 del boundary_fc, boundary_fcs, boundary_fcst
 
+                # Boundary
+                boundary_line_fc      = f"{dataset_code}_Boundary_Line"
+                boundary_line_fcs     = f"{dataset_code}_Boundary_Line_{date_code(project)}"
+                feature_service_title = f"{region} {season} Boundary Line {date_code(project)}"
+                boundary_line_fcst    = f"{feature_service_title.replace('  ',' ')}"
+                del feature_service_title
+
+                #print(f"\tProcessing: {boundary_line_fc}")
+
+                datasets_dict[boundary_line_fc] = {"Dataset Service"       : boundary_line_fcs,
+                                                   "Dataset Service Title" : boundary_line_fcst,
+                                                   "Tags"                  : tags,
+                                                   "Summary"               : summary,
+                                                   "Description"           : f"These files contain the spatial boundaries of the NOAA Fisheries Bottom-trawl surveys. This data set covers 8 regions of the United States: Northeast, Southeast, Gulf of Mexico, West Coast, Eastern Bering Sea, Aleutian Islands, Gulf of Alaska, and Hawai'i Islands.",
+                                                   "Credits"               : _credits,
+                                                   "Access Constraints"    : access_constraints}
+
+                #print(f"\tBoundary FC:   {boundary_line_fc}")
+                #print(f"\tBoundary FCS:  {boundary_line_fcs}")
+                #print(f"\tBoundary FCST: {boundary_line_fcst}")
+
+                del boundary_line_fc, boundary_line_fcs, boundary_line_fcst
+
                 # CRF
                 crf_r                 = f"{dataset_code}_CRF"
                 crf_rs                = f"{dataset_code}_{date_code(project)}"
@@ -963,6 +1035,29 @@ def dataset_title_dict(project_gdb=""):
                 #print(f"\tExtent Points FCST: {extent_points_fcst}")
 
                 del extent_points_fc, extent_points_fcs, extent_points_fcst
+
+                # Extent Points
+                points_fc      = f"{dataset_code}_Points"
+                points_fcs     = f"{dataset_code}_Points_{date_code(project)}"
+                feature_service_title = f"{region} {season} Extent Points {date_code(project)}"
+                points_fcst    = f"{feature_service_title.replace('  ',' ')}"
+                del feature_service_title
+
+                #print(f"\tProcessing: {points_fc}")
+
+                datasets_dict[points_fc] = {"Dataset Service"       : points_fcs,
+                                            "Dataset Service Title" : points_fcst,
+                                            "Tags"                  : tags,
+                                            "Summary"               : summary,
+                                            "Description"           : f"The Points layer represents the extent of the model region.",
+                                            "Credits"               : _credits,
+                                            "Access Constraints"    : access_constraints}
+
+                #print(f"\tExtent Points FC:   {points_fc}")
+                #print(f"\tExtent Points FCS:  {points_fcs}")
+                #print(f"\tExtent Points FCST: {points_fcst}")
+
+                del points_fc, points_fcs, points_fcst
 
                 fishnet_fc            = f"{dataset_code}_Fishnet"
                 fishnet_fcs           = f"{dataset_code}_Fishnet_{date_code(project)}"
@@ -1186,6 +1281,29 @@ def dataset_title_dict(project_gdb=""):
 
                 del region_fc, region_fcs, region_fcst
 
+                survey_area_fc        = f"{dataset_code}_Survey_Area"
+                survey_area_fcs       = f"{dataset_code}_Region_{date_code(project)}"
+                feature_service_title = f"{region} {season} Region {date_code(project)}"
+                survey_area_fcst      = f"{feature_service_title.replace('  ',' ')}"
+                del feature_service_title
+
+                #print(f"\tProcessing: {survey_area_fc}")
+
+                datasets_dict[survey_area_fc] = {"Dataset Service"       : survey_area_fcs,
+                                                 "Dataset Service Title" : survey_area_fcst,
+                                                 "Tags"                  : tags,
+                                                 "Summary"               : summary,
+                                                 "Description"           : f"These files contain the spatial boundaries of the NOAA Fisheries Bottom-trawl surveys. This data set covers 8 regions of the United States: Northeast, Southeast, Gulf of Mexico, West Coast, Bering Sea, Aleutian Islands, Gulf of Alaska, and Hawai'i Islands.",
+                                                 "Credits"               : _credits,
+                                                 "Access Constraints"    : access_constraints}
+
+                #print(f"\tRegion FC:   {survey_area_fc}")
+                #print(f"\tRegion FCS:  {survey_area_fcs}")
+                #print(f"\tRegion FCST: {survey_area_fcst}")
+
+                del survey_area_fc, survey_area_fcs, survey_area_fcst
+
+
             del tags
 
             if not distribution_project_code:
@@ -1348,8 +1466,9 @@ def dataset_title_dict(project_gdb=""):
         del project_folder, crf_folder
         del project, project_gdb
 
-    except Exception:
+    except Exception as e:
         traceback.print_exc()
+        raise Exception
     except:
         traceback.print_exc()
     else:
@@ -1704,6 +1823,7 @@ def field_definitions(csv_data_folder="", field=""):
 def get_encoding_index_col(csv_file):
     import chardet
     import pandas as pd
+    from pathlib import Path
     # Open the file in binary mode
     with open(csv_file, 'rb') as f:
         # Read the file's content
@@ -1716,9 +1836,13 @@ def get_encoding_index_col(csv_file):
     # Print the detected encoding
     #print("Detected Encoding:", encoding)
 
+    path = Path(csv_file)
+    path.write_text(path.read_text(encoding=encoding), encoding="utf8")
+    del path
+
     dtypes = {}
     # Read the CSV file into a DataFrame
-    df = pd.read_csv(csv_file, encoding  = encoding, delimiter = ",",)
+    df = pd.read_csv(csv_file, encoding = encoding, delimiter = ",",)
     # Analyze the data types and lengths
     for column in df.columns: dtypes[column] = df[column].dtype; del column
     first_column = list(dtypes.keys())[0]
@@ -1727,7 +1851,7 @@ def get_encoding_index_col(csv_file):
     del df, dtypes, first_column
 
     # Import
-    del chardet, pd
+    del chardet, pd, Path
 
     return encoding, index_column
 
@@ -3148,7 +3272,7 @@ def main(base_project_folder="", project_name=""):
         DatasetTitleDict = True
         if DatasetTitleDict:
             md_dict = dataset_title_dict(project_gdb)
-            for key in md_dict:
+            for key in sorted(md_dict):
                 print(key)
                 #if "_CRF" in key:
                 print(f"\tDataset Service Title: {md_dict[key]['Dataset Service Title']}")

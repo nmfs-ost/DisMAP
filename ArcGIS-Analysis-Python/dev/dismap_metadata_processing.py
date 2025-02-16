@@ -745,7 +745,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Table\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -785,7 +785,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Table\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -842,7 +842,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Table\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -887,7 +887,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Table\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -927,7 +927,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Boundary\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -967,7 +967,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Extent_Points\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -1008,7 +1008,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Fishnet\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -1048,7 +1048,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Lat_Long\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -1088,7 +1088,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Region\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -1133,7 +1133,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Sample_Locations\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -1178,7 +1178,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\GRID_Points\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -1218,7 +1218,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Region\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -1258,7 +1258,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Bathymetry\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -1298,7 +1298,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Latitude\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -1338,7 +1338,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Longitude\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -1378,7 +1378,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Raster_Mask\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -1423,7 +1423,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Mosaic\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -1472,7 +1472,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\CRF\{dataset_name}.xml"
-                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                    custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                     pretty_format_xml_file(target_file_path)
@@ -1518,7 +1518,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                         del out_xml
 
                         target_file_path = rf"{inport_md_folder}\Table\{dataset_name}.xml"
-                        custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                        custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                         dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                         pretty_format_xml_file(target_file_path)
@@ -1561,7 +1561,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                         del out_xml
 
                         target_file_path = rf"{inport_md_folder}\Table\{dataset_name}.xml"
-                        custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPortV13.xsl"
+                        custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                         dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
                         pretty_format_xml_file(target_file_path)
@@ -2015,7 +2015,7 @@ def export_to_inport_xml_files(base_project_file="", project=""):
             arcpy.AddMessage(f"Dataset Name: {dataset_name}")
 
             target_file_path = rf"{metadata_folder}\{dataset_name}.xml"
-            custom_xslt_path = rf"{metadata_folder}\ArcGIS2InPortV13.xsl"
+            custom_xslt_path = rf"{metadata_folder}\ArcGIS2InPort.xsl"
 
             dataset_md = md.Metadata(dataset_path)
             dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
