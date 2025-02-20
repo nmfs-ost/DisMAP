@@ -1,5 +1,5 @@
 # This function can be used to download the most recent survey data files for the AK regions and
-# put them in the data_raw folder.
+# put them in the data folder.
 # The ai_strata.csv, ebs_strata.csv, and goa_strata.csv do not change year to year, and should be retained
 # between updates (do not delete these files)
 
