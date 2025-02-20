@@ -48,7 +48,7 @@ haul <- dat %>%
 haul <- haul[order(haul$hauljoin), ]
 
 write.csv(x = haul,
-          here::here("data_processing_rcode/data/gap_products_foss_haul.csv"))
+          here::here("data_processing_rcode/data/AK_gap_products_foss_haul.csv"))
 
 ## Download Species Data -------------------------------------------------------
 
@@ -61,7 +61,7 @@ catch_spp <- data$items  %>%
   dplyr::select(-links) # necessary for API accounting, but not part of the dataset
 
 write.csv(x = catch_spp,
-          here::here("data_processing_rcode/data/gap_products_foss_species.csv"))
+          here::here("data_processing_rcode/data/AK_gap_products_foss_species.csv"))
 
 ## Download Catch Data ---------------------------------------------------------
 
@@ -90,7 +90,7 @@ catch <- catch[order(catch$species_code), ]
 catch <- catch[order(catch$hauljoin), ]
 
 write.csv(x = catch,
-          here::here("data_processing_rcode/data/gap_products_foss_species.csv"))
+          here::here("data_processing_rcode/data/AK_gap_products_foss_catch.csv"))
 
 # # Zero-Filled Data -----------------------------------------------------------
 #
