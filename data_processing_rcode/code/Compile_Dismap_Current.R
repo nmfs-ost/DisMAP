@@ -108,7 +108,7 @@ print("Workspace setup")
 print("Functions")
 
 # function to calculate convex hull area in km2
-#developed from http://www.nceas.ucsb.edu/files/scicomp/GISSeminar/UseCases/CalculateConvexHull/CalculateConvexHullR.html
+# developed from http://www.nceas.ucsb.edu/files/scicomp/GISSeminar/UseCases/CalculateConvexHull/CalculateConvexHullR.html
 calcarea <- function(lon,lat){
   hullpts = chull(x=lon, y=lat) # find indices of vertices
   hullpts = c(hullpts,hullpts[1]) # close the loop
@@ -266,23 +266,23 @@ species <- readr::read_csv(file = here::here("data_processing_rcode/data/AK_gap_
 # Wrangle data -----------------------------------------------------------------
 ak_full <-
   # join haul and catch data to unique species by survey table
-  dplyr::left_join(haul, catch, by="HAULJOIN") %>%
+  dplyr::left_join(haul, catch, by="hauljoin") %>%
   # join species data to unique species by survey table
-  dplyr::left_join(species, by="SPECIES_CODE") %>%
+  dplyr::left_join(species, by="species_code") %>%
   # modify zero-filled rows
   dplyr::mutate(
-    CPUE_KGKM2 = ifelse(is.na(CPUE_KGKM2), 0, CPUE_KGKM2), # just in case
-    CPUE_KGHA = CPUE_KGKM2/100, # Hectares
-    CPUE_NOKM2 = ifelse(is.na(CPUE_NOKM2), 0, CPUE_NOKM2), # just in case
-    CPUE_NOHA = CPUE_NOKM2/100, # Hectares
-    COUNT = ifelse(is.na(COUNT), 0, COUNT),
-    WEIGHT_KG = ifelse(is.na(WEIGHT_KG), 0, WEIGHT_KG), # just in case
+    cpue_kgkm2 = ifelse(is.na(cpue_kgkm2), 0, cpue_kgkm2), # just in case
+    cpue_kgha = cpue_kgkm2/100, # Hectares
+    cpue_nokm2 = ifelse(is.na(cpue_nokm2), 0, cpue_nokm2), # just in case
+    cpue_noha = cpue_nokm2/100, # Hectares
+    count = ifelse(is.na(count), 0, count),
+    weight_kg = ifelse(is.na(weight_kg), 0, weight_kg), # just in case
     region = dplyr::case_when(
-      SURVEY_DEFINITION_ID == 78 ~ "Bering Sea Slope Survey",
-      SURVEY_DEFINITION_ID == 47 ~ "Gulf of Alaska",
-      SURVEY_DEFINITION_ID == 52 ~ "Aleutian Islands",
-      SURVEY_DEFINITION_ID == 98 ~ "Eastern Bering Sea",
-      SURVEY_DEFINITION_ID == 143 ~ "Northern Bering Sea"
+      survey_definition_id == 78 ~ "Bering Sea Slope Survey",
+      survey_definition_id == 47 ~ "Gulf of Alaska",
+      survey_definition_id == 52 ~ "Aleutian Islands",
+      survey_definition_id == 98 ~ "Eastern Bering Sea",
+      survey_definition_id == 143 ~ "Northern Bering Sea"
     ))
 
 
