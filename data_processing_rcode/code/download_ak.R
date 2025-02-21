@@ -65,7 +65,7 @@ write.csv(x = catch_spp,
 
 ## Download Catch Data ---------------------------------------------------------
 
-dat <- data.frame()
+catch <- data.frame()
 for (i in seq(0, 1000000, 10000)){
   ## find how many iterations it takes to cycle through the data
   print(i)
@@ -81,7 +81,7 @@ for (i in seq(0, 1000000, 10000)){
   }
 
   ## bind sub-pull to dat data.frame
-  dat <- dplyr::bind_rows(dat,
+  catch <- dplyr::bind_rows(dat,
                           data$items %>%
                             dplyr::select(-links)) # necessary for API accounting, but not part of the dataset)
 }
