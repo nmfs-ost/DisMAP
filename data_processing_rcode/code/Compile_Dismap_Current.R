@@ -70,7 +70,7 @@ HQ_DATA_ONLY <- TRUE
 
 # 2. View plots of removed strata for HQ_DATA. #OPTIONAL, DEFAULT:FALSE
 # It takes a while to generate these plots.
-HQ_PLOTS <- FALSE
+HQ_PLOTS <- TRUE
 
 # 3. Remove ai,ebs,gmex,goa,neus,seus,wcann,wctri, scot. Keep `dat`. #DEFAULT: FALSE
 REMOVE_REGION_DATASETS <- FALSE
@@ -360,7 +360,8 @@ if (HQ_DATA_ONLY == TRUE){
   p1 <- ai %>%
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
-    geom_jitter()
+    geom_jitter() +
+    theme(axis.text.x = element_text(angle = 45, size = rel(0.95)))
 
   p2 <- ai %>%
     select(lat, lon) %>%
@@ -388,7 +389,8 @@ if (HQ_DATA_ONLY == TRUE){
   p3 <- ai_fltr %>%
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
-    geom_jitter()
+    geom_jitter() +
+    theme(axis.text.x = element_text(angle = 45, size = rel(0.95)))
 
   p4 <- ai_fltr %>%
     select(lat, lon) %>%
@@ -414,10 +416,10 @@ ebs <- ak_full %>%
   dplyr::select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>%
   dplyr::ungroup()
 
-ebs<-left_join(ebs, ebs_strata, by=c("stratum"="StratumCode"))%>%
-  select(-stratumarea, -SubareaDescription) %>%
-  rename(stratumarea=Areakm2) %>%
-  dplyr::select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue)
+# ebs<-left_join(ebs, ebs_strata, by=c("stratum"="StratumCode"))%>%
+#   select(-stratumarea, -SubareaDescription) %>%
+#   rename(stratumarea=Areakm2) %>%
+#   dplyr::select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue)
 
 if (HQ_DATA_ONLY == TRUE){
   # look at the graph and make sure decisions to keep or eliminate data make sense
@@ -479,7 +481,8 @@ if (HQ_DATA_ONLY == TRUE){
   p1 <- goa %>%
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
-    geom_jitter()
+    geom_jitter() +
+    theme(axis.text.x = element_text(angle = 45, size = rel(0.95)))
 
   p2 <- goa %>%
     select(lat, lon) %>%
@@ -513,7 +516,8 @@ if (HQ_DATA_ONLY == TRUE){
   p3 <-  goa_fltr %>%
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
-    geom_jitter()
+    geom_jitter() +
+    theme(axis.text.x = element_text(angle = 45, size = rel(0.95)))
 
   p4 <- goa_fltr %>%
     select(lat, lon) %>%
