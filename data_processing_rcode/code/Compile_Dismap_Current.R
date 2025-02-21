@@ -287,15 +287,15 @@ ak_full <-
 
 
 ak_full<- ak_full %>%
-  dplyr::rename(year = YEAR,
-                haulid = HAULJOIN,
-                lat = LATITUDE_DD_START,
-                lon = LONGITUDE_DD_START,
-                stratum = STRATUM,
-                depth = DEPTH_M,
-                spp = SCIENTIFIC_NAME,
-                common = COMMON_NAME,
-                wtcpue = CPUE_KGHA) %>%
+  dplyr::rename(year = year,
+                haulid = hauljoin,
+                lat = latitude_dd_start,
+                lon = longitude_dd_start,
+                stratum = stratum,
+                depth = depth_m,
+                spp = scientific_name,
+                common = common_name,
+                wtcpue = cpue_kgha) %>%
   dplyr::mutate(
     stratumarea = NA, # removed above because the new data tables dont provide this
     # Calculate a corrected longitude for Aleutians (all in western hemisphere coordinates)
