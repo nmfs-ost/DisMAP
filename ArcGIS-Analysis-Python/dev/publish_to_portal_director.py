@@ -1071,7 +1071,7 @@ def create_image_services(base_project_file="", project=""):
         #Sddraft = os.path.join(MyWorkspace,Name+".sddraft")
         #Sd = os.path.join(MyWorkspace,Name+".sd")
         #con = os.path.join(MyWorkspace, "arcgis on myserver_6080 (admin).ags")
-        con = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\server on maps.fisheries.noaa.gov.ags"
+        con = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\server on maps.fisheries.noaa.gov.ags"
 
         mosiac_name    = "SEUS_FAL_Mosaic"
         mosiac_path    = rf"{project_gdb}\{mosiac_name}"

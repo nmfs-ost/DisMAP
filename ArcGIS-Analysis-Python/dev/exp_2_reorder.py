@@ -112,7 +112,7 @@ def main():
         parent[:] = sorted(parent,key=lambda x: tag_position_dict[x.tag])
     etree.indent(doc, space="  ")
     #print(etree.tostring(doc, pretty_print=True))
-    #print(etree.tostring(doc, pretty_print=True, encoding="utf-8").decode())
+    #print(etree.tostring(doc, encoding="utf-8", pretty_print=True).decode())
 
     # Parse an XML document
     #tree = etree.fromstring("<root><item1/><item2/><item3/></root>")
@@ -131,7 +131,7 @@ def main():
     for child in root.xpath("."):
         child[:] = sorted(child, key=lambda x: tag_position_dict[x.tag])
 
-    #print(etree.tostring(root, pretty_print=True, encoding="utf-8").decode())
+    #print(etree.tostring(root, encoding="utf-8", pretty_print=True).decode())
 
     # Get the second item element
     #item2 = tree.xpath("mdChar")[0]

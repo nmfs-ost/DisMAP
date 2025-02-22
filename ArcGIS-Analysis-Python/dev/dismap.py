@@ -137,7 +137,7 @@ def add_fields(csv_data_folder="", in_table=""):
             field_definition_list.append([
                                           field_definitions[field]["field_name"],
                                           field_definitions[field]["field_type"],
-                                          field_definitions[field]["field_alias"],
+                                          field_definitions[field]["field_aliasName"],
                                           field_definitions[field]["field_length"],
                                         ])
             del field
@@ -208,13 +208,13 @@ def alter_fields(csv_data_folder="", in_table=""):
 
                 if field_name in field_definitions:
 
-                    print(f"\t\tAltering Field: {field_name} to: {field_definitions[field_name]['field_alias']}")
+                    print(f"\t\tAltering Field: {field_name} to: {field_definitions[field_name]['field_aliasName']}")
 
                     arcpy.management.AlterField(
                                                 in_table=table,
                                                 field=field_definitions[field_name]["field_name"],
                                                 new_field_name=field_definitions[field_name]["field_name"],
-                                                new_field_alias=field_definitions[field_name]["field_alias"],
+                                                new_field_alias=field_definitions[field_name]["field_aliasName"],
                                                 field_length=field_definitions[field_name]["field_length"],
                                                 field_is_nullable="NULLABLE",
                                                 clear_field_alias="DO_NOT_CLEAR",
@@ -800,7 +800,7 @@ def dataset_title_dict(project_gdb=""):
         _credits           = "These data were produced by NMFS OST."
         access_constraints = "***No Warranty*** The user assumes the entire risk related to its use of these data. NMFS is providing these data 'as is' and NMFS disclaims any and all warranties, whether express or implied, including (without limitation) any implied warranties of merchantability or fitness for a particular purpose. No warranty expressed or implied is made regarding the accuracy or utility of the data on any other system or for general or scientific purposes, nor shall the act of distribution constitute any such warranty. It is strongly recommended that careful attention be paid to the contents of the metadata file associated with these data to evaluate dataset limitations, restrictions or intended use. In no event will NMFS be liable to you or to any third party for any direct, indirect, incidental, consequential, special or exemplary damages or lost profit resulting from any use or misuse of these data."
 
-        datasets_dict = {}
+        __datasets_dict = {}
 
         dataset_codes = {row[0] : [row[1], row[2], row[3], row[4]] for row in arcpy.da.SearchCursor(rf"{project_gdb}\Datasets", ["DatasetCode", "PointFeatureType", "DistributionProjectCode", "Region", "Season"])}
         for dataset_code in dataset_codes:
@@ -824,7 +824,7 @@ def dataset_title_dict(project_gdb=""):
 
                     #print(f"\tProcessing: {table_name}")
 
-                    datasets_dict[table_name] = {"Dataset Service"       : table_name_s,
+                    __datasets_dict[table_name] = {"Dataset Service"       : table_name_s,
                                                  "Dataset Service Title" : table_name_st,
                                                  "Tags"                  : tags,
                                                  "Summary"               : summary,
@@ -841,7 +841,7 @@ def dataset_title_dict(project_gdb=""):
                     sample_locations_fcst = f"{feature_service_title.replace('  ',' ')}"
                     del feature_service_title
 
-                    datasets_dict[sample_locations_fc] = {"Dataset Service"       : sample_locations_fcs,
+                    __datasets_dict[sample_locations_fc] = {"Dataset Service"       : sample_locations_fcs,
                                                           "Dataset Service Title" : sample_locations_fcst,
                                                           "Tags"                  : tags,
                                                           "Summary"               : f"{summary}. These layers provide information on the spatial extent/boundaries of the bottom trawl surveys. Information on species distributions is of paramount importance for understanding and preparing for climate-change impacts, and plays a key role in climate-ready fisheries management.",
@@ -862,7 +862,7 @@ def dataset_title_dict(project_gdb=""):
                     sample_locations_fcst = f"{feature_service_title.replace('  ',' ')}"
                     del feature_service_title
 
-                    datasets_dict[sample_locations_fc] = {"Dataset Service"       : sample_locations_fcs,
+                    __datasets_dict[sample_locations_fc] = {"Dataset Service"       : sample_locations_fcs,
                                                           "Dataset Service Title" : sample_locations_fcst,
                                                           "Tags"                  : tags,
                                                           "Summary"               : f"{summary}. These layers provide information on the spatial extent/boundaries of the bottom trawl surveys. Information on species distributions is of paramount importance for understanding and preparing for climate-change impacts, and plays a key role in climate-ready fisheries management.",
@@ -886,7 +886,7 @@ def dataset_title_dict(project_gdb=""):
 
                     #print(f"\tProcessing: {table_name}")
 
-                    datasets_dict[table_name] = {"Dataset Service"       : table_name_s,
+                    __datasets_dict[table_name] = {"Dataset Service"       : table_name_s,
                                                  "Dataset Service Title" : table_name_st,
                                                  "Tags"                  : tags,
                                                  "Summary"               : summary,
@@ -902,7 +902,7 @@ def dataset_title_dict(project_gdb=""):
                     feature_service_title = f"{region} {season} Sample Locations {date_code(project)}"
                     grid_points_fcst      = f"{dataset_code.replace('_', ' ')} {point_feature_type} {date_code(project)}"
 
-                    datasets_dict[grid_points_fc] = {"Dataset Service"       : grid_points_fcs,
+                    __datasets_dict[grid_points_fc] = {"Dataset Service"       : grid_points_fcs,
                                                      "Dataset Service Title" : grid_points_fcst,
                                                      "Tags"                  : tags,
                                                      "Summary"               : summary,
@@ -927,7 +927,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {bathymetry_r}")
 
-                datasets_dict[bathymetry_r] = {"Dataset Service"       : bathymetry_rs,
+                __datasets_dict[bathymetry_r] = {"Dataset Service"       : bathymetry_rs,
                                                "Dataset Service Title" : bathymetry_rst,
                                                "Tags"                  : tags,
                                                "Summary"               : summary,
@@ -950,7 +950,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {boundary_fc}")
 
-                datasets_dict[boundary_fc] = {"Dataset Service"       : boundary_fcs,
+                __datasets_dict[boundary_fc] = {"Dataset Service"       : boundary_fcs,
                                               "Dataset Service Title" : boundary_fcst,
                                               "Tags"                  : tags,
                                               "Summary"               : summary,
@@ -973,7 +973,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {boundary_line_fc}")
 
-                datasets_dict[boundary_line_fc] = {"Dataset Service"       : boundary_line_fcs,
+                __datasets_dict[boundary_line_fc] = {"Dataset Service"       : boundary_line_fcs,
                                                    "Dataset Service Title" : boundary_line_fcst,
                                                    "Tags"                  : tags,
                                                    "Summary"               : summary,
@@ -999,7 +999,7 @@ def dataset_title_dict(project_gdb=""):
                 #print(f"\t{feature_service_title}")
                 #print(f"\t{crf_rst}")
 
-                datasets_dict[crf_r] = {"Dataset Service"       : crf_rs,
+                __datasets_dict[crf_r] = {"Dataset Service"       : crf_rs,
                                         "Dataset Service Title" : crf_rst,
                                         "Tags"                  : tags,
                                         "Summary"               : f"{summary}. These interpolated biomass layers provide information on the spatial distribution of species caught in the NOAA Fisheries fisheries-independent surveys. Information on species distributions is of paramount importance for understanding and preparing for climate-change impacts, and plays a key role in climate-ready fisheries management.",
@@ -1022,7 +1022,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {extent_points_fc}")
 
-                datasets_dict[extent_points_fc] = {"Dataset Service"       : extent_points_fcs,
+                __datasets_dict[extent_points_fc] = {"Dataset Service"       : extent_points_fcs,
                                                    "Dataset Service Title" : extent_points_fcst,
                                                    "Tags"                  : tags,
                                                    "Summary"               : summary,
@@ -1045,7 +1045,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {points_fc}")
 
-                datasets_dict[points_fc] = {"Dataset Service"       : points_fcs,
+                __datasets_dict[points_fc] = {"Dataset Service"       : points_fcs,
                                             "Dataset Service Title" : points_fcst,
                                             "Tags"                  : tags,
                                             "Summary"               : summary,
@@ -1067,7 +1067,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {fishnet_fc}")
 
-                datasets_dict[fishnet_fc] = {"Dataset Service"       : fishnet_fcs,
+                __datasets_dict[fishnet_fc] = {"Dataset Service"       : fishnet_fcs,
                                              "Dataset Service Title" : fishnet_fcst,
                                              "Tags"                  : tags,
                                              "Summary"               : summary,
@@ -1089,7 +1089,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {indicators_t}")
 
-                datasets_dict[indicators_tb] = {"Dataset Service"       : indicators_tbs,
+                __datasets_dict[indicators_tb] = {"Dataset Service"       : indicators_tbs,
                                                "Dataset Service Title" : indicators_tbst,
                                                "Tags"                  : tags,
                                                "Summary"               : f"{summary}. This table provides the key metrics used to evaluate a species distribution shift. Information on species distributions is of paramount importance for understanding and preparing for climate-change impacts, and plays a key role in climate-ready fisheries management.",
@@ -1111,7 +1111,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {lat_long_fc}")
 
-                datasets_dict[lat_long_fc] = {"Dataset Service"       : lat_long_fcs,
+                __datasets_dict[lat_long_fc] = {"Dataset Service"       : lat_long_fcs,
                                               "Dataset Service Title" : lat_long_fcst,
                                               "Tags"                  : tags,
                                               "Summary"               : summary,
@@ -1133,7 +1133,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {latitude_r}")
 
-                datasets_dict[latitude_r] = {"Dataset Service"       : latitude_rs,
+                __datasets_dict[latitude_r] = {"Dataset Service"       : latitude_rs,
                                              "Dataset Service Title" : latitude_rst,
                                              "Tags"                  : tags,
                                              "Summary"               : summary,
@@ -1155,7 +1155,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {layer_species_year_image_name_tb}")
 
-                datasets_dict[layer_species_year_image_name_tb] = {"Dataset Service"       : layer_species_year_image_name_tbs,
+                __datasets_dict[layer_species_year_image_name_tb] = {"Dataset Service"       : layer_species_year_image_name_tbs,
                                                                    "Dataset Service Title" : layer_species_year_image_name_tbst,
                                                                    "Tags"                  : tags,
                                                                    "Summary"               : summary,
@@ -1177,7 +1177,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {longitude_r}")
 
-                datasets_dict[longitude_r] = {"Dataset Service"       : longitude_rs,
+                __datasets_dict[longitude_r] = {"Dataset Service"       : longitude_rs,
                                               "Dataset Service Title" : longitude_rst,
                                               "Tags"                  : tags,
                                               "Summary"               : summary,
@@ -1199,7 +1199,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {mosaic_r}")
 
-                datasets_dict[mosaic_r] = {"Dataset Service"       : mosaic_rs,
+                __datasets_dict[mosaic_r] = {"Dataset Service"       : mosaic_rs,
                                            "Dataset Service Title" : mosaic_rst,
                                            #"Tags"                  : _tags,
                                            "Tags"                  : tags,
@@ -1222,7 +1222,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {mosaic_r}")
 
-                datasets_dict[crf_r] = {"Dataset Service"       : crf_rs,
+                __datasets_dict[crf_r] = {"Dataset Service"       : crf_rs,
                                         "Dataset Service Title" : crf_rst,
                                         #"Tags"                  : _tags,
                                         "Tags"                  : tags,
@@ -1245,7 +1245,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {raster_mask_r}")
 
-                datasets_dict[raster_mask_r] = {"Dataset Service"       : raster_mask_rs,
+                __datasets_dict[raster_mask_r] = {"Dataset Service"       : raster_mask_rs,
                                                 "Dataset Service Title" : raster_mask_rst,
                                                 "Tags"                  : tags,
                                                 "Summary"               : summary,
@@ -1267,7 +1267,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {region_fc}")
 
-                datasets_dict[region_fc] = {"Dataset Service"       : region_fcs,
+                __datasets_dict[region_fc] = {"Dataset Service"       : region_fcs,
                                             "Dataset Service Title" : region_fcst,
                                             "Tags"                  : tags,
                                             "Summary"               : summary,
@@ -1289,7 +1289,7 @@ def dataset_title_dict(project_gdb=""):
 
                 #print(f"\tProcessing: {survey_area_fc}")
 
-                datasets_dict[survey_area_fc] = {"Dataset Service"       : survey_area_fcs,
+                __datasets_dict[survey_area_fc] = {"Dataset Service"       : survey_area_fcs,
                                                  "Dataset Service Title" : survey_area_fcst,
                                                  "Tags"                  : tags,
                                                  "Summary"               : summary,
@@ -1316,7 +1316,7 @@ def dataset_title_dict(project_gdb=""):
                     datasets_tbs  = f"{dataset_code}_{date_code(project)}"
                     datasets_tbst = f"{dataset_code} {date_code(project)}"
 
-                    datasets_dict[datasets_tb] = {"Dataset Service"       : datasets_tbs,
+                    __datasets_dict[datasets_tb] = {"Dataset Service"       : datasets_tbs,
                                                   "Dataset Service Title" : datasets_tbst,
                                                   "Tags"                  : "DisMAP, Datasets",
                                                   "Summary"               : summary,
@@ -1334,7 +1334,7 @@ def dataset_title_dict(project_gdb=""):
                     regions_fcs  = f"{dataset_code}_{date_code(project)}"
                     regions_fcst = f"DisMAP Regions {date_code(project)}"
 
-                    datasets_dict[regions_fc] = {"Dataset Service"       : regions_fcs,
+                    __datasets_dict[regions_fc] = {"Dataset Service"       : regions_fcs,
                                                  "Dataset Service Title" : regions_fcst,
                                                  "Tags"                  : "DisMAP Regions",
                                                  "Summary"               : summary,
@@ -1352,7 +1352,7 @@ def dataset_title_dict(project_gdb=""):
                     indicators_tbs  = f"{dataset_code}_{date_code(project)}"
                     indicators_tbst = f"{dataset_code} {date_code(project)}"
 
-                    datasets_dict[indicators_tb] = {"Dataset Service"    : indicators_tbs,
+                    __datasets_dict[indicators_tb] = {"Dataset Service"    : indicators_tbs,
                                                    "Dataset Service Title" : indicators_tbst,
                                                    "Tags"                  : "DisMAP, Indicators",
                                                    "Summary"               : f"{summary}. This table provides the key metrics used to evaluate a species distribution shift. Information on species distributions is of paramount importance for understanding and preparing for climate-change impacts, and plays a key role in climate-ready fisheries management.",
@@ -1372,7 +1372,7 @@ def dataset_title_dict(project_gdb=""):
 
                     #print(f"\tProcessing: {layer_species_year_image_name_tb}")
 
-                    datasets_dict[layer_species_year_image_name_tb] = {"Dataset Service"       : layer_species_year_image_name_tbs,
+                    __datasets_dict[layer_species_year_image_name_tb] = {"Dataset Service"       : layer_species_year_image_name_tbs,
                                                                        "Dataset Service Title" : layer_species_year_image_name_tbst,
                                                                        "Tags"                  : "DisMAP, Layer Species Year Image Name Table",
                                                                        "Summary"               : summary,
@@ -1394,7 +1394,7 @@ def dataset_title_dict(project_gdb=""):
                     species_filter_tbs  = f"{dataset_code}_{date_code(project)}"
                     species_filter_tbst = f"Species Filter Table {date_code(project)}"
 
-                    datasets_dict[species_filter_tb] = {"Dataset Service"       : species_filter_tbs,
+                    __datasets_dict[species_filter_tb] = {"Dataset Service"       : species_filter_tbs,
                                                         "Dataset Service Title" : species_filter_tbst,
                                                         "Tags"                  : "DisMAP, Species Filter Table",
                                                         "Summary"               : summary,
@@ -1416,7 +1416,7 @@ def dataset_title_dict(project_gdb=""):
                     tbs  = f"{dataset_code}_{date_code(project)}"
                     tbst = f"DisMAP Survey Info Table {date_code(project)}"
 
-                    datasets_dict[tb] = {"Dataset Service"       : tbs,
+                    __datasets_dict[tb] = {"Dataset Service"       : tbs,
                                          "Dataset Service Title" : tbst,
                                          "Tags"                  : "DisMAP; DisMAP Survey Info Table",
                                          "Summary"               : summary,
@@ -1437,7 +1437,7 @@ def dataset_title_dict(project_gdb=""):
                     #table_s  = f"{dataset_code}_{date_code(project)}"
                     #table_st = f"{table_s.replace('_',' ')} {date_code(project)}"
                     #print(f"\tProcessing: {table_s}")
-                    #datasets_dict[table] = {"Dataset Service"       : table_s,
+                    #__datasets_dict[table] = {"Dataset Service"       : table_s,
                     #                        "Dataset Service Title" : table_st,
                     #                        "Tags"                  : f"DisMAP, {table}",
                     #                        "Summary"               : summary,
@@ -1466,18 +1466,15 @@ def dataset_title_dict(project_gdb=""):
         del project_folder, crf_folder
         del project, project_gdb
 
-    except Exception as e:
-        traceback.print_exc()
-        raise Exception
     except:
         traceback.print_exc()
     else:
         # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith('__') and key != "datasets_dict"]
+        rk = [key for key in locals().keys() if not key.startswith('__')]
         if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
-        return datasets_dict
+        return __datasets_dict
     finally:
-        pass
+        if "__datasets_dict" in locals().keys(): del __datasets_dict
 
 def date_code(version):
     try:
@@ -1501,35 +1498,18 @@ def date_code(version):
         del version
 
         import copy
-        results = copy.deepcopy(_date_code)
+        __results = copy.deepcopy(_date_code)
         del _date_code, copy
 
-    except KeyboardInterrupt:
-        raise Exception
-    except arcpy.ExecuteWarning:
-        arcpy.AddWarning(str(traceback.print_exc()) + arcpy.GetMessages())
-        raise Exception
-    except arcpy.ExecuteError:
-        arcpy.AddError(str(traceback.print_exc()) + arcpy.GetMessages())
-        raise Exception
-    except Exception as e:
-        arcpy.AddError(str(e))
-        raise Exception
     except:
-        arcpy.AddError(str(traceback.print_exc()))
-        raise Exception
+        traceback.print_exc()
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            raise Exception(traceback.print_exc())
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
     finally:
-        if "results" in locals().keys(): del results
+        if "__results" in locals().keys(): del __results
 
 def dTypesCSV(csv_data_folder="", table=""):
     try:
@@ -1572,32 +1552,18 @@ def dTypesCSV(csv_data_folder="", table=""):
         del dismap
 
         import copy
-        results = copy.deepcopy(field_csv_dtypes)
+        __results = copy.deepcopy(field_csv_dtypes)
         del field_csv_dtypes, copy
 
-    except KeyboardInterrupt:
-        raise Exception
-    except arcpy.ExecuteWarning:
-        raise Exception(arcpy.GetMessages())
-    except arcpy.ExecuteError:
-        raise Exception(arcpy.GetMessages())
-    except Exception as e:
-        raise Exception(e)
     except:
         traceback.print_exc()
-        raise Exception
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            raise Exception(traceback.print_exc())
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return __results
     finally:
-        if "results" in locals().keys(): del results
+        if "__results" in locals().keys(): del __results
 
 def dTypesGDB(csv_data_folder="", table=""):
     try:
@@ -1623,15 +1589,15 @@ def dTypesGDB(csv_data_folder="", table=""):
             # print(field_definition["field_type"])
             # fd = field_definition[:-2]
             # del fd[2], field_definition
-            if field_definition["field_type"] == "TEXT":
+            if field_definition["field_type"] == "TEXT" or field_definition["field_type"] == "String":
                 field_dtype = f"U{field_definition['field_length']}"
-            elif field_definition["field_type"] == "SHORT":
+            elif field_definition["field_type"] == "SHORT" or field_definition["field_type"] == "Integer":
                 # np.dtype('u4') == dtype('uint32')
                 field_dtype = f"U4"
-            elif field_definition["field_type"] == "DOUBLE":
+            elif field_definition["field_type"] == "DOUBLE" or field_definition["field_type"] == "Double":
                 # np.dtype('d') == dtype('float64'), np.dtype('f') == dtype('float32'), np.dtype('f8') == dtype('float64')
                 field_dtype = f"d"
-            elif field_definition["field_type"] == "DATE":
+            elif field_definition["field_type"] == "DATE" or field_definition["field_type"] == "Date":
                 field_dtype = f"M8[us]"
             else:
                 field_dtype = ""
@@ -1644,34 +1610,20 @@ def dTypesGDB(csv_data_folder="", table=""):
         del table, csv_data_folder
 
         import copy
-        results = copy.deepcopy(field_gdb_dtypes)
+        __results = copy.deepcopy(field_gdb_dtypes)
         del field_gdb_dtypes, copy
 
         del dismap
 
-    except KeyboardInterrupt:
-        raise Exception
-    except arcpy.ExecuteWarning:
-        raise Exception(arcpy.GetMessages())
-    except arcpy.ExecuteError:
-        raise Exception(arcpy.GetMessages())
-    except Exception as e:
-        raise Exception(e)
     except:
         traceback.print_exc()
-        raise Exception
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            raise Exception(traceback.print_exc())
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return __results
     finally:
-        if "results" in locals().keys(): del results
+        if "__results" in locals().keys(): del __results
 
 def export_metadata(csv_data_folder="", in_table=""):
     # Deprecated
@@ -1742,31 +1694,15 @@ def export_metadata(csv_data_folder="", in_table=""):
         # Declared variable
         del ws, table, cwd
 
-        results = True
-
-    except KeyboardInterrupt:
-        raise Exception
-    except arcpy.ExecuteWarning:
-        raise Exception(arcpy.GetMessages())
-    except arcpy.ExecuteError:
-        raise Exception(arcpy.GetMessages())
-    except Exception as e:
-        raise Exception(e)
     except:
         traceback.print_exc()
-        raise Exception
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            raise Exception(traceback.print_exc())
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
     finally:
-        if "results" in locals().keys(): del results
+        pass
 
 def field_definitions(csv_data_folder="", field=""):
     try:
@@ -1779,12 +1715,12 @@ def field_definitions(csv_data_folder="", field=""):
 
         if not field:  # if ""
             # Returns a dictionaty of field definitions
-            results = copy.deepcopy(field_definitions)
+            __results = copy.deepcopy(field_definitions)
         elif field:  # If a field was passed, then return
             if field in field_definitions:
-                results = copy.deepcopy(field_definitions[field])
+                __results = copy.deepcopy(field_definitions[field])
             else:
-                results = False
+                __results = False
         # else:
         #    #return arcpy.AddError(f"Field {field} is not in field definitions")
         #    return field
@@ -1796,29 +1732,15 @@ def field_definitions(csv_data_folder="", field=""):
         # Function parameters
         del csv_data_folder, field
 
-    except KeyboardInterrupt:
-        raise Exception
-    except arcpy.ExecuteWarning:
-        raise Exception(arcpy.GetMessages())
-    except arcpy.ExecuteError:
-        raise Exception(arcpy.GetMessages())
-    except Exception as e:
-        raise Exception(e)
     except:
         traceback.print_exc()
-        raise Exception
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            raise Exception(traceback.print_exc())
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return __results
     finally:
-        if "results" in locals().keys(): del results
+        if "__results" in locals().keys(): del __results
 
 def get_encoding_index_col(csv_file):
     import chardet
@@ -2039,35 +1961,21 @@ def metadata_dictionary_json(csv_data_folder="", dataset_name=""):
         del json_file, json, csv_data_folder
 
         if not dataset_name:
-            results = metadata_dictionary
+            __results = metadata_dictionary
         elif dataset_name:
-            results = metadata_dictionary[dataset_name]
+            __results = metadata_dictionary[dataset_name]
         else:
-            results = None
+            __results = None
 
-    except KeyboardInterrupt:
-        raise Exception
-    except arcpy.ExecuteWarning:
-        raise Exception(arcpy.GetMessages())
-    except arcpy.ExecuteError:
-        raise Exception(arcpy.GetMessages())
-    except Exception as e:
-        raise Exception(e)
     except:
         traceback.print_exc()
-        raise Exception
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            raise SystemExit(traceback.print_exc())
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
     finally:
-        if "results" in locals().keys(): del results
+        if "__results" in locals().keys(): del __results
 
 def pretty_format_xml_file(metadata=""):
     try:
@@ -2123,32 +2031,15 @@ def pretty_format_xml_file(metadata=""):
         # Declared variable
         del metadata, ET
 
-        results = True
-
-    except KeyboardInterrupt:
-        raise Exception
-    except arcpy.ExecuteWarning:
-        arcpy.AddWarning(arcpy.GetMessages())
-    except arcpy.ExecuteError:
-        arcpy.AddError(arcpy.GetMessages())
-    except Exception as e:
-        arcpy.AddError(str(e))
-        traceback.print_exc()
-        raise SystemExit
     except:
         traceback.print_exc()
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            raise Exception(traceback.print_exc())
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
     finally:
-        if "results" in locals().keys(): del results
+        pass
 
 def pretty_format_xml_files(metadata_folder=""):
     try:
@@ -2167,32 +2058,15 @@ def pretty_format_xml_files(metadata_folder=""):
         # Function paramters
         del metadata_folder
 
-        #print(tgt_item_md.title)
-        results = True
-
-    except KeyboardInterrupt:
-        raise Exception
-    except arcpy.ExecuteWarning:
-        raise Exception(arcpy.GetMessages())
-    except arcpy.ExecuteError:
-        raise Exception(arcpy.GetMessages())
-    except Exception as e:
-        raise Exception(e)
     except:
         traceback.print_exc()
-        raise Exception
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            raise Exception(traceback.print_exc())
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
     finally:
-        if "results" in locals().keys(): del results
+        pass
 
 def table_definitions(csv_data_folder="", dataset_name=""):
     try:
@@ -2205,7 +2079,7 @@ def table_definitions(csv_data_folder="", dataset_name=""):
 
         if not dataset_name or dataset_name == "":
             # Return a dictionary of all values
-            results = copy.deepcopy(table_definitions)
+            __results = copy.deepcopy(table_definitions)
         elif dataset_name:
             # print(f"IN: {dataset_name}")
             if "_IDW" in dataset_name:
@@ -2215,9 +2089,9 @@ def table_definitions(csv_data_folder="", dataset_name=""):
             elif "_GFDL" in dataset_name:
                 dataset_name = "GFDL_Data"
             else:
-                pass
+                dataset_name = dataset_name
             # print(f"OUT: {dataset_name}")
-            results = copy.deepcopy(table_definitions[dataset_name])
+            __results = copy.deepcopy(table_definitions[dataset_name])
         else:
             arcpy.AddError("something wrong")
 
@@ -2228,29 +2102,15 @@ def table_definitions(csv_data_folder="", dataset_name=""):
         # Function parameters
         del csv_data_folder, dataset_name
 
-    except KeyboardInterrupt:
-        raise Exception
-    except arcpy.ExecuteWarning:
-        raise Exception(arcpy.GetMessages())
-    except arcpy.ExecuteError:
-        raise Exception(arcpy.GetMessages())
-    except Exception as e:
-        raise Exception(e)
     except:
         traceback.print_exc()
-        raise Exception
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            raise Exception(traceback.print_exc())
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return __results
     finally:
-        if "results" in locals().keys(): del results
+        if "__results" in locals().keys(): del __results
 
 # #
 # Function: unique_years
@@ -2409,8 +2269,8 @@ def test_bed_1(project_gdb=""):
 
         ##        import dismap
         ##
-        ##        csv_file=r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\April 1 2023\CSV Data\Datasets.csv"
-        ##        #csv_file=r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\April 1 2023\CSV Data\Species_Filter.csv"
+        ##        csv_file=r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\April 1 2023\CSV Data\Datasets.csv"
+        ##        #csv_file=r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\April 1 2023\CSV Data\Species_Filter.csv"
         ##
         ##        table           = os.path.basename(csv_file).replace(".csv", "")
         ##        csv_data_folder = os.path.dirname(csv_file)
@@ -2445,7 +2305,7 @@ def test_bed_1(project_gdb=""):
         ##        del dismap, in_table
 
 ##    # ###--->>>
-##        dataset = r'C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\CRFs\NBS_IDW.crf'
+##        dataset = r'{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\CRFs\NBS_IDW.crf'
 ##        import_metadata(dataset)
 ##    # ###--->>>
 
@@ -2488,7 +2348,7 @@ def test_bed_1(project_gdb=""):
 ##    # ###--->>>
 
 ##    # ###--->>>
-##        dataset = r'C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\May 1 2024.gdb\Datasets'
+##        dataset = r'{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\May 1 2024.gdb\Datasets'
 ##        import_metadata(dataset)
 ##        del dataset
 ##    # ###--->>>
@@ -2501,8 +2361,8 @@ def test_bed_1(project_gdb=""):
 ##
 ##        arcpy.management.CreateFeatureclass(arcpy.env.workspace, "temp_fc", "POLYGON")
 ##        dataset = rf"{arcpy.env.workspace}\temp_fc"
-##        dataset_xml = r'C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\temp_fc.xml'
-##        new_md_xml = r'C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\new_md.xml'
+##        dataset_xml = r'{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\temp_fc.xml'
+##        new_md_xml = r'{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\new_md.xml'
 ##
 ##        dataset_md = md.Metadata(dataset)
 ##        dataset_md.saveAsXML(dataset_xml.replace(".xml", " no sync.xml"))
@@ -2525,8 +2385,8 @@ def test_bed_1(project_gdb=""):
 ##        del md
 
 ##        # Path to new metadata XML file
-##        new_dataset_path = r'C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\new_dataset.xml'
-##        poc_template_path = r'C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\poc_template.xml'
+##        new_dataset_path = r'{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\new_dataset.xml'
+##        poc_template_path = r'{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\poc_template.xml'
 ##
 ##        # Create a new Metadata object, add some content to it, and then save
 ##        new_md = md.Metadata()
@@ -2619,8 +2479,8 @@ def test_bed_1(project_gdb=""):
 ##        project_folder         = os.path.dirname(project_gdb)
 ##        export_metadata_folder = rf"{project_folder}\ArcGIS Metadata"
 ##
-##        in_xml  = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\DisMAP_Regions.xml"
-##        out_xml = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\DisMAP Regions Current.xml"
+##        in_xml  = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\DisMAP_Regions.xml"
+##        out_xml = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\DisMAP Regions Current.xml"
 ##
 ##        diff = compare_metadata_xml(in_xml, out_xml)
 ##        if diff:
@@ -2638,8 +2498,8 @@ def test_bed_1(project_gdb=""):
 ##        del table, project_folder, export_metadata_folder
 ##    # ###--->>> COMPARE TWO XML DOCUMENTS
 
-        #pretty_format_xml_file(r"C:\Users\john.f.kennedy\AppData\Local\ESRI\ArcGISPro\Staging\SharingProcesses\SharingMainLog - Copy.xml")
-        #pretty_format_xml_file(r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\July 1 2024\Export Metadata\EBS_IDW.crf.xml")
+        #pretty_format_xml_file(r"{os.environ['USERPROFILE']}\AppData\Local\ESRI\ArcGISPro\Staging\SharingProcesses\SharingMainLog - Copy.xml")
+        #pretty_format_xml_file(r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\July 1 2024\Export Metadata\EBS_IDW.crf.xml")
 
 ## Doesn't really work
 ##        # ###--->>>
@@ -2699,10 +2559,10 @@ def test_bed_1(project_gdb=""):
 ##
 ##        arcpy.management.CreateFeatureclass(arcpy.env.workspace, "temp_fc", "POLYGON")
 ##        dataset = rf"{arcpy.env.workspace}\temp_fc"
-##        dataset_xml = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\Export Metadata\temp_fc.xml"
-##        new_md_xml = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\Export Metadata\new_md.xml"
+##        dataset_xml = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\Export Metadata\temp_fc.xml"
+##        new_md_xml = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\Export Metadata\new_md.xml"
 ##
-##        poc_template = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\poc_template.xml"
+##        poc_template = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\ArcGIS Metadata\poc_template.xml"
 ##
 ## #        dataset_md = md.Metadata(dataset)
 ## #        dataset_md.saveAsXML(dataset_xml.replace(".xml", " no sync.xml"))
@@ -2779,7 +2639,7 @@ def test_bed_1(project_gdb=""):
 ##    # ###--->>>
 ##        from arcpy import metadata as md
 ##
-##        metadata_folder = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\Export Metadata"
+##        metadata_folder = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\May 1 2024\Export Metadata"
 ##        new_md_xml      = rf"{metadata_folder}\new_md.xml"
 ##        dataset_md_xml  = rf"{metadata_folder}\dataset_md.xml"
 ##
@@ -2855,37 +2715,15 @@ def test_bed_1(project_gdb=""):
         # Function parameters
         del project_gdb
 
-        results = True
-
-    except KeyboardInterrupt:
-        raise Exception
-    except arcpy.ExecuteWarning:
-        raise Exception(arcpy.GetMessages())
-    except arcpy.ExecuteError:
-        raise Exception(arcpy.GetMessages())
-    except Exception as e:
-        raise Exception(e)
     except:
         traceback.print_exc()
-        raise Exception
-        # Get the traceback object
-##        tb = sys.exc_info()[2]
-##        tbinfo = traceback.format_tb(tb)[0]
-##        # Concatenate information together concerning the error into a message string
-##        pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + str(sys.exc_info()[1])
-##        arcpy.AddError(pymsg)
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            traceback.print_exc()
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
     finally:
-        if "results" in locals().keys(): del results
+        pass
 
 def test_bed_2(project=""):
     try:
@@ -3198,31 +3036,15 @@ def test_bed_2(project=""):
         del project_gdb
         del project
 
-        results = True
-
-    except KeyboardInterrupt:
-        raise Exception
-    except arcpy.ExecuteWarning:
-        raise Exception(arcpy.GetMessages())
-    except arcpy.ExecuteError:
-        raise Exception(arcpy.GetMessages())
-    except Exception as e:
-        raise Exception(e)
     except:
         traceback.print_exc()
-        raise Exception
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-            if remaining_keys:
-                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-            del leave_out_keys, remaining_keys
-            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-        except:
-            raise Exception(traceback.print_exc())
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
     finally:
-        if "results" in locals().keys(): del results
+        pass
 
 def main(base_project_folder="", project_name=""):
     try:
@@ -3256,20 +3078,20 @@ def main(base_project_folder="", project_name=""):
             dismap.backup_gdb(project_gdb)
         del Backup
 
-        # ###--->>> xml_combiner
-        TestXmlCombiner = False
-        if TestXmlCombiner:
-            metadata_folder = rf"{project_folder}\Export Metadata"
-            xml_file_1      = rf"{metadata_folder}\AI_IDW_Sample_Locations.xml"
-            xml_file_2      = rf"{metadata_folder}\poc_template.xml"
-            xml_combiner(project_gdb=project_gdb, xml_file_1=xml_file_1, xml_file_2=xml_file_2)
-            del metadata_folder
-            del xml_file_1, xml_file_2
-        del TestXmlCombiner
-        # ###--->>>
+##        # ###--->>> xml_combiner
+##        TestXmlCombiner = False
+##        if TestXmlCombiner:
+##            metadata_folder = rf"{project_folder}\Export Metadata"
+##            xml_file_1      = rf"{metadata_folder}\AI_IDW_Sample_Locations.xml"
+##            xml_file_2      = rf"{metadata_folder}\poc_template.xml"
+##            xml_combiner(project_gdb=project_gdb, xml_file_1=xml_file_1, xml_file_2=xml_file_2)
+##            del metadata_folder
+##            del xml_file_1, xml_file_2
+##        del TestXmlCombiner
+##        # ###--->>>
 
         # ###--->>> dataset_title_dict Test #1
-        DatasetTitleDict = True
+        DatasetTitleDict = False
         if DatasetTitleDict:
             md_dict = dataset_title_dict(project_gdb)
             for key in sorted(md_dict):
@@ -3290,12 +3112,15 @@ def main(base_project_folder="", project_name=""):
         if TestTableDefinitions:
             csv_data_folder = rf"{project_folder}\CSV Data"
             # First Test
-            table_definitions = dismap.table_definitions(csv_data_folder, "")
+            #table_definitions = dismap.table_definitions(csv_data_folder, "DisMAP_Survey_Info")
             #print(table_definitions)
-            for table in table_definitions:
-                print(table)
-                print(f"\t{table_definitions[table]}");
-                del table
+            # Second Test
+            #table_definitions = dismap.table_definitions(csv_data_folder, "")
+            #print(table_definitions)
+            #for table in table_definitions:
+            #    print(table)
+            #    print(f"\t{table_definitions[table]}");
+            #    del table
             del table_definitions
             del csv_data_folder
         else:
@@ -3331,7 +3156,7 @@ def main(base_project_folder="", project_name=""):
         elapse_time =  end_time - start_time
 
         print(f"\n{'-' * 80}")
-        print(f"Python script: {os.path.basename(__file__)} completed {strftime('%a %b %d %I:%M %p', localtime())}")
+        print(f"Python script: {os.path.basename(__file__)}\nCompleted: {strftime('%a %b %d %I:%M %p', localtime())}")
         print(u"Elapsed Time {0} (H:M:S)".format(strftime("%H:%M:%S", gmtime(elapse_time))))
         print(f"{'-' * 80}")
         del elapse_time, end_time, start_time
@@ -3358,9 +3183,9 @@ if __name__ == "__main__":
         sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
         base_project_folder = rf"{os.path.dirname(os.path.dirname(__file__))}"
-        project_name = "April 1 2023"
+        #project_name = "April 1 2023"
         #project_name = "July 1 2024"
-        #project_name   = "December 1 2024"
+        project_name   = "December 1 2024"
 
         main(base_project_folder=base_project_folder, project_name=project_name)
 

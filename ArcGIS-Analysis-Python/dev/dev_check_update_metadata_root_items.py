@@ -86,7 +86,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
                      "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
 
         # Parse the XML
-        parser = etree.XMLParser(remove_blank_text=True, encoding='UTF-8')
+        parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
         target_name = os.path.basename(fc_metadata_xml_file).replace(".xml", "")
         target_tree = etree.parse(fc_metadata_xml_file, parser=parser)
         target_root = target_tree.getroot()
@@ -106,7 +106,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
 
         Esri = target_tree.xpath(f"./Esri")
         if len(Esri) == 0:
-            xml = '''<Esri><CreaDate>20250201</CreaDate><CreaTime>12234100</CreaTime><ArcGISFormat>1.0</ArcGISFormat><ArcGISStyle>ISO 19139 Metadata Implementation Specification</ArcGISStyle><SyncOnce>FALSE</SyncOnce><DataProperties><itemProps><itemName Sync="TRUE">SpeciesRangeTemplate</itemName><imsContentType Sync="TRUE">002</imsContentType><nativeExtBox><westBL Sync="TRUE">-82.000000</westBL><eastBL Sync="TRUE">-72.000000</eastBL><southBL Sync="TRUE">11.000000</southBL><northBL Sync="TRUE">24.000000</northBL><exTypeCode Sync="TRUE">1</exTypeCode></nativeExtBox></itemProps><coordRef><type Sync="TRUE">Geographic</type><geogcsn Sync="TRUE">GCS_WGS_1984</geogcsn><csUnits Sync="TRUE">Angular Unit: Degree (0.017453)</csUnits><peXml Sync="TRUE">&lt;GeographicCoordinateSystem xsi:type='typens:GeographicCoordinateSystem' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns:typens='http://www.esri.com/schemas/ArcGIS/3.4.0'&gt;&lt;WKT&gt;GEOGCS[&amp;quot;GCS_WGS_1984&amp;quot;,DATUM[&amp;quot;D_WGS_1984&amp;quot;,SPHEROID[&amp;quot;WGS_1984&amp;quot;,6378137.0,298.257223563]],PRIMEM[&amp;quot;Greenwich&amp;quot;,0.0],UNIT[&amp;quot;Degree&amp;quot;,0.0174532925199433],AUTHORITY[&amp;quot;EPSG&amp;quot;,4326]]&lt;/WKT&gt;&lt;XOrigin&gt;-400&lt;/XOrigin&gt;&lt;YOrigin&gt;-400&lt;/YOrigin&gt;&lt;XYScale&gt;999999999.99999988&lt;/XYScale&gt;&lt;ZOrigin&gt;-100000&lt;/ZOrigin&gt;&lt;ZScale&gt;10000&lt;/ZScale&gt;&lt;MOrigin&gt;-100000&lt;/MOrigin&gt;&lt;MScale&gt;10000&lt;/MScale&gt;&lt;XYTolerance&gt;8.983152841195215e-09&lt;/XYTolerance&gt;&lt;ZTolerance&gt;0.001&lt;/ZTolerance&gt;&lt;MTolerance&gt;0.001&lt;/MTolerance&gt;&lt;HighPrecision&gt;true&lt;/HighPrecision&gt;&lt;LeftLongitude&gt;-180&lt;/LeftLongitude&gt;&lt;WKID&gt;4326&lt;/WKID&gt;&lt;LatestWKID&gt;4326&lt;/LatestWKID&gt;&lt;/GeographicCoordinateSystem&gt;</peXml></coordRef></DataProperties><SyncDate>20250202</SyncDate><SyncTime>14404400</SyncTime><ModDate>20250202</ModDate><ModTime>14404400</ModTime><scaleRange><minScale>150000000</minScale><maxScale>5000</maxScale></scaleRange><ArcGISProfile>ISO19139</ArcGISProfile></Esri>'''
+            xml = '''<Esri><CreaDate>20250201</CreaDate><CreaTime>12234100</CreaTime><ArcGISFormat>1.0</ArcGISFormat><ArcGISstyle>ISO 19139 Metadata Implementation Specification</ArcGISstyle><SyncOnce>FALSE</SyncOnce><DataProperties><itemProps><itemName Sync="TRUE">SpeciesRangeTemplate</itemName><imsContentType Sync="TRUE">002</imsContentType><nativeExtBox><westBL Sync="TRUE">-82.000000</westBL><eastBL Sync="TRUE">-72.000000</eastBL><southBL Sync="TRUE">11.000000</southBL><northBL Sync="TRUE">24.000000</northBL><exTypeCode Sync="TRUE">1</exTypeCode></nativeExtBox></itemProps><coordRef><type Sync="TRUE">Geographic</type><geogcsn Sync="TRUE">GCS_WGS_1984</geogcsn><csUnits Sync="TRUE">Angular Unit: Degree (0.017453)</csUnits><peXml Sync="TRUE">&lt;GeographicCoordinateSystem xsi:type='typens:GeographicCoordinateSystem' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns:typens='http://www.esri.com/schemas/ArcGIS/3.4.0'&gt;&lt;WKT&gt;GEOGCS[&amp;quot;GCS_WGS_1984&amp;quot;,DATUM[&amp;quot;D_WGS_1984&amp;quot;,SPHEROID[&amp;quot;WGS_1984&amp;quot;,6378137.0,298.257223563]],PRIMEM[&amp;quot;Greenwich&amp;quot;,0.0],UNIT[&amp;quot;Degree&amp;quot;,0.0174532925199433],AUTHORITY[&amp;quot;EPSG&amp;quot;,4326]]&lt;/WKT&gt;&lt;XOrigin&gt;-400&lt;/XOrigin&gt;&lt;YOrigin&gt;-400&lt;/YOrigin&gt;&lt;XYScale&gt;999999999.99999988&lt;/XYScale&gt;&lt;ZOrigin&gt;-100000&lt;/ZOrigin&gt;&lt;ZScale&gt;10000&lt;/ZScale&gt;&lt;MOrigin&gt;-100000&lt;/MOrigin&gt;&lt;MScale&gt;10000&lt;/MScale&gt;&lt;XYTolerance&gt;8.983152841195215e-09&lt;/XYTolerance&gt;&lt;ZTolerance&gt;0.001&lt;/ZTolerance&gt;&lt;MTolerance&gt;0.001&lt;/MTolerance&gt;&lt;HighPrecision&gt;true&lt;/HighPrecision&gt;&lt;LeftLongitude&gt;-180&lt;/LeftLongitude&gt;&lt;WKID&gt;4326&lt;/WKID&gt;&lt;LatestWKID&gt;4326&lt;/LatestWKID&gt;&lt;/GeographicCoordinateSystem&gt;</peXml></coordRef></DataProperties><SyncDate>20250202</SyncDate><SyncTime>14404400</SyncTime><ModDate>20250202</ModDate><ModTime>14404400</ModTime><scaleRange><minScale>150000000</minScale><maxScale>5000</maxScale></scaleRange><ArcGISProfile>ISO19139</ArcGISProfile></Esri>'''
             position = root_dict["Esri"]
             esri_root = etree.XML(xml)
             #print("Inserting Esri at position: {position}")
@@ -127,7 +127,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
             pass
 
         esri_dict ={"CreaDate" : 0,  "CreaTime" : 1, "ArcGISFormat" : 2,
-                    "ArcGISStyle" : 3, "SyncOnce" : 4, "DataProperties" : 5,
+                    "ArcGISstyle" : 3, "SyncOnce" : 4, "DataProperties" : 5,
                     "itemProps" : 0, "itemName" : 0, "imsContentType" : 1,
                     "nativeExtBox" : 2, "westBL" : 0, "eastBL" : 1, "southBL" : 2,
                     "northBL" : 3, "exTypeCode" : 4, "coordRef" : 1, "type" : 0,
@@ -136,30 +136,30 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
                     "scaleRange" : 10, "minScale" : 11, "maxScale" : 12,
                     "ArcGISProfile" : 13,}
 
-        # Check for ArcGISStyle
+        # Check for ArcGISstyle
         Esri = target_tree.xpath(f"./Esri")[0]
-        ArcGISStyle = Esri.xpath(f"./ArcGISStyle")
-        if len(ArcGISStyle) == 0:
-            position = esri_dict["ArcGISStyle"]
-            #print(f"Inserting ArcGISStyle at position {position}")
-            ArcGIS_Style = etree.SubElement(Esri, "ArcGISStyle")
+        ArcGISstyle = Esri.xpath(f"./ArcGISstyle")
+        if len(ArcGISstyle) == 0:
+            position = esri_dict["ArcGISstyle"]
+            #print(f"Inserting ArcGISstyle at position {position}")
+            ArcGIS_Style = etree.SubElement(Esri, "ArcGISstyle")
             ArcGIS_Style.text = "ISO 19139 Metadata Implementation Specification"
             Esri.insert(position, ArcGIS_Style)
             del position, ArcGIS_Style
-        elif len(ArcGISStyle) == 1:
-            position = esri_dict["ArcGISStyle"]
-            #print(f"{len(ArcGISStyle)} {ArcGISStyle[0].tag} element is found with value: {position}")
-            ArcGISStyle[0].text = "ISO 19139 Metadata Implementation Specification"
+        elif len(ArcGISstyle) == 1:
+            position = esri_dict["ArcGISstyle"]
+            #print(f"{len(ArcGISstyle)} {ArcGISstyle[0].tag} element is found with value: {position}")
+            ArcGISstyle[0].text = "ISO 19139 Metadata Implementation Specification"
             del position
-        elif len(ArcGISStyle) > 1:
-            #print(f"Removing {len(ArcGISStyle)-1} 'ArcGISStyle' elements")
-            for i in range(1, len(ArcGISStyle)):
-                Esri.remove(ArcGISStyle[i])
+        elif len(ArcGISstyle) > 1:
+            #print(f"Removing {len(ArcGISstyle)-1} 'ArcGISstyle' elements")
+            for i in range(1, len(ArcGISstyle)):
+                Esri.remove(ArcGISstyle[i])
                 i+=1
                 del i
         else:
             pass
-        del Esri, ArcGISStyle
+        del Esri, ArcGISstyle
 
         # ###--->>> Deletes an unwanted element
         Esri = target_tree.xpath(f"./Esri")[0]
@@ -205,7 +205,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
                 del i
         else:
             pass
-        #print(etree.tostring(Esri, pretty_print=True, encoding="utf-8").decode())
+        #print(etree.tostring(Esri, encoding="utf-8", pretty_print=True).decode())
         del scaleRange, Esri
 
         # Check for ArcGISProfile
@@ -334,7 +334,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
 
         else:
             pass
-        #print(etree.tostring(idCitation, pretty_print=True, encoding="utf-8").decode())
+        #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
         del resTitle
 
         # ######################################################################
@@ -367,7 +367,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
             print(f"May need to delete: {len(resAltTitle)} resAltTitle")
         else:
             pass
-        #print(etree.tostring(idCitation, pretty_print=True, encoding="utf-8").decode())
+        #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
         del resAltTitle
 
         # ######################################################################
@@ -397,7 +397,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
 
         else:
             pass
-        #print(etree.tostring(idCitation, pretty_print=True, encoding="utf-8").decode())
+        #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
         del collTitle
 
         # ######################################################################
@@ -422,7 +422,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
             print(f"May need to delete: {len(fgdcGeoform)} fgdcGeoform")
         else:
             pass
-        #print(etree.tostring(idCitation, pretty_print=True, encoding="utf-8").decode())
+        #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
         del fgdcGeoform, presForm
 
         # ######################################################################
@@ -465,7 +465,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
             print(f"May needed to be deleted {len(date)} date")
         else:
             pass
-        #print(etree.tostring(idCitation, pretty_print=True, encoding="utf-8").decode())
+        #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
         del date
 
         # ######################################################################
@@ -582,7 +582,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
         del citRespParty_root, citRespParty_email
         del idCitation_dict
 
-        #print(etree.tostring(idCitation, pretty_print=True, encoding="utf-8").decode())
+        #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
         del xml, citRespParty
         del idCitation
 
@@ -632,7 +632,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
         else:
             pass
         #print(etree.tostring(Esri, encoding="utf-8").decode())
-        #print(etree.tostring(dataIdInfo, pretty_print=True, encoding="utf-8").decode())
+        #print(etree.tostring(dataIdInfo, encoding="utf-8", pretty_print=True).decode())
         del tpCat, tpCat_dict
 
         del dataIdInfo
@@ -667,7 +667,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
                 del i
         else:
             pass
-        #print(etree.tostring(idCitation, pretty_print=True, encoding="utf-8").decode())
+        #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
         del mdChar
 
         # ######################################################################
@@ -743,7 +743,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
                 del i
         else:
             pass
-        #print(etree.tostring(idCitation, pretty_print=True, encoding="utf-8").decode())
+        #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
 
 ##   #
 ##   #        elif len(citRespParty) == 1:
@@ -793,7 +793,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
 ##   #        else:
 ##   #            pass
 ##   #        del new_cit_resp_party_email, new_cit_resp_party_root
-##   #        #print(etree.tostring(idCitation, pretty_print=True, encoding="utf-8").decode())
+##   #        #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
 ##   #        del xml, citRespParty
 
         del contact_dict, mdContact_root, mdContact_email
@@ -824,7 +824,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
                 del i
         else:
             pass
-        #print(etree.tostring(idCitation, pretty_print=True, encoding="utf-8").decode())
+        #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
         del mdDateSt
 
         mdFileID = target_tree.xpath(f"./mdFileID")
@@ -1508,7 +1508,7 @@ def update_xml_elements(species_range_fc="", fc_metadata_xml_file=""):
 
 
 ##        # Parse the XML
-##        parser = etree.XMLParser(remove_blank_text=True, encoding='UTF-8')
+##        parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
 ##        target_name = os.path.basename(fc_metadata_xml_file).replace(".xml", "")
 ##        target_tree = etree.parse(fc_metadata_xml_file, parser=parser)
 ##        target_root = target_tree.getroot()
@@ -1591,7 +1591,7 @@ def insert_xml_elements(fc_metadata_xml_file=""):
         #pretty_format_xml_file(fc_metadata_xml_file)
 
         # Parse the XML
-        parser = etree.XMLParser(remove_blank_text=True, encoding='UTF-8')
+        parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
         target_name = os.path.basename(fc_metadata_xml_file).replace(".xml", "")
         target_tree = etree.parse(fc_metadata_xml_file, parser=parser)
         target_root = target_tree.getroot()
@@ -1627,7 +1627,7 @@ def insert_xml_elements(fc_metadata_xml_file=""):
                     <CreaDate></CreaDate>
                     <CreaTime></CreaTime>
                     <ArcGISFormat>1.0</ArcGISFormat>
-                    <ArcGISStyle>ISO 19139 Metadata Implementation Specification</ArcGISStyle>
+                    <ArcGISstyle>ISO 19139 Metadata Implementation Specification</ArcGISstyle>
                     <SyncOnce>FALSE</SyncOnce>
                     <DataProperties>
                         <itemProps>
@@ -2152,7 +2152,7 @@ def check_update_metadata_root_items(project_gdb=""):
             dataset_md_xml = dataset_md.xml
 
             # Parse the XML
-            parser = etree.XMLParser(remove_blank_text=True, encoding='UTF-8')
+            parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
             tree = etree.parse(StringIO(dataset_md_xml), parser=parser)
             root = tree.getroot()
             del parser
@@ -2435,7 +2435,7 @@ def update_eainfo(project_gdb=""):
             dataset_md_xml = dataset_md.xml
 
             # Parse the XML
-            parser = etree.XMLParser(remove_blank_text=True, encoding='UTF-8')
+            parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
             tree = etree.parse(StringIO(dataset_md_xml), parser=parser)
             root = tree.getroot()
             del parser
@@ -2540,7 +2540,7 @@ def update_dataIdInfo(project_gdb=""):
                      "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
 
         esri_dict ={"CreaDate" : 0,  "CreaTime" : 1, "ArcGISFormat" : 2,
-                    "ArcGISStyle" : 3, "SyncOnce" : 4, "DataProperties" : 5,
+                    "ArcGISstyle" : 3, "SyncOnce" : 4, "DataProperties" : 5,
                     "itemProps" : 0, "itemName" : 0, "imsContentType" : 1,
                     "nativeExtBox" : 2, "westBL" : 0, "eastBL" : 1, "southBL" : 2,
                     "northBL" : 3, "exTypeCode" : 4, "coordRef" : 1, "type" : 0,
@@ -2584,7 +2584,7 @@ def update_dataIdInfo(project_gdb=""):
             dataset_md_xml = dataset_md.xml
 
             # Parse the XML
-            parser = etree.XMLParser(remove_blank_text=True, encoding='UTF-8')
+            parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
             tree = etree.parse(StringIO(dataset_md_xml), parser=parser)
             root = tree.getroot()
             del parser
@@ -2826,183 +2826,6 @@ def update_dataIdInfo(project_gdb=""):
     finally:
         pass
 
-def update_contacts(project_gdb=""):
-    try:
-        # Imports
-        from lxml import etree
-        from io import StringIO
-        import copy
-        from arcpy import metadata as md
-
-        # Project modules
-        from src.project_tools import pretty_format_xml_file
-
-        arcpy.env.overwriteOutput          = True
-        arcpy.env.parallelProcessingFactor = "100%"
-        arcpy.SetLogMetadata(True)
-        arcpy.SetSeverityLevel(2)
-        arcpy.SetMessageLevels(['NORMAL']) # NORMAL, COMMANDSYNTAX, DIAGNOSTICS, PROJECTIONTRANSFORMATION
-
-        project_folder = os.path.dirname(project_gdb)
-        scratch_folder      = rf"{project_folder}\Scratch"
-
-        root_dict = {"Esri"       :  0, "dataIdInfo" :  1, "mdChar"      :  2,
-                     "mdContact"  :  3, "mdDateSt"   :  4, "mdFileID"    :  5,
-                     "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
-                     "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
-                     "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
-                     "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
-                     "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
-
-        RoleCd_dict = {"001" : "Resource Provider", "002" : "Custodian",
-                       "003" : "Owner",             "004" : "User",
-                       "005" : "Distributor",       "006" : "Originator",
-                       "007" : "Point of Contact",  "008" : "Principal Investigator",
-                       "009" : "Processor",         "010" : "Publisher",
-                       "011" : "Author",            "012" : "Collaborator",
-                       "013" : "Editor",            "014" : "Mediator",
-                       "015" : "Rights Holder",}
-
-        workspaces = [project_gdb]
-
-        contacts_xml = rf"{os.environ['USERPROFILE']}\Documents\ArcGIS\Descriptions\contacts.xml"
-        parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
-        contacts_xml_tree = etree.parse(contacts_xml, parser=parser) # To parse from a string, use the fromstring() function instead.
-        del parser
-        del contacts_xml
-        contacts_xml_root = contacts_xml_tree.getroot()
-        #etree.indent(contacts_xml_root, space="  ")
-        #print(etree.tostring(contacts_xml_root, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
-
-        for workspace in workspaces:
-
-            arcpy.env.workspace        = workspace
-            arcpy.env.scratchWorkspace = rf"{scratch_folder}\scratch.gdb"
-
-            datasets = list()
-
-            walk = arcpy.da.Walk(workspace)
-
-            for dirpath, dirnames, filenames in walk:
-                for filename in filenames:
-                    datasets.append(os.path.join(dirpath, filename))
-                    del filename
-                del dirpath, dirnames, filenames
-            del walk
-
-            for dataset_path in sorted(datasets):
-                #print(dataset_path)
-                dataset_name = os.path.basename(dataset_path)
-
-                #print(f"Dataset Name:     {dataset_name}")
-                #print(f"\tDataset Location: {os.path.basename(os.path.dirname(dataset_path))}")
-
-                dataset_md = md.Metadata(dataset_path)
-                dataset_md_xml = dataset_md.xml
-                del dataset_md
-
-                # Parse the XML
-                parser = etree.XMLParser(remove_blank_text=True, encoding='UTF-8')
-                tree = etree.parse(StringIO(dataset_md_xml), parser=parser)
-                root = tree.getroot()
-                del parser, dataset_md_xml
-
-                # print(etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
-                # etree.indent(tree, space='   ')
-                # tree.write(xml_file, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True)
-
-                print(f"Dataset Name: {dataset_name}")
-
-                contact_parents = root.xpath(f".//eMailAdd/text()/ancestor::*//rpIndName/text()/ancestor::*//rpIndName/..")
-                #contact_parents = copy.deepcopy(root.xpath(f".//eMailAdd/text()/ancestor::*//rpIndName/text()/ancestor::*//rpIndName/.."))
-                #contact_parents = root.xpath(f".//eMailAdd/text()/ancestor::rpCntInfo/..")
-
-                if len(contact_parents) > 0:
-                    #count = 0
-                    for contact_parent in contact_parents:
-                        #count+=1
-                        old_contact_parent = contact_parent.tag
-                        #print(old_contact_parent)
-                        #print(etree.tostring(contact_parent, encoding="utf-8",  method='xml', pretty_print=True).decode())
-
-                        user_name = contact_parent.find(f"./rpIndName").text
-                        print(f"\tUser Name:     {user_name}")
-                        email_address = contact_parent.find(f".//eMailAdd").text
-                        print(f"\tEmail Address: {email_address}")
-                        user_role = contact_parent.find(f".//RoleCd")
-                        print(f"\tRole:          {user_role.attrib}")
-
-                        contact_root = root.xpath(f".//eMailAdd[text()='{email_address}']/ancestor::{old_contact_parent}/rpIndName[text()='{user_name}']/..")
-                        #contact_root = copy.deepcopy(root.xpath(f".//eMailAdd[text()='{email_address}']/ancestor::{old_contact_parent}/rpIndName[text()='{user_name}']/.."))
-                        #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', pretty_print=True).decode())
-
-                        #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', pretty_print=True).decode())
-
-                        new_contact_root = contacts_xml_root.xpath(f".//eMailAdd[text()='{email_address}']/ancestor::contact/rpIndName[text()='{user_name}']/ancestor::contact/editorSave[text()='True']/..")
-
-                        if len(new_contact_root) == 1:
-                            new_contact = copy.deepcopy(new_contact_root[0])
-                            new_contact.tag = old_contact_parent
-                            new_contact.append(contact_root[0].find(f".//role"))
-                            #print(etree.tostring(new_contact, encoding="utf-8",  method='xml', pretty_print=True).decode())
-
-                            #contact_root[0].getparent().replace(contact_root[0], new_contact)
-                            #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', pretty_print=True).decode())
-
-                            del new_contact
-
-                        del new_contact_root, contact_root
-                        del user_role, email_address, user_name
-                        del old_contact_parent, contact_parent
-
-                dataset_md = md.Metadata(dataset_path)
-                dataset_md.xml = etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode()
-                dataset_md.save()
-                dataset_md.synchronize("ALWAYS")
-                del dataset_md
-
-                del contact_parents
-                del dataset_name, dataset_path
-                del root, tree
-
-                #dataset_md = md.Metadata(dataset_path)
-                #dataset_md.xml = etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode()
-                #dataset_md.save()
-                #dataset_md.synchronize("ALWAYS")
-                #del dataset_md
-
-                #del dataset_md_xml
-                #del dataset_name, dataset_path
-                #del root, tree
-
-            del datasets
-            del workspace
-
-        # Variables set in function
-        del contacts_xml_root, contacts_xml_tree
-        del RoleCd_dict, root_dict
-        del project_gdb, project_folder, scratch_folder
-        del workspaces
-
-        # Imports
-
-        del md, etree, StringIO, copy
-
-        # Function Parameters
-        del base_project_file, project_name
-
-    except Exception:
-        traceback.print_exc()
-    except:
-        traceback.print_exc()
-    else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith('__')]
-        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
-        return True
-    finally:
-        pass
-
 def main(project_gdb=""):
     try:
         from time import gmtime, localtime, strftime, time
@@ -3037,16 +2860,9 @@ def main(project_gdb=""):
             update_dataIdInfo(project_gdb=project_gdb)
         del UpdateDataIdInfo
 
-        UpdateContacts = False
-        if UpdateContacts:
-            update_contacts(project_gdb=project_gdb)
-        else:
-            pass
-        del UpdateContacts
-
         #from lxml import etree
-        #dataset_md_xml = r'C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\ArcPy Studies\XML\nmfs-species-range-metatdata\WhaleNorthAtlanticRight_20201215.xml'
-        #parser = etree.XMLParser(remove_blank_text=True, encoding='UTF-8')
+        #dataset_md_xml = r'{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\ArcPy Studies\XML\nmfs-species-range-metatdata\WhaleNorthAtlanticRight_20201215.xml'
+        #parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
         #tree = etree.parse(dataset_md_xml, parser=parser)
         #root = tree.getroot()
         #del parser
@@ -3062,7 +2878,7 @@ def main(project_gdb=""):
         elapse_time =  end_time - start_time
 
         print(f"\n{'-' * 80}")
-        print(f"Python script: {os.path.basename(__file__)} completed {strftime('%a %b %d %I:%M %p', localtime())}")
+        print(f"Python script: {os.path.basename(__file__)}\nCompleted: {strftime('%a %b %d %I:%M %p', localtime())}")
         print(u"Elapsed Time {0} (H:M:S)".format(strftime("%H:%M:%S", gmtime(elapse_time))))
         print(f"{'-' * 80}")
         del elapse_time, end_time, start_time

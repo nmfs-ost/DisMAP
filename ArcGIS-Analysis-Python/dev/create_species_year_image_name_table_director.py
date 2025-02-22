@@ -545,7 +545,7 @@ def main(project=""):
 
         project_gdb         = rf"{base_project_folder}\{project}\{project}.gdb"
 
-  del base_project_folder
+        del base_project_folder
 
         # Test if passed workspace exists, if not raise SystemExit
         if not arcpy.Exists(project_gdb):

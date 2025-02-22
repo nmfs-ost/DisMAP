@@ -14,7 +14,7 @@ def MakeRec_LL(llx, lly, w, h):
 try:
     aprx = arcpy.mp.ArcGISProject("CURRENT")
 
-    #aprx = arcpy.mp.ArcGISProject(rf"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\DisMAP.aprx")
+    #aprx = arcpy.mp.ArcGISProject(rf"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\DisMAP.aprx")
 
     #
     project = "July 1 2024"

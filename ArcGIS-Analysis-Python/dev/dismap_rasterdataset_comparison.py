@@ -28,9 +28,9 @@ def GenerateRasterDatasetReport():
         #table_names = ["AI_IDW"]
         #table_names = ["AI_IDW", "EBS_IDW", "ENBS_IDW", "GMEX_IDW", "GOA_IDW", "HI_IDW", "NBS_IDW", "NEUS_FAL_IDW", "NEUS_SPR_IDW", "SEUS_FAL_IDW", "SEUS_SPR_IDW", "SEUS_SUM_IDW", "WC_GLMME", "WC_GFDL", "WC_ANN_IDW", "WC_TRI_IDW",]
 
-##        C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\April 1 2023
-##            C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\April 1 2023\April 1 2023.gdb
-##            C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\April 1 2023\Bathymetry\Bathymetry.gdb
+##        {os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\April 1 2023
+##            {os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\April 1 2023\April 1 2023.gdb
+##            {os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\April 1 2023\Bathymetry\Bathymetry.gdb
 ##        F:\ArcGIS Analysis - Python\April 1 2023
 ##            F:\ArcGIS Analysis - Python\April 1 2023\Alaska.gdb
 ##            F:\ArcGIS Analysis - Python\April 1 2023\Bathymetry.gdb
@@ -65,8 +65,8 @@ def GenerateRasterDatasetReport():
 ##        #ws = r"F:\ArcGIS Analysis - Python\April 1 2023\Bathymetry.gdb"
 ##        #ws = r"F:\DisMAP\ArcGIS Analysis - Python\April 1 2023\DisMAP April 1 2023 Prod.gdb"
 ##        #ws = r"F:\DisMAP\ArcGIS Analysis - Python\April 1 2023\Bathymetry.gdb"
-##        #ws = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\April 1 2023\April 1 2023.gdb"
-##        #ws = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\Bathymetry\Bathymetry.gdb"
+##        #ws = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\April 1 2023\April 1 2023.gdb"
+##        #ws = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\Bathymetry\Bathymetry.gdb"
 
         wild_card    = "*Bathymetry"
         #wild_card    = "Raster_Mask"
@@ -75,8 +75,8 @@ def GenerateRasterDatasetReport():
 
         #top_level_workspace = r"F:\ArcGIS Analysis - Python"
         #top_level_workspace = r"F:\DisMAP"
-        #top_level_workspace = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects"
-        top_level_workspaces = [r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\April 1 2023",
+        #top_level_workspace = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects"
+        top_level_workspaces = [r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\April 1 2023",
                                 r"F:\ArcGIS Analysis - Python\April 1 2023",
                                 r"F:\DisMAP\ArcGIS Analysis - Python\April 1 2023"]
 
@@ -426,10 +426,10 @@ def generate_raster_properties(ws="", table_names="", wc=""):
 def main():
     try:
 
-##        C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\April 1 2023
-##            C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\Bathymetry\Bathymetry.gdb
-##            C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\April 1 2023\April 1 2023.gdb
-##            C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\April 1 2023\Bathymetry\Bathymetry.gdb
+##        {os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\April 1 2023
+##            {os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\Bathymetry\Bathymetry.gdb
+##            {os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\April 1 2023\April 1 2023.gdb
+##            {os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\April 1 2023\Bathymetry\Bathymetry.gdb
 ##        F:\ArcGIS Analysis - Python\April 1 2023
 ##            F:\ArcGIS Analysis - Python\April 1 2023\Bathymetry.gdb
 ##            F:\ArcGIS Analysis - Python\April 1 2023\DisMAP April 1 2023 Dev.gdb
@@ -438,16 +438,16 @@ def main():
 ##            F:\ArcGIS Analysis - Python\April 1 2023\DisMAP Project April 1 2023.gdb
 
 
-        #ws = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\April 1 2023\Bathymetry\Bathymetry.gdb"
-        #ws = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\Bathymetry\Bathymetry.gdb"
+        #ws = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\April 1 2023\Bathymetry\Bathymetry.gdb"
+        #ws = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\Bathymetry\Bathymetry.gdb"
         #ws = r"F:\ArcGIS Analysis - Python\April 1 2023\Bathymetry.gdb"
         #ws = r"F:\ArcGIS Analysis - Python\April 1 2023\DisMAP April 1 2023 Dev.gdb"
         #ws = r"F:\ArcGIS Analysis - Python\April 1 2023\DisMAP April 1 2023 Prod.gdb"
         #ws = r"E:\DisMAP WI 20230426\April 1 2023\DisMAP April 1 2023 Prod.gdb"
         #ws = r"F:\ArcGIS Analysis - Python\April 1 2023\DisMAP April 1 2023 Test.gdb"
         #ws = r"F:\ArcGIS Analysis - Python\April 1 2023\DisMAP Project April 1 2023.gdb"
-        #ws = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\April 1 2023\April 1 2023.gdb"
-        ws = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\May 1 2024\May 1 2024.gdb"
+        #ws = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\April 1 2023\April 1 2023.gdb"
+        ws = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\May 1 2024\May 1 2024.gdb"
 
         # "AI_IDW", "EBS_IDW", "ENBS_IDW", "GMEX_IDW", "GOA_IDW", "HI_IDW", "NBS_IDW", "NEUS_FAL_IDW", "NEUS_SPR_IDW",
         # "SEUS_FAL_IDW", "SEUS_SPR_IDW", "SEUS_SUM_IDW", "WC_GLMME", "WC_GFDL", "WC_ANN_IDW", "WC_TRI_IDW",

@@ -59,7 +59,7 @@ def _add_basic_metadata(dataset_name, dataset_md, metadata_dictionary):
         traceback.print_exc()
         raise Exception
 
-def update_contacts(base_project_file="", project_name=""):
+def update_existing_contacts(project_gdb=""):
     try:
         # Imports
         from lxml import etree
@@ -67,25 +67,15 @@ def update_contacts(base_project_file="", project_name=""):
         import copy
         from arcpy import metadata as md
 
-        import dismap
-        importlib.reload(dismap)
-        from dismap import dataset_title_dict, parse_xml_file_format_and_save
-
         arcpy.env.overwriteOutput          = True
         arcpy.env.parallelProcessingFactor = "100%"
         arcpy.SetLogMetadata(True)
         arcpy.SetSeverityLevel(2)
         arcpy.SetMessageLevels(['NORMAL']) # NORMAL, COMMANDSYNTAX, DIAGNOSTICS, PROJECTIONTRANSFORMATION
 
-        base_project_folder = rf"{os.path.dirname(base_project_file)}"
-        base_project_file   = rf"{base_project_folder}\DisMAP.aprx"
-        project_folder      = rf"{base_project_folder}\{project_name}"
-        project_gdb         = rf"{project_folder}\{project_name}.gdb"
-        metadata_folder     = rf"{project_folder}\Template Metadata"
-        crfs_folder         = rf"{project_folder}\CRFs"
-        scratch_folder      = rf"{project_folder}\Scratch"
-
-        if not os.path.isdir(metadata_folder): os.mkdir(metadata_folder)
+        project_folder = os.path.dirname(project_gdb)
+        crfs_folder    = rf"{project_folder}\CRFs"
+        scratch_folder = rf"{project_folder}\Scratch"
 
         root_dict = {"Esri"       :  0, "dataIdInfo" :  1, "mdChar"      :  2,
                      "mdContact"  :  3, "mdDateSt"   :  4, "mdFileID"    :  5,
@@ -103,8 +93,6 @@ def update_contacts(base_project_file="", project_name=""):
                        "011" : "Author",            "012" : "Collaborator",
                        "013" : "Editor",            "014" : "Mediator",
                        "015" : "Rights Holder",}
-
-        metadata_dictionary = dataset_title_dict(project_gdb)
 
         workspaces = [project_gdb, crfs_folder]
 
@@ -145,7 +133,7 @@ def update_contacts(base_project_file="", project_name=""):
                 del dataset_md
 
                 # Parse the XML
-                parser = etree.XMLParser(remove_blank_text=True, encoding='UTF-8')
+                parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
                 tree = etree.parse(StringIO(dataset_md_xml), parser=parser)
                 root = tree.getroot()
                 del parser, dataset_md_xml
@@ -166,8 +154,7 @@ def update_contacts(base_project_file="", project_name=""):
                         #count+=1
                         old_contact_parent = contact_parent.tag
                         print(f"\tContact Parent: {old_contact_parent}")
-                        #print(etree.tostring(contact_parent, encoding="utf-8",  method='xml', pretty_print=True).decode())
-
+                        #print(etree.tostring(contact_parent, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
 
                         if isinstance(contact_parent.find(f"./rpCntInfo"), type(None)):
                             _xml = etree.XML('<rpCntInfo><cntAddress addressType="both"><delPoint></delPoint><city></city><adminArea></adminArea> \
@@ -220,28 +207,6 @@ def update_contacts(base_project_file="", project_name=""):
                                 contact_parent.append(_xml)
                                 del _xml
 
-##                            if not isinstance(contact_parent.find(f".//eMailAdd"), type(None)):
-##                                email_address = contact_parent.find(f".//eMailAdd")
-##                                #print(f"\t\tEmail Address: {email_address}")
-##                                if not email_address.text:
-##                                    _user_name = contact_parent.find(f"./rpIndName").text
-##                                    _email_address = _user_name.lower().replace(" ", ".") + "@noaa.gov"
-##                                    email_address.text = _email_address
-##                                    del _email_address, _user_name
-##                                else:
-##                                    pass
-##                            else:
-##                                pass
-##                                _rpCntInfo = contact_parent.find(f".//rpCntInfo")
-##                                _cntAddress = _rpCntInfo.find(f".//cntAddress")
-##                                _user_name = contact_parent.find(f"./rpIndName").text
-##                                #print(f"\t\tUser Name:     {_user_name}")
-##                                _email_address = _user_name.lower().replace(" ", ".") + "@noaa.gov"
-##                                _xml = etree.XML(f'<eMailAdd>{_email_address}</eMailAdd>')
-##                                # Append element
-##                                _cntAddress.append(_xml)
-##                                del _xml, _user_name, _cntAddress, _rpCntInfo
-
                         if old_contact_parent == "distorCont":
                             if not isinstance(contact_parent.find(f"./role"), type(None)):
                                 user_role = contact_parent.find(f".//RoleCd")
@@ -272,32 +237,6 @@ def update_contacts(base_project_file="", project_name=""):
                                 contact_parent.append(_xml)
                                 del _xml
 
-
-                        #if count == 1:
-                        #    _xml = etree.XML('<role><RoleCd value="011"/></role>')
-                        #    # Append element
-                        #    contact_root[0].append(_xml)
-                        #    # Change element name
-                        #    contact_parent.tag = "mdContact"
-                        #    del _xml
-                        #elif count == 2:
-                        #    _xml = etree.XML('<role><RoleCd value="005"/></role>')
-                        #    contact_root[0].append(_xml)
-                        #    contact_parent.tag = "distributor"
-                        #    del _xml
-                        #elif count == 3:
-                        #    _xml = etree.XML('<role><RoleCd value="002"/></role>')
-                        #    contact_root[0].append(_xml)
-                        #    contact_parent.tag = "citRespParty"
-                        #    del _xml
-                        #elif count == 4:
-                        #    _xml = etree.XML('<role><RoleCd value="007"/></role>')
-                        #    contact_root[0].append(_xml)
-                        #    contact_parent.tag = "idPoC"
-                        #    del _xml
-
-
-
                         if not isinstance(contact_parent.find(f"./rpIndName"), type(None)):
                             user_name = contact_parent.find(f"./rpIndName").text
                             print(f"\t\tUser Name:     {user_name}")
@@ -315,50 +254,10 @@ def update_contacts(base_project_file="", project_name=""):
                         else:
                             user_role = ""
 
-
-##                            #if count == 1:
-##                            #    _xml = etree.XML('<role><RoleCd value="011"/></role>')
-##                            #    # Append element
-##                            #    contact_root[0].append(_xml)
-##                            #    # Change element name
-##                            #    contact_parent.tag = "mdContact"
-##                            #    del _xml
-##                            #elif count == 2:
-##                            #    _xml = etree.XML('<role><RoleCd value="005"/></role>')
-##                            #    contact_root[0].append(_xml)
-##                            #    contact_parent.tag = "distributor"
-##                            #    del _xml
-##                            #elif count == 3:
-##                            #    _xml = etree.XML('<role><RoleCd value="002"/></role>')
-##                            #    contact_root[0].append(_xml)
-##                            #    contact_parent.tag = "citRespParty"
-##                            #    del _xml
-##                            #elif count == 4:
-##                            #    _xml = etree.XML('<role><RoleCd value="007"/></role>')
-##                            #    contact_root[0].append(_xml)
-##                            #    contact_parent.tag = "idPoC"
-##                            #    del _xml
-##                            #User Name:     John F Kennedy
-##                            #Email Address: john.f.kennedy@noaa.gov
-##                            #Role:          {'value': '011'}
-##                            #   <role><RoleCd value="011"/></role>
-##                            #User Name:     Timothy J Haverland
-##                            #Email Address: tim.haverland@noaa.gov
-##                            #Role:          {'value': '005'}
-##                            #   <role><RoleCd value="005"/></role>
-##                            #User Name:     Timothy J Haverland
-##                            #Email Address: tim.haverland@noaa.gov
-##                            #Role:          {'value': '002'}
-##                            #   <role><RoleCd value="002"/></role>
-##                            #User Name:     Melissa Ann Karp
-##                            #Email Address: melissa.karp@noaa.gov
-##                            #Role:          {'value': '007'}
-##                            #   <role><RoleCd value="007"/></role>
-
                         contact_root = root.xpath(f".//eMailAdd[text()='{email_address}']/ancestor::{old_contact_parent}/rpIndName[text()='{user_name}']/..")
                         #contact_root = copy.deepcopy(root.xpath(f".//eMailAdd[text()='{email_address}']/ancestor::{old_contact_parent}/rpIndName[text()='{user_name}']/.."))
-                        #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', pretty_print=True).decode())
-                        #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', pretty_print=True).decode())
+                        #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
+                        #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
 
                         new_contact_root = contacts_xml_root.xpath(f".//eMailAdd[text()='{email_address}']/ancestor::contact/rpIndName[text()='{user_name}']/ancestor::contact/editorSave[text()='True']/..")
 
@@ -369,7 +268,7 @@ def update_contacts(base_project_file="", project_name=""):
                             #print(etree.tostring(new_contact, encoding="utf-8",  method='xml', pretty_print=True).decode())
 
                             contact_root[0].getparent().replace(contact_root[0], new_contact)
-                            #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', pretty_print=True).decode())
+                            #print(etree.tostring(contact_root[0], encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
 
                             del new_contact
 
@@ -392,16 +291,14 @@ def update_contacts(base_project_file="", project_name=""):
         # Variables set in function
         del contacts_xml_root, contacts_xml_tree
         del RoleCd_dict, root_dict
-        del project_gdb, base_project_folder, metadata_folder
-        del project_folder, scratch_folder, crfs_folder
-        del metadata_dictionary, workspaces
+        del project_folder, crfs_folder, scratch_folder
+        del workspaces
 
         # Imports
-        del dismap, dataset_title_dict, parse_xml_file_format_and_save
         del md, etree, StringIO, copy
 
         # Function Parameters
-        del base_project_file, project_name
+        del project_gdb
 
     except Exception:
         traceback.print_exc()
@@ -2688,7 +2585,1378 @@ def create_maps(base_project_file="", project_name="", dataset=""):
     finally:
         pass
 
-def main(base_project_folder="", project_name=""):
+def update_xml_elements(project_gdb="", contacts=""):
+    try:
+        # Imports
+        from lxml import etree
+        from io import StringIO
+        import copy
+        import arcpy
+        from arcpy import metadata as md
+        # Project modules
+        #from src.project_tools import pretty_format_xml_file
+
+        arcpy.env.overwriteOutput          = True
+        arcpy.env.parallelProcessingFactor = "100%"
+        arcpy.SetLogMetadata(True)
+        arcpy.SetSeverityLevel(2)
+        arcpy.SetMessageLevels(['NORMAL']) # NORMAL, COMMANDSYNTAX, DIAGNOSTICS, PROJECTIONTRANSFORMATION
+
+        project_folder = os.path.dirname(project_gdb)
+        crfs_folder    = rf"{project_folder}\CRFs"
+        scratch_folder = rf"{project_folder}\Scratch"
+
+        root_dict = {"Esri"       :  0, "dataIdInfo" :  1, "mdChar"      :  2,
+                     "mdContact"  :  3, "mdDateSt"   :  4, "mdFileID"    :  5,
+                     "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
+                     "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
+                     "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
+                     "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
+                     "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
+
+        esri_dict ={"CreaDate" : 0,  "CreaTime" : 1, "ArcGISFormat" : 2,
+                    "ArcGISstyle" : 3, "SyncOnce" : 4, "DataProperties" : 5,
+                    "itemProps" : 0, "itemName" : 0, "imsContentType" : 1,
+                    "nativeExtBox" : 2, "westBL" : 0, "eastBL" : 1, "southBL" : 2,
+                    "northBL" : 3, "exTypeCode" : 4, "coordRef" : 1, "type" : 0,
+                    "geogcsn" : 2, "csUnits" : 3, "peXml" : 4, "SyncDate" : 6,
+                    "SyncTime" : 7, "ModDate" : 8, "ModTime" : 9,
+                    "scaleRange" : 10, "minScale" : 11, "maxScale" : 12,
+                    "ArcGISProfile" : 13,}
+
+        idCitation_dict = {"idCitation" : 0, "resTitle" : 0, "resAltTitle" : 1,
+                           "collTitle"  : 2, "presForm" : 3, "PresFormCd"  : 0,
+                           "fgdcGeoform" : 1, "date" : 4, "createDate" : 0,
+                           "pubDate"    : 1, "revisedDate" : 2, "citRespParty"  : 6,
+                           }
+
+        dataIdInfo_dict = { "idCitation" :  0, "searchKeys" :  1, "idPurp"   : 2,
+                            "idAbs"      :  3, "idCredit"   :  4, "idStatus" : 5,
+                            "idPoC"      :  6, "themeKeys"  :  7, "placeKeys" : 8,
+                            "tempKeys" : 9, "resConst" : 12,
+                            "resMaint"   : 13, "envirDesc"  : 14, "dataLang" : 15,
+                            "dataChar"   : 16, "spatRpType" : 17, "dataExt"  : 18,
+                            "spatRpType" : 19, "tpCat"      : 20,}
+
+        contact_dict = {"editorSource" : 0, "editorDigest" : 1,"rpIndName" : 2,
+                        "rpOrgName"    : 3, "rpPosName"    : 4, "rpCntInfo" : 5,
+                        "cntAddress"   : 0, "delPoint" : 0, "city" : 1,
+                        "adminArea"    : 2, "postCode" : 3, "eMailAdd" : 4,
+                        "country"      : 5, "cntPhone" : 1, "voiceNum" : 0,
+                        "faxNum"       : 1, "cntHours" : 2, "cntOnlineRes" : 3,
+                        "linkage"      : 0, "protocol" : 1, "orName" : 2,
+                        "orDesc"       : 3, "orFunct"  : 4, "OnFunctCd" : 0,
+                        "editorSave"   : 6, "displayName"  : 7, "role" : 8,
+                        "RoleCd"     : 0,
+                        }
+
+        dqInfo_dict = { "dqScope" : 0, "scpLvl" : 0, "ScopeCd" : 0,
+                        "scpLvlDesc" : 1, "datasetSet" : 0, "report" : 1,
+                        "measDesc" : 0, "report" : 2, "measDesc" : 0,
+                        "dataLineage" : 3, "statement" : 0, "dataSource" : 1,
+                        "srcDesc" : 0, "srcCitatn" : 1, "resTitle" : 0,
+                        "date" : 1, "createDate" : 0, "prcStep" : 2,
+                        "stepDesc" : 0, "stepProc" : 1, "stepDateTm" : 2,
+                      }
+        RoleCd_dict = {"001" : "Resource Provider", "002" : "Custodian",
+                       "003" : "Owner",             "004" : "User",
+                       "005" : "Distributor",       "006" : "Originator",
+                       "007" : "Point of Contact",  "008" : "Principal Investigator",
+                       "009" : "Processor",         "010" : "Publisher",
+                       "011" : "Author",            "012" : "Collaborator",
+                       "013" : "Editor",            "014" : "Mediator",
+                       "015" : "Rights Holder",}
+
+        tpCat_dict = {"002": '<tpCat><TopicCatCd value="002"></TopicCatCd></tpCat>',
+         "007": '<tpCat><TopicCatCd value="007"></TopicCatCd></tpCat>',
+         "014": '<tpCat><TopicCatCd value="014"></TopicCatCd></tpCat>',}
+
+        workspaces = [project_gdb, crfs_folder]
+
+        contacts_xml = rf"{os.environ['USERPROFILE']}\Documents\ArcGIS\Descriptions\contacts.xml"
+        parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
+        contacts_xml_tree = etree.parse(contacts_xml, parser=parser) # To parse from a string, use the fromstring() function instead.
+        del parser
+        del contacts_xml
+        contacts_xml_root = contacts_xml_tree.getroot()
+        #etree.indent(contacts_xml_root, space="  ")
+        #print(etree.tostring(contacts_xml_root, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
+
+        for workspace in workspaces:
+            arcpy.env.workspace        = workspace
+            arcpy.env.scratchWorkspace = rf"{scratch_folder}\scratch.gdb"
+            datasets = list()
+            walk = arcpy.da.Walk(workspace)
+            for dirpath, dirnames, filenames in walk:
+                for filename in filenames:
+                    datasets.append(os.path.join(dirpath, filename))
+                    del filename
+                del dirpath, dirnames, filenames
+            del walk
+            for dataset_path in sorted(datasets):
+                #print(dataset_path)
+                dataset_name = os.path.basename(dataset_path)
+                #print(f"Dataset Name:     {dataset_name}")
+                #print(f"\tDataset Location: {os.path.basename(os.path.dirname(dataset_path))}")
+
+                dataset_md = md.Metadata(dataset_path)
+                dataset_md_xml = dataset_md.xml
+                del dataset_md
+
+                # Parse the XML
+                parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
+                tree = etree.parse(StringIO(dataset_md_xml), parser=parser)
+                root = tree.getroot()
+                del parser, dataset_md_xml
+
+                # print(etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode())
+                # etree.indent(tree, space='   ')
+                # tree.write(xml_file, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True)
+
+                print(f"Dataset Name: {dataset_name}")
+
+                #etree.indent(root, space="    ")
+                #print(etree.tostring(root, xml_declaration=True, encoding="utf-8").decode())
+
+                # ######################################################################
+                #               ###--->>> Esri section Start <<<---###
+                # ######################################################################
+
+                # Check for ArcGISstyle
+                Esri = tree.xpath(f"./Esri")[0]
+                ArcGISstyle = Esri.xpath(f"./ArcGISstyle")
+                if len(ArcGISstyle) == 0:
+                    _xml = "<ArcGISstyle>ISO 19139 Metadata Implementation Specification</ArcGISstyle>"
+                    _root = etree.XML(_xml)
+                    position = esri_dict["ArcGISstyle"]
+                    Esri.insert(position, _root)
+                    del position, _root, _xml
+                elif len(ArcGISstyle) == 1:
+                    #print(f"{len(ArcGISstyle)} {ArcGISstyle[0].tag} element is found with value: {position}")
+                    ArcGISstyle[0].text = "ISO 19139 Metadata Implementation Specification"
+                elif len(ArcGISstyle) > 1:
+                    #print(f"Removing {len(ArcGISstyle)-1} 'ArcGISstyle' elements")
+                    for i in range(1, len(ArcGISstyle)):
+                        Esri.remove(ArcGISstyle[i])
+                        i+=1
+                        del i
+                else:
+                    pass
+                del Esri, ArcGISstyle
+
+                # ###--->>> Deletes an unwanted element
+                Esri = tree.xpath(f"./Esri")[0]
+                itemSize = Esri.xpath(f".//itemSize")
+                if len(itemSize) == 0:
+                    pass
+                elif len(itemSize) == 1:
+                    pass
+                    # Esri.remove(itemSize[0])
+                elif len(itemSize) > 1:
+                    #print(f"Removing {len(itemSize)-1} 'itemSize' elements")
+                    for i in range(1, len(itemSize)):
+                        #Esri.remove(itemSize[i])
+                        i+=1
+                        del i
+                else:
+                    pass
+                del itemSize
+                del Esri
+                # ###--->>> Deletes an unwanted element
+
+                # Check for scaleRange
+                Esri = tree.xpath(f"./Esri")[0]
+                scaleRange = Esri.xpath(f"./scaleRange")
+                if len(scaleRange) == 0:
+                    #print("Inserting scaleRange, minScale, maxScale")
+                    _xml = "<scaleRange><minScale>150000000</minScale><maxScale>5000</maxScale></scaleRange>"
+                    _root = etree.XML(_xml)
+                    #scale_range = etree.SubElement(Esri, "scaleRange")
+                    Esri.insert(esri_dict["scaleRange"], _root)
+                    #minScale    = etree.SubElement(scale_range, "minScale")
+                    #minScale.text = '150000000'
+                    #scaleRange.insert(esri_dict["minScale"], minScale)
+                    #maxScale    = etree.SubElement(scale_range, "maxScale")
+                    #maxScale.text = '5000'
+                    #scaleRange.insert(esri_dict["maxScale"], maxScale)
+                    # print(etree.tostring(scale_range, pretty_print=True).decode())
+                    del _root, _xml
+                elif len(scaleRange) == 1:
+                    pass
+                elif len(scaleRange) > 1:
+                    print(f"Removing {len(scaleRange)-1} 'scaleRange' elements")
+                    for i in range(1, len(scaleRange)):
+                        Esri.remove(scaleRange[i])
+                        i+=1
+                        del i
+                else:
+                    pass
+                #print(etree.tostring(Esri, encoding="utf-8", pretty_print=True).decode())
+                del scaleRange, Esri
+
+                # Check for ArcGISProfile
+                Esri = tree.xpath(f"./Esri")[0]
+                ArcGISProfile = Esri.xpath(f"./ArcGISProfile")
+                if len(ArcGISProfile) == 0:
+                    #print("Inserting ArcGISProfile")
+                    _xml = "<ArcGISProfile>ISO19139</ArcGISProfile>"
+                    _root = _root = etree.XML(_xml)
+                    #ArcGIS_Profile = etree.SubElement(Esri, "")
+                    #ArcGIS_Profile.text = 'ISO19139'
+                    Esri.insert(esri_dict["ArcGISProfile"], _root)
+                    #del ArcGIS_Profile
+                    del _root, _xml
+                elif len(ArcGISProfile) == 1:
+                    ArcGISProfile[0].text = 'ISO19139'
+                    #Esri.insert(esri_dict["ArcGISProfile"], ArcGISProfile[0])
+                elif len(ArcGISProfile) > 1:
+                    #print(f"Removing {len(ArcGISProfile)-1} 'ArcGISProfile' elements")
+                    for i in range(1, len(ArcGISProfile)):
+                        Esri.remove(ArcGISProfile[i])
+                        i+=1
+                        del i
+                else:
+                    pass
+                #print(etree.tostring(Esri, encoding="utf-8").decode())
+                del ArcGISProfile
+                del Esri
+
+                # ######################################################################
+                #               ###--->>> Esri section End <<<---###
+                # ######################################################################
+
+                # ######################################################################
+                #               ###--->>> dataIdInfo section Start <<<---###
+                # ######################################################################
+
+                # idCitation sub-section
+
+                envirDesc = tree.xpath(f"./dataIdInfo/envirDesc")
+                envirDesc[0].set("Sync", "TRUE")
+                #if len(envirDesc) == 0:
+                #    #print(f"Inserting envirDesc at {dataIdInfo_dict['envirDesc']}")
+                #    element = etree.SubElement(dataIdInfo, "envirDesc")
+                #    element.set("Sync", "TRUE")
+                #    dataIdInfo.insert(dataIdInfo_dict['envirDesc'], element)
+                #    del element
+                #elif len(envirDesc) == 1:
+                #    #print(f"Updating envirDesc if needed at index: {dataIdInfo.index(dataIdInfo.xpath(f'./envirDesc')[0])}")
+                #    envirDesc[0].set("Sync", "TRUE")
+                #    #dataIdInfo.insert(dataIdInfo_dict['envirDesc'], envirDesc[0])
+                #elif len(envirDesc) > 1:
+                #    pass
+                #else:
+                #    pass
+                del envirDesc
+                #envirDesc = dataIdInfo.xpath(f"./envirDesc")[0]
+                # print(f"Set envirDesc to TRUE")
+                #envirDesc.set("Sync", "TRUE")
+                #del envirDesc, dataIdInfo
+
+                # ######################################################################
+                # Resource Title
+                # ######################################################################
+
+                # idCitation sub-section
+                idCitation  = tree.xpath(f"./dataIdInfo/idCitation")[0]
+                resTitle = idCitation.xpath(f"./resTitle")
+                if len(resTitle) == 0:
+                    #print(f"Inserting resTitle {idCitation_dict['resTitle']}")
+                    _xml = f"<resTitle>{dataset_name}</resTitle>"
+                    _root = etree.XML(_xml)
+                    position = idCitation_dict['resTitle']
+                    idCitation.insert(position, _root)
+                    del position, _root, _xml
+                elif len(resTitle) == 1:
+                    #print(f"Updating resTitle if needed at index: {idCitation.index(idCitation.xpath(f'./resTitle')[0])}")
+                    if dataset_name not in resTitle[0].text:
+                        new_resTitle = resTitle[0].text + ". " + dataset_name
+                        resTitle[0].text = new_resTitle
+                        idCitation.insert(0, resTitle[0])
+                        del new_resTitle
+                    else:
+                        pass
+                elif len(resTitle) > 1:
+                    print(f"HEADSUP!! there are {len(resTitle)} resTitle elements")
+                    #print(len(resTitle))
+                    #print(resTitle)
+                    #print(resTitle[-1])
+                    #for res_title in resTitle:
+                    #    print(f"Removing resTitle at index: {idCitation.index(idCitation.xpath(f'./resTitle')[0])}")
+                    #    idCitation.remove(resTitle[-1])
+
+                else:
+                    pass
+                #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
+                del resTitle
+
+                # ######################################################################
+                # Resource Alternate Title
+                # ######################################################################
+
+                # idCitation sub-section
+                idCitation  = tree.xpath(f"./dataIdInfo/idCitation")[0]
+                resAltTitle = idCitation.xpath(f"./resAltTitle")
+                if len(resAltTitle) == 0:
+                    _xml = f"<resAltTitle>{dataset_name.replace('_', ' ')}</resAltTitle>"
+                    _root = etree.XML(_xml)
+                    position = idCitation_dict['resAltTitle']
+                    idCitation.insert(position, _root)
+                    del position, _root, _xml
+                elif len(resAltTitle) == 1:
+                    position = idCitation_dict['resAltTitle']
+                    #print(f"Updating resAltTitle if needed {position}")
+                    resAltTitle[0].text = f"{dataset_name.replace('_', ' ')}"
+                    if dataset_name not in resAltTitle[0].text:
+                        new_resAltTitle = resAltTitle[0].text + ". " + dataset_name
+                        resAltTitle[0].text = new_resAltTitle
+                        idCitation.insert(idCitation_dict['resAltTitle'], resAltTitle[0])
+                        del new_resAltTitle
+                    else:
+                        pass
+                    del position
+                elif len(resAltTitle) > 1:
+                    print(f"May need to delete: {len(resAltTitle)} resAltTitle")
+                else:
+                    pass
+                #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
+                del resAltTitle
+
+                # ######################################################################
+                # Collective Title
+                # ######################################################################
+
+                collTitle = idCitation.xpath(f"./collTitle")
+                if len(collTitle) == 0:
+                    _xml = f"<collTitle>NMFS DisMAP 2024</collTitle>"
+                    _root = etree.XML(_xml)
+                    position = idCitation_dict['collTitle']
+                    idCitation.insert(position, _root)
+                    del position, _root, _xml
+                elif len(collTitle) == 1:
+                    position = idCitation_dict['collTitle']
+                    #print(f"Updating collTitle if needed {position}")
+                    if 'NMFS DisMAP 2024' not in collTitle[0].text:
+                        new_rescollTitle = collTitle[0].text + ". " + 'NMFS DisMAP 2024'
+                        collTitle[0].text = new_rescollTitle
+                        del new_rescollTitle
+                    else:
+                        pass
+                    del position
+                elif len(collTitle) > 1:
+                    print(f"May need to delete: {len(collTitle)} collTitle")
+
+                else:
+                    pass
+                #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
+                del collTitle
+
+                # ######################################################################
+                # Presentation form
+                # ######################################################################
+
+                # presForm sub-section
+                presForm  = idCitation.xpath(f"./presForm")[0]
+                fgdcGeoform = presForm.xpath(f"./fgdcGeoform")
+                if len(fgdcGeoform) == 0:
+                    position = idCitation_dict['fgdcGeoform']
+                    #print(f"Inserting fgdcGeoform at {position}")
+                    element = etree.SubElement(presForm, "fgdcGeoform")
+                    element.text = 'vector digital data'
+                    del element, position
+                elif len(fgdcGeoform) == 1:
+                    position = idCitation_dict['fgdcGeoform']
+                    #print(f"Updating fgdcGeoform if needed {position}")
+                    fgdcGeoform[0].text = 'vector digital data'
+                    del position
+                elif len(fgdcGeoform) > 1:
+                    print(f"May need to delete: {len(fgdcGeoform)} fgdcGeoform")
+                else:
+                    pass
+                #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
+                del fgdcGeoform, presForm
+
+                # ######################################################################
+                # Publication Date
+                # ######################################################################
+
+                # presForm sub-section
+                date  = idCitation.xpath(f"./date")
+                if len(date) == 0:
+                    position = idCitation_dict['date']
+                    #print(f"Inserting date at position: {position}")
+                    element = etree.SubElement(idCitation, "date")
+                    createDate = etree.SubElement(element, "createDate")
+                    createDate.text = "2025-01-01T00:00:00"
+                    pubDate = etree.SubElement(element, "pubDate")
+                    pubDate.text = "2025-01-01T00:00:00"
+                    revisedDate = etree.SubElement(element, "revisedDate")
+                    revisedDate.text = "2025-01-01T00:00:00"
+                    idCitation.insert(position, element)
+                    del element, createDate, pubDate, revisedDate, position
+                elif len(date) == 1:
+                    #print(f"Updating date if needed at position: {idCitation.index(date[0])}")
+                    createDate = date[0].xpath(f"./createDate")
+                    if len(createDate) == 0:
+                        #print(f"\tInserting createDate at position: {idCitation.index(idCitation.xpath(f'./date')[0])}")
+                        createDate = etree.SubElement(date[0], "createDate")
+                        createDate.text = "2025-01-01T00:00:00"
+                        date.append(createDate)
+                    elif len(createDate) == 1:
+                        #print(f"Updating createDate if needed  at position: {date[0].index(date[0].xpath(f'./createDate')[0])}")
+                        createDate[0].text = "2025-01-01T00:00:00"
+                    elif len(createDate) > 1:
+                        #print(f"Removing {len(createDate)-1} createDate elements")
+                        for i in range(1, len(createDate)):
+                            date[0].remove(createDate[i])
+                            i+=1
+                            del i
+                    else:
+                        pass
+                    del createDate
+                    pubDate = date[0].xpath(f"./pubDate")
+                    if len(pubDate) == 0:
+                        #print(f"\tInserting pubDate at position: {idCitation.index(idCitation.xpath(f'./date')[0])}")
+                        pubDate = etree.SubElement(date[0], "pubDate")
+                        pubDate.text = "2025-01-01T00:00:00"
+                        date.append(pubDate)
+                    elif len(pubDate) == 1:
+                        #print(f"Updating pubDate if needed  at position: {date[0].index(date[0].xpath(f'./pubDate')[0])}")
+                        pubDate[0].text = "2025-01-01T00:00:00"
+                    elif len(pubDate) > 1:
+                        #print(f"Removing {len(pubDate)-1} pubDate elements")
+                        for i in range(1, len(pubDate)):
+                            date[0].remove(pubDate[i])
+                            i+=1
+                            del i
+                    else:
+                        pass
+                    del pubDate
+                    revisedDate = date[0].xpath(f"./revisedDate")
+                    if len(revisedDate) == 0:
+                        #print(f"\tInserting revisedDate at position: {idCitation.index(idCitation.xpath(f'./date')[0])}")
+                        revisedDate = etree.SubElement(date[0], "revisedDate")
+                        revisedDate.text = "2025-01-01T00:00:00"
+                        date.append(revisedDate)
+                    elif len(revisedDate) == 1:
+                        #print(f"Updating revisedDate if needed  at position: {date[0].index(date[0].xpath(f'./revisedDate')[0])}")
+                        revisedDate[0].text = "2025-01-01T00:00:00"
+                    elif len(revisedDate) > 1:
+                        #print(f"Removing {len(revisedDate)-1} revisedDate elements")
+                        for i in range(1, len(revisedDate)):
+                            date[0].remove(revisedDate[i])
+                            i+=1
+                            del i
+                    else:
+                        pass
+                    del revisedDate
+
+                    idCitation.insert(4, date[0])
+
+                elif len(date) > 1:
+                    # May not get here
+                    print(f"May needed to be deleted {len(date)} date")
+                else:
+                    pass
+                #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
+                del date
+
+                del idCitation
+
+##                # ######################################################################
+##                # Citation Responsiable Party
+##                # ######################################################################
+##
+##                citRespParty  = idCitation.xpath(f"./citRespParty")
+##                xml = '''<citRespParty>
+##                            <editorSource>extermal</editorSource>
+##                            <editorDigest>9cc0fe80de5687cc4d79f50f3a254f2c3ceb08ce</editorDigest>
+##                            <rpIndName>Nikki Wildart</rpIndName>
+##                            <rpOrgName>Office of Protected Resources, National Marine Fisheries Service</rpOrgName>
+##                            <rpPosName>Biologist</rpPosName>
+##                            <rpCntInfo>
+##                                <cntAddress addressType="both">
+##                                    <delPoint>1315 East West Highway</delPoint>
+##                                    <city>Silver Spring</city>
+##                                    <adminArea>MD</adminArea>
+##                                    <postCode>20910-3282</postCode>
+##                                    <eMailAdd>nikki.wildart@noaa.gov</eMailAdd>
+##                                    <country>US</country>
+##                                </cntAddress>
+##                                <cntPhone>
+##                                    <voiceNum tddtty="">(301) 427-8443</voiceNum>
+##                                    <faxNum>(301) 427-8443</faxNum>
+##                                </cntPhone>
+##                                <cntHours>0700 - 1800 EST/EDT</cntHours>
+##                                <cntOnlineRes>
+##                                    <linkage>https://www.fisheries.noaa.gov/about/office-protected-resources</linkage>
+##                                    <protocol>REST Service</protocol>
+##                                    <orName>Fisheries OPR</orName>
+##                                    <orDesc>NOAA Fisheries Office of Science and Technology</orDesc>
+##                                    <orFunct>
+##                                        <OnFunctCd value="002"></OnFunctCd>
+##                                    </orFunct>
+##                                </cntOnlineRes>
+##                            </rpCntInfo>
+##                            <editorSave>True</editorSave>
+##                            <displayName>Nikki Wildart</displayName>
+##                            <role>
+##                                <RoleCd value="002"></RoleCd>
+##                            </role>
+##                        </citRespParty>'''
+##
+##                # Create an XML string
+##                citRespParty_root = etree.XML(_xml)
+##                citRespParty_email = citRespParty_root.xpath(f".//eMailAdd")[0].text
+##
+##                if len(citRespParty) == 0:
+##                    position = idCitation_dict['citRespParty']
+##                    #print("Inserting citRespParty at position: {position}")
+##                    idCitation.insert(position, citRespParty_root)
+##                    del position
+##                elif len(citRespParty) == 1:
+##                    position = idCitation_dict['citRespParty']
+##                    #print(f"Updating citRespParty if needed at position: {position}")
+##                    idCitation.insert(position, citRespParty[0])
+##                    del position
+##                    # Get email address from citRespParty[0]
+##                    cit_resp_party_email = citRespParty[0].xpath(f".//eMailAdd")[0].text
+##                    if cit_resp_party_email:
+##                        #print(f"\tFound {cit_resp_party_email}")
+##                        position = idCitation.index(citRespParty[0])
+##                        if cit_resp_party_email != citRespParty_email:
+##                            #print("\t\tInserting an additional citRespParty")
+##                            idCitation.insert(position+1, citRespParty_root)
+##                        else:
+##                            pass
+##                            #print("\t\tcitRespParty update complete")
+##                        del position
+##                    else:
+##                        pass
+##                    del cit_resp_party_email
+##                elif len(citRespParty) > 1:
+##                    #print(f"{len(citRespParty)} citRespParty")
+##                    #print("does it have the same email and the new contact?")
+##                    cit_resp_party_emails = list()
+##                    for cit_resp_party in citRespParty:
+##                        if len(idCitation.xpath(f"./citRespParty/rpCntInfo/cntAddress/eMailAdd")) > 0:
+##                            cit_resp_party_email = idCitation.xpath(f"./citRespParty/rpCntInfo/cntAddress/eMailAdd")[0]
+##                            #print(f"\tFound: {cit_resp_party_email.text}")
+##                            if cit_resp_party_email not in cit_resp_party_emails:
+##                                #print(f"\t{cit_resp_party_email.text} not in email list")
+##                                cit_resp_party_emails.append(cit_resp_party_email)
+##                            elif cit_resp_party_email in cit_resp_party_emails:
+##                                # Remove the element
+##                                if cit_resp_party is not None:
+##                                    #print(f"\tRemoving {cit_resp_party_email.text}")
+##                                    idCitation.remove(cit_resp_party)
+##                                else:
+##                                    pass
+##                            else:
+##                                pass
+##                            del cit_resp_party_email
+##                            #position = idCitation.index(cit_resp_party)
+##                        else:
+##                            pass
+##                        del cit_resp_party
+##                    del cit_resp_party_emails
+##                else:
+##                    pass
+##                del citRespParty_root, citRespParty_email
+##                del idCitation_dict
+##
+##                #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
+##                del xml, citRespParty
+##                del idCitation
+
+                # ######################################################################
+                # Topics
+                # ######################################################################
+
+                dataIdInfo = tree.xpath(f"./dataIdInfo")[0]
+                tpCat      = dataIdInfo.xpath(f"./tpCat")
+                if len(tpCat) == 0:
+                    position = dataIdInfo_dict['tpCat']
+                    #print(f"Inserting tpCat at {position}")
+                    for key in tpCat_dict:
+                        _xml = tpCat_dict[key]
+                        _root = etree.XML(_xml)
+                        dataIdInfo.insert(position, _root)
+                        position+=1
+                        del _root, _xml, key
+                    del position
+
+                #elif len(tpCat) == 1:
+                #    position = dataIdInfo_dict['tpCat']
+                #    #print(f"Updating tpCat if needed at position: {position}")
+                #    dataIdInfo.insert(position, tpCat[0])
+                elif len(tpCat) >= 1:
+                    for i, key in enumerate(tpCat):
+                        position = dataIdInfo_dict['tpCat']
+                        if int(dataIdInfo.index(key)) not in range(position, position + len(tpCat_dict)):
+                            #print(f"delete: {key.tag}")
+                            dataIdInfo.remove(key)
+                        del position
+                        del i, key
+
+                else:
+                    pass
+
+                #print(etree.tostring(dataIdInfo, encoding="utf-8", pretty_print=True).decode())
+                del tpCat
+                del dataIdInfo
+
+                # ######################################################################
+                #               ###--->>> dataIdInfo section End <<<---###
+                # ######################################################################
+
+                # ######################################################################
+                #               ###--->>> mdContact section Start <<<---###
+                # ######################################################################
+                mdContact = tree.xpath(f"./mdContact")
+
+                email_address = contacts["mdContact"]["eMailAdd"]
+                user_name = contacts["mdContact"]["rpIndName"]
+                #print(user_name, email_address)
+
+                new_contact = None
+
+                new_contact_root = contacts_xml_root.xpath(f".//eMailAdd[text()='{email_address}']/ancestor::contact/rpIndName[text()='{user_name}']/ancestor::contact/editorSave[text()='True']/..")
+                if not isinstance(new_contact_root, type(None)) and len(new_contact_root) == 0:
+                    print("There has been a mistake")
+                elif not isinstance(new_contact_root, type(None)) and len(new_contact_root) == 1:
+                    #print(etree.tostring(new_contact_root[0], encoding="utf-8",  method='xml', pretty_print=True).decode())
+                    #print(f"\tInserting Role into new contact")
+                    new_contact = copy.deepcopy(new_contact_root[0])
+                    new_contact.tag = "mdContact"
+                    _xml = etree.XML('<role><RoleCd value="011"/></role>')
+                    # Append element
+                    new_contact.append(_xml)
+                    #print(etree.tostring(new_contact, encoding="utf-8",  method='xml', pretty_print=True).decode())
+                    del _xml
+                elif not isinstance(new_contact_root, type(None)) and len(new_contact_root) > 1:
+                    print(f"\tFound too many contacts")
+                else:
+                    pass
+
+                #print(etree.tostring(new_contact, encoding="utf-8",  method='xml', pretty_print=True).decode())
+
+                if len(mdContact) == 0:
+                    print(f"\tInserting 'mdContact' at position: {root_dict['mdContact']}")
+                    position = root_dict['mdContact']
+                    root.insert(position, new_contact)
+                    del position
+                elif len(mdContact) == 1:
+                    print(f"\tUpdating '{mdContact[0].tag}' if needed at position: {root_dict['mdContact']}")
+                    position = root_dict['mdContact']
+                    root.replace(mdContact[0], new_contact)
+                    del position
+                elif len(mdContact) > 1:
+                    # if it is multiples, is that ok or not. eainfo has multiples, topic does, contacts
+                    print(f"\tRemoving {len(mdContact)-1} mdContact elements")
+                    for i in range(1, len(mdContact)):
+                        root.remove(mdContact[i])
+                        i+=1
+                        del i
+                else:
+                    pass
+                #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
+
+                del new_contact
+                del new_contact_root
+                del user_name, email_address
+                del mdContact
+
+                #del mdContact_email, mdContact_root, mdContact
+           #
+           #        elif len(citRespParty) == 1:
+           #            print(f"Updating citRespParty if needed at position: {idCitation.index(citRespParty[0])}")
+           #            position = 5
+           #            idCitation.insert(position, citRespParty[0])
+           #            # Get email address from citRespParty[0]
+           #            cit_resp_party_email = citRespParty[0].xpath(f".//eMailAdd")[0].text
+           #            if cit_resp_party_email:
+           #                print(f"\tFound {cit_resp_party_email}")
+           #                position = idCitation.index(citRespParty[0])
+           #                if cit_resp_party_email != new_cit_resp_party_email:
+           #                    print("\t\tInserting an additional citRespParty")
+           #                    idCitation.insert(position+1, new_cit_resp_party_root)
+           #                else:
+           #                    print("\t\tcitRespParty update complete")
+           #            else:
+           #                pass
+           #            del cit_resp_party_email
+           #            del position
+           #        elif len(citRespParty) > 1:
+           #            print(f"{len(citRespParty)} citRespParty")
+           #            print("does it have the same email and the new contact?")
+           #            cit_resp_party_emails = list()
+           #            for cit_resp_party in citRespParty:
+           #                if len(idCitation.xpath(f"./citRespParty/rpCntInfo/cntAddress/eMailAdd")) > 0:
+           #                    cit_resp_party_email = idCitation.xpath(f"./citRespParty/rpCntInfo/cntAddress/eMailAdd")[0]
+           #                    print(f"\tFound: {cit_resp_party_email.text}")
+           #                    if cit_resp_party_email not in cit_resp_party_emails:
+           #                        print(f"\t{cit_resp_party_email.text} not in email list")
+           #                        cit_resp_party_emails.append(cit_resp_party_email)
+           #                    elif cit_resp_party_email in cit_resp_party_emails:
+           #                        # Remove the element
+           #                        if cit_resp_party is not None:
+           #                            print(f"\tRemoving {cit_resp_party_email.text}")
+           #                            idCitation.remove(cit_resp_party)
+           #                        else:
+           #                            pass
+           #                    else:
+           #                        pass
+           #                    del cit_resp_party_email
+           #                    #position = idCitation.index(cit_resp_party)
+           #                else:
+           #                    pass
+           #                del cit_resp_party
+           #            del cit_resp_party_emails
+           #        else:
+           #            pass
+           #        del new_cit_resp_party_email, new_cit_resp_party_root
+           #        #print(etree.tostring(idCitation, encoding="utf-8", pretty_print=True).decode())
+           #        del xml, citRespParty
+
+                # #######################################################################
+                #               ###--->>> mdContact section End <<<---###
+                # #######################################################################
+
+                mdFileID = tree.xpath(f"./mdFileID")
+                if len(mdFileID) == 0:
+                    #print(f"Inserting 'mdFileID' at position: {root_dict['mdFileID']}")
+                    _xml = '<mdFileID>gov.noaa.nmfs.inport:</mdFileID>'
+                    _root = etree.XML(_xml)
+                    position = root_dict['mdFileID']
+                    root.insert(position, _root)
+                    del position, _root, _xml
+                elif len(mdFileID) == 1:
+                    #print(f"Updating '{mdFileID[0].tag}' if needed at position: {root.index(root.xpath(f'./mdFileID')[0])}")
+                    position = root_dict['mdFileID']
+                    root.insert(position, mdFileID[0])
+                    del position
+                elif len(mdFileID) > 1:
+                    # if it is multiples, is that ok or not. eainfo has multiples, topic does, contacts
+                    print(f"Removing {len(mdFileID)-1} mdFileID elements")
+                    for i in range(1, len(mdFileID)):
+                        #root.remove(mdFileID[i])
+                        i+=1
+                        del i
+                else:
+                    pass
+                del mdFileID
+
+                mdMaint = tree.xpath(f"./mdMaint")
+                if len(mdMaint) == 0:
+                    #print(f"Inserting 'mdMaint' at position: {root_dict['mdMaint']}")
+                    _xml = '<mdMaint><maintFreq><MaintFreqCd value="009"></MaintFreqCd></maintFreq></mdMaint>'
+                    _root = etree.XML(_xml)
+                    position = root_dict['mdMaint']
+                    root.insert(position, _root)
+                    del position, _root, _xml
+                elif len(mdMaint) == 1:
+                    #print(f"Updating '{mdMaint[0].tag}' if needed at position: {root.index(root.xpath(f'./{mdMaint[0].tag}')[0])}")
+                    position = root_dict['mdMaint']
+                    root.insert(position, mdMaint[0])
+                    del position
+                elif len(mdLang) > 1:
+                    # if it is multiples, is that ok or not. eainfo has multiples, topic does, contacts
+                    print(f"Removing {len(mdMaint)-1} mdMaint elements")
+                    for i in range(1, len(mdMaint)):
+                        root.remove(mdMaint[i])
+                        i+=1
+                        del i
+                else:
+                    pass
+                del mdMaint
+
+                # #######################################################################
+                #               ###--->>> metadata detail section End <<<---###
+                # #######################################################################
+
+                # #######################################################################
+                #               ###--->>> dqInfo section Start <<<---###
+                # #######################################################################
+                _xml = '''<dqInfo>
+                            <dqScope xmlns="">
+                                <scpLvl>
+                                    <ScopeCd value="005"></ScopeCd>
+                                </scpLvl>
+                                <scpLvlDesc xmlns="">
+                                    <datasetSet Sync="TRUE"></datasetSet>
+                                </scpLvlDesc>
+                            </dqScope>
+                            <report type="DQConcConsis" dimension="horizontal">
+                                <measDesc>Based on a review from species' experts, we determined that all necessary features were included in the species' range file.</measDesc>
+                            </report>
+                            <report type="DQCompOm" dimension="horizontal">
+                                <measDesc>Based on a review from species' experts, we determined that all necessary features were included in the species' range file.</measDesc>
+                            </report>
+                            <dataLineage>
+                                <statement></statement>
+                                <dataSource type="">
+                                    <srcDesc></srcDesc>
+                                    <srcCitatn>
+                                        <resTitle></resTitle>
+                                        <date>
+                                            <createDate></createDate>
+                                        </date>
+                                    </srcCitatn>
+                                </dataSource>
+                                <prcStep>
+                                    <stepDesc>Metadata Update</stepDesc>
+                                    <stepProc>
+                                        <editorSource>extermal</editorSource>
+                                        <editorDigest></editorDigest>
+                                        <rpIndName></rpIndName>
+                                        <rpOrgName></rpOrgName>
+                                        <rpPosName></rpPosName>
+                                        <rpCntInfo>
+                                            <cntAddress addressType="both">
+                                                <delPoint></delPoint>
+                                                <city></city>
+                                                <adminArea></adminArea>
+                                                <postCode></postCode>
+                                                <eMailAdd></eMailAdd>
+                                                <country>US</country>
+                                            </cntAddress>
+                                            <cntPhone>
+                                                <voiceNum tddtty=""></voiceNum>
+                                                <faxNum></faxNum>
+                                            </cntPhone>
+                                            <cntHours>0700 - 1800 EST/EDT</cntHours>
+                                            <cntOnlineRes>
+                                                <linkage></linkage>
+                                                <protocol>REST Service</protocol>
+                                                <orName>Fisheries</orName>
+                                                <orDesc></orDesc>
+                                                <orFunct>
+                                                    <OnFunctCd value="002"></OnFunctCd>
+                                                </orFunct>
+                                            </cntOnlineRes>
+                                        </rpCntInfo>
+                                        <editorSave>True</editorSave>
+                                        <displayName></displayName>
+                                        <role>
+                                            <RoleCd value="009"></RoleCd>
+                                        </role>
+                                    </stepProc>
+                                    <stepDateTm></stepDateTm>
+                                </prcStep>
+                            </dataLineage>
+                        </dqInfo>'''
+                # Create an XML string
+                dqInfo_root = etree.XML(_xml)
+                del _xml
+
+                dqInfo = tree.xpath(f"./dqInfo")
+                if len(dqInfo) == 0:
+                    #print(f"Inserting 'dqInfo' at position: {root_dict['dqInfo']}")
+                    position = root_dict['dqInfo']
+                    root.insert(position, dqInfo_root)
+                    del position
+                elif len(dqInfo) == 1:
+                    pass
+                    #print(f"Updating '{dqInfo[0].tag}' if needed at position: {root_dict['dqInfo']}")
+                    #position = root_dict['dqInfo']
+                    #root.replace(dqInfo[0], dqInfo_root)
+                    #del position
+                elif len(dqInfo) > 1:
+                    # if it is multiples, is that ok or not. eainfo has multiples, topic does, contacts
+                    #print(f"Removing {len(dqInfo)-1} dqInfo elements")
+                    for i in range(1, len(dqInfo)):
+                        #root.remove(dqInfo[i])
+                        i+=1
+                        del i
+                else:
+                    pass
+                del dqInfo
+                del dqInfo_root
+
+                dqInfo  = tree.xpath(f"./dqInfo")
+                dqScope = dqInfo[0].xpath(f"./dqScope")
+                if len(dqScope) == 0:
+                    #print(f"Inserting 'dqScope' at position: {dqInfo_dict['dqScope']}")
+                    _xml = '''<dqScope xmlns=""><scpLvl><ScopeCd value="005"></ScopeCd></scpLvl><scpLvlDesc xmlns=""><datasetSet Sync="TRUE">Feature Class</datasetSet></scpLvlDesc></dqScope>'''
+                    _root = etree.XML(_xml)
+                    position = dqInfo_dict['dqScope']
+                    dqInfo[0].insert(position, _root)
+                    del position, _root, _xml
+                elif len(dqScope) == 1:
+                    #print(f"Updating '{dqScope[0].tag}' if needed at position: {dqInfo_dict['dqScope']}")
+                    #_xml = '''<dqScope xmlns=""><scpLvl><ScopeCd value="005"></ScopeCd></scpLvl><scpLvlDesc xmlns=""><datasetSet>Feature Class</datasetSet></scpLvlDesc></dqScope>'''
+                    #_root = etree.XML(_xml)
+                    #position = dqInfo_dict["dqScope"]
+                    #dqInfo[0].insert(position, root)
+                    #del position, _root, _xml
+                    position = dqInfo_dict["dqScope"]
+                    dqInfo[0].insert(position, dqScope[0])
+                    del position
+                elif len(dqScope) > 1:
+                    # if it is multiples, is that ok or not. eainfo has multiples, topic does, contacts
+                    #print(f"Removing {len(dqScope)-1} dqScope elements")
+                    for i in range(1, len(dqScope)):
+                        dqInfo[0].remove(dqScope[i])
+                        i+=1
+                        del i
+                else:
+                    pass
+                #etree.indent(dqInfo[0], space="  ")
+                #print(etree.tostring(dqInfo[0], xml_declaration=True, encoding="utf-8").decode())
+                del dqScope, dqInfo
+
+                dqInfo  = tree.xpath(f"./dqInfo")
+                report = dqInfo[0].xpath(f"./report")
+                if len(report) == 0:
+                    #print(f"Inserting 'report' at position: {dqInfo_dict['report']}")
+                    _xml = '''<report type="DQConcConsis" dimension="horizontal">
+                                <measDesc>Based on a review from species' experts, we determined that all necessary features were included in the species' range file.</measDesc>
+                             </report>'''
+                    _root = etree.XML(_xml)
+                    position = dqInfo_dict['report']
+                    dqInfo[0].insert(position, _root)
+                    del position, _root, _xml
+
+                    #print(f"Inserting 'report' at position: {dqInfo_dict['report']+1}")
+                    _xml = '''<report type="DQCompOm" dimension="horizontal">
+                                <measDesc>Based on a review from species' experts, we determined that all necessary features were included in the species' range file.</measDesc>
+                             </report>'''
+                    _root = etree.XML(_xml)
+                    position = dqInfo_dict['report']
+                    dqInfo[0].insert(position+1, _root)
+                    del position, _root, _xml
+
+                elif len(report) == 1:
+                    #print(f"Updating '{report[0].tag}' if needed at position: {dqInfo_dict['report']}")
+                    _report = dqInfo[0].xpath(f"./report[@type='DQConcConsis']")
+                    if len(_report) == 1:
+                        _xml = '''<report type="DQConcConsis" dimension="horizontal">
+                                    <measDesc>Based on a review from species' experts, we determined that all necessary features were included in the species' range file.</measDesc>
+                                 </report>'''
+                        _root = etree.XML(_xml)
+                        dqInfo[0].replace(_report[0], _root)
+                        del _root, _xml
+
+                        _xml = '''<report type="DQCompOm" dimension="horizontal">
+                                    <measDesc>Based on a review from species' experts, we determined that all necessary features were included in the species' range file.</measDesc>
+                                 </report>'''
+                        _root = etree.XML(_xml)
+                        position = dqInfo_dict["report"]+1
+                        dqInfo[0].insert(position, _root)
+                        del position, _root, _xml
+
+                    elif len(_report) > 1:
+                        dqInfo[0].remove(_report[-1])
+                    del _report
+
+                    _report = dqInfo[0].xpath(f"./report[@type='DQCompOm']")
+                    if len(_report) == 1:
+                        _xml = '''<report type="DQCompOm" dimension="horizontal">
+                                    <measDesc>Based on a review from species' experts, we determined that all necessary features were included in the species' range file.</measDesc>
+                                 </report>'''
+                        _root = etree.XML(_xml)
+                        dqInfo[0].replace(_report[0], _root)
+                        del _root, _xml
+
+                        _xml = '''<report type="DQConcConsis" dimension="horizontal">
+                                    <measDesc>Based on a review from species' experts, we determined that all necessary features were included in the species' range file.</measDesc>
+                                 </report>'''
+                        _root = etree.XML(_xml)
+                        position = dqInfo_dict["report"]
+                        dqInfo[0].insert(position, _root)
+                        del position, _root, _xml
+
+                    elif len(_report) > 1:
+                        dqInfo[0].remove(_report[-1])
+                    del _report
+
+                    #root = etree.XML(_xml)
+                    #position = dqInfo_dict["report"]
+                    #dqInfo[0].insert(position, root)
+                    #del position, _root, _xml
+                    #position = dqInfo_dict["report"]
+                    #dqInfo[0].insert(position, report[0])
+                    #del position
+
+                elif len(report) > 1:
+                    _report = dqInfo[0].xpath(f"./report[@type='DQConcConsis']")
+                    if len(_report) > 1:
+                        dqInfo[0].remove(_report[-1])
+                    del _report
+
+                    _report = dqInfo[0].xpath(f"./report[@type='DQCompOm']")
+                    if len(_report) > 1:
+                        dqInfo[0].remove(_report[-1])
+                    del _report
+
+                    # if it is multiples, is that ok or not. eainfo has multiples, topic does, contacts
+                    #print(f"Removing {len(report)-1} report elements")
+                    #for i in range(1, len(report)):
+                    #    dqInfo[0].remove(report[i])
+                    #    i+=1
+                    #    del i
+                else:
+                    pass
+                #etree.indent(dqInfo[0], space="  ")
+                #print(etree.tostring(dqInfo[0], xml_declaration=True, encoding="utf-8").decode())
+                del report, dqInfo
+
+                dqInfo  = tree.xpath(f"./dqInfo")
+                dataLineage = dqInfo[0].xpath(f"./dataLineage")
+                if len(dataLineage) == 0:
+                    print(f"Inserting 'dataLineage' at position: {dqInfo_dict['dataLineage']}")
+                    _xml = '''<dataLineage>
+                                <statement></statement>
+                                <dataSource type="">
+                                    <srcDesc></srcDesc>
+                                    <srcCitatn>
+                                        <resTitle></resTitle>
+                                        <date>
+                                            <createDate></createDate>
+                                        </date>
+                                    </srcCitatn>
+                                </dataSource>
+                                <prcStep>
+                                    <stepDesc></stepDesc>
+                                    <stepProc>
+                                        <editorSource>extermal</editorSource>
+                                        <editorDigest></editorDigest>
+                                        <rpIndName></rpIndName>
+                                        <rpOrgName></rpOrgName>
+                                        <rpPosName></rpPosName>
+                                        <rpCntInfo>
+                                            <cntAddress addressType="both">
+                                                <delPoint></delPoint>
+                                                <city></city>
+                                                <adminArea></adminArea>
+                                                <postCode></postCode>
+                                                <eMailAdd></eMailAdd>
+                                                <country></country>
+                                            </cntAddress>
+                                            <cntPhone>
+                                                <voiceNum tddtty=""></voiceNum>
+                                                <faxNum></faxNum>
+                                            </cntPhone>
+                                            <cntHours></cntHours>
+                                            <cntOnlineRes>
+                                                <linkage></linkage>
+                                                <protocol>REST Service</protocol>
+                                                <orName></orName>
+                                                <orDesc></orDesc>
+                                                <orFunct>
+                                                    <OnFunctCd value="002"></OnFunctCd>
+                                                </orFunct>
+                                            </cntOnlineRes>
+                                        </rpCntInfo>
+                                        <editorSave>True</editorSave>
+                                        <displayName></displayName>
+                                        <role>
+                                            <RoleCd value="009"></RoleCd>
+                                        </role>
+                                    </stepProc>
+                                    <stepDateTm></stepDateTm>
+                                </prcStep>
+                            </dataLineage>'''
+                    _root = etree.XML(_xml)
+                    position = dqInfo_dict['dataLineage']
+                    dqInfo[0].insert(position, _root)
+                    del position, _root, _xml
+                elif len(dataLineage) == 1:
+                    position = dqInfo_dict["dataLineage"]
+                    dqInfo[0].insert(position, dataLineage[0])
+                    del position
+                elif len(dataLineage) > 1:
+                    # if it is multiples, is that ok or not. eainfo has multiples, topic does, contacts
+                    #print(f"Removing {len(dataLineage)-1} dataLineage elements")
+                    for i in range(1, len(dataLineage)):
+                        dqInfo[0].remove(dataLineage[i])
+                        i+=1
+                        del i
+                else:
+                    pass
+                #etree.indent(dqInfo[0], space="  ")
+                #print(etree.tostring(dqInfo[0], xml_declaration=True, encoding="utf-8").decode())
+                del dataLineage, dqInfo
+
+                # #######################################################################
+                #               ###--->>> dqInfo section End <<<---###
+                # #######################################################################
+
+                # #######################################################################
+                #               ###--->>> distInfo section Start <<<---###
+                # #######################################################################
+                _xml = '''<distInfo>
+                            <distFormat>
+                                <formatName Sync="TRUE">File Geodatabase Feature Class</formatName>
+                                <formatVer>NMFS ESA Range Geodatabase 2024</formatVer>
+                                <fileDecmTech>ZIP</fileDecmTech>
+                            </distFormat>
+                            <distributor>
+                                <distorCont>
+                                    <editorSource>extermal</editorSource>
+                                    <editorDigest></editorDigest>
+                                    <rpIndName></rpIndName>
+                                    <rpOrgName></rpOrgName>
+                                    <rpPosName></rpPosName>
+                                    <rpCntInfo>
+                                        <cntAddress addressType="both">
+                                            <delPoint></delPoint>
+                                            <city></city>
+                                            <adminArea></adminArea>
+                                            <postCode></postCode>
+                                            <eMailAdd></eMailAdd>
+                                            <country></country>
+                                        </cntAddress>
+                                        <cntPhone>
+                                            <voiceNum tddtty=""></voiceNum>
+                                            <faxNum></faxNum>
+                                        </cntPhone>
+                                        <cntHours></cntHours>
+                                        <cntOnlineRes>
+                                            <linkage></linkage>
+                                            <protocol>REST Service</protocol>
+                                            <orName></orName>
+                                            <orDesc></orDesc>
+                                            <orFunct>
+                                                <OnFunctCd value="002"></OnFunctCd>
+                                            </orFunct>
+                                        </cntOnlineRes>
+                                    </rpCntInfo>
+                                    <editorSave>True</editorSave>
+                                    <displayName></displayName>
+                                    <role>
+                                        <RoleCd value="005"></RoleCd>
+                                    </role>
+                                </distorCont>
+                            </distributor>
+                             <distorTran xmlns="">
+                                <onLineSrc xmlns="">
+                                   <linkage>https://www.fisheries.noaa.gov/science-and-data</linkage>
+                                   <protocol>REST Service</protocol>
+                                   <orName>NMFS ESA Range Geodatabase 2024</orName>
+                                   <orDesc>File Geodatabase Download</orDesc>
+                                   <orFunct>
+                                      <OnFunctCd value="001"/>
+                                   </orFunct>
+                                </onLineSrc>
+                                <unitsODist>MB</unitsODist>
+                                <transSize>0</transSize>
+                             </distorTran>
+                             <distorTran xmlns="">
+                                <onLineSrc xmlns="">
+                                   <linkage>https://services2.arcgis.com/C8EMgrsFcRFL6LrL/arcgis/rest/services/.../FeatureServer</linkage>
+                                   <protocol>ArcGIS REST Services</protocol>
+                                   <orName>AbaloneBlack_20210712</orName>
+                                   <orDesc>AbaloneBlack_20210712 Feature Service</orDesc>
+                                   <orFunct>
+                                      <OnFunctCd value="002"/>
+                                   </orFunct>
+                                </onLineSrc>
+                             </distorTran>
+                        </distInfo>'''
+                # Create an XML string
+                distInfo_root = etree.XML(_xml)
+                del _xml
+
+                distInfo = tree.xpath(f"./distInfo")
+                if len(distInfo) == 0:
+                    #print(f"Inserting 'distInfo' at position: {root_dict['distInfo']}")
+                    position = root_dict['distInfo']
+                    #root.insert(position, distInfo_root)
+                    del position
+                elif len(distInfo) == 1:
+                    pass
+                    #print(f"Updating '{distInfo[0].tag}' if needed at position: {root_dict['distInfo']}")
+                    #position = root_dict['distInfo']
+                    #root.replace(distInfo[0], distInfo_root)
+                    #del position
+                elif len(distInfo) > 1:
+                    # if it is multiples, is that ok or not. eainfo has multiples, topic does, contacts
+                    #print(f"Removing {len(distInfo)-1} distInfo elements")
+                    for i in range(1, len(distInfo)):
+                        root.remove(distInfo[i])
+                        i+=1
+                        del i
+                else:
+                    pass
+                del distInfo_root
+                del distInfo
+
+                # #######################################################################
+                #               ###--->>> distInfo section End <<<---###
+                # #######################################################################
+
+        ##        # #######################################################################
+        ##        #               ###--->>> eainfo section Start <<<---###
+        ##        # #######################################################################
+        ##        eainfo      = tree.xpath(f"./eainfo")
+        ##        if len(eainfo) == 0:
+        ##            print(f"Inserting 'eainfo' at position: {root_dict['eainfo']}")
+        ##            _xml = '<eainfo Sync="TRUE"></eainfo>'
+        ##            _root = etree.XML(_xml)
+        ##            position = root_dict['eainfo']
+        ##            root.insert(position, _root)
+        ##            del position, _root, _xml
+        ##        elif len(eainfo) == 1:
+        ##            print(f"Updating '{eainfo[0].tag}' if needed at position: {root_dict['eainfo']}")
+        ##            position = root_dict['eainfo']
+        ##            root.insert(position, eainfo[0])
+        ##            del position
+        ##        elif len(eainfo) > 1:
+        ##            # if it is multiples, is that ok or not. eainfo has multiples, topic does, contacts
+        ##            print(f"Removing {len(eainfo)-1} eainfo elements")
+        ##            for i in range(1, len(eainfo)):
+        ##                root.remove(eainfo[i])
+        ##                i+=1
+        ##                del i
+        ##        else:
+        ##            pass
+        ##        del eainfo
+        ##        # ######################################################################
+        ##        #               ###--->>> eainfo section End <<<---###
+        ##        # ######################################################################
+
+                # ######################################################################
+                #               ###--->>> Binary section Start <<<---###
+                # ######################################################################
+                Binary      = tree.xpath(f"./Binary")
+                if len(Binary) == 0:
+                    #print(f"Inserting 'Binary' at position: {root_dict['Binary']}")
+                    _xml = '<Binary Sync="TRUE"><Thumbnail><Data EsriPropertyType="PictureX"></Data></Thumbnail></Binary>'
+                    _root = etree.XML(_xml)
+                    position = root_dict['Binary']
+                    root.insert(position, _root)
+                    del position, _root, _xml
+                elif len(Binary) == 1:
+                    #print(f"Updating '{Binary[0].tag}' if needed at position: {root_dict['Binary']}")
+                    position = root_dict['Binary']
+                    root.insert(position, Binary[0])
+                    del position
+                elif len(Binary) > 1:
+                    # if it is multiples, is that ok or not. Binary has multiples, topic does, contacts
+                    print(f"Removing {len(Binary)-1} Binary elements")
+                    for i in range(1, len(Binary)):
+                        #root.remove(Binary[i])
+                        i+=1
+                        del i
+                else:
+                    pass
+                del Binary
+                # ######################################################################
+                #               ###--->>> Binary section End <<<---###
+                # ######################################################################
+
+        ##        #etree.indent(root, space='    ')
+        ##        #etree.dump(root)
+        ##
+        ##        #etree.indent(root, space="    ")
+        ##        #print(etree.tostring(root, xml_declaration=True, encoding="utf-8").decode())
+
+
+
+        ##        # Parse the XML
+        ##        parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
+        ##        dataset_name = os.path.basename(fc_metadata_xml_file).replace(".xml", "")
+        ##        tree = etree.parse(fc_metadata_xml_file, parser=parser)
+        ##        root = tree.getroot()
+        ##        del parser
+
+##                # Parse the XML
+##                parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
+##                tree = etree.parse(fc_metadata_xml_file, parser=parser)
+##                root = tree.getroot()
+##                del parser
+
+                dqInfo = tree.xpath(f"./dqInfo")[0]
+                for child in dqInfo.xpath("."):
+                    child[:] = sorted(child, key=lambda x: dqInfo_dict[x.tag])
+                    del child
+                del dqInfo
+
+                dataIdInfo = tree.xpath(f"./dataIdInfo")[0]
+                for child in dataIdInfo.xpath("."):
+                    child[:] = sorted(child, key=lambda x: dataIdInfo_dict[x.tag])
+                    del child
+                del dataIdInfo
+
+                Esri = tree.xpath(f"./Esri")[0]
+                for child in Esri.xpath("."):
+                    child[:] = sorted(child, key=lambda x: esri_dict[x.tag])
+                    del child
+                del Esri
+
+                # Sort the XML
+                for child in root.xpath("."):
+                    child[:] = sorted(child, key=lambda x: root_dict[x.tag])
+                    del child
+
+                #etree.indent(root, space='    ')
+                #target_xml_string = etree.tostring(tree, pretty_print=True, method='html', encoding="utf-8", xml_declaration=True).decode()
+                #etree.tostring(contacts_xml_root, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode()
+                #target_xml_string = etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True).decode()
+                #print(target_xml_string)
+                #try:
+                #    with open(fc_metadata_xml_file, "w") as f:
+                #        f.write(target_xml_string)
+                #    del f
+                #except:
+                #    print(f"The metadata file: {os.path.basename(fc_metadata_xml_file)} can not be overwritten!!")
+                #del target_xml_string
+
+                #pretty_format_xml_file(fc_metadata_xml_file)
+
+                etree.indent(root, space='    ')
+                dataset_md_xml = etree.tostring(tree, encoding="utf-8",  method='xml', xml_declaration=True, pretty_print=True)
+                #print(dataset_md_xml)
+                # This allows for sorting
+                doc = etree.XML(dataset_md_xml, etree.XMLParser(remove_blank_text=True))
+                for parent in doc.xpath('.'): # Search for parent elements
+                  parent[:] = sorted(parent,key=lambda x: root_dict[x.tag])
+                  del parent
+                #print( etree.tostring(doc,pretty_print=True).decode() )
+                del doc
+
+                SaveBackXml = True
+                if SaveBackXml:
+                    dataset_md = md.Metadata(dataset_path)
+                    dataset_md.xml = dataset_md_xml
+                    dataset_md.save()
+                    dataset_md.synchronize("ALWAYS")
+                    dataset_md.save()
+                    #dataset_md.reload()
+                    del dataset_md
+                else:
+                    pass
+                del SaveBackXml
+
+                del dataset_md_xml
+
+                del dataset_path, dataset_name, tree, root
+            del workspace, datasets
+        # Declare Variables
+        del root_dict, contact_dict, dqInfo_dict
+        del dataIdInfo_dict, tpCat_dict, esri_dict
+        del idCitation_dict, RoleCd_dict
+        del contacts_xml_root, contacts_xml_tree
+        del project_folder, crfs_folder, scratch_folder, workspaces
+        #del tree, root, dataset_name
+        # Imports
+        del etree, StringIO, copy, arcpy, md
+        # Function Parameters
+        del project_gdb, contacts
+
+    except:
+        traceback.print_exc()
+    else:
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function: ##--> '{', '.join(rk)}' <--##"); del rk
+        return True
+    finally:
+        pass
+
+def main(project_gdb=""):
     try:
         from time import gmtime, localtime, strftime, time
         # Set a start time so that we can see how log things take
@@ -2703,13 +3971,15 @@ def main(base_project_folder="", project_name=""):
         arcpy.env.overwriteOutput = True
         arcpy.env.parallelProcessingFactor = "100%"
 
-        project_folder    = rf"{base_project_folder}\{project_name}"
-        base_project_file = rf"{base_project_folder}\DisMAP.aprx"
-        project_gdb       = rf"{base_project_folder}\{project_name}\{project_name}.gdb"
+        project_folder      = rf"{os.path.dirname(project_gdb)}"
+        #base_project_folder = rf"{os.path.dirname(project_folder)}"
+        #base_project_file   = rf"{base_project_folder}\DisMAP.aprx"
+
+        del project_folder
 
         # Test if passed workspace exists, if not raise SystemExit
-        if not arcpy.Exists(base_project_file):
-            print(f"{os.path.basename(base_project_file)} is missing!!")
+        #if not arcpy.Exists(base_project_file):
+        #    print(f"{os.path.basename(base_project_file)} is missing!!")
 
         # Test if passed workspace exists, if not raise SystemExit
         if not arcpy.Exists(project_gdb):
@@ -2721,44 +3991,60 @@ def main(base_project_folder="", project_name=""):
         del Backup
 
         try:
-            UpdateContacts = True
-            if UpdateContacts:
-                update_contacts(base_project_file, project_name)
+            UpdateXmlElements = True
+            if UpdateXmlElements:
+                contact_dict = {"citRespParty" : {"rpIndName" : "", "eMailAdd" : "tim.haverland@noaa.gov"},
+                                "idPoC"        : {"rpIndName" : "Melissa Karp", "eMailAdd" : "melissa.karp@noaa.gov"},
+                                "distorCont"   : {"rpIndName" : "Timothy J Haverland", "eMailAdd" : "tim.haverland@noaa.gov"},
+                                "mdContact"    : {"rpIndName" : "John F Kennedy", "eMailAdd" : "john.f.kennedy@noaa.gov"},
+                                "stepProc"     : [{"rpIndName" : "John F Kennedy", "eMailAdd" : "john.f.kennedy@noaa.gov"},
+                                                  {"rpIndName" : "Melissa Karp", "eMailAdd" : "melissa.karp@noaa.gov"}],
+                                }
+
+                update_xml_elements(project_gdb=project_gdb, contacts=contact_dict)
+                del contact_dict
             else:
                 pass
-            del UpdateContacts
+            del UpdateXmlElements
+
+            UpdateExistingContacts = False
+            if UpdateExistingContacts:
+                update_existing_contacts(project_gdb=project_gdb)
+            else:
+                pass
+            del UpdateExistingContacts
 
             CreateBasicTemplateXMLFiles = False
             if CreateBasicTemplateXMLFiles:
-                create_basic_template_xml_files(base_project_file, project_name)
+                create_basic_template_xml_files(project_gdb=project_gdb)
             else:
                 pass
             del CreateBasicTemplateXMLFiles
 
             ImportBasicTemplateXmlFiles = False
             if ImportBasicTemplateXmlFiles:
-                import_basic_template_xml_files(base_project_file, project_name)
+                import_basic_template_xml_files(project_gdb=project_gdb)
             else:
                 pass
             del ImportBasicTemplateXmlFiles
 
             CreateThumbnails = False
             if CreateThumbnails:
-               create_thumbnails(base_project_file, project_name)
+               create_thumbnails(project_gdb=project_gdb)
             else:
                 pass
             del CreateThumbnails
 
             CreateMaps = False
             if CreateMaps:
-                create_maps(base_project_file, project_name, dataset=rf"{project_gdb}\DisMAP_Regions")
+                create_maps(project_gdb=project_gdb, dataset=rf"{project_gdb}\DisMAP_Regions")
             else:
                 pass
             del CreateMaps
 
             ExportToInportXmlFiles = False
             if ExportToInportXmlFiles:
-                export_to_inport_xml_files(base_project_file, project_name)
+                export_to_inport_xml_files(project_gdb=project_gdb)
             else:
                 pass
             del ExportToInportXmlFiles
@@ -2767,18 +4053,18 @@ def main(base_project_folder="", project_name=""):
             arcpy.AddError(str(e))
 
         # Declared Varaiables
-        del base_project_file, project_folder, project_gdb
+
         # Imports
 
         # Function Parameters
-        del base_project_folder, project_name
+        del project_gdb
 
         # Elapsed time
         end_time = time()
         elapse_time =  end_time - start_time
 
         print(f"\n{'-' * 80}")
-        print(f"Python script: {os.path.basename(__file__)} completed {strftime('%a %b %d %I:%M %p', localtime())}")
+        print(f"Python script: {os.path.basename(__file__)}\nCompleted: {strftime('%a %b %d %I:%M %p', localtime())}")
         print(u"Elapsed Time {0} (H:M:S)".format(strftime("%H:%M:%S", gmtime(elapse_time))))
         print(f"{'-' * 80}")
         del elapse_time, end_time, start_time
@@ -2808,11 +4094,13 @@ if __name__ == "__main__":
         project_name = "April 1 2023"
         #project_name = "July 1 2024"
         #project_name   = "December 1 2024"
+        project_folder = rf"{base_project_folder}\{project_name}"
+        project_gdb    = rf"{project_folder}\{project_name}.gdb"
 
-        main(base_project_folder=base_project_folder, project_name=project_name)
+        main(project_gdb=project_gdb)
 
         # Variables
-        del base_project_folder, project_name
+        del project_gdb, project_name, project_folder, base_project_folder
 
         # Imports
 

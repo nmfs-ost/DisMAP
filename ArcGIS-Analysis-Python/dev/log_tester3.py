@@ -1,6 +1,6 @@
 import arcpy
 
-errorLog = r'C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\dismap_tools\log.txt'
+errorLog = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\dismap_tools\log.txt"
 filePath = errorLog
 try:
     arcpy.Delete_management("Data doesn't exist, lets' just force the exception")

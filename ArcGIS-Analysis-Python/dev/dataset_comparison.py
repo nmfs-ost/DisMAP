@@ -240,7 +240,7 @@ def feature_compare(input_base_gdb="", input_test_gdb=""):
 
         #Feature Comparison:
         #     Input Base GDB: E:\DisMAP WI 20230426\April 1 2023\DisMAP April 1 2023 Prod.gdb
-        #     Input Target GDB: C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\May 1 2024\May 1 2024.gdb
+        #     Input Target GDB: {os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\May 1 2024\May 1 2024.gdb
         #In Base FC: AI_IDW_Points In Test FC: AI_IDW_Extent_Points
         #    Base Spatial Reference: NAD_1983_Albers
         #    Test Spatial Reference: NAD_1983_Albers
@@ -248,11 +248,11 @@ def feature_compare(input_base_gdb="", input_test_gdb=""):
         #    Base Extent:            -2273985.5    379297.281300001 -715354.5    990521.375
         #    Test Extent:            -2273986.4622 379297.5913      -715355.6656 990521.5711
 
-        #    C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\May 1 2024\Scratch\AI_IDW.gdb\AI_IDW_Extent_Points
+        #    {os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\May 1 2024\Scratch\AI_IDW.gdb\AI_IDW_Extent_Points
         #    Spatial Reference: NAD_1983_Albers
         #    Extent:            -2273986.4622 379297.5913 -715355.6656 990521.5711
         #    Geographic Transformations: None
-        #    C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\May 1 2024\May 1 2024.gdb\AI_IDW_Extent_Points
+        #    {os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\May 1 2024\May 1 2024.gdb\AI_IDW_Extent_Points
         #    Spatial Reference: NAD_1983_Albers
         #    Extent:            -2273986.4622 379297.5913 -715355.6656 990521.5711
         #    Geographic Transformations: None
@@ -267,7 +267,7 @@ def feature_compare(input_base_gdb="", input_test_gdb=""):
         #
         # Feature Comparison:
         #     Input Base GDB: E:\DisMAP WI 20230426\April 1 2023\DisMAP April 1 2023 Prod.gdb
-        #     Input Target GDB: C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\May 1 2024\May 1 2024.gdb
+        #     Input Target GDB: {os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\May 1 2024\May 1 2024.gdb
         # In Base FC: AI_IDW_Fishnet In Test FC: AI_IDW_Fishnet
         #    Base Spatial Reference: NAD_1983_Albers
         #    Test Spatial Reference: NAD_1983_Albers
@@ -730,7 +730,7 @@ def feature_compare(input_base_gdb="", input_test_gdb=""):
 
         #    Feature Comparison:
         #         Input Base GDB: E:\DisMAP WI 20230426\April 1 2023\DisMAP April 1 2023 Prod.gdb
-        #         Input Target GDB: C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\May 1 2024\May 1 2024.gdb
+        #         Input Target GDB: {os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP\May 1 2024\May 1 2024.gdb
         #    In Base FC: AI_IDW_Fishnet In Test FC: AI_IDW_Fishnet
         #        Base Spatial Reference: NAD_1983_Albers
         #        Test Spatial Reference: NAD_1983_Albers

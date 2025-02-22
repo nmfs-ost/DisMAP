@@ -6,7 +6,7 @@ portal = "https://noaa.maps.arcgis.com/"
 arcpy.SignInToPortal(portal)
 
 # Set output file names
-outdir = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\December 1 2024\Publish"
+outdir = r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\December 1 2024\Publish"
 service_name = "FeatureSharingDraftExample"
 sddraft_filename = service_name + ".sddraft"
 sddraft_output_filename = os.path.join(outdir, sddraft_filename)
@@ -14,7 +14,7 @@ sd_filename = service_name + ".sd"
 sd_output_filename = os.path.join(outdir, sd_filename)
 
 # Reference layers to publish
-aprx = arcpy.mp.ArcGISProject(r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\DisMAP.aprx")
+aprx = arcpy.mp.ArcGISProject(r"{os.environ['USERPROFILE']}\Documents\ArcGIS\Projects\DisMAP-ArcGIS-Analysis\DisMAP.aprx")
 m = aprx.listMaps('Aleutian Islands Sample Locations 20241201')[0]
 selected_layer = m.listLayers('Aleutian Islands Sample Locations 20241201')[0]
 #selected_table = m.listTables('Capitals')[0]
