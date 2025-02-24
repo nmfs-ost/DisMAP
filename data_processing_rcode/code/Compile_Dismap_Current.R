@@ -361,7 +361,7 @@ if (HQ_DATA_ONLY == TRUE){
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
     geom_jitter() +
-    theme(axis.text.x = element_text(angle = 45, size = rel(0.95)))
+    theme(axis.text.x = element_text(angle = 90, size = rel(0.80)))
 
   p2 <- ai %>%
     select(lat, lon) %>%
@@ -390,7 +390,7 @@ if (HQ_DATA_ONLY == TRUE){
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
     geom_jitter() +
-    theme(axis.text.x = element_text(angle = 45, size = rel(0.95)))
+    theme(axis.text.x = element_text(angle = 90, size = rel(0.85)))
 
   p4 <- ai_fltr %>%
     select(lat, lon) %>%
@@ -427,7 +427,8 @@ if (HQ_DATA_ONLY == TRUE){
   p1 <- ebs %>%
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
-    geom_jitter()
+    geom_jitter()  +
+    theme(axis.text.y = element_text(size = rel(0.70)))
 
   p2 <- ebs %>%
     select(lat, lon) %>%
@@ -456,7 +457,8 @@ if (HQ_DATA_ONLY == TRUE){
   p3 <- ebs_fltr %>%
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year))) +
-    geom_jitter()
+    geom_jitter() +
+    theme(axis.text.y = element_text(size = rel(0.70)))
 
   p4 <- ebs_fltr %>%
     select(lat, lon) %>%
@@ -482,7 +484,7 @@ if (HQ_DATA_ONLY == TRUE){
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
     geom_jitter() +
-    theme(axis.text.x = element_text(angle = 45, size = rel(0.95)))
+    theme(axis.text.x = element_text(angle = 90, size = rel(0.80)))
 
   p2 <- goa %>%
     select(lat, lon) %>%
@@ -499,7 +501,7 @@ if (HQ_DATA_ONLY == TRUE){
     distinct() %>%
     group_by(stratum) %>%
     summarise(count = n())%>%
-    filter(count >= 11) ## I think this may need to change to 12 years?
+    filter(count >= 12) ## I think this may need to change to 12 years?
 
   # how many rows will be lost if only stratum trawled ever year and the ones mentioned
   # above are kept?
@@ -517,7 +519,7 @@ if (HQ_DATA_ONLY == TRUE){
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
     geom_jitter() +
-    theme(axis.text.x = element_text(angle = 45, size = rel(0.95)))
+    theme(axis.text.x = element_text(angle = 90, size = rel(0.80)))
 
   p4 <- goa_fltr %>%
     select(lat, lon) %>%
