@@ -684,7 +684,7 @@ wctri <- wctri %>%
 
 # Calculate stratum area where needed (use convex hull approach)
 wctri_strats <- wctri %>%
-  group_by(stratum) %>%
+  group_by(stratum) %>% #Should this be "STRATUM"
   summarise(stratumarea = calcarea(START_LONGITUDE, START_LATITUDE))
 
 wctri <- left_join(wctri, wctri_strats, by = "stratum")
@@ -727,7 +727,8 @@ if (HQ_DATA_ONLY == TRUE){
   p1 <- wctri %>%
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
-    geom_jitter()
+    geom_jitter() +
+    theme(axis.text.x = element_text(angle = 90, size = rel(0.80)))
 
   p2 <- wctri %>%
     select(lat, lon) %>%
@@ -754,7 +755,8 @@ if (HQ_DATA_ONLY == TRUE){
   p3 <- wctri_fltr %>%
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
-    geom_jitter()
+    geom_jitter() +
+    theme(axis.text.x = element_text(angle = 90, size = rel(0.80)))
 
   p4 <- wctri_fltr %>%
     select(lat, lon) %>%
