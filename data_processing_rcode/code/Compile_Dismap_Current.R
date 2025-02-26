@@ -772,7 +772,7 @@ if (HQ_DATA_ONLY == TRUE){
 }
 
 rm(wctri_catch, wctri_haul, wctri_species, wctri_strats)
-##
+
 # Compile WCANN ===========================================================
 print("Compile WCANN")
 wcann_catch <- read_csv(here::here("data_processing_rcode/data", "wcann_catch.csv"), col_types = cols(
