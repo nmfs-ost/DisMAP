@@ -3517,7 +3517,7 @@ spplist2<-rbind(spplist_IDW, spp_addin) %>%
 years<-c(2010, 2017, 2019, 2021, 2022, 2023)
 enbs_trimmed<- trimmed_dat_fltr_expanded  %>% filter(region %in% c("Eastern Bering Sea", "Northern Bering Sea"),
                                                      year %in% years) %>%
-  mutate(region="Bering Sea Combined")
+  mutate(region="Eastern and Northern Bering Sea")
 
 p1 <- enbs_trimmed %>%
   select(stratum, year) %>%
