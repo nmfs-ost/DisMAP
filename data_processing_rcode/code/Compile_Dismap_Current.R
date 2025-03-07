@@ -1030,8 +1030,9 @@ gmex_tow<-type_convert(gmex_tow, col_types = cols(
   COMBIO = col_character(),
   X28 = col_character()
 ))
+
 gmex_tow <- gmex_tow %>%
-  select('STATIONID', 'VESSEL', 'CRUISE_NO', 'P_STA_NO', 'INVRECID', 'GEAR_SIZE', 'GEAR_TYPE', 'MESH_SIZE', 'MIN_FISH', 'OP') %>%
+  select('CRUISEID','STATIONID', 'VESSEL', 'CRUISE_NO', 'P_STA_NO', 'INVRECID', 'GEAR_SIZE', 'GEAR_TYPE', 'MESH_SIZE', 'MIN_FISH', 'OP') %>%
   filter(GEAR_TYPE=='ST')
 
 gmex_bio <-readr::read_delim(here::here("data_processing_rcode/data","gmex_BGSREC.csv"),
@@ -1060,7 +1061,8 @@ names(gmex_cruise)<-tolower(names(gmex_cruise))
 gmex_spp <-read_csv(here::here("data_processing_rcode/data","gmex_BCT_NFR_01182023.csv"))
 problems(gmex_spp)
 names(gmex_spp)<-tolower(names(gmex_spp))
-gmex_spp<-dplyr::select(gmex_spp,biocode,ciu_biocode,taxon)
+gmex_spp<- gmex_spp %>%
+  dplyr::select(biocode,ciu_biocode,taxon)
 
 ##Resolve issues
 #Issue 1: Proper way to Merge the Tow (invrec) and bio (bgsrec) tables
@@ -1080,13 +1082,16 @@ names(gmex_tow) <- tolower(names(gmex_tow))
 names(gmex_bio) <- tolower(names(gmex_bio))
 #create bgsrec_invrecid_fix
 #get only stationid and invrecid from invrec table
-get_stationid_invrecid <- gmex_tow %>% dplyr::select(stationid, invrecid) %>% rename(inv_invrecid = invrecid)
+get_stationid_invrecid <- gmex_tow %>%
+  dplyr::select(stationid, invrecid) %>%
+  rename(inv_invrecid = invrecid)
 
 #extract bgsrec table records with missing invrecid and update based on stationid from get_stationid_invrecid
 bgsrec_null_invrecid <- gmex_bio %>%
   dplyr::filter(is.na(invrecid)) %>%
   dplyr::left_join(get_stationid_invrecid, by = 'stationid') %>%
-  dplyr::mutate(invrecid = inv_invrecid) %>% dplyr::select(-inv_invrecid)
+  dplyr::mutate(invrecid = inv_invrecid) %>%
+  dplyr::select(-inv_invrecid)
 
 #Extracts any remaining bgsrec table records with null invrecid. These should all be
 #associated with reef fish cruises at this point.
@@ -1104,6 +1109,7 @@ gmex_bio_mod <- bgsrec_null_invrecid %>%
   dplyr::filter(!is.na(invrecid)) %>%
   dplyr::arrange(bgsid)
 
+
 #Check to make sure only records with invrecs are present - should have 0 rows
 bgsrec_null_check2 <- gmex_bio_mod %>% filter(is.na(invrecid))
 
@@ -1113,9 +1119,9 @@ rm(bgsrec_null_invrecid,bgsrec_null_check1,bgsrec_null_check2,bgsrec_with_invrec
 gc()
 
 #Issues 2: Taxonomic coding
-# (3-1) The newbiocodesbig table does not fully contain all code/taxonomic names found in the bgsrec table:
-# (3-2) the bgsrec table has a few instances of invalid bio_bgs (biocode) values; and
-# (3-3) multiple code/taxonomic combinations may refer to the same organisms under different names. For example,
+# (2-1) The newbiocodesbig table does not fully contain all code/taxonomic names found in the bgsrec table:
+# (2-2) the bgsrec table has a few instances of invalid bio_bgs (biocode) values; and
+# (2-3) multiple code/taxonomic combinations may refer to the same organisms under different names. For example,
 # 189040204/MONACANTHUS HISPIDUS, 189040305/STEPHANOLEPIS HISPIDA, 189040306/STEPHANOLEPIS HISPIDUS
 # and 189040307/STEPHANOLEPIS HISPIDA (current) have all been used to identify Planehead Filefish due to
 # changes in taxonomy. The bsgrec file reflects the code/taxonomic use at time of data ingest.
@@ -1138,7 +1144,7 @@ gmex_bio_utax1 <- gmex_bio_mod %>%
   dplyr::mutate(bio_bgs = as.integer(bio_bgs)) %>%
   #rename bio_bgs to biocode to allow for easier manipulation with master biocode table (mbt)
   dplyr::rename(biocode = bio_bgs) %>%
-  ### take care of Issue 3-2 ###
+  ### take care of Issue 2-2 ###
   # fix invalid zero code and make it the code (999999998) for unidentified specimen
   dplyr::mutate(biocode = ifelse(biocode == 0,999999998,biocode)) %>%
   # fix invalid unidentified fish code 100000001 to proper code
@@ -1148,13 +1154,9 @@ gmex_bio_utax1 <- gmex_bio_mod %>%
   # fix invalid unidentified crustacean code 300000001  and 300000001 to proper code
   dplyr::mutate(biocode = ifelse(biocode == 300000001,300000000,biocode)) %>%
   dplyr::mutate(biocode = ifelse(biocode == 300000002,300000000,biocode)) %>%
-  ### take care of Issue 3-3 ###
+  ### take care of Issue 2-3 ###
   #update older inactive biocodes to those currently in use (ciu_biocode)
-  dplyr::left_join(dplyr::select(gmex_spp,biocode,taxon,ciu_biocode), by = "biocode") %>%
-  #rename taxon to bgs taxon to keep the original name associated with a biocode
-  dplyr::rename(bgs_taxon = taxon) %>%
-  #do a left join to bring in taxon associated with ciu_taxon
-  dplyr::left_join(dplyr::select(gmex_spp,biocode,taxon), by = c("ciu_biocode" = "biocode"))
+  dplyr::left_join(gmex_spp, by = "biocode")
 
 ### Issue 3: Problematic Taxa with taxonomic issues or problematic separation in the field###
 # Collapse taxa with known identification issues and collapse all sponge to single category
@@ -1191,7 +1193,12 @@ gmex_bio_utax2 <- gmex_bio_utax1 %>%
   mutate(biocode = ifelse(biocode >= 691010101 & biocode <= 691010112,691010100,biocode)) %>%
   mutate(taxon = ifelse(biocode %in% c(691010100),'ASTROPECTEN',taxon))
 
-## MERGE the corrected catch/tow/species information from above with cruise information, but only for shrimp trawl tows (ST)
+
+
+### PAUSED HERE ####
+
+
+## Merge the corrected catch/tow/species information from above with cruise information, but only for shrimp trawl tows (ST)
 gmex <- left_join(gmex_bio_utax2, gmex_tow, by = c("stationid","vessel", "cruise_no", "p_sta_no", "invrecid")) %>%
   # add station location and related data
   left_join(gmex_station, by = c("cruiseid", "stationid", "cruise_no", "p_sta_no")) %>%
