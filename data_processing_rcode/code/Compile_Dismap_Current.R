@@ -1144,7 +1144,7 @@ gmex_bio_utax1 <- gmex_bio_mod %>%
   dplyr::mutate(bio_bgs = as.integer(bio_bgs)) %>%
   #rename bio_bgs to biocode to allow for easier manipulation with master biocode table (mbt)
   dplyr::rename(biocode = bio_bgs) %>%
-  ### take care of Issue 2-2 ###
+  ### take care of Issue 3-2 ###
   # fix invalid zero code and make it the code (999999998) for unidentified specimen
   dplyr::mutate(biocode = ifelse(biocode == 0,999999998,biocode)) %>%
   # fix invalid unidentified fish code 100000001 to proper code
@@ -1154,9 +1154,13 @@ gmex_bio_utax1 <- gmex_bio_mod %>%
   # fix invalid unidentified crustacean code 300000001  and 300000001 to proper code
   dplyr::mutate(biocode = ifelse(biocode == 300000001,300000000,biocode)) %>%
   dplyr::mutate(biocode = ifelse(biocode == 300000002,300000000,biocode)) %>%
-  ### take care of Issue 2-3 ###
+  ### take care of Issue 3-3 ###
   #update older inactive biocodes to those currently in use (ciu_biocode)
-  dplyr::left_join(gmex_spp, by = "biocode")
+  dplyr::left_join(dplyr::select(gmex_spp,biocode,taxon,ciu_biocode), by = "biocode") %>%
+  #rename taxon to bgs taxon to keep the original name associated with a biocode
+  dplyr::rename(bgs_taxon = taxon) %>%
+  #do a left join to bring in taxon associated with ciu_taxon
+  dplyr::left_join(dplyr::select(gmex_spp,biocode,taxon), by = c("ciu_biocode" = "biocode"))
 
 ### Issue 3: Problematic Taxa with taxonomic issues or problematic separation in the field###
 # Collapse taxa with known identification issues and collapse all sponge to single category
@@ -1190,24 +1194,57 @@ gmex_bio_utax2 <- gmex_bio_utax1 %>%
   mutate(ciu_biocode = ifelse(ciu_biocode %in% c(228012001,228012002),228012000,ciu_biocode)) %>%
   mutate(taxon = ifelse(ciu_biocode %in% c(228012000),'RIMAPENAEUS',taxon)) %>%
   #Astropecten species have changed, distribution overlap with major east west differences
-  mutate(biocode = ifelse(biocode >= 691010101 & biocode <= 691010112,691010100,biocode)) %>%
-  mutate(taxon = ifelse(biocode %in% c(691010100),'ASTROPECTEN',taxon))
+  mutate(biocode = ifelse(ciu_biocode >= 691010101 & ciu_biocode <= 691010112,691010100,biocode)) %>%
+  mutate(taxon = ifelse(ciu_biocode %in% c(691010100),'ASTROPECTEN',taxon))
 
 
+## 03/03/2025 D Hanisko - Collapse gmex_bio_utax2 to have single entry for each taxa for a distinct invrecid (tow)
+gmex_bio_utax3 <- gmex_bio_utax2 %>%
+  group_by(cruiseid, stationid, invrecid, ciu_biocode, taxon) %>%
+  summarise(record_cnt = n(),
+            tcntexp = sum(cntexp, na.rm=TRUE),
+            tselect_bgs = sum(select_bgs,na.rm=TRUE))
 
-### PAUSED HERE ####
+## 03/03/2025 D Hanisko - Find Catch with multiple records
+gmex_bio_utax3_chk <- gmex_bio_utax3 %>%
+  filter(record_cnt > 1)
 
-
-## Merge the corrected catch/tow/species information from above with cruise information, but only for shrimp trawl tows (ST)
-gmex <- left_join(gmex_bio_utax2, gmex_tow, by = c("stationid","vessel", "cruise_no", "p_sta_no", "invrecid")) %>%
+## 03/03/2025 D Hanisko - The following code left joins gmex_tow to gmex_bio_utax2 which will keep only tows with
+## catch. However, SEAMAP data has a limited number valid tows for which there were no catch. The better approach
+## is to determine the which SEAMAP trawls are valid and left join catch to those tows. A small number of tows with
+## no catch have and operation code (op = 'W' or water haul) which was later discontinued from use. There may also
+## be other tows with zero catch and null op. All gmex_original objects based on previouse code with noted changes.
+## 03/30/2025 D Hanisko - The following code also drops YOY records with BGSCODE = T. These records should have valid
+## weights. The extrapolated counts (cntexp) and weights (select_bgs) of a taxa for a tow is the sum of all records of
+## that taxon.
+## See code provided by D Hanisko below.
+## MERGE the corrected catch/tow/species information from above with cruise information, but only for shrimp trawl tows (ST)
+## 03/03/2025 D Hanisko - modified the first left joint to gmex_bio_utax2 to include "cruiseid" as this is added to
+## the gmex_tow ingest above and is needed to prevent redunt variables from showing up.
+gmex_original <- left_join(gmex_bio_utax2, gmex_tow, by = c("cruiseid", "stationid","vessel", "cruise_no", "p_sta_no", "invrecid")) %>%
   # add station location and related data
   left_join(gmex_station, by = c("cruiseid", "stationid", "cruise_no", "p_sta_no")) %>%
   # add cruise title
   left_join(gmex_cruise, by = c("cruiseid", "vessel")) %>%
+  ## 03/03/2025 D Hanisko - Elminating this to better match with updated code
   #filter out YOY (denoted by BSGCODE=T) since they are useful for counts by not weights
-  filter(bgscode != "T"| is.na(bgscode))
+  #filter(bgscode != "T"| is.na(bgscode))
+  ## 03/03/2025 D Hanisko - keeping only null/no operation code or water hauls op = "W"
+  ## This also removes op = 9 which is undocumented in GSMFC metadata
+  ## An op = '9' is "NOS,WTS,OR SPECIES LIST INCOMPLETE"
+  # OP is null (no letter value) or W
+  filter(is.na(op) | op == "W")
 
-gmex <- gmex %>%
+## 03/03/2025 D Hanisko - Check gmex_original with missing invrecid. Zero is great.
+gmex_original_ck1 <- gmex_original %>%
+  filter(is.na(invrecid))
+## 03/03/2025 D Hanisko - Check gmex_original for missing gear_type.
+gmex_original_ck2 <- gmex_original %>%
+  group_by(invrecid) %>%
+  slice(1) %>%
+  filter(is.na(gear_type))
+
+gmex_original <- gmex_original %>%
   # Trim to high quality SEAMAP summer trawls, based off the subset used by Jeff Rester's GS_TRAWL_05232011.sas
   filter(grepl("Summer", title) &
            gear_size == 40 &
@@ -1229,7 +1266,156 @@ gmex <- gmex %>%
     # Add "strata" (define by STAT_ZONE and depth bands)
     # degree bins, # degree bins, # 100 m bins
     #stratum = paste(STAT_ZONE, floor(depth/100)*100 + 50, sep= "-")
-  )
+  ) %>%
+  ## 03/03/2025 D Hanisko - Only deal with target years
+  filter(year >= 2010 & year <= 2023)
+
+## 03/03/2025 D Hanisko - Get counts by gear_type
+gmex_original_ck3 <- gmex_original %>% group_by(invrecid) %>%
+  slice(1) %>%
+  mutate(gear_type = ifelse(is.na(gear_type), "**", gear_type)) %>%
+  group_by(gear_type) %>%
+  summarise(count = n())
+
+## 03/03/2025 D Hanisko - Get counts by op
+gmex_original_ck4 <- gmex_original %>% group_by(invrecid) %>%
+  slice(1) %>%
+  mutate(op = ifelse(is.na(op), "*", op)) %>%
+  group_by(op) %>%
+  summarise(count = n())
+
+## 03/03/2025 D Hanisko - get unique tows from gmex_original
+gmex_original_utows <- gmex_original %>%
+  group_by(invrecid) %>%
+  slice(1)
+
+
+## 03/03/2025 D Hanisko - Determine which tows to keep initially from the original gmex_tow object
+## Adding additional variable from gmex_station and gmex_cruise
+gmex_tow <- gmex_tow %>%
+  # add station location and related data dropping duplicated variables cruise_no and p_sta_no using select within left_join
+  left_join(select(gmex_station,-c("cruise_no","p_sta_no")), by = c("cruiseid", "stationid")) %>%
+  # add cruise title and dropping duplicated variable vesel using select within left_join
+  left_join(select(gmex_cruise, -c("vessel")), by = c("cruiseid"))
+
+## 03/03/2025 D Hanisko
+## Create a table of shrimp trawl tows (ST) showing frequency of opcoded (op in invrec) to get a better idea of
+## tow selection
+gmex_tow_op_1 <- gmex_tow %>%
+  mutate(op = ifelse(is.na(op), "*", op)) %>%
+  group_by(op) %>%
+  summarize(count = n())
+
+## 03/03/2025 D Hanisko - gmex_tow filters adapted from gmex_original
+gmex_tow <- gmex_tow %>%
+  # Trim to high quality SEAMAP summer trawls, based off the subset used by Jeff Rester's GS_TRAWL_05232011.sas
+  filter(grepl("Summer", title) &
+           gear_size == 40 &
+           mesh_size == 1.63 &
+           ## 03/03/2025 D Hanisko - See details below for alternate filtering...
+           # OP has no letter value
+           #!grepl("[A-Z]", op)) %>%
+           ## 03/03/2025 D Hanisko - keeping only null/no operation code or water hauls op = "W"
+           ## This also removes op = 9 which is undocumented in GSMFC metadata
+           ## An op = '9' is "NOS,WTS,OR SPECIES LIST INCOMPLETE"
+           # OP is null (no letter value) or W
+           (is.na(op) | op == "W")) %>%
+  mutate(
+    # Create a unique haulid
+    # 03/03/2025 D Haniksko - Creation of the haulid should be OK in this instance, unless there are multiple invrecid (unique for a tow)
+    # for a particular vessel + cruise_no + p_sta_no combination.
+    haulid = paste(formatC(vessel, width=3, flag=0), formatC(cruise_no, width=3, flag=0), formatC(p_sta_no, width=5, flag=0, format='d'), sep='-'),
+    # Extract year where needed
+    year = year(mo_day_yr),
+    # Calculate decimal lat and lon, depth in m, where needed
+    s_latd = ifelse(s_latd == 0, NA, s_latd),
+    s_lond = ifelse(s_lond == 0, NA, s_lond),
+    e_latd = ifelse(e_latd == 0, NA, e_latd),
+    e_lond = ifelse(e_lond == 0, NA, e_lond),
+    lat = rowMeans(cbind(s_latd + s_latm/60, e_latd + e_latm/60), na.rm=T),
+    lon = -rowMeans(cbind(s_lond + s_lonm/60, e_lond + e_lonm/60), na.rm=T),
+    # Add "strata" (define by STAT_ZONE and depth bands)
+    # degree bins, # degree bins, # 100 m bins
+    #stratum = paste(STAT_ZONE, floor(depth/100)*100 + 50, sep= "-")
+  ) %>%
+  ## 03/03/2025 D Hanisko - Only deal with target years
+  filter(year >= 2010 & year <= 2023)
+
+## 03/03/2025 D Hanisko
+## Create a table of gmex_tow shrimp trawl tows (ST) showing frequency of opcoded (op in invrec) after filter above
+gmex_tow_op_2 <- gmex_tow %>%
+  mutate(op = ifelse(is.na(op), "*", op)) %>%
+  group_by(op) %>%
+  summarize(count = n())
+
+## 03/03/2025 D Hanisko
+## Create gmex object as gmex_bio_utax2 left joined to gmex_tow using select within left_join to get rid of redundant variables
+## Unlike the original gmex_original object all biological records including year of young (YOY) are retained and the
+## filter(bgscode != "T"| is.na(bgscode)) is not implemented as these counts and weights need to be incorporated by getting
+## totals for each taxa by invrecid. See gmex_bio_tax3 above and gmex_bio_tax3_chk and gmex_utax3 that incorporates total counts
+## and weights for each invrec that has multiple entries for a taxon.
+gmex_utax2 <- gmex_tow %>%
+  left_join(select(gmex_bio_utax2,-c("vessel","cruise_no","p_sta_no")), by = c("cruiseid","stationid","invrecid"))
+
+## 03/03/2025 D Hanisko - Version using gmex_bio_utax3 with counts and weights collapsed for multiple records for a taxa
+## withing a invrecid.
+gmex_utax3 <- gmex_tow %>%
+  left_join(gmex_bio_utax3, by = c("cruiseid","stationid","invrecid"))
+
+# 03/03/2025 D Hanisko - Pick which version of taxa I want to work with; (1) gmex_utax2 for comps to original
+# or (2) gmex_utax3 to use catch collapes by taxon and tow to incorporate updates and YOY categories.
+gmex <- gmex_utax2
+
+# 03/03/2025 D Hanisko - All tows with catch should have at least one taxon that is null.
+chk_zero_catch <- gmex %>%
+  filter(is.na(taxon))
+
+## 03/03/2025 D Hanisko - get unique tows from gmex
+gmex_utows_1 <- gmex %>%
+  group_by(invrecid) %>%
+  slice(1)
+
+## 03/03/2025 D Hanisko - Compare gmex_original_utows and gmex_utows
+compare_1 <- gmex_utows_1 %>%
+  anti_join(gmex_original_utows, by = "invrecid")
+
+## 03/03/2025 D Hanisko - Address tows that should have been op coded based on 03/03/2025 download and
+## only addressing >= 2010
+gmex <- gmex %>%
+  dplyr::mutate(uop = op) %>%
+  ## 03/03/2025 D Hanisko - Update tow that should have been op coded based on 03/03/2025 download and
+  ## only addressing >= 2010
+  dplyr::mutate(uop =
+                  ifelse(vessel == '95' & cruise_no == '1701' & p_sta_no == '95007' & invrecid == 138972,
+                         'M', uop)) %>%
+  dplyr::mutate(uop =
+                  ifelse(vessel == '17' & cruise_no == '1503' & p_sta_no == '00030' & invrecid == 139159,
+                         'M', uop)) %>%
+  dplyr::mutate(uop =
+                  ifelse(vessel == '35' & cruise_no == '1202' & p_sta_no == '35006' & invrecid == 111362,
+                         'T', uop)) %>%
+  dplyr::mutate(uop =
+                  ifelse(vessel == '17' & cruise_no == '1002' & p_sta_no == '00068' & invrecid == 135137,
+                         'Z', uop)) %>%
+  dplyr::mutate(uop =
+                  ifelse(vessel == '17' & cruise_no == '1002' & p_sta_no == '00054' & invrecid == 135123,
+                         'X', uop)) %>%
+
+  dplyr::mutate(uop =
+                  ifelse(vessel == '35' & cruise_no == '1902' & p_sta_no == '00011' & invrecid == 142353,
+                         'G', uop)) %>%
+  dplyr::mutate(uop =
+                  ifelse(vessel == '77' & cruise_no == '1002' & p_sta_no == '00007' & invrecid == 135383,
+                         'Z', uop)) %>%
+  dplyr::filter(is.na(uop) | uop == "W") %>%
+  dplyr::select(-c("uop"))
+
+## 03/03/2025 D Hanisko - Compare gmex_original_utows and gmex_utows
+compare_2 <- gmex %>% group_by(invrecid) %>% slice(1) %>%
+  anti_join(gmex_original_utows, by = "invrecid")
+
+## 03/03/2025 D Hanisko - get unique tows from gmex after op code corrections
+gmex_utows_2 <- gmex %>% group_by(invrecid) %>% slice(1)
 
 #add stratum code defined by STAT_ZONE and depth bands (note depth in recorded as m, and depth bands based on 0-20 fathoms
 # and 21-60 fathoms))
@@ -1238,7 +1424,7 @@ gmex$depth_zone<-ifelse(gmex$depth_ssta<=36.576, "20",
 gmex<-gmex %>%
   mutate(stratum = paste(stat_zone, depth_zone, sep= "-"))
 
-# # fix speed
+## fix speed
 # Trim out or fix speed and duration records
 # trim out tows of 0, >60, or unknown minutes
 gmex <- gmex %>%
@@ -1294,7 +1480,8 @@ if (HQ_DATA_ONLY == TRUE){
   p1 <- gmex %>%
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
-    geom_jitter()
+    geom_jitter() +
+    theme(axis.text.x = element_text(angle = 90, size = rel(0.80)))
 
   p2 <- gmex %>%
     select(lat, lon) %>%
@@ -1303,7 +1490,7 @@ if (HQ_DATA_ONLY == TRUE){
 
 
   test <- gmex %>%
-    filter(year >= 2010, year!=2023) %>% #switched to 2010 and after since 2008-2009 were experimental years
+    filter(year >= 2010, year!=2023) %>% # switched to 2010 and after since 2008-2009 were experimental years
     select(stratum, year) %>%
     distinct() %>%
     group_by(stratum) %>%
@@ -1357,7 +1544,8 @@ if (HQ_DATA_ONLY == TRUE){
   p3 <- gmex_fltr %>%
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
-    geom_jitter()
+    geom_jitter() +
+    theme(axis.text.x = element_text(angle = 90, size = rel(0.80)))
 
   p4 <- gmex_fltr %>%
     select(lat, lon) %>%
@@ -1371,7 +1559,7 @@ if (HQ_DATA_ONLY == TRUE){
   }
   rm(test, test2, p1, p2, p3, p4)
 }
-rm(gmex_bio, gmex_cruise, gmex_spp, gmex_station, gmex_tow, problems,gmex_bio_mod, gmex_bio_utax2, gmex_bio_utax1, dups)
+rm(gmex_bio, gmex_cruise, gmex_spp, gmex_station, gmex_tow, problems, gmex_bio_mod, gmex_bio_utax2, gmex_bio_utax1, dups)
 
 # Compile Northeast US ===========================================================
 print("Compile NEUS")
