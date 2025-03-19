@@ -1065,8 +1065,8 @@ names(gmex_spp)<-tolower(names(gmex_spp))
 gmex_spp<- gmex_spp %>%
   dplyr::select(biocode,ciu_biocode,taxon)
 
-## Resolve issues
-# Issue 1: Proper way to merge gmex_tow and gmex_bio tables
+
+### Merging gmex_tow and gmex_bio tables ###
 
 # This code updates the null invrecid values in gmex_bio based on stationid from gmex_tow.
 # Remaining null values (from reef fish cruises) are removed to create gmex_bio_mod.
@@ -1103,13 +1103,15 @@ rm(bgsrec_null_invrecid,bgsrec_null_check1,bgsrec_null_check2,bgsrec_with_invrec
 gc()
 
 
-#Issue 2: Taxonomic coding
-# (2-1) gmex_bio_mod has a few instances of invalid bio_bgs (biocode) values; and
-# (2-2) multiple code/taxonomic combinations may refer to the same organisms under different names.
+### Resolve taxonomic coding ###
+
+# Gmex_bio_mod has a few instances of invalid bio_bgs (biocode) values.
+# Also, multiple code/taxonomic combinations may refer to the same organisms under different names.
 # Gmex_bio_mod reflects the code/taxonomic use at time of data ingest.
 # Gmex_spp will allow translation of cases where multiple code/taxonomic refer to the same organism.
 # Since multiple changes may have occurred, the ciu_biocode (currently in use biocode) value ties multiple records
 # that are now inactive to the current active biocode. Inactive biocodes have the variable inactive set to zero.
+
 # The following script updates biocode to ciu_biocode in gmex_bio_mod, using gmex_spp to merge.
 
 # starting with our gmex_bio_mod from above
@@ -1118,7 +1120,6 @@ gmex_bio_utax1 <- gmex_bio_mod %>%
   dplyr::mutate(bio_bgs = as.integer(bio_bgs)) %>%
   # rename bio_bgs to biocode to allow for easier manipulation with master biocode table (mbt)
   dplyr::rename(biocode = bio_bgs) %>%
-  ### addressing Issue 2-1 ###
   # fix invalid zero code and make it the code (999999998) for unidentified specimen
   dplyr::mutate(biocode = ifelse(biocode == 0,999999998,biocode)) %>%
   # fix invalid unidentified fish code 100000001 to proper code
@@ -1128,7 +1129,6 @@ gmex_bio_utax1 <- gmex_bio_mod %>%
   # fix invalid unidentified crustacean code 300000001  and 300000001 to proper code
   dplyr::mutate(biocode = ifelse(biocode == 300000001,300000000,biocode)) %>%
   dplyr::mutate(biocode = ifelse(biocode == 300000002,300000000,biocode)) %>%
-  ### addressing Issue 2-2 ###
   # update older inactive biocodes to those currently in use (ciu_biocode)
   dplyr::left_join(dplyr::select(gmex_spp,biocode,taxon,ciu_biocode), by = "biocode") %>%
   # rename taxon to bgs taxon to keep the original name associated with a biocode
@@ -1136,10 +1136,10 @@ gmex_bio_utax1 <- gmex_bio_mod %>%
   # do a left join to bring in taxon associated with ciu_taxon
   dplyr::left_join(dplyr::select(gmex_spp,biocode,taxon), by = c("ciu_biocode" = "biocode"))
 
-### Issue 3: Problematic Taxa with taxonomic issues or problematic separation in the field ###
-# Collapse taxa with known identification issues and collapse all sponge to single category
-# Note this process needs to be implemented after the ciu_biocode update as the statements
-# rely on the ciu_biocode. The statements undergo a review with each updated version of the MBT
+
+# Collapse taxa with known identification issues and collapse all sponges to single category
+# Note this process needs to be implemented after the chunk above (building`gmex_bio_utax1`), because
+# the updates rely on the ciu_biocode. These updates undergo a review with each updated version of gmex_spp.
 
 gmex_bio_utax2 <- gmex_bio_utax1 %>%
   # Update the squid genus Loligo and all species under genus Doryteuthis to the genus Doryteuthis
@@ -1148,22 +1148,22 @@ gmex_bio_utax2 <- gmex_bio_utax1 %>%
   # Update batfish species to Halieutichthys
   mutate(ciu_biocode = ifelse(ciu_biocode >= 195050401 & ciu_biocode <= 195050405,195050400,ciu_biocode)) %>%
   mutate(taxon = ifelse(ciu_biocode %in% c(195050400),'HALIEUTICHTHYS SP',taxon)) %>%
-  # Update all jellfishy in the genus Aurelia to the genus Aurelia
+  # Update all jellyfish in the genus Aurelia to the genus Aurelia
   mutate(ciu_biocode = ifelse(ciu_biocode >= 618010101 & ciu_biocode <= 618010105,618010100,ciu_biocode)) %>%
   mutate(taxon = ifelse(ciu_biocode %in% c(618010100),'AURELIA',taxon)) %>%
   # Update all lionfishes species to the genus Pterois
   mutate(ciu_biocode = ifelse(ciu_biocode %in% c(168011901,168011902),168011900,ciu_biocode)) %>%
   mutate(taxon = ifelse(ciu_biocode %in% c(168011900),'PTEROIS',taxon)) %>%
-  # smoothhounds (Mustelus) Managed as species complex, our ids are OK now but in the past assumptions made %>%
+  # Smoothhounds (Mustelus) managed as species complex, our ids are OK now but in the past assumptions made %>%
   mutate(ciu_biocode = ifelse(ciu_biocode %in% c(108031101,108031102,108031103,108031104),108031100,ciu_biocode)) %>%
   mutate(taxon = ifelse(ciu_biocode %in% c(108031100),'MUSTELUS SP',taxon)) %>%
-  # lump all sponge identifications to Porifera
+  # Update all sponge identifications to Porifera
   mutate(ciu_biocode = ifelse(ciu_biocode >= 613000000 & ciu_biocode < 616000000,613000000,ciu_biocode)) %>%
   mutate(taxon = ifelse(ciu_biocode %in% c(613000000),'PORIFERA',taxon)) %>%
   # handle out of order Porifera  Demospngiae and Agelas and Agelas and Agelasidae in coral numbers
   mutate(ciu_biocode = ifelse(ciu_biocode %in% c(999997000,999997020,617170000,617170100),613000000,ciu_biocode)) %>%
   mutate(taxon = ifelse(ciu_biocode %in% c(613000000),'PORIFERA',taxon)) %>%
-  # Collapse all shrimp species in Rimnapenaeus as they are not consistently seperated in the field
+  # Collapse all shrimp species in Rimnapenaeus as they are not consistently separated in the field
   mutate(ciu_biocode = ifelse(ciu_biocode %in% c(228012001,228012002),228012000,ciu_biocode)) %>%
   mutate(taxon = ifelse(ciu_biocode %in% c(228012000),'RIMAPENAEUS',taxon)) %>%
   # Astropecten species have changed, distribution overlap with major east west differences
@@ -1179,16 +1179,16 @@ gmex_bio_utax3 <- gmex_bio_utax2 %>%
             tselect_bgs = sum(select_bgs,na.rm=TRUE))
 
 
-## 03/03/2025 D Hanisko - The following code left joins gmex_tow to gmex_bio_utax2 which will keep only tows with
+## The following code left joins gmex_tow to gmex_bio_utax2 which will keep only tows with
 ## catch. However, SEAMAP data has a limited number valid tows for which there were no catch. The better approach
 ## is to determine the which SEAMAP trawls are valid and left join catch to those tows. A small number of tows with
 ## no catch have and operation code (op = 'W' or water haul) which was later discontinued from use. There may also
 ## be other tows with zero catch and null op. All gmex_original objects based on previouse code with noted changes.
-## 03/30/2025 D Hanisko - The following code also drops YOY records with BGSCODE = T. These records should have valid
+## The following code also drops YOY records with BGSCODE = T. These records should have valid
 ## weights. The extrapolated counts (cntexp) and weights (select_bgs) of a taxa for a tow is the sum of all records of
 ## that taxon.
-## See code provided by D Hanisko below.
-## MERGE the corrected catch/tow/species information from above with cruise information, but only for shrimp trawl tows (ST)
+
+## Merge the corrected catch/tow/species information from above with cruise information, but only for shrimp trawl tows (ST)
 ## 03/03/2025 D Hanisko - modified the first left joint to gmex_bio_utax2 to include "cruiseid" as this is added to
 ## the gmex_tow ingest above and is needed to prevent redunt variables from showing up.
 gmex_original <- left_join(gmex_bio_utax2, gmex_tow, by = c("cruiseid", "stationid","vessel", "cruise_no", "p_sta_no", "invrecid")) %>%
