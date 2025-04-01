@@ -1179,11 +1179,11 @@ gmex_bio_utax3 <- gmex_bio_utax2 %>%
             tselect_bgs = sum(select_bgs,na.rm=TRUE))
 
 
-# The following code left joins gmex_tow to gmex_bio_utax2 which will keep only tows with
-# catch. However, SEAMAP data has a limited number valid tows for which there were no catch. The better approach
+# The following code left joins gmex_tow to gmex_bio_utax2 which will keep only tows with catch.
+# However, SEAMAP data has a limited number valid tows for which there were no catch. The better approach
 # is to determine the which SEAMAP trawls are valid and left join catch to those tows. A small number of tows with
 # no catch have and operation code (op = 'W' or water haul) which was later discontinued from use. There may also
-# be other tows with zero catch and null op. All gmex_original objects based on previouse code with noted changes.
+# be other tows with zero catch and null op. All gmex_original objects based on previous code with noted changes.
 # The following code also drops YOY records with BGSCODE = T. These records should have valid weights.
 # The extrapolated counts (cntexp) and weights (select_bgs) of a taxa for a tow is the sum of all records of
 # that taxon.
@@ -1195,8 +1195,8 @@ gmex_original <- left_join(gmex_bio_utax2, gmex_tow, by = c("cruiseid", "station
   # add cruise title
   left_join(gmex_cruise, by = c("cruiseid", "vessel")) %>%
   ## 03/03/2025 D Hanisko - Elminating this to better match with updated code
-  #filter out YOY (denoted by BSGCODE=T) since they are useful for counts by not weights
-  #filter(bgscode != "T"| is.na(bgscode))
+  # filter out YOY (denoted by BSGCODE=T) since they are useful for counts by not weights
+  # filter(bgscode != "T"| is.na(bgscode))
   ## 03/03/2025 D Hanisko - keeping only null/no operation code or water hauls op = "W"
   ## This also removes op = 9 which is undocumented in GSMFC metadata
   ## An op = '9' is "NOS,WTS,OR SPECIES LIST INCOMPLETE"
@@ -1231,12 +1231,12 @@ gmex_original <- gmex_original %>%
 
 
 
-## 03/03/2025 D Hanisko - Determine which tows to keep initially from the original gmex_tow object
+## Determine which tows to keep initially from the original gmex_tow object
 ## Adding additional variable from gmex_station and gmex_cruise
 gmex_tow <- gmex_tow %>%
-  # add station location and related data dropping duplicated variables cruise_no and p_sta_no using select within left_join
+  # add station location and related data dropping duplicated variables cruise_no and p_sta_no
   left_join(select(gmex_station,-c("cruise_no","p_sta_no")), by = c("cruiseid", "stationid")) %>%
-  # add cruise title and dropping duplicated variable vesel using select within left_join
+  # add cruise title and dropping duplicated variable vesel
   left_join(select(gmex_cruise, -c("vessel")), by = c("cruiseid"))
 
 
@@ -1246,10 +1246,7 @@ gmex_tow <- gmex_tow %>%
   filter(grepl("Summer", title) &
            gear_size == 40 &
            mesh_size == 1.63 &
-           ## 03/03/2025 D Hanisko - See details below for alternate filtering...
-           # OP has no letter value
-           #!grepl("[A-Z]", op)) %>%
-           ## 03/03/2025 D Hanisko - keeping only null/no operation code or water hauls op = "W"
+           ## keeping only null/no operation code or water hauls op = "W"
            ## This also removes op = 9 which is undocumented in GSMFC metadata
            ## An op = '9' is "NOS,WTS,OR SPECIES LIST INCOMPLETE"
            # OP is null (no letter value) or W
@@ -1274,7 +1271,6 @@ gmex_tow <- gmex_tow %>%
   filter(year >= 2010 & year <= 2023)
 
 
-## 03/03/2025 D Hanisko
 ## Create gmex object as gmex_bio_utax2 left joined to gmex_tow using select within left_join to get rid of redundant variables
 ## Unlike the original gmex_original object all biological records including year of young (YOY) are retained and the
 ## filter(bgscode != "T"| is.na(bgscode)) is not implemented as these counts and weights need to be incorporated by getting
@@ -1315,11 +1311,6 @@ gmex <- gmex %>%
   dplyr::filter(is.na(uop) | uop == "W") %>%
   dplyr::select(-c("uop"))
 
-## 03/03/2025 D Hanisko - Compare gmex_original_utows and gmex_utows
-compare_2 <- gmex %>%
-  group_by(invrecid) %>%
-  slice(1) %>%
-  anti_join(gmex_original_utows, by = "invrecid")
 
 ## 03/03/2025 D Hanisko - get unique tows from gmex after op code corrections
 gmex_utows_2 <- gmex %>% group_by(invrecid) %>% slice(1)
