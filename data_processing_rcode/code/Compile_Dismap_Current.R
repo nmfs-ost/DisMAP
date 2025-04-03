@@ -1285,7 +1285,7 @@ gmex_utax3 <- gmex_tow %>%
 
 # 03/03/2025 D Hanisko - Pick which version of taxa I want to work with; (1) gmex_utax2 for comps to original
 # or (2) gmex_utax3 to use catch collapes by taxon and tow to incorporate updates and YOY categories.
-gmex <- gmex_utax2
+gmex <- gmex_utax3
 
 
 ## 03/03/2025 D Hanisko - Address tows that should have been op coded based on 03/03/2025 download and
@@ -1312,14 +1312,11 @@ gmex <- gmex %>%
   dplyr::select(-c("uop"))
 
 
-## 03/03/2025 D Hanisko - get unique tows from gmex after op code corrections
-gmex_utows_2 <- gmex %>% group_by(invrecid) %>% slice(1)
-
-
 # add stratum code defined by STAT_ZONE and depth bands (note depth in recorded as m, and depth bands based on 0-20 fathoms
 # and 21-60 fathoms))
 gmex$depth_zone <- ifelse(gmex$depth_ssta<=36.576, "20",
                         ifelse(gmex$depth_ssta>36.576, "60", NA))
+
 gmex <- gmex %>%
   mutate(stratum = paste(stat_zone, depth_zone, sep= "-"))
 
@@ -3440,7 +3437,7 @@ dat <- rbind(ai, ebs, gmex, goa, nbs, neus_fall, neus_spring, seusFALL, seusSPRI
   # remove any extra white space from around spp and common names
   mutate(spp= str_squish(spp))
 
-#convert all taxa names to first word capitalzied and rest lowercase...
+#convert all taxa names to first word capitalized and rest lowercase...
 dat$spp<-firstup(dat$spp)
 
 #========================== start SPECIES CHECK =============
