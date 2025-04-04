@@ -1138,8 +1138,7 @@ gmex_bio_utax1 <- gmex_bio_mod %>%
 
 
 # Collapse taxa with known identification issues and collapse all sponges to single category
-# Note this process needs to be implemented after the chunk above (building`gmex_bio_utax1`), because
-# the updates rely on the ciu_biocode. These updates undergo a review with each updated version of gmex_spp.
+# These updates undergo a review with each updated version of gmex_spp.
 
 gmex_bio_utax2 <- gmex_bio_utax1 %>%
   # Update the squid genus Loligo and all species under genus Doryteuthis to the genus Doryteuthis
@@ -1247,9 +1246,7 @@ gmex_tow <- gmex_tow %>%
            gear_size == 40 &
            mesh_size == 1.63 &
            ## keeping only null/no operation code or water hauls op = "W"
-           ## This also removes op = 9 which is undocumented in GSMFC metadata
-           ## An op = '9' is "NOS,WTS,OR SPECIES LIST INCOMPLETE"
-           # OP is null (no letter value) or W
+           ## This also removes op = 9 ("NOS,WTS,OR SPECIES LIST INCOMPLETE") which is undocumented in GSMFC metadata
            (is.na(op) | op == "W")) %>%
   mutate(
     # Create a unique haulid
@@ -1263,9 +1260,6 @@ gmex_tow <- gmex_tow %>%
     e_lond = ifelse(e_lond == 0, NA, e_lond),
     lat = rowMeans(cbind(s_latd + s_latm/60, e_latd + e_latm/60), na.rm=T),
     lon = -rowMeans(cbind(s_lond + s_lonm/60, e_lond + e_lonm/60), na.rm=T),
-    # Add "strata" (define by STAT_ZONE and depth bands)
-    # degree bins, # degree bins, # 100 m bins
-    # stratum = paste(STAT_ZONE, floor(depth/100)*100 + 50, sep= "-")
   ) %>%
   ## filter for target years
   filter(year >= 2010 & year <= 2023)
@@ -1336,7 +1330,7 @@ gmex_strats <- gmex %>%
 
 gmex <- left_join(gmex, gmex_strats, by = "stratum")
 
-# while comsat is still present
+# while comstat is still present
 # Remove a tow when paired tows exist (same lat/lon/year but different haulid, only Gulf of Mexico)
 # identify duplicate tows at same year/lat/lon
 dups <- gmex %>%
@@ -1355,12 +1349,11 @@ gmex <- gmex %>%
   # adjust for area towed
   mutate(
     # kg per 10000m2. calc area trawled in m2: knots * 1.8 km/hr/knot * 1000 m/km * minutes * 1 hr/60 min * width of gear in feet * 0.3 m/ft # biomass per standard tow
-    wtcpue = 10000*select_bgs/(vessel_spd * 1.85200 * 1000 * min_fish / 60 * gear_size * 0.3048)
+    wtcpue = 10000*tselect_bgs/(vessel_spd * 1.85200 * 1000 * min_fish / 60 * gear_size * 0.3048)
   ) %>%
-  # remove non-fish
+  # remove unidentified spp
   filter(
     spp != '' | !is.na(spp),
-    # remove unidentified spp
     !spp %in% c('UNID CRUSTA', 'UNID OTHER', 'UNID.FISH', 'CRUSTACEA(INFRAORDER) BRACHYURA', 'MOLLUSCA AND UNID.OTHER #01', 'ALGAE', 'MISCELLANEOUS INVERTEBR', 'OTHER INVERTEBRATES')
   ) %>%
   group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>%
