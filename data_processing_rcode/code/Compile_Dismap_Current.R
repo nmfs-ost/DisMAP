@@ -1221,13 +1221,9 @@ gmex <- gmex_tow %>%
   left_join(gmex_bio_utax3, by = c("cruiseid","stationid","invrecid"))
 
 
-
-## 03/03/2025 D Hanisko - Address tows that should have been op coded based on 03/03/2025 download and
-## only addressing >= 2010
 gmex <- gmex %>%
   dplyr::mutate(uop = op) %>%
-  ## 03/03/2025 D Hanisko - Update tow that should have been op coded based on 03/03/2025 download and
-  ## only addressing >= 2010
+  ## Update tow that should have been op coded based on 03/03/2025 download and only years >= 2010
   dplyr::mutate(uop =
                   ifelse(vessel == '95' & cruise_no == '1701' & p_sta_no == '95007' & invrecid == 138972, 'M', uop)) %>%
   dplyr::mutate(uop =
