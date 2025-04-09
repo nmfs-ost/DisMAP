@@ -1174,60 +1174,9 @@ gmex_bio_utax2 <- gmex_bio_utax1 %>%
 gmex_bio_utax3 <- gmex_bio_utax2 %>%
   group_by(cruiseid, stationid, invrecid, ciu_biocode, taxon) %>%
   summarise(record_cnt = n(),
+            # Note: Extrapolated counts (cntexp) & weights (select_bgs) of a taxa for a tow is the sum of all records of that taxon.
             tcntexp = sum(cntexp, na.rm=TRUE),
             tselect_bgs = sum(select_bgs,na.rm=TRUE))
-
-
-# The following code left joins gmex_tow to gmex_bio_utax2 which will keep only tows with catch.
-# However, SEAMAP data has a limited number valid tows for which there were no catch. The better approach
-# is to determine the which SEAMAP trawls are valid and left join catch to those tows. A small number of tows with
-# no catch have and operation code (op = 'W' or water haul) which was later discontinued from use. There may also
-# be other tows with zero catch and null op. All gmex_original objects based on previous code with noted changes.
-# The following code also drops YOY records with BGSCODE = T. These records should have valid weights.
-# The extrapolated counts (cntexp) and weights (select_bgs) of a taxa for a tow is the sum of all records of
-# that taxon.
-
-## Merge the corrected catch/tow/species information from above with cruise information, but only for shrimp trawl tows (ST)
-gmex_original <- left_join(gmex_bio_utax2, gmex_tow, by = c("cruiseid", "stationid","vessel", "cruise_no", "p_sta_no", "invrecid")) %>%
-  # add station location and related data
-  left_join(gmex_station, by = c("cruiseid", "stationid", "cruise_no", "p_sta_no")) %>%
-  # add cruise title
-  left_join(gmex_cruise, by = c("cruiseid", "vessel")) %>%
-  ## 03/03/2025 D Hanisko - Elminating this to better match with updated code
-  # filter out YOY (denoted by BSGCODE=T) since they are useful for counts by not weights
-  # filter(bgscode != "T"| is.na(bgscode))
-  ## 03/03/2025 D Hanisko - keeping only null/no operation code or water hauls op = "W"
-  ## This also removes op = 9 which is undocumented in GSMFC metadata
-  ## An op = '9' is "NOS,WTS,OR SPECIES LIST INCOMPLETE"
-  # OP is null (no letter value) or W
-  filter(is.na(op) | op == "W")
-
-gmex_original <- gmex_original %>%
-  # Trim to high quality SEAMAP summer trawls, based off the subset used by Jeff Rester's GS_TRAWL_05232011.sas
-  filter(grepl("Summer", title) &
-           gear_size == 40 &
-           mesh_size == 1.63 &
-           # OP has no letter value
-           !grepl("[A-Z]", op)) %>%
-  mutate(
-    # Create a unique haul id
-    haulid = paste(formatC(vessel, width=3, flag=0), formatC(cruise_no, width=3, flag=0), formatC(p_sta_no, width=5, flag=0, format='d'), sep='-'),
-    # Extract year where needed
-    year = year(mo_day_yr),
-    # Calculate decimal lat and lon, depth in m, where needed
-    s_latd = ifelse(s_latd == 0, NA, s_latd),
-    s_lond = ifelse(s_lond == 0, NA, s_lond),
-    e_latd = ifelse(e_latd == 0, NA, e_latd),
-    e_lond = ifelse(e_lond == 0, NA, e_lond),
-    lat = rowMeans(cbind(s_latd + s_latm/60, e_latd + e_latm/60), na.rm=T),
-    lon = -rowMeans(cbind(s_lond + s_lonm/60, e_lond + e_lonm/60), na.rm=T),
-    # Add "strata" (define by STAT_ZONE and depth bands)
-    # degree bins, # degree bins, # 100 m bins
-    # stratum = paste(STAT_ZONE, floor(depth/100)*100 + 50, sep= "-")
-  ) %>%
-  # Only deal with target years
-  filter(year >= 2010 & year <= 2023)
-
 
 
 ## Determine which tows to keep initially from the original gmex_tow object
@@ -1235,14 +1184,15 @@ gmex_original <- gmex_original %>%
 gmex_tow <- gmex_tow %>%
   # add station location and related data dropping duplicated variables cruise_no and p_sta_no
   left_join(select(gmex_station,-c("cruise_no","p_sta_no")), by = c("cruiseid", "stationid")) %>%
-  # add cruise title and dropping duplicated variable vesel
+  # add cruise title and dropping duplicated variable vessel
   left_join(select(gmex_cruise, -c("vessel")), by = c("cruiseid"))
 
 
-## 03/03/2025 D Hanisko - gmex_tow filters adapted from gmex_original
+## filtering gmex_tow
 gmex_tow <- gmex_tow %>%
-  # Trim to high quality SEAMAP summer trawls, based off the subset used by Jeff Rester's GS_TRAWL_05232011.sas
+  # Trim to high quality SEAMAP summer trawls
   filter(grepl("Summer", title) &
+           # NOTE: gear_size is 42ft (width of trawl net) but recorded as 40ft #
            gear_size == 40 &
            mesh_size == 1.63 &
            ## keeping only null/no operation code or water hauls op = "W"
@@ -1265,21 +1215,11 @@ gmex_tow <- gmex_tow %>%
   filter(year >= 2010 & year <= 2023)
 
 
-## Create gmex object as gmex_bio_utax2 left joined to gmex_tow using select within left_join to get rid of redundant variables
-## Unlike the original gmex_original object all biological records including year of young (YOY) are retained and the
-## filter(bgscode != "T"| is.na(bgscode)) is not implemented as these counts and weights need to be incorporated by getting
-## totals for each taxa by invrecid.
-gmex_utax2 <- gmex_tow %>%
-  left_join(select(gmex_bio_utax2,-c("vessel","cruise_no","p_sta_no")), by = c("cruiseid","stationid","invrecid"))
-
-## 03/03/2025 D Hanisko - Version using gmex_bio_utax3 with counts and weights collapsed for multiple records for a taxa
-## withing a invrecid.
-gmex_utax3 <- gmex_tow %>%
+## Create gmex object by left_joining gmex_bio_utax3 to gmex_tow
+## Counts and weights collapsed for multiple records for a taxa within an invrecid.
+gmex <- gmex_tow %>%
   left_join(gmex_bio_utax3, by = c("cruiseid","stationid","invrecid"))
 
-# 03/03/2025 D Hanisko - Pick which version of taxa I want to work with; (1) gmex_utax2 for comps to original
-# or (2) gmex_utax3 to use catch collapes by taxon and tow to incorporate updates and YOY categories.
-gmex <- gmex_utax3
 
 
 ## 03/03/2025 D Hanisko - Address tows that should have been op coded based on 03/03/2025 download and
@@ -1349,7 +1289,8 @@ gmex <- gmex %>%
   # adjust for area towed
   mutate(
     # kg per 10000m2. calc area trawled in m2: knots * 1.8 km/hr/knot * 1000 m/km * minutes * 1 hr/60 min * width of gear in feet * 0.3 m/ft # biomass per standard tow
-    wtcpue = 10000*tselect_bgs/(vessel_spd * 1.85200 * 1000 * min_fish / 60 * gear_size * 0.3048)
+    # gear_size is calculated by multiplying the 42ft net by 0.75 (the estimate of the active-use portion of the net)
+    wtcpue = 10000*tselect_bgs/(vessel_spd * 1.85200 * 1000 * min_fish / 60 * 31.5 * 0.3048)
   ) %>%
   # remove unidentified spp
   filter(
