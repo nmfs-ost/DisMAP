@@ -1336,37 +1336,6 @@ if (HQ_DATA_ONLY == TRUE){
     filter(stratum %in% test$stratum) %>%
     filter(year>=2010, year != 2023)
 
-  #### #filter out the points that are outside of the standard survey extent
-  # library(sf)
-  # library(sp)
-  # shape<-read_sf(dsn="~/transfer/DisMAP project/IDW_survey_shapefiles/GMEX_IDW", layer="GMEX_IDW_Region")
-  # plot(shape)
-  # points<-gmex_fltr %>%
-  #   sf::st_as_sf(coords=c("lon", "lat"))
-  # st_crs(points)<-4326
-  # shape<-sf::st_transform(shape, CRS("+proj=longlat"))
-  # st_crs(shape)<-4326
-  #
-  # library(tmap)
-  # tmap::qtm(points)
-  # ponts_in_boundary<-st_intersection(points, shape)
-  # tmap::qtm(ponts_in_boundary)
-  # gmex_coords <- unlist(st_geometry(ponts_in_boundary)) %>%
-  #   matrix(ncol=2,byrow=TRUE) %>%
-  #   as_tibble() %>%
-  #   setNames(c("lon","lat"))
-  # gmex_bind<-bind_cols(ponts_in_boundary, gmex_coords)
-  # gmex_fltr<-as.data.frame(gmex_bind) %>%
-  #   select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue)
-  #
-  # plot_new<-gmex_fltr %>%
-  #   select(lat, lon)
-  # # plot_old<-gmex_fltr %>%
-  # #   select(lat, lon)
-  # ggplot()+
-  #   geom_sf(data=shape, color="red")+
-  #   geom_point(data=plot, aes(x = lon, y = lat), color="blue")
-  #   # geom_point(data=plot_new, aes(x = lon, y = lat), color="green")
 
   p3 <- gmex_fltr %>%
     select(stratum, year) %>%
