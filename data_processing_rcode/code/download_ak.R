@@ -52,13 +52,15 @@ write.csv(x = haul,
 
 ## Download Species Data -------------------------------------------------------
 
+########### TESTING FIXES TO THIS CHUNK ###########
 res <- httr::GET(url = paste0('https://apps-st.fisheries.noaa.gov/ods/foss/afsc_groundfish_survey_species/',
-                              "?offset=0&limit=10000"))
+                              "?offset=0&limit=10000")) ## removing the  problematic command here to pull without filtering species code
 
 ## convert from JSON format
 data <- jsonlite::fromJSON(base::rawToChar(res$content))
 catch_spp <- data$items  %>%
-  dplyr::select(-links) # necessary for API accounting, but not part of the dataset
+  dplyr::select(-links) %>% # necessary for API accounting, but not part of the dataset
+  filter(species_code < 32000)
 
 write.csv(x = catch_spp,
           here::here("data_processing_rcode/data/AK_gap_products_foss_species.csv"))
@@ -97,7 +99,7 @@ for (i in seq(0, 1000000, 10000)){
   print(i)
   ## query the API link
   res <- httr::GET(url = paste0("https://apps-st.fisheries.noaa.gov/ods/foss/afsc_groundfish_survey_catch/",
-                                "?offset=",i,"&limit=10000",'&q={"species_code":{"$lt":32000}}'))
+                                "?offset=",i,"&limit=10000"))
   ## convert from JSON format
   data <- jsonlite::fromJSON(base::rawToChar(res$content))
 
@@ -112,7 +114,9 @@ for (i in seq(0, 1000000, 10000)){
                             dplyr::select(-links)) # necessary for API accounting, but not part of the dataset)
 }
 # mostly for testing, but also nice to have it organized
-catch <- catch[order(catch$species_code), ]
+
+
+ catch <- catch[order(catch$species_code), ]
 catch <- catch[order(catch$hauljoin), ]
 
 write.csv(x = catch,
