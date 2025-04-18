@@ -116,7 +116,7 @@ for (i in seq(0, 1000000, 10000)){
 # mostly for testing, but also nice to have it organized
 
 
- catch <- catch[order(catch$species_code), ]
+catch <- catch[order(catch$species_code), ]
 catch <- catch[order(catch$hauljoin), ]
 
 write.csv(x = catch,
