@@ -97,6 +97,9 @@ catch <- unique(dat)
 catch <- catch[order(catch$species_code), ]
 catch <- catch[order(catch$hauljoin), ]
 
+write.csv(x = catch,
+          here::here("data_processing_rcode/data/AK_gap_products_foss_catch.csv"))
+
 ############ Testing # April 21, 2025
 dim(catch)
 # 438608      7
