@@ -73,7 +73,9 @@ goa_wide <- goa_ex %>%
   select(region, spp, yrs1993_90:yrs2023_21) %>%
   mutate(total_change_wtcpue = yrs1993_90 + yrs1996_93 + yrs1999_96 + yrs2003_99 + yrs2005_03 + yrs2007_05 +
                                    yrs2009_07 + yrs2011_09 + yrs2013_11 + yrs2015_13 + yrs2017_15 + yrs2019_17 +
-                                   yrs2021_19 + yrs2023_21)
+                                   yrs2021_19 + yrs2023_21) # this is a separate table
+
+## Add presence absence (1/0), actual biomass, percentile for just that year
 
 goa_long <- goa_wide %>%
   pivot_longer(yrs1993_90:total_change_wtcpue, names_to = "year_diff", values_to = "wtcpue_diff")
