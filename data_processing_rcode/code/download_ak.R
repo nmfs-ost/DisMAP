@@ -61,7 +61,7 @@ catch_spp <- data$items  %>%
   dplyr::select(-links) # necessary for API accounting, but not part of the dataset
 
 catch_spp <- catch_spp %>%
-  dplyr::filter(species_code < 32000)
+  dplyr::filter(species_code < 32000) # dplyr::filter(species_code < 32000 | species_code %in% c(69323, 69322, 68580))
 
 write.csv(x = catch_spp,
           here::here("data_processing_rcode/data/AK_gap_products_foss_species.csv"))
