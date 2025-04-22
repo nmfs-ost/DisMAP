@@ -3,6 +3,7 @@
 # change in biomass of each species in a survey region
 
 
+
 # Load required packages
 library(devtools)
 library(here)
@@ -14,44 +15,26 @@ library(tidyr)
 library(tibble)
 library(ggplot2)
 library(RColorBrewer)
-# library(stringr)
-# library(data.table)
-# library(taxize)
-# library(worrms)
-# library(rfishbase)
-# library(lubridate)
-# library(PBSmapping)
-# library(gridExtra)
-# library(questionr)
-# library(geosphere)
+
 
 # Read in data from Compile_Dismap_Current.r
 ## Note: I am using example data from last year for now##
+data_ex <- data.frame(base::readRDS(file = here::here("data_processing_rcode/output/data_clean/alldata_withzeros.rds")))
+mydata_filt <- data_ex %>%
+  filter(region == "Aleutian Islands" & spp == "Gadus macrocephalus")
 
-goa_ex <- readr::read_csv(file = here::here("data_processing_rcode/output/python/example_GOA_survey.csv"))[,-1] # remove "row number" column
+############ PAUSED HERE - finish writing this conditional ######################
+# data__update <- data_ex %>%
+#   if(region == "Aleutian Islands") {
+#     mutate(survey = "Aleutian Islands Bottom Trawl Survey")
+#   } else if (region == "Eastern Bering Sea") {
+#       mutate(survey = "Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey")
+#     } else if
 
-#This step seems unecessary#
-# goa_ex <- goa_ex %>%
-#   type_convert(goa_ex, col_types = cols(
-#     region = col_character(),
-#     haulid = col_integer(),
-#     year = col_double(),
-#     spp = col_character(),
-#     wtcpue = col_double(),
-#     common = col_character(),
-#     stratum = col_integer(),
-#     stratumarea = col_integer(),
-#     lat = col_double(),
-#     lon = col_double(),
-#     depth = col_double(),
-#     DistributionProjectName = col_character(),
-#   ))
-
-goa_ex$year <- as.character(goa_ex$year)
-
-goa_wide <- goa_ex %>%
-  group_by(region, year, spp) %>%
-  summarise(wtcpue = sum(wtcpue)) %>%
+data_wide <- data_ex %>%
+  # group_by(region, year, spp) %>%
+  # summarise(wtcpue = sum(wtcpue)) %>%
+  select(-c(haulid, stratum, stratumarea, lat, lon, depth))
   pivot_wider(names_from = year, values_from = wtcpue, names_prefix = "yr") %>%
   mutate(
     yrs1993_90 = yr1993 - yr1990,
