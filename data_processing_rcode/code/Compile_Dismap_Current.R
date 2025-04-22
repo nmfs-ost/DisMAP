@@ -91,7 +91,7 @@ WRITE_TRIMMED_DAT <- TRUE
 DAT_EXPLODED <- TRUE
 
 # 9. Output the dat.exploded table #DEFAULT:FALSE
-WRITE_DAT_EXPLODED <- TRUE
+WRITE_DAT_EXPLODED <- FALSE
 
 
 # Workspace setup ---------------------------------------------------------
@@ -2204,6 +2204,8 @@ Sys.time()
 # This takes about 10 minutes
 if (DAT_EXPLODED == TRUE){
   dat.exploded <- as.data.table(trimmed_dat_fltr_expanded)[,explode0(.SD), by="region"]
+  saveRDS(dat.exploded, here::here("data_processing_rcode/output/data_clean", "alldata_withzeros.rds"))
+
   dat_expl_spl <- split(dat.exploded, dat.exploded$region, drop = FALSE)
 
   if(isTRUE(WRITE_DAT_EXPLODED)){
