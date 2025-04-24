@@ -154,19 +154,14 @@ netwtcpue <- netwtcpue %>%
 
 #### Writing csv files for development team ####
 
-write.csv(data_rank, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorPercentile.csv"))
-write.csv(netwtcpue, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorNetWTCPUE.csv"))
+# write.csv(data_rank, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorPercentile.csv"))
+# write.csv(netwtcpue, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorNetWTCPUE.csv"))
 
 
+#### Visualizations ####
 
-goa_long <- goa_wide %>%
-  pivot_longer(yrs1993_90:total_change_wtcpue, names_to = "year_diff", values_to = "wtcpue_diff")
-
-#an example of filtering for a species and visualizing
-goa_filt <- goa_long %>%
-  filter(spp== "Aphrocallistes vastus")
-
-plot1 <- ggplot(goa_filt, aes(year_diff, spp)) +
-  geom_tile(aes(fill= wtcpue_diff)) +
+# an example of filtering for a species and visualizing - redo this
+plot1 <- ggplot(data_rank, aes(Year, Species)) +
+  geom_tile(aes(fill= Percentile)) +
   theme(axis.text.x = element_text(angle = 60, size = rel(0.80))) +
   scale_colour_brewer(palette = "Spectral")
