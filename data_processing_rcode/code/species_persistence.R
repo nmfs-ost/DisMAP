@@ -55,7 +55,7 @@ data_update$region <- ifelse(data_update$region_old == "Aleutian Islands", "Aleu
                                                                                                    ifelse(data_update$region_old == "West Coast Triennial", "West Coast", NA))))))))))))
 
 
-# caculate percentile for each
+## Calculate percentile for each
 data_rank <- data_update %>%
   select(region, survey, year, spp, common, wtcpue) %>%
   group_by(region, survey, year, spp) %>%
@@ -63,6 +63,37 @@ data_rank <- data_update %>%
   group_by(region, survey, spp) %>%
   mutate(percentile = percent_rank(wtcpue)) %>%
   select(-wtcpue)
+
+## Calculate cumulative biomass gain or loss across all survey years
+
+data_wtcpue <- data_update %>%
+  select(region, survey, year, spp, common, wtcpue) %>%
+  group_by(region, survey, year, spp) %>%
+  summarise(wtcpue = sum(wtcpue))
+
+# loop through to find the gain or loss in biomass from year to year
+netwtcpue <- data.frame()
+surveys <- unique(data_wtcpue$survey)
+for(l in surveys) {
+
+  myfilt <- data_wtcpue %>%
+    filter(survey == v & spp == p)
+
+  years <- c(myfilt$year[1]:myfilt$year[length(myfilt$year)])
+
+  for (i in years) {
+
+    (i+1) - i
+
+    netwtcpue <- dplyr::bind_cols(netwtcpue,
+                                  #{add new object here}
+                                  )
+
+  }
+
+}
+
+
 
 ##### PAUSED HERE #####
 
