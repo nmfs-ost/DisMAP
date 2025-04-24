@@ -55,72 +55,109 @@ data_update$region <- ifelse(data_update$region_old == "Aleutian Islands", "Aleu
                                                                                                    ifelse(data_update$region_old == "West Coast Triennial", "West Coast", NA))))))))))))
 
 
-## Calculate percentile for each
+#### Calculate percentile for each spp, year, and survey####
 data_rank <- data_update %>%
-  select(region, survey, year, spp, common, wtcpue) %>%
+  select(region, survey, spp, year, common, wtcpue) %>%
   group_by(region, survey, year, spp) %>%
   summarise(wtcpue = sum(wtcpue)) %>%
   group_by(region, survey, spp) %>%
   mutate(percentile = percent_rank(wtcpue)) %>%
-  select(-wtcpue)
+  select(-wtcpue) %>%
+  dplyr::rename(Region = region,
+                SurveyName = survey,
+                Species = spp,
+                Year = year,
+                Percentile = percentile)
 
-## Calculate cumulative biomass gain or loss across all survey years
+#### Calculate cumulative biomass gain or loss across all survey years####
 
 data_wtcpue <- data_update %>%
   select(region, survey, year, spp, common, wtcpue) %>%
   group_by(region, survey, year, spp) %>%
   summarise(wtcpue = sum(wtcpue))
 
+## Combine data_rank and data_wtcpue
+## CG - I am leaving these as two different chunks above because data_rank should not have the year, but data_wtcpue should still have year
+
 # loop through to find the gain or loss in biomass from year to year
-netwtcpue <- data.frame()
+holding <- data.frame(survey = character(), spp = character(), Diff = numeric(), stringsAsFactors = FALSE)
+
+
 surveys <- unique(data_wtcpue$survey)
-for(l in surveys) {
 
-  myfilt <- data_wtcpue %>%
-    filter(survey == v & spp == p)
+for(v in surveys) {
 
-  years <- c(myfilt$year[1]:myfilt$year[length(myfilt$year)])
+  firstfilt <- data_wtcpue %>%
+    filter(survey == v)
 
-  for (i in years) {
+  spps <- unique(firstfilt$spp)
 
-    (i+1) - i
+  for (p in spps) {
 
-    netwtcpue <- dplyr::bind_cols(netwtcpue,
-                                  #{add new object here}
-                                  )
+    myfilt <- firstfilt %>%
+      filter(spp == p)
 
+    years <- c(myfilt$year)
+
+
+    for (i in 1:(length(years)-1)) {
+
+      wt_1 <- myfilt %>%
+        filter(year == years[i])
+
+      wt_2 <- myfilt %>%
+        filter(year == years[i+1])
+
+      diff <- wt_2$wtcpue[1] - wt_1$wtcpue[1]
+
+      #this step (below) might be redundant
+      survey <- paste(v)
+      spp <- paste(p)
+      Diff <- diff
+
+      temp <- data.frame(survey = survey, spp = spp, Diff = Diff, stringsAsFactors = FALSE)
+
+      holding <- rbind(holding, temp)
+
+    }
   }
-
 }
 
 
+netwtcpue <- holding %>%
+  group_by(survey, spp) %>%
+  summarise(net_wtcpue = sum(Diff))
 
-##### PAUSED HERE #####
+netwtcpue$region <- ifelse(netwtcpue$survey == "Aleutian Islands Bottom Trawl Survey", "Aleutian Islands",
+                             ifelse(netwtcpue$survey == "Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey", "Eastern Bering Sea",
+                                    ifelse(netwtcpue$survey == "Northern Bering Sea Crab/Groundfish Survey - Eastern Bering Sea Shelf Survey Extension", "Northern Bering Sea",
+                                           ifelse(netwtcpue$survey == "Gulf of Alaska Bottom Trawl Survey", "Gulf of Alaska",
+                                                  ifelse(netwtcpue$survey == "Gulf of Mexico Summer Shrimp/Groundfish Survey", "Gulf of Mexico",
+                                                         ifelse(netwtcpue$survey == "NEFSC Fall Bottom Trawl", "Northeast US",
+                                                                ifelse(netwtcpue$survey == "NEFSC Spring Bottom Trawl", "Northeast US",
+                                                                       ifelse(netwtcpue$survey == "SEAMAP Fall Coastal Trawl Survey", "Southeast US",
+                                                                              ifelse(netwtcpue$survey == "SEAMAP Spring Coastal Trawl Survey", "Southeast US",
+                                                                                     ifelse(netwtcpue$survey == "SEAMAP Summer Coastal Trawl Survey", "Southeast US",
+                                                                                            ifelse(netwtcpue$survey == "West Coast Bottom Trawl Annual", "West Coast",
+                                                                                                   ifelse(netwtcpue$survey == "West Coast Bottom Trawl Triennial", "West Coast", NA))))))))))))
 
-  # pivot_wider(names_from = year, values_from = wtcpue, names_prefix = "yr") %>%
-  # mutate(
-  #   yrs1993_yr90 = yr1993 - yr1990,
-  #   yrs1996_yr93 = yr1996 - yr1993,
-  #   yrs1999_yr96 = yr1999 - yr1996,
-  #   yrs2003_yr99 = yr2003 - yr1999,
-  #   yrs2005_yr03 = yr2005 - yr2003,
-  #   yrs2007_yr05 = yr2007 - yr2005,
-  #   yrs2009_yr07 = yr2009 - yr2007,
-  #   yrs2011_yr09 = yr2011 - yr2009,
-  #   yrs2013_yr11 = yr2013 - yr2011,
-  #   yrs2015_yr13 = yr2015 - yr2013,
-  #   yrs2017_yr15 = yr2017 - yr2015,
-  #   yrs2019_yr17 = yr2019 - yr2017,
-  #   yrs2021_yr19 = yr2021 - yr2019,
-  #   yrs2023_yr21 = yr2023 - yr2021
-  # ) %>%
-  # ungroup() %>%
-  # select(region, spp, yrs1993_90:yrs2023_21) %>%
-  # mutate(total_change_wtcpue = yrs1993_90 + yrs1996_93 + yrs1999_96 + yrs2003_99 + yrs2005_03 + yrs2007_05 +
-  #                                  yrs2009_07 + yrs2011_09 + yrs2013_11 + yrs2015_13 + yrs2017_15 + yrs2019_17 +
-  #                                  yrs2021_19 + yrs2023_21) # this is a separate table
 
-## Add presence absence (1/0), actual biomass, percentile for just that year
+netwtcpue <- netwtcpue %>%
+  select(region, survey, spp, net_wtcpue) %>%
+  dplyr::rename(Region = region,
+                SurveyName = survey,
+                Species = spp,
+                NetWTCPUE = net_wtcpue)
+
+
+## Add presence absence (1/0) ??
+
+#### Writing csv files for development team ####
+
+write.csv(data_rank, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorPercentile.csv"))
+write.csv(netwtcpue, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorNetWTCPUE.csv"))
+
+
 
 goa_long <- goa_wide %>%
   pivot_longer(yrs1993_90:total_change_wtcpue, names_to = "year_diff", values_to = "wtcpue_diff")
