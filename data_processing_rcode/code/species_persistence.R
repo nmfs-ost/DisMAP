@@ -19,24 +19,25 @@ library(RColorBrewer)
 
 # Read in data from Compile_Dismap_Current.r
 ## Note: I am using example data from last year for now##
-data_ex <- data.frame(base::readRDS(file = here::here("data_processing_rcode/output/data_clean/alldata_withzeros.rds")))
+data <- data.frame(base::readRDS(file = here::here("data_processing_rcode/output/data_clean/alldata_withzeros.rds")))
 
 # This version does not include data from Hawai'i Islands, but this should be added in
-data_ex$survey <- ifelse(data_ex$region == "Aleutian Islands", "Aleutian Islands Bottom Trawl Survey",
-                         ifelse(data_ex$region == "Eastern Bering Sea", "Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey",
-                                ifelse(data_ex$region == "Northern Bering Sea", "Northern Bering Sea Crab/Groundfish Survey - Eastern Bering Sea Shelf Survey Extension",
-                                       ifelse(data_ex$region == "Gulf of Alaska", "Gulf of Alaska Bottom Trawl Survey",
-                                              ifelse(data_ex$region == "Gulf of Mexico", "Gulf of Mexico Summer Shrimp/Groundfish Survey",
-                                                     ifelse(data_ex$region == "Northeast US Fall", "NEFSC Fall Bottom Trawl",
-                                                            ifelse(data_ex$region == "Northeast US Spring", "NEFSC Spring Bottom Trawl",
-                                                                   ifelse(data_ex$region == "Southeast US Fall", "SEAMAP Fall Coastal Trawl Survey",
-                                                                          ifelse(data_ex$region == "Southeast US Spring", "SEAMAP Spring Coastal Trawl Survey",
-                                                                                 ifelse(data_ex$region == "Southeast US Summer", "SEAMAP Summer Coastal Trawl Survey",
-                                                                                        ifelse(data_ex$region == "West Coast Annual", "West Coast Bottom Trawl Annual",
-                                                                                               ifelse(data_ex$region == "West Coast Triennial", "West Coast Bottom Trawl Triennial",
-                                                                                                      ifelse(data_ex$region == "Eastern and Northern Bering Sea", NA, NA)))))))))))))
+data$survey <- ifelse(data$region == "Aleutian Islands", "Aleutian Islands Bottom Trawl Survey",
+                         ifelse(data$region == "Eastern Bering Sea", "Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey",
+                                ifelse(data$region == "Northern Bering Sea", "Northern Bering Sea Crab/Groundfish Survey - Eastern Bering Sea Shelf Survey Extension",
+                                       ifelse(data$region == "Gulf of Alaska", "Gulf of Alaska Bottom Trawl Survey",
+                                              ifelse(data$region == "Gulf of Mexico", "Gulf of Mexico Summer Shrimp/Groundfish Survey",
+                                                     ifelse(data$region == "Northeast US Fall", "NEFSC Fall Bottom Trawl",
+                                                            ifelse(data$region == "Northeast US Spring", "NEFSC Spring Bottom Trawl",
+                                                                   ifelse(data$region == "Southeast US Fall", "SEAMAP Fall Coastal Trawl Survey",
+                                                                          ifelse(data$region == "Southeast US Spring", "SEAMAP Spring Coastal Trawl Survey",
+                                                                                 ifelse(data$region == "Southeast US Summer", "SEAMAP Summer Coastal Trawl Survey",
+                                                                                        ifelse(data$region == "West Coast Annual", "West Coast Bottom Trawl Annual",
+                                                                                               ifelse(data$region == "West Coast Triennial", "West Coast Bottom Trawl Triennial",
+                                                                                                      ifelse(data$region == "Hawaii", "Bottomfish Fishery-Independent Survey in Hawaii (BFISH)",
+                                                                                                             ifelse(data$region == "Eastern and Northern Bering Sea", NA, NA))))))))))))))
 
-data_update <- data_ex %>%
+data_update <- data %>%
   filter(!is.na(survey)) %>%
   mutate(region_old = region) %>%
   select(-region)
@@ -52,7 +53,8 @@ data_update$region <- ifelse(data_update$region_old == "Aleutian Islands", "Aleu
                                                                               ifelse(data_update$region_old == "Southeast US Spring", "Southeast US",
                                                                                      ifelse(data_update$region_old == "Southeast US Summer", "Southeast US",
                                                                                             ifelse(data_update$region_old == "West Coast Annual", "West Coast",
-                                                                                                   ifelse(data_update$region_old == "West Coast Triennial", "West Coast", NA))))))))))))
+                                                                                                   ifelse(data_update$region_old == "Hawaii", "Hawai'i Islands",
+                                                                                                          ifelse(data_update$region_old == "West Coast Triennial", "West Coast", NA)))))))))))))
 
 
 #### Calculate percentile for each spp, year, and survey####
