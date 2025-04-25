@@ -21,7 +21,7 @@ library(RColorBrewer)
 ## Note: I am using example data from last year for now##
 data <- data.frame(base::readRDS(file = here::here("data_processing_rcode/output/data_clean/alldata_withzeros.rds")))
 
-# This version does not include data from Hawai'i Islands, but this should be added in
+
 data$survey <- ifelse(data$region == "Aleutian Islands", "Aleutian Islands Bottom Trawl Survey",
                          ifelse(data$region == "Eastern Bering Sea", "Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey",
                                 ifelse(data$region == "Northern Bering Sea", "Northern Bering Sea Crab/Groundfish Survey - Eastern Bering Sea Shelf Survey Extension",
