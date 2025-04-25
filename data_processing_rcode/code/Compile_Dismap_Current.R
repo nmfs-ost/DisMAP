@@ -1957,6 +1957,13 @@ rm(test, test2, p1, p2, p3, p4)
 
 rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, problems, change, seus)
 
+# Compile BFISH data (Hawaii) =================================================
+
+bfish_catch <- read_csv(here::here("data_processing_rcode/data", "BFISH_DisMAP_2024_update_v2.csv"))
+
+#NOTE: psu is changed to haulid in this dataset to help match the other fieldnames (helpful with compiling)
+#This should be reconciled ASAP
+
 
 # Compile TAX ===============================================================
 print("Compile TAX")
@@ -1997,7 +2004,7 @@ if(isTRUE(WRITE_MASTER_DAT)){
 # Master Data Set ===========================================================
 print("Join into Master Data Set")
 #Full unfiltered data set
-dat <- rbind(ai, ebs, gmex, goa, nbs, neus_fall, neus_spring, seusFALL, seusSPRING, seusSUMMER, wcann, wctri) %>%
+dat <- rbind(ai, ebs, gmex, goa, nbs, neus_fall, neus_spring, seusFALL, seusSPRING, seusSUMMER, wcann, wctri, bfish_catch) %>%
   # Remove NA values in wtcpue
   filter(!is.na(wtcpue)) %>%
   # remove any extra white space from around spp and common names
@@ -2062,7 +2069,7 @@ if(isTRUE(WRITE_MASTER_DAT)){
 
 
 # Master "Filtered" dataset
-dat_fltr <- rbind(ai_fltr, ebs_fltr, nbs_fltr, gmex_fltr, goa_fltr, neus_fall_fltr, neus_spring_fltr, seusFALL_fltr, seusSPRING_fltr, seusSUMMER_fltr, wcann_fltr, wctri_fltr) %>%
+dat_fltr <- rbind(ai_fltr, ebs_fltr, nbs_fltr, gmex_fltr, goa_fltr, neus_fall_fltr, neus_spring_fltr, seusFALL_fltr, seusSPRING_fltr, seusSUMMER_fltr, wcann_fltr, wctri_fltr, bfish_catch) %>%
   # Remove NA values in wtcpue
   filter(!is.na(wtcpue)) %>%
   # remove any extra white space from around spp and common names
