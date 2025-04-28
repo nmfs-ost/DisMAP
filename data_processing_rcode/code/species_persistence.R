@@ -19,7 +19,40 @@ library(RColorBrewer)
 
 # Read in data from Compile_Dismap_Current.r
 ## Note: I am using example data from last year for now##
-data <- data.frame(base::readRDS(file = here::here("data_processing_rcode/output/data_clean/alldata_withzeros.rds")))
+data_orig <- data.frame(base::readRDS(file = here::here("data_processing_rcode/output/data_clean/alldata_withzeros.rds")))
+
+## creating a dataset for last year ##
+
+bfish <- read_csv(here::here("data_processing_rcode/data", "BFISH_DisMAP_2024_update_v2.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+ai <- read_csv(here::here("data_processing_rcode","output","python", "AI_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+ebs <- read_csv(here::here("data_processing_rcode","output","python", "EBS_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+gmex <- read_csv(here::here("data_processing_rcode","output","python", "GMEX_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+goa <- read_csv(here::here("data_processing_rcode","output","python", "GOA_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+nbs <- read_csv(here::here("data_processing_rcode","output","python", "NBS_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+neus_fall <- read_csv(here::here("data_processing_rcode","output","python", "NEUS_FAL_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+neus_spri <- read_csv(here::here("data_processing_rcode","output","python", "NEUS_SPR_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+seus_fall <- read_csv(here::here("data_processing_rcode","output","python", "SEUS_FAL_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+seus_spri <- read_csv(here::here("data_processing_rcode","output","python", "SEUS_SPR_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+seus_sum <- read_csv(here::here("data_processing_rcode","output","python", "SEUS_SUM_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+wc_ann <- read_csv(here::here("data_processing_rcode","output","python", "WC_ANN_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+wc_tri <- read_csv(here::here("data_processing_rcode","output","python", "WC_TRI_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+
+data <- rbind(bfish, ai, ebs, gmex, goa, nbs, neus_fall, neus_spri, seus_fall, seus_spri, seus_sum, wc_ann, wc_tri)
+
+## done ##
 
 
 data$survey <- ifelse(data$region == "Aleutian Islands", "Aleutian Islands Bottom Trawl Survey",
@@ -59,22 +92,27 @@ data_update$region <- ifelse(data_update$region_old == "Aleutian Islands", "Aleu
 
 #### Calculate percentile for each spp, year, and survey####
 data_rank <- data_update %>%
-  select(region, survey, spp, year, common, wtcpue) %>%
+  select(region, survey, spp, year,
+         # common,
+         wtcpue) %>%
   group_by(region, survey, year, spp) %>%
   summarise(wtcpue = sum(wtcpue)) %>%
   group_by(region, survey, spp) %>%
   mutate(percentile = percent_rank(wtcpue)) %>%
-  select(-wtcpue) %>%
+  # select(-wtcpue) %>%
   dplyr::rename(Region = region,
                 SurveyName = survey,
                 Species = spp,
                 Year = year,
+                WTCPUE = wtcpue,
                 Percentile = percentile)
 
 #### Calculate cumulative biomass gain or loss across all survey years####
 
 data_wtcpue <- data_update %>%
-  select(region, survey, year, spp, common, wtcpue) %>%
+  select(region, survey, year, spp,
+         # common,
+         wtcpue) %>%
   group_by(region, survey, year, spp) %>%
   summarise(wtcpue = sum(wtcpue))
 
@@ -156,8 +194,8 @@ netwtcpue <- netwtcpue %>%
 
 #### Writing csv files for development team ####
 
-# write.csv(data_rank, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorPercentile.csv"))
-# write.csv(netwtcpue, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorNetWTCPUE.csv"))
+# write.csv(data_rank, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorPercentile_withWTCPUE.csv"), row.names = FALSE)
+# write.csv(netwtcpue, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorNetWTCPUE.csv"), row.names = FALSE)
 
 
 #### Visualizations ####
