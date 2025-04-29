@@ -1,0 +1,65 @@
+---
+title: 'Species Persistence: Options'
+author: "Claire Gonzales (NOAA Affiliate)"
+date: "2025-04-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(here)
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+```
+#IN DEVELOPMENT
+
+## Background
+
+This document presents various analyses for evaluating species persistence (emergence, consistence persistence, or removal). Feedback on the usefulness of these analyses and visualization would be greatly appreciated.
+
+The goals for this indicator are four-fold:
+- Visualize changes in biomass (or presence/absence) for a particular species, from years to year
+- Categorize prevalence as being: 1) emerging, 2) disappearing, 3) stable, or 4) sporadic
+- Measure cumulative trend in prevalence of a particular species, across all survey years
+- Categorize trend as: 1) increasing, 2) decreasing, or 3) consistent
+
+```{r wrangling}
+# data <- data.frame(base::readRDS(file = here::here("data_processing_rcode/output/data_clean/alldata_withzeros.rds")))
+
+## creating a dataset for last year. Normally, data would be pulled in from the RDS and titled `data`, as shown above ##
+
+bfish <- read_csv(here::here("data_processing_rcode/data", "BFISH_DisMAP_2024_update_v2.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+ai <- read_csv(here::here("data_processing_rcode","output","python", "AI_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+ebs <- read_csv(here::here("data_processing_rcode","output","python", "EBS_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+gmex <- read_csv(here::here("data_processing_rcode","output","python", "GMEX_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+goa <- read_csv(here::here("data_processing_rcode","output","python", "GOA_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+nbs <- read_csv(here::here("data_processing_rcode","output","python", "NBS_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+neus_fall <- read_csv(here::here("data_processing_rcode","output","python", "NEUS_FAL_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+neus_spri <- read_csv(here::here("data_processing_rcode","output","python", "NEUS_SPR_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+seus_fall <- read_csv(here::here("data_processing_rcode","output","python", "SEUS_FAL_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+seus_spri <- read_csv(here::here("data_processing_rcode","output","python", "SEUS_SPR_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+seus_sum <- read_csv(here::here("data_processing_rcode","output","python", "SEUS_SUM_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+wc_ann <- read_csv(here::here("data_processing_rcode","output","python", "WC_ANN_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+wc_tri <- read_csv(here::here("data_processing_rcode","output","python", "WC_TRI_survey.csv")) %>%
+  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+
+data <- rbind(bfish, ai, ebs, gmex, goa, nbs, neus_fall, neus_spri, seus_fall, seus_spri, seus_sum, wc_ann, wc_tri)
+```
+
+## Biomass across years
+
+
