@@ -179,7 +179,8 @@ netwtcpue$region <- ifelse(netwtcpue$survey == "Aleutian Islands Bottom Trawl Su
                                                                               ifelse(netwtcpue$survey == "SEAMAP Spring Coastal Trawl Survey", "Southeast US",
                                                                                      ifelse(netwtcpue$survey == "SEAMAP Summer Coastal Trawl Survey", "Southeast US",
                                                                                             ifelse(netwtcpue$survey == "West Coast Bottom Trawl Annual", "West Coast",
-                                                                                                   ifelse(netwtcpue$survey == "West Coast Bottom Trawl Triennial", "West Coast", NA))))))))))))
+                                                                                                   ifelse(netwtcpue$survey == "Bottomfish Fishery-Independent Survey in Hawaii (BFISH)", "Hawai'i Islands",
+                                                                                                          ifelse(netwtcpue$survey == "West Coast Bottom Trawl Triennial", "West Coast", NA)))))))))))))
 
 
 netwtcpue <- netwtcpue %>%
