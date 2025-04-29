@@ -202,7 +202,43 @@ netwtcpue <- netwtcpue %>%
 #### Visualizations ####
 
 # an example of filtering for a species and visualizing - redo this
-plot1 <- ggplot(data_rank, aes(Year, Species)) +
+data_filt1 <- data_rank %>%
+  filter(Species == "Sebastes aurora" | (SurveyName== "West Coast Bottom Trawl Annual" & Species == "Sebastes melanostictus and S. aleutianus"))
+
+data_filt2 <- data_rank %>%
+  filter(SurveyName== "West Coast Bottom Trawl Annual" & Species == "Sebastes melanostictus and S. aleutianus")
+
+data_filt3 <- data_rank %>%
+  filter(Species == "Sebastes aurora")
+
+data_filt4 <- data_rank %>%
+  filter(SurveyName== "Aleutian Islands Bottom Trawl Survey" & Species == "Aplidium soldatovi")
+
+plot1 <- ggplot(data, aes(Year, Species)) +
   geom_tile(aes(fill= Percentile)) +
   theme(axis.text.x = element_text(angle = 60, size = rel(0.80))) +
   scale_colour_brewer(palette = "Spectral")
+
+plot2 <- ggplot(data_filt1, aes(Year, Species)) +
+  scale_colour_brewer(palette = "Spectral") +
+  geom_tile(aes(fill= Percentile)) +
+  theme(axis.text.x = element_text(angle = 60, size = rel(0.80))) +
+  theme_minimal()
+
+plot3 <- ggplot(data_filt1, aes(Year, Species)) +
+  scale_colour_brewer(palette = "Spectral") +
+  geom_tile(aes(fill= WTCPUE)) +
+  theme(axis.text.x = element_text(angle = 60, size = rel(0.80))) +
+  theme_minimal()
+
+plot4 <- ggplot(data_filt2, aes(Year, Species)) +
+  scale_colour_brewer(palette = "Spectral") +
+  geom_tile(aes(fill= WTCPUE)) +
+  theme(axis.text.x = element_text(angle = 60, size = rel(0.80))) +
+  theme_minimal()
+
+plot5 <- ggplot(data_filt4, aes(Year, Species)) +
+  scale_colour_brewer(palette = "Spectral") +
+  geom_tile(aes(fill= Percentile)) +
+  theme(axis.text.x = element_text(angle = 60, size = rel(0.80))) +
+  theme_minimal()
