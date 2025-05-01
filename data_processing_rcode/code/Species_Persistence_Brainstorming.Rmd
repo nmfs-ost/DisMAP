@@ -2,7 +2,11 @@
 title: 'Species Persistence: Options'
 author: "Claire Gonzales (NOAA Affiliate)"
 date: "2025-04-29"
-output: html_document
+output: 
+  html_document: 
+    toc: yes
+    theme: lumen
+    code_folding: hide
 ---
 
 ```{r setup, include=FALSE}
@@ -12,6 +16,7 @@ library(here)
 library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
+library(readr)
 ```
 #IN DEVELOPMENT
 
@@ -25,7 +30,7 @@ The goals for this indicator are four-fold:
 - Measure cumulative trend in prevalence of a particular species, across all survey years
 - Categorize trend as: 1) increasing, 2) decreasing, or 3) consistent
 
-```{r wrangling}
+```{r wrangling, message = FALSE}
 # data <- data.frame(base::readRDS(file = here::here("data_processing_rcode/output/data_clean/alldata_withzeros.rds")))
 
 ## creating a dataset for last year. Normally, data would be pulled in from the RDS and titled `data`, as shown above ##
@@ -60,6 +65,84 @@ wc_tri <- read_csv(here::here("data_processing_rcode","output","python", "WC_TRI
 data <- rbind(bfish, ai, ebs, gmex, goa, nbs, neus_fall, neus_spri, seus_fall, seus_spri, seus_sum, wc_ann, wc_tri)
 ```
 
-## Biomass across years
+
+## Biomass percentile
+This section captures the data by calculating percentile/rank of biomass of a specific species, compared to all the species biomass in that region and survey.
+
+```{r prep}
+data$survey <- ifelse(data$region == "Aleutian Islands", "Aleutian Islands Bottom Trawl Survey",
+                         ifelse(data$region == "Eastern Bering Sea", "Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey",
+                                ifelse(data$region == "Northern Bering Sea", "Northern Bering Sea Crab/Groundfish Survey - Eastern Bering Sea Shelf Survey Extension",
+                                       ifelse(data$region == "Gulf of Alaska", "Gulf of Alaska Bottom Trawl Survey",
+                                              ifelse(data$region == "Gulf of Mexico", "Gulf of Mexico Summer Shrimp/Groundfish Survey",
+                                                     ifelse(data$region == "Northeast US Fall", "NEFSC Fall Bottom Trawl",
+                                                            ifelse(data$region == "Northeast US Spring", "NEFSC Spring Bottom Trawl",
+                                                                   ifelse(data$region == "Southeast US Fall", "SEAMAP Fall Coastal Trawl Survey",
+                                                                          ifelse(data$region == "Southeast US Spring", "SEAMAP Spring Coastal Trawl Survey",
+                                                                                 ifelse(data$region == "Southeast US Summer", "SEAMAP Summer Coastal Trawl Survey",
+                                                                                        ifelse(data$region == "West Coast Annual", "West Coast Bottom Trawl Annual",
+                                                                                               ifelse(data$region == "West Coast Triennial", "West Coast Bottom Trawl Triennial",
+                                                                                                      ifelse(data$region == "Hawaii", "Bottomfish Fishery-Independent Survey in Hawaii (BFISH)",
+                                                                                                             ifelse(data$region == "Eastern and Northern Bering Sea", NA, NA))))))))))))))
+
+data_update <- data %>%
+  filter(!is.na(survey)) %>%
+  mutate(region_old = region) %>%
+  select(-region)
+
+data_update$region <- ifelse(data_update$region_old == "Aleutian Islands", "Aleutian Islands",
+                             ifelse(data_update$region_old == "Eastern Bering Sea", "Eastern Bering Sea",
+                                    ifelse(data_update$region_old == "Northern Bering Sea", "Northern Bering Sea",
+                                           ifelse(data_update$region_old == "Gulf of Alaska", "Gulf of Alaska",
+                                                  ifelse(data_update$region_old == "Gulf of Mexico", "Gulf of Mexico",
+                                                         ifelse(data_update$region_old == "Northeast US Fall", "Northeast US",
+                                                                ifelse(data_update$region_old == "Northeast US Spring", "Northeast US",
+                                                                       ifelse(data_update$region_old == "Southeast US Fall", "Southeast US",
+                                                                              ifelse(data_update$region_old == "Southeast US Spring", "Southeast US",
+                                                                                     ifelse(data_update$region_old == "Southeast US Summer", "Southeast US",
+                                                                                            ifelse(data_update$region_old == "West Coast Annual", "West Coast",
+                                                                                                   ifelse(data_update$region_old == "Hawaii", "Hawai'i Islands",
+                                                                                                          ifelse(data_update$region_old == "West Coast Triennial", "West Coast", NA)))))))))))))
+
+
+```
+
+
+```{r percentile, message = FALSE}
+
+data_rank <- data_update %>%
+  select(region, survey, spp, year,
+         # common,
+         wtcpue) %>%
+  group_by(region, survey, year, spp) %>%
+  summarise(wtcpue = sum(wtcpue)) %>%
+  group_by(region, survey) %>%
+  mutate(percentile = percent_rank(wtcpue)) %>%
+  # select(-wtcpue) %>%
+  dplyr::rename(Region = region,
+                SurveyName = survey,
+                Species = spp,
+                Year = year,
+                WTCPUE = wtcpue,
+                Percentile = percentile)
+```
+
+```{r test_viz, message=FALSE}
+
+ggplot(data_rank, aes(Percentile)) +
+  # scale_colour_brewer(palette = "Spectral") +
+  geom_histogram() +
+  facet_wrap(vars(SurveyName)) +
+  theme_minimal()
+
+```
+## Presence in hauls
+This section will calculate the number of hauls that a species is present in, per survey and per year. Measuring the presence in hauls will capture the prevalence of that species in the ecosystem (i.e., how prominent is this species in the ecosystem?), over time.
+
+```{r prep}
+
+data_edit <- 
+
+```
 
 
