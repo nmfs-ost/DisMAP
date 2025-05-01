@@ -10,7 +10,8 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE)
 
 library(here)
 library(dplyr)
@@ -25,10 +26,17 @@ library(readr)
 This document presents various analyses for evaluating species persistence (emergence, consistence persistence, or removal). Feedback on the usefulness of these analyses and visualization would be greatly appreciated.
 
 The goals for this indicator are four-fold:
-- Visualize changes in biomass (or presence/absence) for a particular species, from years to year
-- Categorize prevalence as being: 1) emerging, 2) disappearing, 3) stable, or 4) sporadic
-- Measure cumulative trend in prevalence of a particular species, across all survey years
-- Categorize trend as: 1) increasing, 2) decreasing, or 3) consistent
+* Visualize changes in biomass (or presence/absence) for a particular species, from years to year
+* Categorize prevalence as being: 
++ 1) emerging, 
++ 2) disappearing, 
++ 3) stable,
++ or 4) sporadic
+* Measure cumulative trend in prevalence of a particular species, across all survey years
+* Categorize trend as:
++ 1) increasing, 
++ 2) decreasing,
++ or 3) consistent
 
 ```{r wrangling, message = FALSE}
 # data <- data.frame(base::readRDS(file = here::here("data_processing_rcode/output/data_clean/alldata_withzeros.rds")))
@@ -139,10 +147,48 @@ ggplot(data_rank, aes(Percentile)) +
 ## Presence in hauls
 This section will calculate the number of hauls that a species is present in, per survey and per year. Measuring the presence in hauls will capture the prevalence of that species in the ecosystem (i.e., how prominent is this species in the ecosystem?), over time.
 
-```{r prep}
+**FLAG: This is coded for determining the presence in hauls for that region. Should it be made more specific, to survey?**
 
-data_edit <- 
+```{r functions, message=FALSE}
+
+present_every_year <- function(dat, ...){
+  presyr <- dat %>%
+    filter(wtcpue > 0) %>%
+    group_by(...) %>%
+    summarise(pres = n())
+  return(presyr)
+}
+
+num_hauls_year <- function(dat, ...){
+  haulsyr <- dat %>%
+    select(c(region, survey, haulid, year)) %>%
+    distinct() %>%
+    group_by(...) %>%
+    summarise(hauls = n())
+  return(haulsyr)
+}
 
 ```
 
 
+```{r prep2}
+
+presyr <- present_every_year(data_update, region, survey, spp, year)
+
+haulsyr <- num_hauls_year(data_update, region, survey, year)
+
+# data frame with the number of hauls a species is present for, 
+preshaul <- left_join(presyr, haulsyr, by=c("region", "survey", "year")) %>%
+  mutate(proportion=((pres/hauls)*100))
+
+data_haul <- preshaul %>% 
+  select(region, survey, spp, year, pres) %>% 
+  dplyr::rename(Region = region,
+                Species = spp,
+                SurveyName = survey,
+                Year = year,
+                Presence = pres)
+
+```
+
+**TODO: RBIND DATA_HAUL AND DATA_RANK**
