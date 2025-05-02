@@ -233,7 +233,7 @@ p1 <- heatmaply(mat_1,
                 xlab = "", 
                 ylab = "",
                 main = "Ex 1: West Coast Bottom Trawl Triennial",
-                scale = "column",
+                # scale = "column",
                 margins = c(60,100,40,20),
                 grid_color = "white",
                 grid_width = 0.00001,
@@ -249,21 +249,5 @@ p1 <- heatmaply(mat_1,
                 )
 
 p1
-```
-
-EXAMPLE:
-```{r}
-data <- read.table("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/multivariate.csv", header = T, sep = ";")
-colnames(data) <- gsub("\\.", " ", colnames(data))
-
-data <- data %>%
-  filter(Country %in% c("France", "Sweden", "Italy", "Spain", "England", "Portugal", "Greece", "Peru", "Chile", "Brazil", "Argentina", "Bolivia", "Venezuela", "Australia", "New Zealand", "Fiji", "China", "India", "Thailand", "Afghanistan", "Bangladesh", "United States of America", "Canada", "Burundi", "Angola", "Kenya", "Togo")) %>%
-  arrange(Country) %>%
-  mutate(Country = factor(Country, Country))
-
-mat <- data
-rownames(mat) <- mat[,1]
-mat <- mat %>% dplyr::select(-Country, -Group, -Continent)
-mat <- as.matrix(mat)
 ```
 
