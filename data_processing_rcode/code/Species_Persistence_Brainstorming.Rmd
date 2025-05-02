@@ -147,7 +147,6 @@ ggplot(data_rank, aes(Percentile)) +
 ## Presence in hauls
 This section will calculate the number of hauls that a species is present in, per survey and per year. Measuring the presence in hauls will capture the prevalence of that species in the ecosystem (i.e., how prominent is this species in the ecosystem?), over time.
 
-**FLAG: This is coded for determining the presence in hauls for that region. Should it be made more specific, to survey?**
 
 ```{r functions, message=FALSE}
 
@@ -191,4 +190,80 @@ data_haul <- preshaul %>%
 
 ```
 
-**TODO: RBIND DATA_HAUL AND DATA_RANK**
+
+## Bind haul count to percentiles
+
+Using left_join to add the `Presence` values from `data_haul`. Any zero biomass/percentile will turn up as `NA` values in the haul presence column when it's joined. We have converted these `NA`'s to zeros because those are instances in which the species was not landed in the survey.
+
+```{r}
+data_full <- data_rank %>% 
+  left_join(data_haul, by = c("Region", "SurveyName", "Species", "Year")) %>% 
+  mutate(Presence = ifelse(is.na(Presence), 0, Presence))
+```
+
+
+## Vizualizations
+The goal of this data processing is for users to be able to clearly see trends in the prevalence of species in surveys over time so that they can notice species that might be emerging or disappreing in a region.
+
+```{r}
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+library(plotly)
+library(heatmaply)
+
+data_1 <- data_full %>%
+  filter(SurveyName == "West Coast Bottom Trawl Triennial") %>% 
+  ungroup() %>% 
+  dplyr::select(-Region, -SurveyName, -WTCPUE, -Percentile) %>% 
+  pivot_wider(names_from = Year, values_from = Presence)
+
+# data_1$Year <- as.character(data_1$Year)
+
+mat_1 <- as.matrix(data_1)
+rownames(mat_1) <- mat_1[,1]
+mat_1 <- as.data.frame(mat_1) %>% 
+  dplyr::select(-Species) %>% 
+  mutate_if(is.character, as.numeric)
+# mat_1 <- as.matrix(mat_1) %>% 
+  # mutate_if(is.character, as.numeric)
+
+p1 <- heatmaply(mat_1,
+                dendrogram = "none",
+                xlab = "", 
+                ylab = "",
+                main = "Ex 1: West Coast Bottom Trawl Triennial",
+                scale = "column",
+                margins = c(60,100,40,20),
+                grid_color = "white",
+                grid_width = 0.00001,
+                titleX = FALSE,
+                hide_colorbar = FALSE,
+                branches_lwd = 0.1,
+                label_names = c("Species", "Year", "Presence"),
+                fontsize_row = 5, 
+                fontsize_col = 5,
+                labCol = colnames(mat_1),
+                labRow = rownames(mat_1),
+                heatmap_layers = theme(axis.line = element_blank())
+                )
+
+p1
+```
+
+EXAMPLE:
+```{r}
+data <- read.table("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/multivariate.csv", header = T, sep = ";")
+colnames(data) <- gsub("\\.", " ", colnames(data))
+
+data <- data %>%
+  filter(Country %in% c("France", "Sweden", "Italy", "Spain", "England", "Portugal", "Greece", "Peru", "Chile", "Brazil", "Argentina", "Bolivia", "Venezuela", "Australia", "New Zealand", "Fiji", "China", "India", "Thailand", "Afghanistan", "Bangladesh", "United States of America", "Canada", "Burundi", "Angola", "Kenya", "Togo")) %>%
+  arrange(Country) %>%
+  mutate(Country = factor(Country, Country))
+
+mat <- data
+rownames(mat) <- mat[,1]
+mat <- mat %>% dplyr::select(-Country, -Group, -Continent)
+mat <- as.matrix(mat)
+```
+
