@@ -19,32 +19,35 @@ library(ggplot2)
 library(RColorBrewer)
 library(readr)
 ```
-#IN DEVELOPMENT
+# IN DEVELOPMENT
 
 ## Background
 
 This document presents various analyses for evaluating species persistence (emergence, consistence persistence, or removal). Feedback on the usefulness of these analyses and visualization would be greatly appreciated.
 
 The goals for this indicator are four-fold:
+
 * Visualize changes in biomass (or presence/absence) for a particular species, from years to year
 * Categorize prevalence as being: 
-+ 1) emerging, 
-+ 2) disappearing, 
-+ 3) stable,
-+ or 4) sporadic
+  + emerging, 
+  + disappearing, 
+  + stable,
+  + or sporadic
 * Measure cumulative trend in prevalence of a particular species, across all survey years
 * Categorize trend as:
-+ 1) increasing, 
-+ 2) decreasing,
-+ or 3) consistent
+  + increasing, 
+  + decreasing,
+  + or consistent
+
+**FLAG: Add common names back into these data frames. We did it for bfish already. So just need to do the others**
 
 ```{r wrangling, message = FALSE}
 # data <- data.frame(base::readRDS(file = here::here("data_processing_rcode/output/data_clean/alldata_withzeros.rds")))
 
 ## creating a dataset for last year. Normally, data would be pulled in from the RDS and titled `data`, as shown above ##
 
-bfish <- read_csv(here::here("data_processing_rcode/data", "BFISH_DisMAP_2024_update_v2.csv")) %>%
-  select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
+bfish <- read_csv(here::here("data_processing_rcode/data", "BFISH_DisMAP_2024_update_v2.csv")) 
+
 ai <- read_csv(here::here("data_processing_rcode","output","python", "AI_survey.csv")) %>%
   select(region, haulid, year, spp, wtcpue, stratum, stratumarea, lat, lon, depth)
 ebs <- read_csv(here::here("data_processing_rcode","output","python", "EBS_survey.csv")) %>%
@@ -112,7 +115,6 @@ data_update$region <- ifelse(data_update$region_old == "Aleutian Islands", "Aleu
                                                                                                    ifelse(data_update$region_old == "Hawaii", "Hawai'i Islands",
                                                                                                           ifelse(data_update$region_old == "West Coast Triennial", "West Coast", NA)))))))))))))
 
-
 ```
 
 
@@ -122,18 +124,28 @@ data_rank <- data_update %>%
   select(region, survey, spp, year,
          # common,
          wtcpue) %>%
-  group_by(region, survey, year, spp) %>%
+  group_by(region, survey, year, 
+           # common,
+           spp) %>%
   summarise(wtcpue = sum(wtcpue)) %>%
   group_by(region, survey) %>%
   mutate(percentile = percent_rank(wtcpue)) %>%
   # select(-wtcpue) %>%
   dplyr::rename(Region = region,
                 SurveyName = survey,
+                # Common,
                 Species = spp,
                 Year = year,
                 WTCPUE = wtcpue,
                 Percentile = percentile)
 ```
+
+**Flag to do: create a column of bins here** 
+```{r binning}
+
+
+```
+
 
 ```{r test_viz, message=FALSE}
 
@@ -145,10 +157,10 @@ ggplot(data_rank, aes(Percentile)) +
 
 ```
 ## Presence in hauls
-This section will calculate the number of hauls that a species is present in, per survey and per year. Measuring the presence in hauls will capture the prevalence of that species in the ecosystem (i.e., how prominent is this species in the ecosystem?), over time.
+This section will calculate the number of hauls that a species is present in, per survey and per year. Measuring the presence in hauls will capture the prevalence of that species in the survey (i.e., how prominent is this species in the survey?), over time.
 
 
-```{r functions, message=FALSE}
+```{r functions, message = FALSE}
 
 present_every_year <- function(dat, ...){
   presyr <- dat %>%
@@ -201,10 +213,19 @@ data_full <- data_rank %>%
   mutate(Presence = ifelse(is.na(Presence), 0, Presence))
 ```
 
+```{r, eval=FALSE}
+ggplot(data_full, aes(WTCPUE)) +
+  # scale_colour_brewer(palette = "Spectral") +
+  geom_histogram() +
+  facet_wrap(vars(SurveyName)) +
+  theme_minimal()
+```
+
 
 ## Vizualizations
-The goal of this data processing is for users to be able to clearly see trends in the prevalence of species in surveys over time so that they can notice species that might be emerging or disappreing in a region.
+The goal of this data processing is for users to be able to clearly see trends in the prevalence of species in surveys over time so that they can notice species that might be emerging or disappearing in a region.
 
+### Presence Heatmaps
 ```{r}
 library(tidyverse)
 library(hrbrthemes)
@@ -234,12 +255,12 @@ p1 <- heatmaply(mat_1,
                 ylab = "",
                 main = "Ex 1: West Coast Bottom Trawl Triennial",
                 # scale = "column",
-                margins = c(60,100,40,20),
-                grid_color = "white",
-                grid_width = 0.00001,
-                titleX = FALSE,
+                # margins = c(60,100,40,20),
+                # grid_color = "white",
+                # grid_width = 0.000005,
+                # titleX = FALSE,
                 hide_colorbar = FALSE,
-                branches_lwd = 0.1,
+                # branches_lwd = 0.1,
                 label_names = c("Species", "Year", "Presence"),
                 fontsize_row = 5, 
                 fontsize_col = 5,
@@ -249,5 +270,206 @@ p1 <- heatmaply(mat_1,
                 )
 
 p1
+```
+
+```{r}
+data_2 <- data_full %>%
+  filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
+  ungroup() %>% 
+  dplyr::select(-Region, -SurveyName, -WTCPUE, -Percentile) %>% 
+  pivot_wider(names_from = Year, values_from = Presence)
+
+# data_1$Year <- as.character(data_1$Year)
+
+mat_2 <- as.matrix(data_2)
+rownames(mat_2) <- mat_2[,1]
+mat_2 <- as.data.frame(mat_2) %>% 
+  dplyr::select(-Species) %>% 
+  mutate_if(is.character, as.numeric)
+# mat_1 <- as.matrix(mat_1) %>% 
+  # mutate_if(is.character, as.numeric)
+
+p2 <- heatmaply(mat_2,
+                dendrogram = "none",
+                xlab = "", 
+                ylab = "",
+                main = "Ex 2: NEFSC Spring Bottom Trawl",
+                # scale = "column",
+                # margins = c(60,100,40,20),
+                # grid_color = "white",
+                # grid_width = 0.000005,
+                # titleX = FALSE,
+                hide_colorbar = FALSE,
+                # branches_lwd = 0.1,
+                label_names = c("Species", "Year", "Presence"),
+                fontsize_row = 5, 
+                fontsize_col = 5,
+                labCol = colnames(mat_2),
+                labRow = rownames(mat_2),
+                heatmap_layers = theme(axis.line = element_blank())
+                )
+
+p2
+```
+
+```{r}
+data_3 <- data_full %>%
+  filter(SurveyName == "Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey") %>% 
+  ungroup() %>% 
+  dplyr::select(-Region, -SurveyName, -WTCPUE, -Percentile) %>% 
+  pivot_wider(names_from = Year, values_from = Presence)
+
+# data_1$Year <- as.character(data_1$Year)
+
+mat_3 <- as.matrix(data_3)
+rownames(mat_3) <- mat_3[,1]
+mat_3 <- as.data.frame(mat_3) %>% 
+  dplyr::select(-Species) %>% 
+  mutate_if(is.character, as.numeric)
+# mat_1 <- as.matrix(mat_1) %>% 
+  # mutate_if(is.character, as.numeric)
+
+p3 <- heatmaply(mat_3,
+                dendrogram = "none",
+                xlab = "", 
+                ylab = "",
+                main = "Ex 3: Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey",
+                # scale = "column",
+                # margins = c(60,100,40,20),
+                # grid_color = "white",
+                # grid_width = 0.000005,
+                # titleX = FALSE,
+                hide_colorbar = FALSE,
+                # branches_lwd = 0.1,
+                label_names = c("Species", "Year", "Presence"),
+                fontsize_row = 5, 
+                fontsize_col = 5,
+                labCol = colnames(mat_3),
+                labRow = rownames(mat_3),
+                heatmap_layers = theme(axis.line = element_blank())
+                )
+
+p3
+```
+
+### Biomass Percentile Heatmaps
+```{r}
+data_4 <- data_full %>%
+  filter(SurveyName == "West Coast Bottom Trawl Triennial") %>% 
+  ungroup() %>% 
+  dplyr::select(-Region, -SurveyName, -WTCPUE, -Presence) %>% 
+  pivot_wider(names_from = Year, values_from = Percentile)
+
+# data_1$Year <- as.character(data_1$Year)
+
+mat_4 <- as.matrix(data_4)
+rownames(mat_4) <- mat_4[,1]
+mat_4 <- as.data.frame(mat_4) %>% 
+  dplyr::select(-Species) %>% 
+  mutate_if(is.character, as.numeric)
+# mat_1 <- as.matrix(mat_1) %>% 
+  # mutate_if(is.character, as.numeric)
+
+p4 <- heatmaply(mat_4,
+                dendrogram = "none",
+                xlab = "", 
+                ylab = "",
+                main = "Ex 4: West Coast Bottom Trawl Triennial (Percentiles)",
+                # scale = "column",
+                # margins = c(60,100,40,20),
+                # grid_color = "white",
+                # grid_width = 0.000005,
+                # titleX = FALSE,
+                hide_colorbar = FALSE,
+                # branches_lwd = 0.1,
+                label_names = c("Species", "Year", "Presence"),
+                fontsize_row = 5, 
+                fontsize_col = 5,
+                labCol = colnames(mat_4),
+                labRow = rownames(mat_4),
+                heatmap_layers = theme(axis.line = element_blank())
+                )
+
+p4
+```
+
+```{r}
+data_5 <- data_full %>%
+  filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
+  ungroup() %>% 
+  dplyr::select(-Region, -SurveyName, -WTCPUE, -Presence) %>% 
+  pivot_wider(names_from = Year, values_from = Percentile)
+
+# data_1$Year <- as.character(data_1$Year)
+
+mat_5 <- as.matrix(data_5)
+rownames(mat_5) <- mat_5[,1]
+mat_5 <- as.data.frame(mat_5) %>% 
+  dplyr::select(-Species) %>% 
+  mutate_if(is.character, as.numeric)
+# mat_1 <- as.matrix(mat_1) %>% 
+  # mutate_if(is.character, as.numeric)
+
+p5 <- heatmaply(mat_5,
+                dendrogram = "none",
+                xlab = "", 
+                ylab = "",
+                main = "Ex 5: NEFSC Spring Bottom Trawl (Percentiles)",
+                # scale = "column",
+                # margins = c(60,100,40,20),
+                # grid_color = "white",
+                # grid_width = 0.000005,
+                # titleX = FALSE,
+                hide_colorbar = FALSE,
+                # branches_lwd = 0.1,
+                label_names = c("Species", "Year", "Presence"),
+                fontsize_row = 5, 
+                fontsize_col = 5,
+                labCol = colnames(mat_5),
+                labRow = rownames(mat_5),
+                heatmap_layers = theme(axis.line = element_blank())
+                )
+
+p5
+```
+
+```{r}
+data_6 <- data_full %>%
+  filter(SurveyName == "Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey") %>% 
+  ungroup() %>% 
+  dplyr::select(-Region, -SurveyName, -WTCPUE, -Presence) %>% 
+  pivot_wider(names_from = Year, values_from = Percentile)
+
+# data_1$Year <- as.character(data_1$Year)
+
+mat_6 <- as.matrix(data_6)
+rownames(mat_6) <- mat_6[,1]
+mat_6 <- as.data.frame(mat_6) %>% 
+  dplyr::select(-Species) %>% 
+  mutate_if(is.character, as.numeric)
+# mat_1 <- as.matrix(mat_1) %>% 
+  # mutate_if(is.character, as.numeric)
+
+p6 <- heatmaply(mat_6,
+                dendrogram = "none",
+                xlab = "", 
+                ylab = "",
+                main = "Ex 6: Eastern Bering Sea Crab/Groundfish Bottom Trawl Surveyl (Percentiles)",
+                # scale = "column",
+                # margins = c(60,100,40,20),
+                # grid_color = "white",
+                # grid_width = 0.000005,
+                # titleX = FALSE,
+                hide_colorbar = FALSE,
+                # branches_lwd = 0.1,
+                label_names = c("Species", "Year", "Presence"),
+                fontsize_row = 5, 
+                fontsize_col = 5,
+                labCol = colnames(mat_6),
+                labRow = rownames(mat_6),
+                heatmap_layers = theme(axis.line = element_blank())
+                )
+
+p6
 ```
 
