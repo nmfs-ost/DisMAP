@@ -3,12 +3,12 @@ title: 'Species Persistence: Options'
 author: "Claire Gonzales (NOAA Affiliate)"
 date: "2025-04-29"
 output:
-  pdf_document:
-    toc: yes
   html_document:
     toc: yes
     theme: lumen
     code_folding: hide
+  pdf_document:
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -364,10 +364,11 @@ p3 <- heatmaply(mat_3,
 p3
 ```
 
-```{r}
+```{r, eval=FALSE}
 data_4 <- data_full %>%
   filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
-  ungroup()
+  ungroup() %>% 
+  select(Region, SurveyName, Year, Species, Common, Bin)
 
 data_4$Bin <- factor(data_3$Bin, levels = c('Absent', 'Rare', 'Less Common', 'Common', 'Abundant', 'Highly Abundant'))
 
@@ -485,7 +486,7 @@ p7 <- heatmaply(mat_7,
 p7
 ```
 
-```{r}
+```{r, eval=FALSE}
 data_8 <- data_full %>%
   filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
   ungroup()
