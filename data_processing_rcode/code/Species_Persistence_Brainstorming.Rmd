@@ -21,7 +21,7 @@ library(ggplot2)
 library(RColorBrewer)
 library(readr)
 ```
-# IN DEVELOPMENT
+
 
 ## Background
 
@@ -41,7 +41,6 @@ The goals for this indicator are four-fold:
   + decreasing,
   + or consistent
 
-**FLAG: Add common names back into these data frames. We did it for bfish already. So just need to do the others**
 
 ```{r wrangling, message = FALSE}
 # data <- data.frame(base::readRDS(file = here::here("data_processing_rcode/output/data_clean/alldata_withzeros.rds")))
@@ -119,23 +118,41 @@ data_update$region <- ifelse(data_update$region_old == "Aleutian Islands", "Aleu
 
 ```
 
+```{r}
+data_sum <- data_update %>%
+  select(region, survey, spp, year, common, wtcpue) %>%
+  group_by(region, survey, year, spp, common) %>%
+  summarise(wtcpue = sum(wtcpue))
 
+data_sum_zeros <- data_sum %>% 
+  filter(wtcpue == 0)
+
+data_sum_nozeros <- data_sum %>% 
+  filter(wtcpue > 0)
+```
+
+Using the `cume_dist()` function here (as opposed to the `percent_rank()` function) to rank biomass values as percentiles because this method will not produce a percentile of zero.
 ```{r percentile, message = FALSE}
 
-data_rank <- data_update %>%
-  select(region, survey, spp, year, common, wtcpue) %>%
-  group_by(region, survey, year, common, spp) %>%
-  summarise(wtcpue = sum(wtcpue)) %>%
+data_rank_nozeros <- data_sum_nozeros %>%
   group_by(region, survey) %>%
-  mutate(percentile = percent_rank(wtcpue)) %>%
-  # select(-wtcpue) %>%
+  mutate(percentile = cume_dist(wtcpue))
+
+```
+
+Bringing the absent biomass values back in after the percentiles are calculated.
+```{r}
+
+data_rank <- rbind(data_rank_nozeros, data_sum_zeros) %>% 
   dplyr::rename(Region = region,
                 SurveyName = survey,
                 Common = common,
                 Species = spp,
                 Year = year,
                 WTCPUE = wtcpue,
-                Percentile = percentile)
+                Percentile = percentile) %>% 
+  mutate(Percentile = ifelse(is.na(Percentile), 0, Percentile))
+  
 ```
 
 
@@ -151,7 +168,7 @@ data_rank$Bin <- ifelse(data_rank$Percentile == 0.0, "Absent",
 ```
 
 
-```{r test_viz, message=FALSE}
+```{r test_viz, message=FALSE, eval=FALSE}
 
 ggplot(data_rank, aes(Percentile)) +
   # scale_colour_brewer(palette = "Spectral") +
@@ -197,13 +214,14 @@ preshaul <- left_join(presyr, haulsyr, by=c("region", "survey", "year")) %>%
   mutate(proportion=((pres/hauls)*100))
 
 data_haul <- preshaul %>% 
-  select(region, survey, spp, common, year, pres) %>% 
+  select(-hauls) %>% 
   dplyr::rename(Region = region,
                 Species = spp,
                 Common = common,
                 SurveyName = survey,
                 Year = year,
-                Presence = pres)
+                Presence = pres,
+                Proportion = proportion)
 
 ```
 
@@ -230,7 +248,7 @@ ggplot(data_full, aes(WTCPUE)) +
 ## Vizualizations
 The goal of this data processing is for users to be able to clearly see trends in the prevalence of species in surveys over time so that they can notice species that might be emerging or disappearing in a region.
 
-### West Coast Example Heatmaps
+### NEFSC Spring Example Heatmaps
 ```{r}
 library(tidyverse)
 library(hrbrthemes)
@@ -241,7 +259,7 @@ library(heatmaply)
 #These will need to be adjusted to list the common name
 
 data_1 <- data_full %>%
-  filter(SurveyName == "West Coast Bottom Trawl Annual") %>% 
+  filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
   ungroup() %>% 
   dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Percentile, -Bin) %>% 
   pivot_wider(names_from = Year, values_from = Presence)
@@ -260,7 +278,7 @@ p1 <- heatmaply(mat_1,
                 dendrogram = "none",
                 xlab = "", 
                 ylab = "",
-                main = "Ex 1: West Coast Bottom Trawl Annual",
+                main = "Ex 1: NEFSC Spring Bottom Trawl (Haul Freq.)",
                 # scale = "column",
                 # margins = c(60,100,40,20),
                 # grid_color = "white",
@@ -281,7 +299,7 @@ p1
 
 ```{r}
 data_2 <- data_full %>%
-  filter(SurveyName == "West Coast Bottom Trawl Annual") %>% 
+  filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
   ungroup() %>% 
   dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin) %>% 
   pivot_wider(names_from = Year, values_from = Percentile)
@@ -300,7 +318,7 @@ p2 <- heatmaply(mat_2,
                 dendrogram = "none",
                 xlab = "", 
                 ylab = "",
-                main = "Ex 2: West Coast Bottom Trawl Annual (Percentiles)",
+                main = "Ex 2: NEFSC Spring Bottom Trawl (Percentiles)",
                 hide_colorbar = FALSE,
                 label_names = c("Species", "Year", "Percentile"),
                 fontsize_row = 5, 
@@ -313,75 +331,22 @@ p2 <- heatmaply(mat_2,
 p2
 ```
 
-### NEFSC Spring Example Heatmaps
-
 ```{r}
 data_3 <- data_full %>%
-  filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
-  ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Percentile, -Bin) %>% 
-  pivot_wider(names_from = Year, values_from = Presence)
+  filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
+  ungroup()
 
-# data_1$Year <- as.character(data_1$Year)
+data_3$Bin <- factor(data_3$Bin, levels = c('Absent', 'Less Common', 'Common', 'Abundant', 'Highly Abundant'))
 
-mat_3 <- as.matrix(data_3)
-rownames(mat_3) <- mat_3[,1]
-mat_3 <- as.data.frame(mat_3) %>% 
-  dplyr::select(-Species) %>% 
-  mutate_if(is.character, as.numeric)
-# mat_1 <- as.matrix(mat_1) %>% 
-  # mutate_if(is.character, as.numeric)
+p3 <- ggplot(data_3, aes(Year, Common)) +
+  geom_tile(aes(fill= Bin)) +
+  ggtitle("Ex 3: NEFSC Spring Bottom Trawl (Binned Percentiles)") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis") +
+  theme(axis.text.y = element_text(size = 4))
 
-p3 <- heatmaply(mat_3,
-                dendrogram = "none",
-                xlab = "", 
-                ylab = "",
-                main = "Ex 3: NEFSC Spring Bottom Trawl",
-                hide_colorbar = FALSE,
-                label_names = c("Species", "Year", "Presence"),
-                fontsize_row = 5, 
-                fontsize_col = 5,
-                labCol = colnames(mat_3),
-                labRow = rownames(mat_3),
-                heatmap_layers = theme(axis.line = element_blank())
-                )
 
-p3
-```
-
-```{r}
-data_4 <- data_full %>%
-  filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
-  ungroup() %>% 
-  dplyr::select(-Region, -Common, -SurveyName, -WTCPUE, -Presence, -Bin) %>% 
-  pivot_wider(names_from = Year, values_from = Percentile)
-
-# data_1$Year <- as.character(data_1$Year)
-
-mat_4 <- as.matrix(data_4)
-rownames(mat_4) <- mat_4[,1]
-mat_4 <- as.data.frame(mat_4) %>% 
-  dplyr::select(-Species) %>% 
-  mutate_if(is.character, as.numeric)
-# mat_1 <- as.matrix(mat_1) %>% 
-  # mutate_if(is.character, as.numeric)
-
-p4 <- heatmaply(mat_4,
-                dendrogram = "none",
-                xlab = "", 
-                ylab = "",
-                main = "Ex 4: NEFSC Spring Bottom Trawl (Percentiles)",
-                hide_colorbar = FALSE,
-                # branches_lwd = 0.1,
-                label_names = c("Species", "Year", "Percentile"),
-                fontsize_row = 5, 
-                fontsize_col = 5,
-                labCol = colnames(mat_4),
-                labRow = rownames(mat_4),
-                heatmap_layers = theme(axis.line = element_blank())
-                )
-
-p4
+ggplotly(p3)
 ```
 
 ### Aleutian Islands Example Heatmaps
@@ -407,7 +372,7 @@ p5 <- heatmaply(mat_5,
                 dendrogram = "none",
                 xlab = "", 
                 ylab = "",
-                main = "Ex 5: Aleutian Islands Bottom Trawl Survey",
+                main = "Ex 5: Aleutian Islands Bottom Trawl Survey (Haul Freq.)",
                 hide_colorbar = FALSE,
                 label_names = c("Species", "Year", "Presence"),
                 fontsize_row = 5, 
