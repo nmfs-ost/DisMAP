@@ -301,8 +301,8 @@ p1
 data_2 <- data_full %>%
   filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
   ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Proportion) %>% 
-  pivot_wider(names_from = Year, values_from = Percentile)
+  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Percentile) %>% 
+  pivot_wider(names_from = Year, values_from = Proportion)
 
 # data_1$Year <- as.character(data_1$Year)
 
@@ -311,14 +311,13 @@ rownames(mat_2) <- mat_2[,1]
 mat_2 <- as.data.frame(mat_2) %>% 
   dplyr::select(-Species) %>% 
   mutate_if(is.character, as.numeric)
-# mat_1 <- as.matrix(mat_1) %>% 
-  # mutate_if(is.character, as.numeric)
+
 
 p2 <- heatmaply(mat_2,
                 dendrogram = "none",
                 xlab = "", 
                 ylab = "",
-                main = "Ex 2: NEFSC Spring Bottom Trawl (Percentiles)",
+                main = "Ex 2: NEFSC Spring Bottom Trawl (Haul Proportion)",
                 hide_colorbar = FALSE,
                 label_names = c("Species", "Year", "Percentile"),
                 fontsize_row = 5, 
@@ -334,52 +333,53 @@ p2
 ```{r}
 data_3 <- data_full %>%
   filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
-  ungroup()
+  ungroup() %>% 
+  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Proportion) %>% 
+  pivot_wider(names_from = Year, values_from = Percentile)
 
-data_3$Bin <- factor(data_3$Bin, levels = c('Absent', 'Rare', 'Less Common', 'Common', 'Abundant', 'Highly Abundant'))
+# data_1$Year <- as.character(data_1$Year)
 
-p3 <- ggplot(data_3, aes(Year, Common)) +
-  geom_tile(aes(fill= Bin)) +
-  ggtitle("Ex 3: NEFSC Spring Bottom Trawl (Binned Percentiles)") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  theme(axis.text.y = element_text(size = 4))
+mat_3 <- as.matrix(data_3)
+rownames(mat_3) <- mat_3[,1]
+mat_3 <- as.data.frame(mat_3) %>% 
+  dplyr::select(-Species) %>% 
+  mutate_if(is.character, as.numeric)
+# mat_1 <- as.matrix(mat_1) %>% 
+  # mutate_if(is.character, as.numeric)
 
+p3 <- heatmaply(mat_3,
+                dendrogram = "none",
+                xlab = "", 
+                ylab = "",
+                main = "Ex 3: NEFSC Spring Bottom Trawl (Percentiles)",
+                hide_colorbar = FALSE,
+                label_names = c("Species", "Year", "Percentile"),
+                fontsize_row = 5, 
+                fontsize_col = 5,
+                labCol = colnames(mat_3),
+                labRow = rownames(mat_3),
+                heatmap_layers = theme(axis.line = element_blank())
+                )
 
-ggplotly(p3)
+p3
 ```
 
 ```{r}
 data_4 <- data_full %>%
   filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
-  ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Percentile) %>% 
-  pivot_wider(names_from = Year, values_from = Proportion)
+  ungroup()
 
-# data_1$Year <- as.character(data_1$Year)
+data_4$Bin <- factor(data_3$Bin, levels = c('Absent', 'Rare', 'Less Common', 'Common', 'Abundant', 'Highly Abundant'))
 
-mat_4 <- as.matrix(data_4)
-rownames(mat_4) <- mat_4[,1]
-mat_4 <- as.data.frame(mat_4) %>% 
-  dplyr::select(-Species) %>% 
-  mutate_if(is.character, as.numeric)
+p4 <- ggplot(data_4, aes(Year, Common)) +
+  geom_tile(aes(fill= Bin)) +
+  ggtitle("Ex 4: NEFSC Spring Bottom Trawl (Binned Percentiles)") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis") +
+  theme(axis.text.y = element_text(size = 4))
 
 
-p4 <- heatmaply(mat_4,
-                dendrogram = "none",
-                xlab = "", 
-                ylab = "",
-                main = "Ex 4: NEFSC Spring Bottom Trawl (Haul Proportion)",
-                hide_colorbar = FALSE,
-                label_names = c("Species", "Year", "Percentile"),
-                fontsize_row = 5, 
-                fontsize_col = 5,
-                labCol = colnames(mat_4),
-                labRow = rownames(mat_4),
-                heatmap_layers = theme(axis.line = element_blank())
-                )
-
-p4
+ggplotly(p4)
 ```
 
 
@@ -418,14 +418,12 @@ p5 <- heatmaply(mat_5,
 p5
 ```
 
-
-
 ```{r}
 data_6 <- data_full %>%
   filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
   ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Proportion) %>% 
-  pivot_wider(names_from = Year, values_from = Percentile)
+  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Percentile) %>% 
+  pivot_wider(names_from = Year, values_from = Proportion)
 
 # data_1$Year <- as.character(data_1$Year)
 
@@ -434,14 +432,13 @@ rownames(mat_6) <- mat_6[,1]
 mat_6 <- as.data.frame(mat_6) %>% 
   dplyr::select(-Species) %>% 
   mutate_if(is.character, as.numeric)
-# mat_1 <- as.matrix(mat_1) %>% 
-  # mutate_if(is.character, as.numeric)
+
 
 p6 <- heatmaply(mat_6,
                 dendrogram = "none",
                 xlab = "", 
                 ylab = "",
-                main = "Ex 6: Aleutian Islands Bottom Trawl Survey (Percentiles)",
+                main = "Ex 6: Aleutian Islands (Haul Proportion)",
                 hide_colorbar = FALSE,
                 label_names = c("Species", "Year", "Percentile"),
                 fontsize_row = 5, 
@@ -457,51 +454,54 @@ p6
 ```{r}
 data_7 <- data_full %>%
   filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
-  ungroup()
+  ungroup() %>% 
+  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Proportion) %>% 
+  pivot_wider(names_from = Year, values_from = Percentile)
 
-data_7$Bin <- factor(data_7$Bin, levels = c('Absent', 'Rare', 'Less Common', 'Common', 'Abundant', 'Highly Abundant'))
+# data_1$Year <- as.character(data_1$Year)
 
-p7 <- ggplot(data_7, aes(Year, Common)) +
-  geom_tile(aes(fill= Bin)) +
-  ggtitle("Ex 7: Aleutian Islands (Binned Percentiles)") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  theme(axis.text.y = element_text(size = 4))
+mat_7 <- as.matrix(data_7)
+rownames(mat_7) <- mat_7[,1]
+mat_7 <- as.data.frame(mat_7) %>% 
+  dplyr::select(-Species) %>% 
+  mutate_if(is.character, as.numeric)
+# mat_1 <- as.matrix(mat_1) %>% 
+  # mutate_if(is.character, as.numeric)
 
+p7 <- heatmaply(mat_7,
+                dendrogram = "none",
+                xlab = "", 
+                ylab = "",
+                main = "Ex 7: Aleutian Islands Bottom Trawl Survey (Percentiles)",
+                hide_colorbar = FALSE,
+                label_names = c("Species", "Year", "Percentile"),
+                fontsize_row = 5, 
+                fontsize_col = 5,
+                labCol = colnames(mat_7),
+                labRow = rownames(mat_7),
+                heatmap_layers = theme(axis.line = element_blank())
+                )
 
-ggplotly(p7)
+p7
 ```
 
 ```{r}
 data_8 <- data_full %>%
   filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
-  ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Percentile) %>% 
-  pivot_wider(names_from = Year, values_from = Proportion)
+  ungroup()
 
-# data_1$Year <- as.character(data_1$Year)
+data_8$Bin <- factor(data_8$Bin, levels = c('Absent', 'Rare', 'Less Common', 'Common', 'Abundant', 'Highly Abundant'))
 
-mat_8 <- as.matrix(data_8)
-rownames(mat_8) <- mat_8[,1]
-mat_8 <- as.data.frame(mat_8) %>% 
-  dplyr::select(-Species) %>% 
-  mutate_if(is.character, as.numeric)
+p8 <- ggplot(data_8, aes(Year, Common)) +
+  geom_tile(aes(fill= Bin)) +
+  ggtitle("Ex 8: Aleutian Islands (Binned Percentiles)") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis") +
+  theme(axis.text.y = element_text(size = 4))
 
 
-p8 <- heatmaply(mat_8,
-                dendrogram = "none",
-                xlab = "", 
-                ylab = "",
-                main = "Ex 8: Aleutian Islands (Haul Proportion)",
-                hide_colorbar = FALSE,
-                label_names = c("Species", "Year", "Percentile"),
-                fontsize_row = 5, 
-                fontsize_col = 5,
-                labCol = colnames(mat_8),
-                labRow = rownames(mat_8),
-                heatmap_layers = theme(axis.line = element_blank())
-                )
-
-p8
+ggplotly(p8)
 ```
+
+
 
