@@ -1,11 +1,11 @@
 ---
-title: 'Species Persistence: Options'
+title: 'Species Persistence: Visualization Options'
 author: "Claire Gonzales (2025 Knauss Fellow, NOAA Affiliate)"
 date: "2025-05-06"
 output:
   html_document:
     toc: yes
-    theme: lumen
+    theme: readable
     code_folding: hide
   pdf_document:
     toc: yes
@@ -27,7 +27,10 @@ library(readr)
 
 ## Background
 
-This document presents various analyses for evaluating species persistence (emergence, consistence persistence, or removal) as a new analysis module on [DisMAP](https://apps-st.fisheries.noaa.gov/dismap/). **Feedback on the usefulness of these analyses and visualizations would be greatly appreciated.**
+This document presents various analyses for evaluating species persistence (emergence, consistence persistence, or removal) as a new analysis module on [DisMAP](https://apps-st.fisheries.noaa.gov/dismap/). 
+
+**Feedback on the usefulness of these analyses and visualizations would be greatly appreciated. Specifically, we would appreciate any comments on which visualization of the data (if any) you feel would be most useful to DisMAP end-users. Please feel free to contact Melissa and Claire at any time with questions or comments.**
+
 
 The goals for this indicator are four-fold:
 
@@ -39,15 +42,16 @@ The goals for this indicator are four-fold:
   + common,
   + abundant
   + or highly abundant
-* Measure cumulative trend in prevalence of a particular species, across all survey years (*in development and not presented here*)
+* Measure overall prevalence pattern of a particular species, across all survey years (*in development and not presented here*)
 * Categorize trend as (*in development and not presented here*):
   + increasing, 
   + decreasing,
   + or consistent
 
 In this current draft of the analyses, we present data processing steps as well as four draft heat maps. The heat maps reflect
-  1. the frequency of occurrence for a particular species (by year and by survey),
-  2. the proportion of occurrence for a particular species (by year and by survey),
+
+  1. the frequency of tows a particular species is caught in (by year and by survey),
+  2. the proportion of tows for a particular species is caught in (by year and by survey),
   3. the percentile of biomass for a particular species (by year and by survey), and
   4. the binned percentile of biomass for a particular species (by year and by survey).
 
@@ -86,9 +90,11 @@ wc_tri <- read_csv(here::here("data_processing_rcode","output","python", "WC_TRI
 data <- rbind(bfish, ai, ebs, gmex, goa, nbs, neus_fall, neus_spri, seus_fall, seus_spri, seus_sum, wc_ann, wc_tri)
 ```
 
+## Data Processing
 
-## Biomass percentile
-This section captures the data by calculating percentile/rank of biomass of a specific species, compared to all the species biomass in that region and survey.
+
+### Biomass percentile
+This section captures the data by calculating percentile/rank of biomass of a specific species, compared to all the species biomass in that survey region and survey year.
 
 ```{r prep}
 data$survey <- ifelse(data$region == "Aleutian Islands", "Aleutian Islands Bottom Trawl Survey",
@@ -127,7 +133,7 @@ data_update$region <- ifelse(data_update$region_old == "Aleutian Islands", "Aleu
 
 ```
 
-Here, we remove the species that have zero biomass for an entire survey because these values would skew percentile calculations.
+We calculate total biomass for each species in each year for each survey. Then we remove zero biomass records because these values would skew percentile calculations in the following step. These will be added back in after the percentile calculations.
 ```{r}
 data_sum <- data_update %>%
   select(region, survey, spp, year, common, wtcpue) %>%
@@ -141,7 +147,7 @@ data_sum_nozeros <- data_sum %>%
   filter(wtcpue > 0)
 ```
 
-Using the `cume_dist()` function here (as opposed to the `percent_rank()` function) to rank biomass values as percentiles because this method will not produce a percentile of zero. Percentiles are calculated for a particular species, in comparison to all the biomass values for all species in a survey/survey region.
+Using the `cume_dist()` function here (as opposed to the `percent_rank()` function) to rank biomass values as percentiles because this method will not produce a percentile of zero. Percentiles are calculated for a particular species, in comparison to all the biomass values for all species in a survey/survey region, across all survey years.
 ```{r percentile, message = FALSE}
 
 data_rank_nozeros <- data_sum_nozeros %>%
@@ -150,7 +156,7 @@ data_rank_nozeros <- data_sum_nozeros %>%
 
 ```
 
-Then, we bring the zero biomass rows back in after the percentiles are calculated and `rbind` them to the data set with percentiles calculated. Species that have zero biomass for an entire survey will have a percentile value of zero. Any species that has a survey biomass > 0 will have a ranked percentile value, in comparison to all the biomass values in that years survey.
+Then, we bring the zero biomass rows back in after the percentiles are calculated and `rbind` them to the data set with percentiles calculated. Species that have zero biomass in a survey region for a survey year will have a percentile value of zero. Any species that has a survey biomass > 0 for a survey year will have a ranked percentile value, in comparison to all the biomass values in that survey region across all survey years.
 ```{r}
 
 data_rank <- rbind(data_rank_nozeros, data_sum_zeros) %>% 
@@ -187,7 +193,7 @@ ggplot(data_rank, aes(Percentile)) +
   theme_minimal()
 
 ```
-## Presence in hauls
+### Presence in hauls
 This section will calculate the number of hauls that a species is present in, per survey and per year. Measuring the presence in hauls will capture the prevalence of that species in the survey (i.e., how prominent is this species in the survey?), over time.
 
 
@@ -236,7 +242,7 @@ data_haul <- preshaul %>%
 ```
 
 
-## Bind haul count to percentiles
+### Binding haul count to percentiles
 
 Using left_join to add the `Presence` and `Proportion` values from `data_haul` to the corresponding survey and species in `data_rank`. Any zero biomass/percentile will turn up as `NA` values in the haul presence column when it's joined. We have converted these `NA`'s to zeros because those are instances in which the species was not landed in the survey. **This builds our full data set of results.**
 
@@ -260,14 +266,15 @@ ggplot(data_full, aes(WTCPUE)) +
 ## Vizualizations
 The goal of this data processing is for users to be able to clearly see trends in the prevalence of species in surveys over time so that they can notice species that might be emerging or disappearing in a region. We have chosen two example surveys/regions for testing visualizations of data processing: the Northeast Spring Bottom Trawl Survey and the Aleutian Island Bottom Trawl Survey.
 
-Please feel free to send any feedback on these figures to Melissa and Claire. Specifically, we would appreciate any comments on which depiction of the data (if any) you feel would be most useful to DisMAP end-users.
 
 *The example visualizations below are depicted as heat maps because of their similarities to the mocked-up version of the module on DisMAP*
 
 **Note: These visualizations are interactive. To see the values depicted in each cell, simply hover your cursor over the plot. To zoom in on a set of species or years, hold and drag your cursor to draw a box around the desired region.**
 
 ### NEFSC Spring Example Heatmaps
-This "Haul Frequency" figure reflects the number of hauls that each species was present in, across surveyed years for the Northeast Spring Bottom Trawl Survey.
+The "Haul Frequency" figure below reflects the number of hauls that each species was present in, across surveyed years for the Northeast Spring Bottom Trawl Survey. 
+
+*(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
 ```{r}
 library(tidyverse)
 library(hrbrthemes)
@@ -316,7 +323,9 @@ p1 <- heatmaply(mat_1,
 p1
 ```
 
-This "Haul Proportion" figure reflects the proportion of hauls that each species was present in (hauls present divided by total hauls in a survey), across surveyed years for the Northeast Spring Bottom Trawl Survey.
+The "Haul Proportion" figure below reflects the proportion of hauls that each species was present in (hauls present divided by total hauls in a survey), across surveyed years for the Northeast Spring Bottom Trawl Survey.
+
+*(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
 ```{r}
 data_2 <- data_full %>%
   filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
@@ -351,7 +360,9 @@ p2
 ```
 
 
-This "Percentiles" figure reflects the biomass of each species, calculated as a percentile of all the species biomass values across an entire survey. Percentiles are calculated for all survey years for the Northeast Spring Bottom Trawl Survey.
+The "Percentiles" figure below reflects the biomass of each species, calculated as a percentile of all the species biomass values across an entire survey. Percentiles are calculated for all survey years for the Northeast Spring Bottom Trawl Survey.
+
+*(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
 ```{r}
 data_3 <- data_full %>%
   filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
@@ -386,7 +397,7 @@ p3 <- heatmaply(mat_3,
 p3
 ```
 
-This "Binned Percentile" figure reflects the Percentile values in Ex 3 figure (above) binned as "Absent" (biomass and percentile of 0), "Rare" (< 10th percentile), "Less Common" (10th - 25th percentile), "Common" (25th - 75th percentile), "Abundant" (75th - 90th percentile), of "Highly Abundant" (> 90th percentile). Percentile Bins are calculated for all survey years for the Northeast Spring Bottom Trawl Survey.
+The "Binned Percentile" figure below reflects the Percentile values in Ex 3 figure (above) binned as "Absent" (biomass and percentile of 0), "Rare" (< 10th percentile), "Less Common" (10th - 25th percentile), "Common" (25th - 75th percentile), "Abundant" (75th - 90th percentile), of "Highly Abundant" (> 90th percentile). Percentile Bins are calculated for all survey years for the Northeast Spring Bottom Trawl Survey.
 ```{r, eval=TRUE}
 data_4 <- data_full %>%
   filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
@@ -408,7 +419,9 @@ ggplotly(p4)
 
 
 ### Aleutian Islands Example Heatmaps
-This "Haul Frequency" figure reflects the number of hauls that each species was present in, across surveyed years for the Aleutian Islands Bottom Trawl Survey.
+The "Haul Frequency" figure below reflects the number of hauls that each species was present in, across surveyed years for the Aleutian Islands Bottom Trawl Survey.
+
+*(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
 ```{r}
 data_5 <- data_full %>%
   filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
@@ -441,7 +454,9 @@ p5 <- heatmaply(mat_5,
 
 p5
 ```
-This "Haul Proportion" figure reflects the proportion of hauls that each species was present in (hauls present divided by total hauls in a survey), across surveyed years for the Aleutian Islands Bottom Trawl Survey.
+The "Haul Proportion" figure below reflects the proportion of hauls that each species was present in (hauls present divided by total hauls in a survey), across surveyed years for the Aleutian Islands Bottom Trawl Survey.
+
+*(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
 ```{r}
 data_6 <- data_full %>%
   filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
@@ -475,7 +490,9 @@ p6 <- heatmaply(mat_6,
 p6
 ```
 
-This "Percentiles" figure reflects the biomass of each species, calculated as a percentile of all the species biomass values across an entire survey. Percentiles are calculated for all survey years for the Aleutian Islands Bottom Trawl Survey.
+The "Percentiles" figure below reflects the biomass of each species, calculated as a percentile of all the species biomass values across an entire survey. Percentiles are calculated for all survey years for the Aleutian Islands Bottom Trawl Survey.
+
+*(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
 ```{r}
 data_7 <- data_full %>%
   filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
@@ -509,7 +526,8 @@ p7 <- heatmaply(mat_7,
 
 p7
 ```
-This "Binned Percentile" figure reflects the Percentile values in Ex 3 figure (above) binned as "Absent" (biomass and percentile of 0), "Rare" (< 10th percentile), "Less Common" (10th - 25th percentile), "Common" (25th - 75th percentile), "Abundant" (75th - 90th percentile), of "Highly Abundant" (> 90th percentile). Percentile Bins are calculated for all survey years for the Aleutian Islands Bottom Trawl Survey.
+
+The "Binned Percentile" figure below reflects the Percentile values in Ex 3 figure (above) binned as "Absent" (biomass and percentile of 0), "Rare" (< 10th percentile), "Less Common" (10th - 25th percentile), "Common" (25th - 75th percentile), "Abundant" (75th - 90th percentile), of "Highly Abundant" (> 90th percentile). Percentile Bins are calculated for all survey years for the Aleutian Islands Bottom Trawl Survey.
 ```{r, eval=TRUE}
 data_8 <- data_full %>%
   filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
