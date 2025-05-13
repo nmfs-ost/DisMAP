@@ -116,8 +116,6 @@ data_wtcpue <- data_update %>%
   group_by(region, survey, year, spp) %>%
   summarise(wtcpue = sum(wtcpue))
 
-## Combine data_rank and data_wtcpue
-## CG - I am leaving these as two different chunks above because data_rank should not have the year, but data_wtcpue should still have year
 
 # loop through to find the gain or loss in biomass from year to year
 holding <- data.frame(survey = character(), spp = character(), Diff = numeric(), stringsAsFactors = FALSE)
