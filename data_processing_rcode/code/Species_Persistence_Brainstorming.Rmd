@@ -3,6 +3,8 @@ title: 'Species Persistence: Visualization Options'
 author: "Claire Gonzales (2025 Knauss Fellow, NOAA Affiliate)"
 date: "2025-05-06"
 output:
+  word_document:
+    toc: yes
   html_document:
     toc: yes
     theme: readable
@@ -183,6 +185,13 @@ data_rank$Bin <- ifelse(data_rank$Percentile == 0.0, "Absent",
 
 ```
 
+```{r presence_absence}
+
+data_rank$Absence_Presence <- ifelse(data_rank$WTCPUE == 0, "0",
+                                     ifelse(data_rank$WTCPUE > 0, "1", "NA"))
+
+```
+
 
 ```{r test_viz, message=FALSE, eval=FALSE}
 
@@ -275,7 +284,7 @@ The goal of this data processing is for users to be able to clearly see trends i
 The "Haul Frequency" figure below reflects the number of hauls that each species was present in, across surveyed years for the Northeast Spring Bottom Trawl Survey. 
 
 *(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
-```{r}
+```{r, eval=FALSE}
 library(tidyverse)
 library(hrbrthemes)
 library(viridis)
@@ -287,7 +296,7 @@ library(heatmaply)
 data_1 <- data_full %>%
   filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
   ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Percentile, -Bin, -Proportion) %>% 
+  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Percentile, -Bin, -Proportion, -Absence_Presence) %>% 
   pivot_wider(names_from = Year, values_from = Presence)
 
 # data_1$Year <- as.character(data_1$Year)
@@ -326,11 +335,11 @@ p1
 The "Haul Proportion" figure below reflects the proportion of hauls that each species was present in (hauls present divided by total hauls in a survey), across surveyed years for the Northeast Spring Bottom Trawl Survey.
 
 *(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
-```{r}
+```{r, eval=FALSE}
 data_2 <- data_full %>%
   filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
   ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Percentile) %>% 
+  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Percentile, -Absence_Presence) %>% 
   pivot_wider(names_from = Year, values_from = Proportion)
 
 # data_1$Year <- as.character(data_1$Year)
@@ -363,11 +372,11 @@ p2
 The "Percentiles" figure below reflects the biomass of each species, calculated as a percentile of all the species biomass values across an entire survey. Percentiles are calculated for all survey years for the Northeast Spring Bottom Trawl Survey.
 
 *(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
-```{r}
+```{r, eval=FALSE}
 data_3 <- data_full %>%
   filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
   ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Proportion) %>% 
+  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Proportion, -Absence_Presence) %>% 
   pivot_wider(names_from = Year, values_from = Percentile)
 
 # data_1$Year <- as.character(data_1$Year)
@@ -398,7 +407,7 @@ p3
 ```
 
 The "Binned Percentile" figure below reflects the Percentile values in Ex 3 figure (above) binned as "Absent" (biomass and percentile of 0), "Rare" (< 10th percentile), "Less Common" (10th - 25th percentile), "Common" (25th - 75th percentile), "Abundant" (75th - 90th percentile), of "Highly Abundant" (> 90th percentile). Percentile Bins are calculated for all survey years for the Northeast Spring Bottom Trawl Survey.
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 data_4 <- data_full %>%
   filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
   ungroup() %>% 
@@ -422,11 +431,11 @@ ggplotly(p4)
 The "Haul Frequency" figure below reflects the number of hauls that each species was present in, across surveyed years for the Aleutian Islands Bottom Trawl Survey.
 
 *(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
-```{r}
+```{r, eval=FALSE}
 data_5 <- data_full %>%
   filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
   ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Percentile, -Bin, -Proportion) %>% 
+  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Percentile, -Bin, -Proportion, -Absence_Presence) %>% 
   pivot_wider(names_from = Year, values_from = Presence)
 
 # data_1$Year <- as.character(data_1$Year)
@@ -457,11 +466,11 @@ p5
 The "Haul Proportion" figure below reflects the proportion of hauls that each species was present in (hauls present divided by total hauls in a survey), across surveyed years for the Aleutian Islands Bottom Trawl Survey.
 
 *(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
-```{r}
+```{r, eval=FALSE}
 data_6 <- data_full %>%
   filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
   ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Percentile) %>% 
+  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Percentile, -Absence_Presence) %>% 
   pivot_wider(names_from = Year, values_from = Proportion)
 
 # data_1$Year <- as.character(data_1$Year)
@@ -493,11 +502,11 @@ p6
 The "Percentiles" figure below reflects the biomass of each species, calculated as a percentile of all the species biomass values across an entire survey. Percentiles are calculated for all survey years for the Aleutian Islands Bottom Trawl Survey.
 
 *(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
-```{r}
+```{r, eval=FALSE}
 data_7 <- data_full %>%
   filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
   ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Proportion) %>% 
+  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Proportion, -Absence_Presence) %>% 
   pivot_wider(names_from = Year, values_from = Percentile)
 
 # data_1$Year <- as.character(data_1$Year)
@@ -528,7 +537,7 @@ p7
 ```
 
 The "Binned Percentile" figure below reflects the Percentile values in Ex 3 figure (above) binned as "Absent" (biomass and percentile of 0), "Rare" (< 10th percentile), "Less Common" (10th - 25th percentile), "Common" (25th - 75th percentile), "Abundant" (75th - 90th percentile), of "Highly Abundant" (> 90th percentile). Percentile Bins are calculated for all survey years for the Aleutian Islands Bottom Trawl Survey.
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 data_8 <- data_full %>%
   filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
   ungroup()
@@ -546,5 +555,67 @@ p8 <- ggplot(data_8, aes(Year, Common)) +
 ggplotly(p8)
 ```
 
+## Cummulative assessment
 
+**Definitions**
+
+- Emerging: species colonized the region but never went extinct
+- Leaving: species went extinct from the region but were never observed to have colonized
+- Sporadic: experienced at least one colonization and extinction
+- Stable: not experienced a colonization nor an extinction
+
+### 
+
+```{r}
+data_cumm <- data_full %>% 
+  select(Region, SurveyName, Year, Species, Common, Absence_Presence)
+
+data_cumm$Absence_Presence <- as.numeric(data_cumm$Absence_Presence)
+```
+
+```{r}
+holding <- data.frame(SurveyName = character(), Species = character(), Year = numeric(), Diff = numeric(), stringsAsFactors = FALSE)
+
+
+surveys <- unique(data_cumm$SurveyName)
+
+for(v in surveys) {
+
+  firstfilt <- data_cumm %>%
+    filter(SurveyName == v)
+
+  spps <- unique(firstfilt$Species)
+
+  for (p in spps) {
+
+    myfilt <- firstfilt %>%
+      filter(Species == p)
+
+    years <- c(myfilt$Year)
+
+
+    for (i in 1:(length(years)-1)) {
+
+      var_1 <- myfilt %>%
+        filter(Year == years[i])
+
+      var_2 <- myfilt %>%
+        filter(Year == years[i+1])
+
+      Diff <- var_2$Absence_Presence[1] - var_1$Absence_Presence[1]
+
+      #this step (below) might be redundant
+      # survey <- paste(v)
+      # spp <- paste(p)
+      # Diff <- diff
+
+      temp <- data.frame(SurveyName = v, Species = p, Year = years[i+1], Diff = Diff, stringsAsFactors = FALSE)
+
+      holding <- rbind(holding, temp)
+
+    }
+  }
+}
+
+```
 
