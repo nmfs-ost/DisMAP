@@ -592,6 +592,7 @@ for(v in surveys) {
       filter(Species == p)
 
     years <- c(myfilt$Year)
+    years <- years[order(years)]
 
 
     for (i in 1:(length(years)-1)) {
@@ -617,5 +618,25 @@ for(v in surveys) {
   }
 }
 
+```
+
+```{r}
+data_ce_col <- holding %>% 
+  filter(Diff == 1) %>% 
+  group_by(SurveyName, Species) %>% 
+  summarise(col = n())
+
+data_ce_ext <- holding %>% 
+  filter(Diff == -1) %>% 
+  group_by(SurveyName, Species) %>% 
+  summarise(ext = n())
+
+data_ce_stable <- holding %>% 
+  filter(Diff == 0) %>% 
+  group_by(SurveyName, Species) %>% 
+  summarise(stable = n())
+
+# data_ce <- data_ce_stable %>% 
+#   full_join()
 ```
 
