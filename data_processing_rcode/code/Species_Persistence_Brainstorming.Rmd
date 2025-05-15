@@ -620,6 +620,15 @@ for(v in surveys) {
 
 ```
 
+
+```{r adding common names}
+# Creating a speices list will allow me to join in the common names at the end of the next chunk
+spp_list <- distinct(data_full %>% 
+  ungroup() %>% 
+  select(SurveyName, Species, Common))
+
+```
+
 ```{r}
 data_ce_col <- holding %>% 
   filter(Diff == 1) %>% 
@@ -636,7 +645,14 @@ data_ce_stable <- holding %>%
   group_by(SurveyName, Species) %>% 
   summarise(stable = n())
 
-# data_ce <- data_ce_stable %>% 
-#   full_join()
+data_ce <- data_ce_stable %>%
+  full_join(data_ce_col, by = c("SurveyName", "Species")) %>% 
+  full_join(data_ce_ext, by = c("SurveyName", "Species")) %>% 
+  replace(is.na(.), 0) %>% 
+  select(-stable) %>% 
+  left_join(spp_list, by = c("SurveyName", "Species")) %>% 
+  select(SurveyName, Species, Common, col, ext)
 ```
+
+
 
