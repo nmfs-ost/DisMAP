@@ -190,6 +190,8 @@ data_rank$Bin <- ifelse(data_rank$Percentile == 0.0, "Absent",
 data_rank$Absence_Presence <- ifelse(data_rank$WTCPUE == 0, "0",
                                      ifelse(data_rank$WTCPUE > 0, "1", "NA"))
 
+#Absence is 0 and Presence is 1
+
 ```
 
 
@@ -273,6 +275,15 @@ ggplot(data_full, aes(WTCPUE)) +
 
 
 ## Vizualizations
+
+```{r}
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+library(plotly)
+library(heatmaply)
+```
+
 The goal of this data processing is for users to be able to clearly see trends in the prevalence of species in surveys over time so that they can notice species that might be emerging or disappearing in a region. We have chosen two example surveys/regions for testing visualizations of data processing: the Northeast Spring Bottom Trawl Survey and the Aleutian Island Bottom Trawl Survey.
 
 
@@ -285,11 +296,6 @@ The "Haul Frequency" figure below reflects the number of hauls that each species
 
 *(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
 ```{r, eval=FALSE}
-library(tidyverse)
-library(hrbrthemes)
-library(viridis)
-library(plotly)
-library(heatmaply)
 
 #These will need to be adjusted to list the common name
 
@@ -555,16 +561,73 @@ p8 <- ggplot(data_8, aes(Year, Common)) +
 ggplotly(p8)
 ```
 
+### All Surveys - Facet Wrapped
+
+```{r scratch 1, eval=FALSE}
+data_all <- data_full
+
+data_all$Bin <- factor(data_all$Bin, levels = c('Absent', 'Rare', 'Less Common', 'Common', 'Abundant', 'Highly Abundant'))
+
+p_all <- ggplot(data_all, aes(Year, Common)) +
+  geom_tile(aes(fill= Bin)) +
+  # ggtitle("All Surveys (Binned Percentiles)") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis") +
+  # theme(axis.text.y = element_text(size = 8)) +
+  facet_wrap(~SurveyName, nrow = 6)
+
+
+ggplotly(p_all)
+
+
+```
+
+```{r scratch 2, eval=FALSE}
+
+#### HAVING TROUBLE SAVING THE GGPLOTS IN A KNITTABLE FORMAT ####
+
+data_all <- data_full
+
+surveys <- unique(data_all$SurveyName)
+
+plot_list <- list()
+
+for(v in surveys) {
+  
+  dat <- data_all %>% 
+    filter(SurveyName == v)
+  
+  dat$Bin <- factor(dat$Bin, levels = c('Absent', 'Rare', 'Less Common', 'Common', 'Abundant', 'Highly Abundant'))
+  
+  # plotname <- paste(v)
+  
+  p <- ggplot(dat, aes(Year, Common)) +
+    geom_tile(aes(fill= Bin)) +
+    ggtitle(paste(v)) +
+    theme_minimal() +
+    scale_fill_viridis(discrete=TRUE, option="viridis")
+    # theme(axis.text.y = element_text(size = 8))
+  
+  # Convert ggplot to ggplotly
+  myplot <- ggplotly(p)
+  
+  
+  # Add the plot to the list
+  plot_list[[v]] <- myplot
+  
+
+}
+
+  # Display the plot in the knitted .Rmd document
+  print(plot_list) # This will ensure the plots are displayed inline in the .Rmd
+  
+
+```
+
+
 ## Cummulative assessment
 
-**Definitions**
 
-- Emerging: species colonized the region but never went extinct
-- Leaving: species went extinct from the region but were never observed to have colonized
-- Sporadic: experienced at least one colonization and extinction
-- Stable: not experienced a colonization nor an extinction
-
-### 
 
 ```{r}
 data_cumm <- data_full %>% 
@@ -654,5 +717,48 @@ data_ce <- data_ce_stable %>%
   select(SurveyName, Species, Common, col, ext)
 ```
 
+**Definitions**
 
+- Emerging: species colonized the region but never went extinct
+- Leaving: species went extinct from the region but were never observed to have colonized
+- Sporadic: experienced at least one colonization and extinction
+- Stable: not experienced a colonization nor an extinction
+
+```{r grouped absence/presence df}
+#creating a data frame that groups the tally of absences vs presences to help with definitions of trends
+# Reminder for `Absence_Presence` column: Absence is 0 and Presence is 1
+data_ap_a <- data_cumm %>% 
+  filter(Absence_Presence == 0) %>% 
+  group_by(Region, SurveyName, Species, Common) %>% 
+  summarise(Absence = n())
+
+data_ap_p <- data_cumm %>% 
+  filter(Absence_Presence == 1) %>% 
+  group_by(Region, SurveyName, Species, Common) %>% 
+  summarise(Presence = n())
+
+data_ap <- data_ap_p %>% 
+  full_join(data_ap_a, by = c("Region", "SurveyName", "Species", "Common")) %>% 
+  ungroup() %>% 
+  mutate(Absence = ifelse(is.na(Absence), 0, Absence))
+```
+
+```{r df col/ext and ab/pre}
+
+data_ce_ap <- data_ce %>% 
+  left_join(data_ap, by = c("SurveyName", "Species", "Common")) %>% 
+  select(Region, SurveyName, Species, Common, col, ext, Absence, Presence) %>% 
+  # group_by(Region, SurveyName, Species, Common) %>% 
+  mutate(total_ap = Absence + Presence)
+```
+
+
+```{r definitions}
+
+data_ce_ap$Trend <- ifelse(data_ce_ap$col == 1 & data_ce_ap$ext == 0, "Emerging",
+                           ifelse(data_ce_ap$col == 0 & data_ce_ap$ext == 1, "Leaving",
+                                  ifelse(data_ce_ap$Absence == 0, "Stable", 
+                                         ifelse(data_ce_ap$col > 2 & data_ce_ap$ext > 2, "Sporadic", 0))))
+
+```
 
