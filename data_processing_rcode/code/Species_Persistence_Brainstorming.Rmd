@@ -586,7 +586,8 @@ ggplotly(p_all)
 
 #### This takes a really long time to knit so be prepared! ####
 
-data_all <- data_full
+data_all <- data_full %>%
+  ungroup()
 
 surveys <- unique(data_all$SurveyName)
 
@@ -716,7 +717,7 @@ data_ce <- data_ce_stable %>%
 - Sporadic: experienced at least one colonization and extinction
 - Stable: not experienced a colonization nor an extinction
 
-```{r grouped absence/presence df, eval=FALSE}
+```{r grouped absence/presence df}
 #creating a data frame that groups the tally of absences vs presences to help with definitions of trends
 # Reminder for `Absence_Presence` column: Absence is 0 and Presence is 1
 data_ap_a <- data_cumm %>% 
@@ -735,22 +736,99 @@ data_ap <- data_ap_p %>%
   mutate(Absence = ifelse(is.na(Absence), 0, Absence))
 ```
 
-```{r df col/ext and ab/pre, eval=FALSE}
+```{r df col/ext and ab/pre}
 
 data_ce_ap <- data_ce %>% 
   left_join(data_ap, by = c("SurveyName", "Species", "Common")) %>% 
   select(Region, SurveyName, Species, Common, col, ext, Absence, Presence) %>% 
   # group_by(Region, SurveyName, Species, Common) %>% 
-  mutate(total_ap = Absence + Presence)
+  mutate(total_ap = Absence + Presence) %>% 
+  mutate(pres_prob = Presence/total_ap) %>% 
+  ungroup()
+```
+
+```{r}
+#' Get species that show up and remain (Batt et al., 2017)
+#' 
+#'  n_yrs_start after this many years, species seen for the first time "show up"; acts as a burn-in
+#'  n_yrs_remain how many years must be remaining in the time series after a species "shows up" to evaluate it as "sticking around"
+#'  n_yrs_miss_after how many years the species can be missing during remaining (post show-up) years and still be considered to "stick around"
+#' 
+#' Details:
+#' Function looks for species that appear after the second year, but before the final 5 years, and that in the remaining years (of which there must be at least 5) the species is observed in at least every year but 1. So a species that shows up after many years of sampling, and then is seen every year thereafter, will be returned by this function. Those species might be showing up and sticking around b/c of changing detection by the survey (I'd expect species to come on the scene more slowly, such that after it first shows up, there should still be some years it isn't observed)
+#' 
+#' Returns data.table containing the region, year of appearance, species, stats for how long and how consistently that species showed up.
+#' 
+una <- unique
+
+get_show_up_spp <- function(data_all, n_yrs_start=2, n_yrs_remain=5, n_yrs_miss_after=1){
+	data_all <- data_all[!is.na(SurveyName) & !is.na(Species) & !is.na(Year)]
+  added_spp <- data_all[, j={
+		Years <- Year[order(Year)]
+	  old <- .SD[Year==una(Year)[1],una(Species)]
+		new <- list()
+		uyr <- .SD[,una(Year)]
+		for(y in 2:length(Year)){
+			td <- .SD[(Year)==uyr[y]]
+			t_spp <- td[,una(Species)]
+			spp_added <- c(NA, setdiff(t_spp, old))
+			old <- una(c(old,t_spp))
+			new[[y]] <- data.table(Year=td[,una(Year)], Species=spp_added)
+
+		}
+
+		rbindlist(new)
+
+	}, by="SurveyName"]
+
+	n_added_spp <- added_spp[,list(n_new_spp=length(Species)-1), by=c("SurveyName","Year")]
+
+	t_X <- copy(data_all)
+	setkey(t_X, SurveyName, Species)
+	t_added_spp <- copy(added_spp[!is.na(Species)])
+	setkey(t_added_spp, SurveyName, Species)
+	t_added_spp[,year_added:=Year]
+	t_added_spp[,Year:=NULL]
+
+	X_added <- merge(t_X, t_added_spp, by=c("SurveyName","Species"))
+	spp_added_freq <- X_added[,j={
+		yrs <- sort(una(Year))
+		uya <- una(year_added)
+		.SD[,list(
+			year_added=una(year_added),
+			total_years = length(yrs)+1,
+			years_elapsed=sum(yrs <= una(year_added))+1,
+			years_remaining=sum(yrs > una(year_added)),
+			years_seen_after=length(Year)-1
+		), by="Species"]
+
+	}, by=c("SurveyName")]
+
+	show_up_spp <- spp_added_freq[years_elapsed>=n_yrs_start & ((years_remaining - years_seen_after)<=n_yrs_miss_after) & years_remaining >=n_yrs_remain]
+	
+	return(show_up_spp)
+}
+```
+
+```{r}
+library(data.table)
+data_all <- as.data.table(data_all %>% select(SurveyName, Species, Year, Common, WTCPUE, Absence_Presence))
+result <- get_show_up_spp(data_all)
 ```
 
 
-```{r definitions, eval=FALSE}
+```{r definitions}
 
-data_ce_ap$Trend <- ifelse(data_ce_ap$col == 1 & data_ce_ap$ext == 0, "Emerging",
-                           ifelse(data_ce_ap$col == 0 & data_ce_ap$ext == 1, "Leaving",
-                                  ifelse(data_ce_ap$Absence == 0, "Stable", 
-                                         ifelse(data_ce_ap$col > 2 & data_ce_ap$ext > 2, "Sporadic", 0))))
+data_ce_ap$Trend <- ifelse(data_ce_ap$col == 1 & data_ce_ap$ext == 0, "Emerging", #third rule
+                           ifelse(data_ce_ap$col == 0 & data_ce_ap$ext == 1, "Leaving", #fourth rule
+                                  ifelse(data_ce_ap$Absence == 0, "Persistent", #move this to top rule
+                                         ifelse(data_ce_ap$col > 2 & data_ce_ap$ext > 2, "Sporadic", #second rule
+                                                ifelse(data_ce_ap$ext <= 2 & data_ce_ap$pres_prob >= 0.85, "Stable", 0))))) #both stable definitions 
+
+# Stable here is being defined as similar to Persistent but with a little flexibility (allowing for a random absence here or there)
+
+# check the species left over that aren't captured by these definitions
+myfilt <- data_ce_ap %>% filter(Trend == 0)
 
 ```
 
