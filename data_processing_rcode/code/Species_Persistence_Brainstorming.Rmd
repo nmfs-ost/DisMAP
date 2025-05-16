@@ -3,12 +3,12 @@ title: 'Species Persistence: Visualization Options'
 author: "Claire Gonzales (2025 Knauss Fellow, NOAA Affiliate)"
 date: "2025-05-06"
 output:
-  word_document:
-    toc: yes
   html_document:
     toc: yes
     theme: readable
     code_folding: hide
+  word_document:
+    toc: yes
   pdf_document:
     toc: yes
 ---
@@ -582,15 +582,15 @@ ggplotly(p_all)
 
 ```
 
-```{r scratch 2, eval=FALSE}
+```{r scratch 2, eval=FALSE, message=FALSE, warning=FALSE}
 
-#### HAVING TROUBLE SAVING THE GGPLOTS IN A KNITTABLE FORMAT ####
+#### This takes a really long time to knit so be prepared! ####
 
 data_all <- data_full
 
 surveys <- unique(data_all$SurveyName)
 
-plot_list <- list()
+plotlist <- list()
 
 for(v in surveys) {
   
@@ -599,8 +599,6 @@ for(v in surveys) {
   
   dat$Bin <- factor(dat$Bin, levels = c('Absent', 'Rare', 'Less Common', 'Common', 'Abundant', 'Highly Abundant'))
   
-  # plotname <- paste(v)
-  
   p <- ggplot(dat, aes(Year, Common)) +
     geom_tile(aes(fill= Bin)) +
     ggtitle(paste(v)) +
@@ -608,19 +606,13 @@ for(v in surveys) {
     scale_fill_viridis(discrete=TRUE, option="viridis")
     # theme(axis.text.y = element_text(size = 8))
   
-  # Convert ggplot to ggplotly
-  myplot <- ggplotly(p)
+  # Convert ggplot to ggplotly and display
   
+  plotlist[[v]] <- ggplotly(p)
   
-  # Add the plot to the list
-  plot_list[[v]] <- myplot
-  
-
 }
 
-  # Display the plot in the knitted .Rmd document
-  print(plot_list) # This will ensure the plots are displayed inline in the .Rmd
-  
+htmltools::tagList(setNames(plotlist, NULL))
 
 ```
 
@@ -724,7 +716,7 @@ data_ce <- data_ce_stable %>%
 - Sporadic: experienced at least one colonization and extinction
 - Stable: not experienced a colonization nor an extinction
 
-```{r grouped absence/presence df}
+```{r grouped absence/presence df, eval=FALSE}
 #creating a data frame that groups the tally of absences vs presences to help with definitions of trends
 # Reminder for `Absence_Presence` column: Absence is 0 and Presence is 1
 data_ap_a <- data_cumm %>% 
@@ -743,7 +735,7 @@ data_ap <- data_ap_p %>%
   mutate(Absence = ifelse(is.na(Absence), 0, Absence))
 ```
 
-```{r df col/ext and ab/pre}
+```{r df col/ext and ab/pre, eval=FALSE}
 
 data_ce_ap <- data_ce %>% 
   left_join(data_ap, by = c("SurveyName", "Species", "Common")) %>% 
@@ -753,7 +745,7 @@ data_ce_ap <- data_ce %>%
 ```
 
 
-```{r definitions}
+```{r definitions, eval=FALSE}
 
 data_ce_ap$Trend <- ifelse(data_ce_ap$col == 1 & data_ce_ap$ext == 0, "Emerging",
                            ifelse(data_ce_ap$col == 0 & data_ce_ap$ext == 1, "Leaving",
