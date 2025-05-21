@@ -262,10 +262,12 @@ data_full <- data_rank %>%
   left_join(data_haul, by = c("Region", "SurveyName", "Species", "Common", "Year")) %>% 
   mutate(Presence = ifelse(is.na(Presence), 0, Presence)) %>% 
   mutate(Proportion = ifelse(is.na(Proportion), 0, Proportion))
+
+# saveRDS(data_full, file = "data_full.RData")
   
 ```
 
-```{r, eval=FALSE}
+```{r make data_full, eval=FALSE}
 ggplot(data_full, aes(WTCPUE)) +
   # scale_colour_brewer(palette = "Spectral") +
   geom_histogram() +
@@ -620,8 +622,6 @@ htmltools::tagList(setNames(plotlist, NULL))
 
 ## Cummulative assessment
 
-
-
 ```{r}
 data_cumm <- data_full %>% 
   select(Region, SurveyName, Year, Species, Common, Absence_Presence)
@@ -741,6 +741,17 @@ data_ce_ap <- data_ce %>%
   ungroup()
 ```
 
+
+**Definitions**
+
+- Persistently Present: Is observed in surveys and has always been observed in surveys
+- Established: It wasn’t observed in surveys and now it’s definitely observed in surveys
+- Emerging: It wasn’t really observed in surveys and now it’s maybe beginning to be observed in surveys
+- Potentially Disappearing: It was observed in surveys in some capacity but now might be possibly leaving
+- Disappeared: It was observed in surveys in some capacity but has now fully left
+- Sporadic - Primarily Present: Mix of present and absent observations throughout time, but there is more presences than absences
+- Sporadic - Primarily Absent: Mix of present and absent observations throughout time, but there is more absences than presences
+
 ```{r function add_trend_category}
 
 add_trend_category <- function(data_full) {
@@ -776,8 +787,8 @@ add_trend_category <- function(data_full) {
         percent_present <= 0.5 & abs_last5 <= 1 &
           percent_last_half <= 0.35 &
           abs_first_half >= abs_last_half ~ "Disappeared",
-        abs_last5 <= 1 & percent_first_half <= 0.5 ~ "Potentially Emerging",
-        abs_last5 >= 4 & percent_first_half >= 0.5 ~ "Potentially Disappearing",
+        abs_last5 >= 4 & percent_first_half <= 0.5 ~ "Potentially Emerging",
+        abs_last5 <= 1 & percent_first_half >= 0.5 ~ "Potentially Disappearing",
         percent_present >= 0.5 ~ "Sporadic - Primarily Present",
         percent_present < 0.5 ~ "Sporadic - Primarily Absent",
         TRUE ~ NA_character_
@@ -789,104 +800,102 @@ add_trend_category <- function(data_full) {
 }
 
 # Usage:
-data_full_summary <- add_trend_category(data_full) %>% 
-  select(Region, SurveyName, Species, Common, TrendCategory) %>% 
+data_full_trends <- add_trend_category(data_full) 
+
+data_summary <- add_trend_category(data_full) %>%
+  select(Region, SurveyName, Species, Common, TrendCategory) %>%
   distinct()
 ```
 
 
-```{r, eval=FALSE}
-#' Get species that show up and remain (Batt et al., 2017)
-#' 
-#'  n_yrs_start after this many years, species seen for the first time "show up"; acts as a burn-in
-#'  n_yrs_remain how many years must be remaining in the time series after a species "shows up" to evaluate it as "sticking around"
-#'  n_yrs_miss_after how many years the species can be missing during remaining (post show-up) years and still be considered to "stick around"
-#' 
-#' Details:
-#' Function looks for species that appear after the second year, but before the final 5 years, and that in the remaining years (of which there must be at least 5) the species is observed in at least every year but 1. So a species that shows up after many years of sampling, and then is seen every year thereafter, will be returned by this function. Those species might be showing up and sticking around b/c of changing detection by the survey (I'd expect species to come on the scene more slowly, such that after it first shows up, there should still be some years it isn't observed)
-#' 
-#' Returns data.table containing the region, year of appearance, species, stats for how long and how consistently that species showed up.
-#' 
-una <- unique
 
-get_show_up_spp <- function(data_all, n_yrs_start=2, n_yrs_remain=5, n_yrs_miss_after=1){
-	data_all <- data_all[!is.na(SurveyName) & !is.na(Species) & !is.na(Year)]
-  added_spp <- data_all[, j={
-		Years <- Year[order(Year)]
-	  old <- .SD[Year==una(Year)[1],una(Species)]
-		new <- list()
-		uyr <- .SD[,una(Year)]
-		for(y in 2:length(Year)){
-			td <- .SD[(Year)==uyr[y]]
-			t_spp <- td[,una(Species)]
-			spp_added <- c(NA, setdiff(t_spp, old))
-			old <- una(c(old,t_spp))
-			new[[y]] <- data.table(Year=td[,una(Year)], Species=spp_added)
+```{r viz of trends}
+trendsummary <- data_summary %>%
+  group_by(TrendCategory) %>%
+  summarize(n = n())
 
-		}
+#Potentially Emerging (n=4)
+trend_emerging <- data_full_trends %>% 
+  filter(TrendCategory == "Potentially Emerging")
 
-		rbindlist(new)
+ggplot(trend_emerging, aes(Year, Common)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Potentially Emerging") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
 
-	}, by="SurveyName"]
+#Disappeared (n=15)
+trend_disapp <- data_full_trends %>% 
+  filter(TrendCategory == "Disappeared")
 
-	n_added_spp <- added_spp[,list(n_new_spp=length(Species)-1), by=c("SurveyName","Year")]
+ggplot(trend_disapp, aes(Year, Common)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Disappeared") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
 
-	t_X <- copy(data_all)
-	setkey(t_X, SurveyName, Species)
-	t_added_spp <- copy(added_spp[!is.na(Species)])
-	setkey(t_added_spp, SurveyName, Species)
-	t_added_spp[,year_added:=Year]
-	t_added_spp[,Year:=NULL]
+#Potentially Disappearing (n=30)
+trend_potdis <- data_full_trends %>% 
+  filter(TrendCategory == "Potentially Disappearing")
 
-	X_added <- merge(t_X, t_added_spp, by=c("SurveyName","Species"))
-	spp_added_freq <- X_added[,j={
-		yrs <- sort(una(Year))
-		uya <- una(year_added)
-		.SD[,list(
-			year_added=una(year_added),
-			total_years = length(yrs)+1,
-			years_elapsed=sum(yrs <= una(year_added))+1,
-			years_remaining=sum(yrs > una(year_added)),
-			years_seen_after=length(Year)-1
-		), by="Species"]
+ggplot(trend_potdis, aes(Year, Common)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Potentially Disappearing") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
 
-	}, by=c("SurveyName")]
+#Sporadic - Primarily Absent (n=38)
+trend_spoab <- data_full_trends %>% 
+  filter(TrendCategory == "Sporadic - Primarily Absent")
 
-	show_up_spp <- spp_added_freq[years_elapsed>=n_yrs_start & ((years_remaining - years_seen_after)<=n_yrs_miss_after) & years_remaining >=n_yrs_remain]
-	
-	return(show_up_spp)
-}
+p4 <- ggplot(trend_spoab, aes(Year, Common)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Sporadic - Primarily Absent") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+ggplotly(p4)
+
+#Sporadic - Primarily Present (n=94)
+trend_spopre <- data_full_trends %>% 
+  filter(TrendCategory == "Sporadic - Primarily Present")
+
+p5 <- ggplot(trend_spopre, aes(Year, Common)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Sporadic - Primarily Present") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+ggplotly(p5)
+
+#Established (n=146)
+trend_estab <- data_full_trends %>% 
+  filter(TrendCategory == "Established")
+
+p6 <- ggplot(trend_estab, aes(Year, Common)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Established") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+ggplotly(p6)
+
+#Persistently Present (n=1123)
+trend_pres <- data_full_trends %>% 
+  filter(TrendCategory == "Persistently Present")
+
+# p7 <-
+ggplot(trend_pres, aes(Year, Common)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Persistently Present") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+# ggplotly(p7)
+
+# [1] "Sporadic - Primarily Absent"  "Persistently Present"         "Established"                  "Sporadic - Primarily Present"
+# [5] "Potentially Disappearing"     "Disappeared"                  "Potentially Emerging"  
 ```
 
-```{r}
-library(data.table)
-data_all <- as.data.table(data_all %>% select(SurveyName, Species, Year, Common, WTCPUE, Absence_Presence))
-result <- get_show_up_spp(data_all)
-```
 
-**Definitions**
-
-- Persistently Present: Is observed in surveys and has always been observed in surveys
-- Established: It wasn’t observed in surveys and now it’s definitely observed in surveys
-- Emerging: It wasn’t really observed in surveys and now it’s maybe beginning to be observed in surveys
-- Potentially Disappearing: It was observed in surveys in some capacity but now might be possibly leaving
-- Disappeared: It was observed in surveys in some capacity but has now fully left
-- Sporadic - Primarily Present: Mix of present and absent observations throughout time, but there is more presences than absences
-- Sporadic - Primarily Absent: Mix of present and absent observations throughout time, but there is more absences than presences
-
-
-```{r definitions}
-
-data_ce_ap$Trend <- ifelse(data_ce_ap$col == 1 & data_ce_ap$ext == 0, "Emerging", #third rule
-                           ifelse(data_ce_ap$col == 0 & data_ce_ap$ext == 1, "Leaving", #fourth rule
-                                  ifelse(data_ce_ap$Absence == 0, "Persistent", #move this to top rule
-                                         ifelse(data_ce_ap$col > 2 & data_ce_ap$ext > 2, "Sporadic", #second rule
-                                                ifelse(data_ce_ap$ext <= 2 & data_ce_ap$pres_prob >= 0.85, "Stable", 0))))) #both stable definitions 
-
-# Stable here is being defined as similar to Persistent but with a little flexibility (allowing for a random absence here or there)
-
-# check the species left over that aren't captured by these definitions
-myfilt <- data_ce_ap %>% filter(Trend == 0)
-
-```
 
