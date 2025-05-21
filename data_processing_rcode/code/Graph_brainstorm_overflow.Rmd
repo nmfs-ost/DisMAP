@@ -1,0 +1,434 @@
+---
+title: "Graph brainstorm overflow"
+author: "Claire Gonzales (NOAA Affiliate)"
+date: "2025-05-21"
+output:
+  html_document:
+    toc: yes
+    theme: readable
+    code_folding: hide
+  word_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE)
+
+library(here)
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(readr)
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+library(plotly)
+library(heatmaply)
+```
+
+## Load data
+Loading R Data product created in chunk 13 of `Species_Persistence_Brainstorm.Rmd`
+
+```{r}
+data_full <- readRDS(here("data_processing_rcode", "code", "data_full.RData"))
+```
+
+**Definitions**
+
+- Persistently Present: Is observed in surveys and has always been observed in surveys
+- Established: It wasn’t observed in surveys and now it’s definitely observed in surveys
+- Emerging: It wasn’t really observed in surveys and now it’s maybe beginning to be observed in surveys
+- Potentially Disappearing: It was observed in surveys in some capacity but now might be possibly leaving
+- Disappeared: It was observed in surveys in some capacity but has now fully left
+- Sporadic - Primarily Present: Mix of present and absent observations throughout time, but there is more presences than absences
+- Sporadic - Primarily Absent: Mix of present and absent observations throughout time, but there is more absences than presences
+
+
+Now, bringing in function and visualization code to expand upon
+
+### Original version
+```{r function add_trend_category}
+
+add_trend_category <- function(data_full) {
+  data_full %>%
+    arrange(Region, SurveyName, Species, Common, Year) %>%
+    group_by(Region, SurveyName, Species, Common) %>%
+    group_modify(~{
+      df <- .x
+      n_years <- nrow(df)
+      abs_vec <- df$Absence_Presence
+      percent_present <- sum(abs_vec == 1, na.rm = TRUE) / n_years
+
+      # Indices for first/last half
+      half_n <- floor(n_years / 2)
+      first_half_idx <- seq_len(half_n)
+      last_half_idx <- seq(n_years - half_n + 1, n_years)
+
+      abs_first_half <- if(length(first_half_idx) > 0) sum(abs_vec[first_half_idx] == 1, na.rm = TRUE) else NA_real_
+      abs_last_half <- if(length(last_half_idx) > 0) sum(abs_vec[last_half_idx] == 1, na.rm = TRUE) else NA_real_
+      percent_first_half <- if(length(first_half_idx) > 0) abs_first_half / length(first_half_idx) else NA_real_
+      percent_last_half <- if(length(last_half_idx) > 0) abs_last_half / length(last_half_idx) else NA_real_
+
+      # Indices for last 5 years
+      last5_n <- min(5, n_years)
+      last5_idx <- seq(n_years - last5_n + 1, n_years)
+      abs_last5 <- if(length(last5_idx) > 0) sum(abs_vec[last5_idx] == 1, na.rm = TRUE) else NA_real_
+
+      trend_category <- case_when(
+        percent_present >= 0.85 & abs_last5 >= 4 ~ "Persistently Present",
+        percent_present > 0.5 & abs_last5 >= 4 &
+          percent_last_half >= 0.75 &
+          abs_first_half <= abs_last_half ~ "Established",
+        percent_present <= 0.5 & abs_last5 <= 1 &
+          percent_last_half <= 0.35 &
+          abs_first_half >= abs_last_half ~ "Disappeared",
+        abs_last5 >= 4 & percent_first_half <= 0.5 ~ "Potentially Emerging",
+        abs_last5 <= 1 & percent_first_half >= 0.5 ~ "Potentially Disappearing",
+        percent_present >= 0.5 ~ "Sporadic - Primarily Present",
+        percent_present < 0.5 ~ "Sporadic - Primarily Absent",
+        TRUE ~ NA_character_
+      )
+      df$TrendCategory <- trend_category
+      df
+    }) %>%
+    ungroup()
+}
+
+# Usage:
+data_full_trends <- add_trend_category(data_full) %>% 
+  mutate( ref = paste(Common, SurveyName, sep = "_")) 
+
+data_summary <- add_trend_category(data_full) %>%
+  select(Region, SurveyName, Species, Common, TrendCategory) %>%
+  distinct()
+```
+
+Bringing in a table of the number of each trend category
+```{r summary table}
+
+library(knitr)
+
+trendsummary <- data_summary %>%
+  group_by(TrendCategory) %>%
+  summarize(n = n())
+
+kable(trendsummary)
+
+```
+
+
+```{r viz of trends}
+library(stringr)
+
+#Persistently Present (n=1123)
+trend_pres <- data_full_trends %>% 
+  filter(TrendCategory == "Persistently Present")
+
+ggplot(trend_pres, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Persistently Present") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis") +
+  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
+
+
+#Established (n=146)
+trend_estab <- data_full_trends %>% 
+  filter(TrendCategory == "Established")
+
+p6 <- ggplot(trend_estab, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Established") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+ggplotly(p6)
+
+
+#Disappeared (n=15)
+trend_disapp <- data_full_trends %>% 
+  filter(TrendCategory == "Disappeared")
+
+ggplot(trend_disapp, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Disappeared") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+
+#Potentially Emerging (n=4)
+trend_emerging <- data_full_trends %>% 
+  filter(TrendCategory == "Potentially Emerging")
+
+ggplot(trend_emerging, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Potentially Emerging") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+
+#Potentially Disappearing (n=30)
+trend_potdis <- data_full_trends %>% 
+  filter(TrendCategory == "Potentially Disappearing")
+
+ggplot(trend_potdis, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Potentially Disappearing") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+
+#Sporadic - Primarily Present (n=94)
+trend_spopre <- data_full_trends %>% 
+  filter(TrendCategory == "Sporadic - Primarily Present")
+
+p5 <- ggplot(trend_spopre, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Sporadic - Primarily Present") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+ggplotly(p5)
+
+
+#Sporadic - Primarily Absent (n=38)
+trend_spoab <- data_full_trends %>% 
+  filter(TrendCategory == "Sporadic - Primarily Absent")
+
+p4 <- ggplot(trend_spoab, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Sporadic - Primarily Absent") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+ggplotly(p4)
+
+```
+
+### Alternate Version 1
+This alt loosens the requirements on the potentially emerging and potentially disappearing definitions to try and remove some patterns from being "sporadic"
+```{r function add_trend_category1}
+
+add_trend_category1 <- function(data_full) {
+  data_full %>%
+    arrange(Region, SurveyName, Species, Common, Year) %>%
+    group_by(Region, SurveyName, Species, Common) %>%
+    group_modify(~{
+      df <- .x
+      n_years <- nrow(df)
+      abs_vec <- df$Absence_Presence
+      percent_present <- sum(abs_vec == 1, na.rm = TRUE) / n_years
+
+      # Indices for first/last half
+      half_n <- floor(n_years / 2)
+      first_half_idx <- seq_len(half_n)
+      last_half_idx <- seq(n_years - half_n + 1, n_years)
+
+      abs_first_half <- if(length(first_half_idx) > 0) sum(abs_vec[first_half_idx] == 1, na.rm = TRUE) else NA_real_
+      abs_last_half <- if(length(last_half_idx) > 0) sum(abs_vec[last_half_idx] == 1, na.rm = TRUE) else NA_real_
+      percent_first_half <- if(length(first_half_idx) > 0) abs_first_half / length(first_half_idx) else NA_real_
+      percent_last_half <- if(length(last_half_idx) > 0) abs_last_half / length(last_half_idx) else NA_real_
+
+      # Indices for last 5 years
+      last5_n <- min(5, n_years)
+      last5_idx <- seq(n_years - last5_n + 1, n_years)
+      abs_last5 <- if(length(last5_idx) > 0) sum(abs_vec[last5_idx] == 1, na.rm = TRUE) else NA_real_
+
+      trend_category <- case_when(
+        percent_present >= 0.85 & abs_last5 >= 4 ~ "Persistently Present",
+        percent_present > 0.5 & abs_last5 >= 4 &
+          percent_last_half >= 0.75 &
+          abs_first_half <= abs_last_half ~ "Established",
+        percent_present <= 0.5 & abs_last5 <= 1 &
+          percent_last_half <= 0.35 &
+          abs_first_half >= abs_last_half ~ "Disappeared",
+        abs_last5 >= 4 & percent_first_half <= 0.60 ~ "Potentially Emerging",
+        abs_last5 <= 1 & percent_first_half >= 0.40 ~ "Potentially Disappearing",
+        percent_present >= 0.5 ~ "Sporadic - Primarily Present",
+        percent_present < 0.5 ~ "Sporadic - Primarily Absent",
+        TRUE ~ NA_character_
+      )
+      df$TrendCategory <- trend_category
+      df
+    }) %>%
+    ungroup()
+}
+
+# Usage:
+data_full_trends1 <- add_trend_category1(data_full) %>% 
+  mutate( ref = paste(Common, SurveyName, sep = "_"))
+
+data_summary1 <- add_trend_category1(data_full) %>%
+  select(Region, SurveyName, Species, Common, TrendCategory) %>%
+  distinct()
+```
+
+```{r summary table1}
+
+library(knitr)
+
+trendsummary1 <- data_summary1 %>%
+  group_by(TrendCategory) %>%
+  summarize(n = n())
+
+kable(trendsummary1)
+
+```
+
+```{r viz of trends1}
+
+#Persistently Present (n=1123)
+trend_pres <- data_full_trends1 %>% 
+  filter(TrendCategory == "Persistently Present")
+
+ggplot(trend_pres, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Persistently Present") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+
+#Established (n=146)
+trend_estab <- data_full_trends1 %>% 
+  filter(TrendCategory == "Established")
+
+p6 <- ggplot(trend_estab, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Established") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+ggplotly(p6)
+
+
+#Disappeared (n=15)
+trend_disapp <- data_full_trends1 %>% 
+  filter(TrendCategory == "Disappeared")
+
+ggplot(trend_disapp, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Disappeared") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+
+#Potentially Emerging (n=4)
+trend_emerging <- data_full_trends1 %>% 
+  filter(TrendCategory == "Potentially Emerging")
+
+ggplot(trend_emerging, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Potentially Emerging") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+
+#Potentially Disappearing (n=30)
+trend_potdis <- data_full_trends1 %>% 
+  filter(TrendCategory == "Potentially Disappearing")
+
+ggplot(trend_potdis, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Potentially Disappearing") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+
+#Sporadic - Primarily Present (n=94)
+trend_spopre <- data_full_trends1 %>% 
+  filter(TrendCategory == "Sporadic - Primarily Present")
+
+p5 <- ggplot(trend_spopre, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Sporadic - Primarily Present") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+ggplotly(p5)
+
+
+#Sporadic - Primarily Absent (n=38)
+trend_spoab <- data_full_trends1 %>% 
+  filter(TrendCategory == "Sporadic - Primarily Absent")
+
+p4 <- ggplot(trend_spoab, aes(Year, ref)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Sporadic - Primarily Absent") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis")
+
+ggplotly(p4)
+
+```
+
+### Alternate Version 2
+This alt ... 
+```{r function add_trend_category2, eval = FALSE}
+
+add_trend_category2 <- function(data_full) {
+  data_full %>%
+    arrange(Region, SurveyName, Species, Common, Year) %>%
+    group_by(Region, SurveyName, Species, Common) %>%
+    group_modify(~{
+      df <- .x
+      n_years <- nrow(df)
+      abs_vec <- df$Absence_Presence
+      percent_present <- sum(abs_vec == 1, na.rm = TRUE) / n_years
+
+      # Indices for first/last half
+      half_n <- floor(n_years / 2)
+      first_half_idx <- seq_len(half_n)
+      last_half_idx <- seq(n_years - half_n + 1, n_years)
+
+      abs_first_half <- if(length(first_half_idx) > 0) sum(abs_vec[first_half_idx] == 1, na.rm = TRUE) else NA_real_
+      abs_last_half <- if(length(last_half_idx) > 0) sum(abs_vec[last_half_idx] == 1, na.rm = TRUE) else NA_real_
+      percent_first_half <- if(length(first_half_idx) > 0) abs_first_half / length(first_half_idx) else NA_real_
+      percent_last_half <- if(length(last_half_idx) > 0) abs_last_half / length(last_half_idx) else NA_real_
+
+      # Indices for last 5 years
+      last5_n <- min(5, n_years)
+      last5_idx <- seq(n_years - last5_n + 1, n_years)
+      abs_last5 <- if(length(last5_idx) > 0) sum(abs_vec[last5_idx] == 1, na.rm = TRUE) else NA_real_
+
+      trend_category <- case_when(
+        percent_present >= 0.88 & abs_last5 >= 4 ~ "Persistently Present",
+        percent_present > 0.5 & abs_last5 >= 4 &
+          percent_last_half >= 0.75 &
+          abs_first_half <= abs_last_half ~ "Established",
+        percent_present <= 0.5 & abs_last5 <= 1 &
+          percent_last_half <= 0.35 &
+          abs_first_half >= abs_last_half ~ "Disappeared",
+        abs_last5 >= 4 & percent_first_half <= 0.60 ~ "Potentially Emerging",
+        abs_last5 <= 1 & percent_first_half >= 0.40 ~ "Potentially Disappearing",
+        percent_present >= 0.5 ~ "Sporadic - Primarily Present",
+        percent_present < 0.5 ~ "Sporadic - Primarily Absent",
+        TRUE ~ NA_character_
+      )
+      df$TrendCategory <- trend_category
+      df
+    }) %>%
+    ungroup()
+}
+
+# Usage:
+data_full_trends2 <- add_trend_category2(data_full) 
+
+data_summary2 <- add_trend_category2(data_full) %>%
+  select(Region, SurveyName, Species, Common, TrendCategory) %>%
+  distinct()
+```
+
+```{r summary table2, eval=FALSE}
+
+library(knitr)
+
+trendsummary1 <- data_summary1 %>%
+  group_by(TrendCategory) %>%
+  summarize(n = n())
+
+kable(trendsummary1)
+
+```
