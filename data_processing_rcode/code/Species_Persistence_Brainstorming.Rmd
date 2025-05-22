@@ -708,6 +708,8 @@ data_ce <- data_ce_stable %>%
   select(-stable) %>% 
   left_join(spp_list, by = c("SurveyName", "Species")) %>% 
   select(SurveyName, Species, Common, col, ext)
+
+# saveRDS(data_ce, file = "data_ce.RData")
 ```
 
 
