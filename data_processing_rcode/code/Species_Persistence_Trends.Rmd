@@ -609,8 +609,8 @@ This version categorizes species observation trends across years into one of the
 
 - *Persistently Present*: Observed in >=85% of survey years
 - *Established*: Observed in >50% of years, observed more in the second half of the survey years (compared to the first half of survey years), observed in >= 75% of the second half of survey years, and observed in at least four (presence >= 4) of the final five survey years
-- *Potentially Emerging*: Observed in <= 60% of years in the first half of survey years and observed in at least three (presence >= 3) of the final five survey years
-- *Potentially Disappearing*: Observed in >= 40% of years in the first half of survey years and observed in at most two (presence <= 2) of the final five survey years
+- *Potentially Emerging*: Observed in <= 50% of years in the first half of survey years and observed in at least three (presence >= 3) of the final five survey years
+- *Potentially Disappearing*: Observed in >= 50% of years in the first half of survey years and observed in at most two (presence <= 2) of the final five survey years
 - *Disappeared*: Observed in <=50% of years, observed more in the first half of the survey years (compared to the second half of survey years), observed in <= 35% of the second half of survey years, and observed in at most one (presence <= 1) of the final five survey years
 - *Sporadic - Primarily Present*: Observed in >=50% of years
 - *Sporadic - Primarily Absent*: Observed in <50% of years
@@ -791,8 +791,8 @@ This version categorizes species observation trends across years into one of the
 
 - *Persistently Present*: Observed in >=85% of survey years
 - *Established*: Observed in >50% of years, observed more in the second half of the survey years (compared to the first half of survey years), observed in >= 75% of the second half of survey years, and observed in at least four (presence >= 4) of the final five survey years
-- *Potentially Emerging*: Observed in <= 60% of years in the first half of survey years, observed in at least four (presence >= 4) of the final five survey years, has one switch from not being observed to being observed (referred to as a "colonizing event"), and has zero switches from being observed to not being observed (referred to as a leaving event)
-- *Potentially Disappearing*: Observed in >= 40% of years in the first half of survey years, observed in at most one (presence <= 1) of the final five survey years, has one switch from being observed to not being observed (leaving event), and has zero switches from not being observed to being observed (colonizing event)
+- *Potentially Emerging*: Observed in <= 50% of years in the first half of survey years and observed in at least four (presence >= 4) of the final five survey years, or has one switch from not being observed to being observed (referred to as a "colonizing event") and has zero switches from being observed to not being observed (referred to as a leaving event)
+- *Potentially Disappearing*: Observed in >= 50% of years in the first half of survey years and observed in at most one (presence <= 1) of the final five survey years, or has one switch from being observed to not being observed (leaving event) and has zero switches from not being observed to being observed (colonizing event)
 - *Disappeared*: Observed in <=50% of years, observed more in the first half of the survey years (compared to the second half of survey years), observed in <= 35% of the second half of survey years, and observed in at most one (presence <= 1) of the final five survey years
 - *Sporadic - Primarily Present*: Observed in >=50% of years
 - *Sporadic - Primarily Absent*: Observed in <50% of years
