@@ -80,7 +80,7 @@ This is the original function that was written. The following "Alternate" versio
 - *Sporadic - Primarily Present*: Observed in >=50% of years
 - *Sporadic - Primarily Absent*: Observed in <50% of years
 
-```{r function add_trend_category}
+```{r function add_trend_category, eval=FALSE}
 
 add_trend_category <- function(data) {
   data %>%
@@ -137,7 +137,7 @@ data_summary <- add_trend_category(data) %>%
 ```
 
 The following table provides the number of species that fall into each category, using this version of the metrics.
-```{r summary table}
+```{r summary table, eval=FALSE}
 
 library(knitr)
 
@@ -150,7 +150,7 @@ kable(trendsummary)
 ```
 
 The following visualizations capture the trends of the species that fall into each category, using this version of metrics.
-```{r viz of trends}
+```{r viz of trends, eval=FALSE}
 library(stringr)
 
 #Persistently Present (n=1123)
@@ -259,7 +259,7 @@ This version categorizes species observation trends across years into one of the
 - *Sporadic - Primarily Absent*: Observed in <50% of years
 
 Ultimately, this version loosens the requirements on the "Potentially Emerging" and "Potentially Disappearing" definitions to try and limit the amount of trends that are categorized as "sporadic".
-```{r function add_trend_category1}
+```{r function add_trend_category1, eval=FALSE}
 
 add_trend_category1 <- function(data) {
   data %>%
@@ -318,7 +318,7 @@ data_summary1 <- add_trend_category1(data) %>%
 ```
 
 The following table provides the number of species that fall into each category, using this version of the metrics.
-```{r summary table1}
+```{r summary table1, eval=FALSE}
 
 library(knitr)
 
@@ -330,7 +330,7 @@ kable(trendsummary1)
 
 ```
 The following visualizations capture the trends of the species that fall into each category, using this version of metrics.
-```{r viz of trends1}
+```{r viz of trends1, eval=FALSE}
 
 #Persistently Present
 trend_pres <- data_full_trends1 %>% 
@@ -439,7 +439,7 @@ This version categorizes species observation trends across years into one of the
 
 Here, we make some small changes to the "Persistently Present" category (makes it more strict) and to the "Potentially Disappearing/Emerging" categories, making the rule about the first 50% of years more strict to highlight scenarios in which a shift is more dramatic.
 
-```{r function add_trend_category2, eval = TRUE}
+```{r function add_trend_category2, eval=FALSE}
 
 add_trend_category2 <- function(data) {
   data %>%
@@ -496,7 +496,7 @@ data_summary2 <- add_trend_category2(data) %>%
 ```
 
 The following table provides the number of species that fall into each category, using this version of the metrics.
-```{r summary table2, eval=TRUE}
+```{r summary table2, eval=FALSE}
 
 library(knitr)
 
@@ -509,7 +509,7 @@ kable(trendsummary2)
 ```
 
 The following visualizations capture the trends of the species that fall into each category, using this version of metrics.
-```{r viz of trends2}
+```{r viz of trends2, eval=FALSE}
 
 #Persistently Present 
 trend_pres <- data_full_trends2 %>% 
@@ -619,7 +619,7 @@ This version categorizes species observation trends across years into one of the
 Here, we loosen the requirement for "Potentially Disappearing/Emerging", in the attempt to identify a shift in a species being observed year sooner.
 
 
-```{r function add_trend_category3, eval = TRUE}
+```{r function add_trend_category3, eval=FALSE}
 
 add_trend_category3 <- function(data) {
   data %>%
@@ -677,7 +677,7 @@ data_summary3 <- add_trend_category3(data) %>%
 
 
 The following table provides the number of species that fall into each category, using this version of the metrics.
-```{r summary table3, eval=TRUE}
+```{r summary table3, eval=FALSE}
 
 library(knitr)
 
@@ -690,7 +690,7 @@ kable(trendsummary3)
 ```
 
 The following visualizations capture the trends of the species that fall into each category, using this version of metrics.
-```{r viz of trends3}
+```{r viz of trends3, eval=FALSE}
 
 #Persistently Present 
 trend_pres <- data_full_trends3 %>% 
@@ -790,10 +790,10 @@ This version categorizes species observation trends across years into one of the
 **Category Metrics**
 
 - *Persistently Present*: Observed in >=85% of survey years
-- *Established*: Observed in >50% of years, observed more in the second half of the survey years (compared to the first half of survey years), observed in >= 75% of the second half of survey years, and observed in at least four (presence >= 4) of the final five survey years
+- *Established*: Observed in >=50% of years, observed more in the second half of the survey years (compared to the first half of survey years), observed in >= 75% of the second half of survey years, and observed in at least four (presence >= 4) of the final five survey years
 - *Potentially Emerging*: Observed in <= 50% of years in the first half of survey years and observed in at least four (presence >= 4) of the final five survey years, or has one switch from not being observed to being observed (referred to as a "colonizing event") and has zero switches from being observed to not being observed (referred to as a leaving event)
 - *Potentially Disappearing*: Observed in >= 50% of years in the first half of survey years and observed in at most one (presence <= 1) of the final five survey years, or has one switch from being observed to not being observed (leaving event) and has zero switches from not being observed to being observed (colonizing event)
-- *Disappeared*: Observed in <=50% of years, observed more in the first half of the survey years (compared to the second half of survey years), observed in <= 35% of the second half of survey years, and observed in at most one (presence <= 1) of the final five survey years
+- *Disappeared*: Observed in <=50% of years, observed more in the first half of the survey years (compared to the second half of survey years), observed in <= 25% of the second half of survey years, and observed in at most one (presence <= 1) of the final five survey years
 - *Sporadic - Primarily Present*: Observed in >=50% of years
 - *Sporadic - Primarily Absent*: Observed in <50% of years
 
@@ -825,14 +825,19 @@ add_trend_category4 <- function(data) {
       last5_n <- min(5, n_years)
       last5_idx <- seq(n_years - last5_n + 1, n_years)
       abs_last5 <- if(length(last5_idx) > 0) sum(abs_vec[last5_idx] == 1, na.rm = TRUE) else NA_real_
+      
+      # Indices for last 10 years
+      last10_n <- min(10, n_years)
+      last10_idx <- seq(n_years - last10_n + 1, n_years)
+      abs_last10 <- if(length(last10_idx) > 0) sum(abs_vec[last10_idx] == 1, na.rm = TRUE) else NA_real_
 
       trend_category <- case_when(
         percent_present >= 0.85 & abs_last5 >= 4 ~ "Persistently Present",
-        percent_present > 0.5 & abs_last5 >= 4 &
+        percent_present >= 0.5 & abs_last5 >= 4 &
           percent_last_half >= 0.75 &
           abs_first_half <= abs_last_half ~ "Established",
         percent_present <= 0.5 & abs_last5 <= 1 &
-          percent_last_half <= 0.35 &
+          percent_last_half <= 0.25 &
           abs_first_half >= abs_last_half ~ "Disappeared",
         abs_last5 >= 4 & percent_first_half <= 0.50 ~ "Potentially Emerging",
         any(df$col == 1 & df$ext == 0, na.rm = TRUE) ~ "Potentially Emerging",
@@ -961,4 +966,23 @@ p4 <- ggplot(trend_spoab, aes(Year, Name)) +
 
 ggplotly(p4)
 
+```
+
+### Problems
+
+
+The following trends are still categorized as "Potentially emerging", despite having many consecutive years of presence. This could be fixed by relaxing the "75% in the last half of years" rule for "Established" so that this would be categorized as "Established".
+```{r ex2}
+ex2 <- data_full_trends4 %>% 
+  filter(TrendCategory == "Potentially Emerging") %>% 
+  filter(Common == "Oblique smoothcockle" | Common == "Ocellate lady crab" | Common == "Atlantic moonfish")
+
+pex2 <- ggplot(ex2, aes(Year, Name)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("Potentially Emerging") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis") +
+  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
+
+ggplotly(pex2)
 ```
