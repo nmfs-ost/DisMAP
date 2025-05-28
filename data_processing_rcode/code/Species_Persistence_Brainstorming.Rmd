@@ -267,6 +267,17 @@ data_full <- data_rank %>%
   
 ```
 
+```{r exporting data_full}
+#writing the csv for John here
+
+data_export <- data_full %>% 
+  select(Region, SurveyName, Year, Species, Common, Bin, WTCPUE)
+
+# write.csv(data_export, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorPercentileBin_withWTCPUE.csv"))
+
+```
+
+
 ```{r make data_full, eval=FALSE}
 ggplot(data_full, aes(WTCPUE)) +
   # scale_colour_brewer(palette = "Spectral") +
