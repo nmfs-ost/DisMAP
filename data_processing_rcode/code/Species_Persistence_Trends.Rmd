@@ -864,8 +864,8 @@ data_summary <- add_trend_category(data) %>%
 
 ```{r export data_full_trends}
 
-data_trends_export <- data_full_trends %>% 
-  select(Region, SurveyName, Year, Species, Common, TrendCategory)
+data_trends_export <- data_summary %>% 
+  select(Region, SurveyName, Species, Common, TrendCategory)
 
 # write.csv(data_trends_export, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorTrend.csv"))
 
