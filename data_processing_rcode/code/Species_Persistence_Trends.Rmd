@@ -790,10 +790,10 @@ This version categorizes species observation trends across years into one of the
 **Category Metrics**
 
 - *Persistently Present*: Observed in >=85% of survey years
-- *Established*: Observed in >=50% of years, observed more in the second half of the survey years (compared to the first half of survey years), observed in >= 75% of the second half of survey years, and observed in at least four (presence >= 4) of the final five survey years
+- *Emerged*: Observed in >=50% of years, observed more in the second half of the survey years (compared to the first half of survey years), observed in >= 75% of the second half of survey years, and observed in at least nine (presence >= 9) of the final ten survey years
 - *Potentially Emerging*: Observed in <= 50% of years in the first half of survey years and observed in at least four (presence >= 4) of the final five survey years, or has one switch from not being observed to being observed (referred to as a "colonizing event") and has zero switches from being observed to not being observed (referred to as a leaving event)
 - *Potentially Disappearing*: Observed in >= 50% of years in the first half of survey years and observed in at most one (presence <= 1) of the final five survey years, or has one switch from being observed to not being observed (leaving event) and has zero switches from not being observed to being observed (colonizing event)
-- *Disappeared*: Observed in <=50% of years, observed more in the first half of the survey years (compared to the second half of survey years), observed in <= 25% of the second half of survey years, and observed in at most one (presence <= 1) of the final five survey years
+- *Disappeared*: Observed in <=50% of years, observed more in the first half of the survey years (compared to the second half of survey years), observed in <= 25% of the second half of survey years, and observed in at most one (presence <= 1) of the final ten survey years
 - *Sporadic - Primarily Present*: Observed in >=50% of years
 - *Sporadic - Primarily Absent*: Observed in <50% of years
 
@@ -801,7 +801,7 @@ In this version, we have added an additional rule to the "Potentially Emerging/D
 
 ```{r function add_trend_category4}
 
-add_trend_category4 <- function(data) {
+add_trend_category <- function(data) {
   data %>%
     arrange(Region, SurveyName, Species, Common, Year) %>%
     group_by(Region, SurveyName, Species, Common) %>%
@@ -833,10 +833,10 @@ add_trend_category4 <- function(data) {
 
       trend_category <- case_when(
         percent_present >= 0.85 & abs_last5 >= 4 ~ "Persistently Present",
-        percent_present >= 0.5 & abs_last5 >= 4 &
+        percent_present >= 0.5 & abs_last10 >= 9 &
           percent_last_half >= 0.75 &
-          abs_first_half <= abs_last_half ~ "Established",
-        percent_present <= 0.5 & abs_last5 <= 1 &
+          abs_first_half <= abs_last_half ~ "Emerged",
+        percent_present <= 0.5 & abs_last10 <= 1 &
           percent_last_half <= 0.25 &
           abs_first_half >= abs_last_half ~ "Disappeared",
         abs_last5 >= 4 & percent_first_half <= 0.50 ~ "Potentially Emerging",
@@ -854,24 +854,34 @@ add_trend_category4 <- function(data) {
 }
 
 # Usage:
-data_full_trends4 <- add_trend_category4(data)  %>% 
+data_full_trends <- add_trend_category(data) %>%
   mutate(Name = paste(Common, SurveyName, sep = "_"))
 
-data_summary4 <- add_trend_category4(data) %>%
+data_summary <- add_trend_category(data) %>%
   select(Region, SurveyName, Species, Common, TrendCategory) %>%
   distinct()
 ```
+
+```{r export data_full_trends}
+
+data_trends_export <- data_full_trends %>% 
+  select(Region, SurveyName, Year, Species, Common, TrendCategory)
+
+# write.csv(data_trends_export, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorTrend.csv"))
+
+```
+
 
 The following table provides the number of species that fall into each category, using this version of the metrics.
 ```{r summary table4}
 
 library(knitr)
 
-trendsummary4 <- data_summary4 %>%
+trendsummary <- data_summary %>%
   group_by(TrendCategory) %>%
   summarize(n = n())
 
-kable(trendsummary4)
+kable(trendsummary)
 
 ```
 The following visualizations capture the trends of the species that fall into each category, using this version of metrics.
@@ -886,8 +896,7 @@ ggplot(trend_pres, aes(Year, Name)) +
   ggtitle("Persistently Present") +
   theme_minimal() +
   scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
+  scale_y_discrete(label = function(x) stringr::str_trunc(x, 15))
 
 #Established
 trend_estab <- data_full_trends4 %>% 
@@ -898,7 +907,7 @@ p6 <- ggplot(trend_estab, aes(Year, Name)) +
   ggtitle("Established") +
   theme_minimal() +
   scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
+  scale_y_discrete(label = function(x) stringr::str_trunc(x, 15))
 
 ggplotly(p6)
 
@@ -907,37 +916,40 @@ ggplotly(p6)
 trend_disapp <- data_full_trends4 %>% 
   filter(TrendCategory == "Disappeared")
 
-ggplot(trend_disapp, aes(Year, Name)) +
+p2 <- ggplot(trend_disapp, aes(Year, Name)) +
   geom_tile(aes(fill= Absence_Presence)) +
   ggtitle("Disappeared") +
   theme_minimal() +
   scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
+  scale_y_discrete(label = function(x) stringr::str_trunc(x, 15))
 
+ggplotly(p2)
 
 #Potentially Emerging 
 trend_emerging <- data_full_trends4 %>% 
   filter(TrendCategory == "Potentially Emerging")
 
-ggplot(trend_emerging, aes(Year, Name)) +
+p3 <- ggplot(trend_emerging, aes(Year, Name)) +
   geom_tile(aes(fill= Absence_Presence)) +
   ggtitle("Potentially Emerging") +
   theme_minimal() +
   scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
+  scale_y_discrete(label = function(x) stringr::str_trunc(x, 15))
 
+ggplotly(p3)
 
 #Potentially Disappearing 
 trend_potdis <- data_full_trends4 %>% 
   filter(TrendCategory == "Potentially Disappearing")
 
-ggplot(trend_potdis, aes(Year, Name)) +
+p7 <- ggplot(trend_potdis, aes(Year, Name)) +
   geom_tile(aes(fill= Absence_Presence)) +
   ggtitle("Potentially Disappearing") +
   theme_minimal() +
   scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
+  scale_y_discrete(label = function(x) stringr::str_trunc(x, 15))
 
+ggplotly(p7)
 
 #Sporadic - Primarily Present 
 trend_spopre <- data_full_trends4 %>% 
@@ -948,7 +960,7 @@ p5 <- ggplot(trend_spopre, aes(Year, Name)) +
   ggtitle("Sporadic - Primarily Present") +
   theme_minimal() +
   scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
+  scale_y_discrete(label = function(x) stringr::str_trunc(x, 15))
 
 ggplotly(p5)
 
@@ -962,20 +974,20 @@ p4 <- ggplot(trend_spoab, aes(Year, Name)) +
   ggtitle("Sporadic - Primarily Absent") +
   theme_minimal() +
   scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
+  scale_y_discrete(label = function(x) stringr::str_trunc(x, 15))
 
 ggplotly(p4)
 
 ```
 
+
 ### Problems
 
-
-The following trends are still categorized as "Potentially emerging", despite having many consecutive years of presence. This could be fixed by relaxing the "75% in the last half of years" rule for "Established" so that this would be categorized as "Established".
+The following trends are still categorized as "Potentially emerging", despite having many consecutive years of presence. Does this align will with our definition of "Potentially emerging"? Or would it be better suited for "Established" by this point?
 ```{r ex2}
 ex2 <- data_full_trends4 %>% 
   filter(TrendCategory == "Potentially Emerging") %>% 
-  filter(Common == "Oblique smoothcockle" | Common == "Ocellate lady crab" | Common == "Atlantic moonfish")
+  filter(Common == "Oblique smoothcockle" | Common == "Atlantic moonfish")
 
 pex2 <- ggplot(ex2, aes(Year, Name)) +
   geom_tile(aes(fill= Absence_Presence)) +
