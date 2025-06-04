@@ -273,7 +273,7 @@ data_full <- data_rank %>%
 data_export <- data_full %>% 
   select(Region, SurveyName, Year, Species, Common, Bin, WTCPUE)
 
-# write.csv(data_export, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorPercentileBin_withWTCPUE.csv"))
+# write.csv(data_export, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorPercentileBin.csv"))
 
 ```
 
