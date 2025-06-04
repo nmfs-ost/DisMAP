@@ -66,724 +66,8 @@ The quantitative metrics used to define each category will greatly impact which 
 
 As a note: these figures are mock-ups and outputs will be optimized and finalized by the DisMAP development team prior to the update.
 
-### Original version
 
-This is the original function that was written. The following "Alternate" versions are variations of this original analysis. This version categorizes species observation trends across years into one of the seven categories, based on the following metrics:
-
-**Category Metrics**
-
-- *Persistently Present*: Observed in >=85% of survey years
-- *Established*: Observed in >50% of years, observed more in the second half of the survey years (compared to the first half of survey years), observed in >= 75% of the second half of survey years, and observed in at least four (presence >= 4) of the final five survey years
-- *Potentially Emerging*: Observed in <= 50% of years in the first half of survey years and observed in at least four (presence >= 4) of the final five survey years
-- *Potentially Disappearing*: Observed in >= 50% of years in the first half of survey years and observed in at most one (presence <= 1) of the final five survey years
-- *Disappeared*: Observed in <=50% of years, observed more in the first half of the survey years (compared to the second half of survey years), observed in <= 35% of the second half of survey years, and observed in at most one (presence <= 1) of the final five survey years
-- *Sporadic - Primarily Present*: Observed in >=50% of years
-- *Sporadic - Primarily Absent*: Observed in <50% of years
-
-```{r function add_trend_category, eval=FALSE}
-
-add_trend_category <- function(data) {
-  data %>%
-    arrange(Region, SurveyName, Species, Common, Year) %>%
-    group_by(Region, SurveyName, Species, Common) %>%
-    group_modify(~{
-      df <- .x
-      n_years <- nrow(df)
-      abs_vec <- df$Absence_Presence
-      percent_present <- sum(abs_vec == 1, na.rm = TRUE) / n_years
-
-      # Indices for first/last half
-      half_n <- floor(n_years / 2)
-      first_half_idx <- seq_len(half_n)
-      last_half_idx <- seq(n_years - half_n + 1, n_years)
-
-      abs_first_half <- if(length(first_half_idx) > 0) sum(abs_vec[first_half_idx] == 1, na.rm = TRUE) else NA_real_
-      abs_last_half <- if(length(last_half_idx) > 0) sum(abs_vec[last_half_idx] == 1, na.rm = TRUE) else NA_real_
-      percent_first_half <- if(length(first_half_idx) > 0) abs_first_half / length(first_half_idx) else NA_real_
-      percent_last_half <- if(length(last_half_idx) > 0) abs_last_half / length(last_half_idx) else NA_real_
-
-      # Indices for last 5 years
-      last5_n <- min(5, n_years)
-      last5_idx <- seq(n_years - last5_n + 1, n_years)
-      abs_last5 <- if(length(last5_idx) > 0) sum(abs_vec[last5_idx] == 1, na.rm = TRUE) else NA_real_
-
-      trend_category <- case_when(
-        percent_present >= 0.85 & abs_last5 >= 4 ~ "Persistently Present",
-        percent_present > 0.5 & abs_last5 >= 4 &
-          percent_last_half >= 0.75 &
-          abs_first_half <= abs_last_half ~ "Established",
-        percent_present <= 0.5 & abs_last5 <= 1 &
-          percent_last_half <= 0.35 &
-          abs_first_half >= abs_last_half ~ "Disappeared",
-        abs_last5 >= 4 & percent_first_half <= 0.5 ~ "Potentially Emerging",
-        abs_last5 <= 1 & percent_first_half >= 0.5 ~ "Potentially Disappearing",
-        percent_present >= 0.5 ~ "Sporadic - Primarily Present",
-        percent_present < 0.5 ~ "Sporadic - Primarily Absent",
-        TRUE ~ NA_character_
-      )
-      df$TrendCategory <- trend_category
-      df
-    }) %>%
-    ungroup()
-}
-
-# Usage:
-data_full_trends <- add_trend_category(data) %>% 
-  mutate(Name = paste(Common, SurveyName, sep = "_")) 
-
-data_summary <- add_trend_category(data) %>%
-  select(Region, SurveyName, Species, Common, TrendCategory) %>%
-  distinct()
-```
-
-The following table provides the number of species that fall into each category, using this version of the metrics.
-```{r summary table, eval=FALSE}
-
-library(knitr)
-
-trendsummary <- data_summary %>%
-  group_by(TrendCategory) %>%
-  summarize(n = n())
-
-kable(trendsummary)
-
-```
-
-The following visualizations capture the trends of the species that fall into each category, using this version of metrics.
-```{r viz of trends, eval=FALSE}
-library(stringr)
-
-#Persistently Present (n=1123)
-trend_pres <- data_full_trends %>% 
-  filter(TrendCategory == "Persistently Present")
-
-ggplot(trend_pres, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Persistently Present") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12)) 
-
-
-#Established (n=146)
-trend_estab <- data_full_trends %>% 
-  filter(TrendCategory == "Established")
-
-p6 <- ggplot(trend_estab, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Established") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-ggplotly(p6)
-
-
-#Disappeared (n=15)
-trend_disapp <- data_full_trends %>% 
-  filter(TrendCategory == "Disappeared")
-
-ggplot(trend_disapp, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Disappeared") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Potentially Emerging (n=4)
-trend_emerging <- data_full_trends %>% 
-  filter(TrendCategory == "Potentially Emerging")
-
-ggplot(trend_emerging, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Potentially Emerging") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Potentially Disappearing (n=30)
-trend_potdis <- data_full_trends %>% 
-  filter(TrendCategory == "Potentially Disappearing")
-
-ggplot(trend_potdis, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Potentially Disappearing") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Sporadic - Primarily Present (n=94)
-trend_spopre <- data_full_trends %>% 
-  filter(TrendCategory == "Sporadic - Primarily Present")
-
-p5 <- ggplot(trend_spopre, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Sporadic - Primarily Present") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-ggplotly(p5)
-
-
-#Sporadic - Primarily Absent (n=38)
-trend_spoab <- data_full_trends %>% 
-  filter(TrendCategory == "Sporadic - Primarily Absent")
-
-p4 <- ggplot(trend_spoab, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Sporadic - Primarily Absent") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-ggplotly(p4)
-
-```
-
-### Alternate Version 1
-
-This version categorizes species observation trends across years into one of the seven categories, based on the following metrics: 
-
-**Category Metrics**
-
-- *Persistently Present*: Observed in >=85% of survey years
-- *Established*: Observed in >50% of years, observed more in the second half of the survey years (compared to the first half of survey years), observed in >= 75% of the second half of survey years, and observed in at least four (presence >= 4) of the final five survey years
-- *Potentially Emerging*: Observed in <= 60% of years in the first half of survey years and observed in at least four (presence >= 4) of the final five survey years
-- *Potentially Disappearing*: Observed in >= 40% of years in the first half of survey years and observed in at most one (presence <= 1) of the final five survey years
-- *Disappeared*: Observed in <=50% of years, observed more in the first half of the survey years (compared to the second half of survey years), observed in <= 35% of the second half of survey years, and observed in at most one (presence <= 1) of the final five survey years
-- *Sporadic - Primarily Present*: Observed in >=50% of years
-- *Sporadic - Primarily Absent*: Observed in <50% of years
-
-Ultimately, this version loosens the requirements on the "Potentially Emerging" and "Potentially Disappearing" definitions to try and limit the amount of trends that are categorized as "sporadic".
-```{r function add_trend_category1, eval=FALSE}
-
-add_trend_category1 <- function(data) {
-  data %>%
-    arrange(Region, SurveyName, Species, Common, Year) %>%
-    group_by(Region, SurveyName, Species, Common) %>%
-    group_modify(~{
-      df <- .x
-      n_years <- nrow(df)
-      abs_vec <- df$Absence_Presence
-      percent_present <- sum(abs_vec == 1, na.rm = TRUE) / n_years
-
-      # Indices for first/last half
-      half_n <- floor(n_years / 2)
-      first_half_idx <- seq_len(half_n)
-      last_half_idx <- seq(n_years - half_n + 1, n_years)
-
-      abs_first_half <- if(length(first_half_idx) > 0) sum(abs_vec[first_half_idx] == 1, na.rm = TRUE) else NA_real_
-      abs_last_half <- if(length(last_half_idx) > 0) sum(abs_vec[last_half_idx] == 1, na.rm = TRUE) else NA_real_
-      percent_first_half <- if(length(first_half_idx) > 0) abs_first_half / length(first_half_idx) else NA_real_
-      percent_last_half <- if(length(last_half_idx) > 0) abs_last_half / length(last_half_idx) else NA_real_
-
-      # Indices for last 5 years
-      last5_n <- min(5, n_years)
-      last5_idx <- seq(n_years - last5_n + 1, n_years)
-      abs_last5 <- if(length(last5_idx) > 0) sum(abs_vec[last5_idx] == 1, na.rm = TRUE) else NA_real_
-
-      trend_category <- case_when(
-        percent_present >= 0.85 & abs_last5 >= 4 ~ "Persistently Present",
-        percent_present > 0.5 & abs_last5 >= 4 &
-          percent_last_half >= 0.75 &
-          abs_first_half <= abs_last_half ~ "Established",
-        percent_present <= 0.5 & abs_last5 <= 1 &
-          percent_last_half <= 0.35 &
-          abs_first_half >= abs_last_half ~ "Disappeared",
-        abs_last5 >= 4 & percent_first_half <= 0.60 ~ "Potentially Emerging",
-        
-        abs_last5 <= 1 & percent_first_half >= 0.40 ~ "Potentially Disappearing",
-        
-        percent_present >= 0.5 ~ "Sporadic - Primarily Present",
-        percent_present < 0.5 ~ "Sporadic - Primarily Absent",
-        TRUE ~ NA_character_
-      )
-      df$TrendCategory <- trend_category
-      df
-    }) %>%
-    ungroup()
-}
-
-# Usage:
-data_full_trends1 <- add_trend_category1(data) %>% 
-  mutate( Name = paste(Common, SurveyName, sep = "_"))
-
-data_summary1 <- add_trend_category1(data) %>%
-  select(Region, SurveyName, Species, Common, TrendCategory) %>%
-  distinct()
-```
-
-The following table provides the number of species that fall into each category, using this version of the metrics.
-```{r summary table1, eval=FALSE}
-
-library(knitr)
-
-trendsummary1 <- data_summary1 %>%
-  group_by(TrendCategory) %>%
-  summarize(n = n())
-
-kable(trendsummary1)
-
-```
-The following visualizations capture the trends of the species that fall into each category, using this version of metrics.
-```{r viz of trends1, eval=FALSE}
-
-#Persistently Present
-trend_pres <- data_full_trends1 %>% 
-  filter(TrendCategory == "Persistently Present")
-
-ggplot(trend_pres, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Persistently Present") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Established
-trend_estab <- data_full_trends1 %>% 
-  filter(TrendCategory == "Established")
-
-p6 <- ggplot(trend_estab, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Established") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-ggplotly(p6)
-
-
-#Disappeared
-trend_disapp <- data_full_trends1 %>% 
-  filter(TrendCategory == "Disappeared")
-
-ggplot(trend_disapp, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Disappeared") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Potentially Emerging
-trend_emerging <- data_full_trends1 %>% 
-  filter(TrendCategory == "Potentially Emerging")
-
-ggplot(trend_emerging, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Potentially Emerging") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Potentially Disappearing
-trend_potdis <- data_full_trends1 %>% 
-  filter(TrendCategory == "Potentially Disappearing")
-
-ggplot(trend_potdis, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Potentially Disappearing") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Sporadic - Primarily Present
-trend_spopre <- data_full_trends1 %>% 
-  filter(TrendCategory == "Sporadic - Primarily Present")
-
-p5 <- ggplot(trend_spopre, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Sporadic - Primarily Present") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-ggplotly(p5)
-
-
-#Sporadic - Primarily Absent
-trend_spoab <- data_full_trends1 %>% 
-  filter(TrendCategory == "Sporadic - Primarily Absent")
-
-p4 <- ggplot(trend_spoab, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Sporadic - Primarily Absent") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-ggplotly(p4)
-
-```
-
-### Alternate Version 2
-This version categorizes species observation trends across years into one of the seven categories, based on the following metrics:
-
-**Category Metrics**
-
-- *Persistently Present*: Observed in >=88% of survey years
-- *Established*: Observed in >50% of years, observed more in the second half of the survey years (compared to the first half of survey years), observed in >= 75% of the second half of survey years, and observed in at least four (presence >= 4) of the final five survey years
-- *Potentially Emerging*: Observed in <= 45% of years in the first half of survey years and observed in at least four (presence >= 4) of the final five survey years
-- *Potentially Disappearing*: Observed in >= 55% of years in the first half of survey years and observed in at most one (presence <= 1) of the final five survey years
-- *Disappeared*: Observed in <=50% of years, observed more in the first half of the survey years (compared to the second half of survey years), observed in <= 35% of the second half of survey years, and observed in at most one (presence <= 1) of the final five survey years
-- *Sporadic - Primarily Present*: Observed in >=50% of years
-- *Sporadic - Primarily Absent*: Observed in <50% of years
-
-
-Here, we make some small changes to the "Persistently Present" category (makes it more strict) and to the "Potentially Disappearing/Emerging" categories, making the rule about the first 50% of years more strict to highlight scenarios in which a shift is more dramatic.
-
-```{r function add_trend_category2, eval=FALSE}
-
-add_trend_category2 <- function(data) {
-  data %>%
-    arrange(Region, SurveyName, Species, Common, Year) %>%
-    group_by(Region, SurveyName, Species, Common) %>%
-    group_modify(~{
-      df <- .x
-      n_years <- nrow(df)
-      abs_vec <- df$Absence_Presence
-      percent_present <- sum(abs_vec == 1, na.rm = TRUE) / n_years
-
-      # Indices for first/last half
-      half_n <- floor(n_years / 2)
-      first_half_idx <- seq_len(half_n)
-      last_half_idx <- seq(n_years - half_n + 1, n_years)
-
-      abs_first_half <- if(length(first_half_idx) > 0) sum(abs_vec[first_half_idx] == 1, na.rm = TRUE) else NA_real_
-      abs_last_half <- if(length(last_half_idx) > 0) sum(abs_vec[last_half_idx] == 1, na.rm = TRUE) else NA_real_
-      percent_first_half <- if(length(first_half_idx) > 0) abs_first_half / length(first_half_idx) else NA_real_
-      percent_last_half <- if(length(last_half_idx) > 0) abs_last_half / length(last_half_idx) else NA_real_
-
-      # Indices for last 5 years
-      last5_n <- min(5, n_years)
-      last5_idx <- seq(n_years - last5_n + 1, n_years)
-      abs_last5 <- if(length(last5_idx) > 0) sum(abs_vec[last5_idx] == 1, na.rm = TRUE) else NA_real_
-
-      trend_category <- case_when(
-        percent_present >= 0.88 & abs_last5 >= 4 ~ "Persistently Present",
-        percent_present > 0.5 & abs_last5 >= 4 &
-          percent_last_half >= 0.75 &
-          abs_first_half <= abs_last_half ~ "Established",
-        percent_present <= 0.5 & abs_last5 <= 1 &
-          percent_last_half <= 0.35 &
-          abs_first_half >= abs_last_half ~ "Disappeared",
-        abs_last5 >= 4 & percent_first_half <= 0.45 ~ "Potentially Emerging",
-        abs_last5 <= 1 & percent_first_half >= 0.55 ~ "Potentially Disappearing",
-        percent_present >= 0.5 ~ "Sporadic - Primarily Present",
-        percent_present < 0.5 ~ "Sporadic - Primarily Absent",
-        TRUE ~ NA_character_
-      )
-      df$TrendCategory <- trend_category
-      df
-    }) %>%
-    ungroup()
-}
-
-# Usage:
-data_full_trends2 <- add_trend_category2(data)  %>% 
-  mutate( Name = paste(Common, SurveyName, sep = "_"))
-
-data_summary2 <- add_trend_category2(data) %>%
-  select(Region, SurveyName, Species, Common, TrendCategory) %>%
-  distinct()
-```
-
-The following table provides the number of species that fall into each category, using this version of the metrics.
-```{r summary table2, eval=FALSE}
-
-library(knitr)
-
-trendsummary2 <- data_summary2 %>%
-  group_by(TrendCategory) %>%
-  summarize(n = n())
-
-kable(trendsummary2)
-
-```
-
-The following visualizations capture the trends of the species that fall into each category, using this version of metrics.
-```{r viz of trends2, eval=FALSE}
-
-#Persistently Present 
-trend_pres <- data_full_trends2 %>% 
-  filter(TrendCategory == "Persistently Present")
-
-ggplot(trend_pres, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Persistently Present") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Established
-trend_estab <- data_full_trends2 %>% 
-  filter(TrendCategory == "Established")
-
-p6 <- ggplot(trend_estab, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Established") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-ggplotly(p6)
-
-
-#Disappeared 
-trend_disapp <- data_full_trends2 %>% 
-  filter(TrendCategory == "Disappeared")
-
-ggplot(trend_disapp, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Disappeared") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Potentially Emerging 
-trend_emerging <- data_full_trends2 %>% 
-  filter(TrendCategory == "Potentially Emerging")
-
-ggplot(trend_emerging, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Potentially Emerging") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Potentially Disappearing 
-trend_potdis <- data_full_trends2 %>% 
-  filter(TrendCategory == "Potentially Disappearing")
-
-ggplot(trend_potdis, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Potentially Disappearing") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Sporadic - Primarily Present 
-trend_spopre <- data_full_trends2 %>% 
-  filter(TrendCategory == "Sporadic - Primarily Present")
-
-p5 <- ggplot(trend_spopre, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Sporadic - Primarily Present") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-ggplotly(p5)
-
-
-#Sporadic - Primarily Absent 
-trend_spoab <- data_full_trends2 %>% 
-  filter(TrendCategory == "Sporadic - Primarily Absent")
-
-p4 <- ggplot(trend_spoab, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Sporadic - Primarily Absent") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-ggplotly(p4)
-
-```
-### Alternative Version 3
-
-This version categorizes species observation trends across years into one of the seven categories, based on the following metrics:
-
-**Category Metrics**
-
-- *Persistently Present*: Observed in >=85% of survey years
-- *Established*: Observed in >50% of years, observed more in the second half of the survey years (compared to the first half of survey years), observed in >= 75% of the second half of survey years, and observed in at least four (presence >= 4) of the final five survey years
-- *Potentially Emerging*: Observed in <= 50% of years in the first half of survey years and observed in at least three (presence >= 3) of the final five survey years
-- *Potentially Disappearing*: Observed in >= 50% of years in the first half of survey years and observed in at most two (presence <= 2) of the final five survey years
-- *Disappeared*: Observed in <=50% of years, observed more in the first half of the survey years (compared to the second half of survey years), observed in <= 35% of the second half of survey years, and observed in at most one (presence <= 1) of the final five survey years
-- *Sporadic - Primarily Present*: Observed in >=50% of years
-- *Sporadic - Primarily Absent*: Observed in <50% of years
-
-
-Here, we loosen the requirement for "Potentially Disappearing/Emerging", in the attempt to identify a shift in a species being observed year sooner.
-
-
-```{r function add_trend_category3, eval=FALSE}
-
-add_trend_category3 <- function(data) {
-  data %>%
-    arrange(Region, SurveyName, Species, Common, Year) %>%
-    group_by(Region, SurveyName, Species, Common) %>%
-    group_modify(~{
-      df <- .x
-      n_years <- nrow(df)
-      abs_vec <- df$Absence_Presence
-      percent_present <- sum(abs_vec == 1, na.rm = TRUE) / n_years
-
-      # Indices for first/last half
-      half_n <- floor(n_years / 2)
-      first_half_idx <- seq_len(half_n)
-      last_half_idx <- seq(n_years - half_n + 1, n_years)
-
-      abs_first_half <- if(length(first_half_idx) > 0) sum(abs_vec[first_half_idx] == 1, na.rm = TRUE) else NA_real_
-      abs_last_half <- if(length(last_half_idx) > 0) sum(abs_vec[last_half_idx] == 1, na.rm = TRUE) else NA_real_
-      percent_first_half <- if(length(first_half_idx) > 0) abs_first_half / length(first_half_idx) else NA_real_
-      percent_last_half <- if(length(last_half_idx) > 0) abs_last_half / length(last_half_idx) else NA_real_
-
-      # Indices for last 5 years
-      last5_n <- min(5, n_years)
-      last5_idx <- seq(n_years - last5_n + 1, n_years)
-      abs_last5 <- if(length(last5_idx) > 0) sum(abs_vec[last5_idx] == 1, na.rm = TRUE) else NA_real_
-
-      trend_category <- case_when(
-        percent_present >= 0.85 & abs_last5 >= 4 ~ "Persistently Present",
-        percent_present > 0.5 & abs_last5 >= 4 &
-          percent_last_half >= 0.75 &
-          abs_first_half <= abs_last_half ~ "Established",
-        percent_present <= 0.5 & abs_last5 <= 1 &
-          percent_last_half <= 0.35 &
-          abs_first_half >= abs_last_half ~ "Disappeared",
-        abs_last5 >= 3 & percent_first_half <= 0.50 ~ "Potentially Emerging",
-        abs_last5 <= 2 & percent_first_half >= 0.50 ~ "Potentially Disappearing",
-        percent_present >= 0.5 ~ "Sporadic - Primarily Present",
-        percent_present < 0.5 ~ "Sporadic - Primarily Absent",
-        TRUE ~ NA_character_
-      )
-      df$TrendCategory <- trend_category
-      df
-    }) %>%
-    ungroup()
-}
-
-# Usage:
-data_full_trends3 <- add_trend_category3(data)  %>% 
-  mutate( Name = paste(Common, SurveyName, sep = "_"))
-
-data_summary3 <- add_trend_category3(data) %>%
-  select(Region, SurveyName, Species, Common, TrendCategory) %>%
-  distinct()
-```
-
-
-The following table provides the number of species that fall into each category, using this version of the metrics.
-```{r summary table3, eval=FALSE}
-
-library(knitr)
-
-trendsummary3 <- data_summary3 %>%
-  group_by(TrendCategory) %>%
-  summarize(n = n())
-
-kable(trendsummary3)
-
-```
-
-The following visualizations capture the trends of the species that fall into each category, using this version of metrics.
-```{r viz of trends3, eval=FALSE}
-
-#Persistently Present 
-trend_pres <- data_full_trends3 %>% 
-  filter(TrendCategory == "Persistently Present")
-
-ggplot(trend_pres, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Persistently Present") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Established
-trend_estab <- data_full_trends3 %>% 
-  filter(TrendCategory == "Established")
-
-p6 <- ggplot(trend_estab, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Established") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-ggplotly(p6)
-
-
-#Disappeared 
-trend_disapp <- data_full_trends3 %>% 
-  filter(TrendCategory == "Disappeared")
-
-ggplot(trend_disapp, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Disappeared") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Potentially Emerging 
-trend_emerging <- data_full_trends3 %>% 
-  filter(TrendCategory == "Potentially Emerging")
-
-ggplot(trend_emerging, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Potentially Emerging") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Potentially Disappearing 
-trend_potdis <- data_full_trends3 %>% 
-  filter(TrendCategory == "Potentially Disappearing")
-
-ggplot(trend_potdis, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Potentially Disappearing") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-
-#Sporadic - Primarily Present 
-trend_spopre <- data_full_trends3 %>% 
-  filter(TrendCategory == "Sporadic - Primarily Present")
-
-p5 <- ggplot(trend_spopre, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Sporadic - Primarily Present") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-ggplotly(p5)
-
-
-#Sporadic - Primarily Absent 
-trend_spoab <- data_full_trends3 %>% 
-  filter(TrendCategory == "Sporadic - Primarily Absent")
-
-p4 <- ggplot(trend_spoab, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Sporadic - Primarily Absent") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-ggplotly(p4)
-
-```
-
-### Alternative Version 4
+### Current Version
 
 This version categorizes species observation trends across years into one of the seven categories, based on the following metrics:
 
@@ -799,7 +83,7 @@ This version categorizes species observation trends across years into one of the
 
 In this version, we have added an additional rule to the "Potentially Emerging/Disappearing" categories that would prevent any species that only have one colonizing/leaving event from being categorized as being "sporadic".
 
-```{r function add_trend_category4}
+```{r function add_trend_category}
 
 add_trend_category <- function(data) {
   data %>%
@@ -863,33 +147,26 @@ data_summary <- add_trend_category(data) %>%
 ```
 
 
-```{r species flag}
+```{r species flag function}
 
 data <- data_full_trends
 
-flag_spp <- function(data, SurveyName){
+flag_spp <- function(data, survey){
   
-  cat("taxonomy check for region: ", SurveyName, sep="\n")
+  cat("taxonomy check for survey: ", survey, sep="\n")
   
   #select region (survey column)
-  # data %>%
-  #   dplyr::mutate(SurveyName = forcats::as_factor(SurveyName)) %>%
-  #   dplyr::filter(survey == region) -> df_region
-  
   data_survey <- data %>% 
-    dplyr::mutate(SurveyName = forcats::as_factor(SurveyName))
+    dplyr::mutate(SurveyName = forcats::as_factor(SurveyName)) %>% 
+    dplyr::filter(SurveyName == survey)
   
   
   #get grouped species names per year
   df <- data_survey %>%
-    dplyr::select(Species, Year) %>%
+    dplyr::select(Species, Year, Absence_Presence) %>%
     dplyr::group_by(Species) %>%
     dplyr::distinct()
-  
-  # df_region %>%
-  #   dplyr::select(accepted_name, year) %>%
-  #   dplyr::group_by(accepted_name) %>%
-  #   dplyr::distinct() -> df
+
   
   #make species x year matrix
   years <- unique(df$Year)
@@ -900,10 +177,12 @@ flag_spp <- function(data, SurveyName){
   
   #fill up matrix with FALSE/TRUE depending on species presence/absence
   n <- 2
-  for (y in years){
-    df2[,n] <- c(apply(df, 1, function(r) any(r %in% c(y))))
+  for (y in years) {
+    df2[, n] <- sapply(df2$spp, function(spp_name) {
+      any(df$Species == spp_name & df$Year == y & df$Absence_Presence == 1)
+      })
     n <- n + 1
-  }
+    }
   
   #summarize
   df2 <- df2 %>%
@@ -946,9 +225,13 @@ flag_spp <- function(data, SurveyName){
     # sink()
     
     #write stats of species flagged
-    data_out <- data.frame("name" = c("Total number of species", "Percentage of species flagged"),
-                       "nb" = c(length(df2$spp), round(100*(length(testdf$spp) /  length(df2$spp)), 1)))
-    write.csv(data_out, file = here::here("data_processing_rcode", "output", paste0(region, "_stats.csv")), row.names = FALSE)
+    # data_out <- data.frame("name" = c("Total number of species", "Percentage of species flagged"),
+    #                    "nb" = c(length(df2$spp), round(100*(length(testdf$spp) /  length(df2$spp)), 1)))
+    # write.csv(data_out, file = here::here("data_processing_rcode", "output", paste0(survey, "_stats.csv")), row.names = FALSE)
+    
+    #write df of species flagged
+    survey_clean <- gsub("[/\\]", "_", survey)  # Replace slashes/backslashes with underscore
+    write.csv(df3, file = here::here("data_processing_rcode", "output", "flags", paste0(survey_clean, "_flags.csv")), row.names = FALSE)
     
     #create absence dataframe for plotting
     allyears <- min(years):max(years)
@@ -956,23 +239,23 @@ flag_spp <- function(data, SurveyName){
                       "year" = rep(allyears, length(df3$spp)))
     
     #get presence dataframe for plotting
-    pres <- subset(df_region, Species %in% testdf$spp) %>%
+    pres <- subset(data_survey, Species %in% testdf$spp) %>%
       dplyr::select(Species, Year)
     
     #make summary scatterplot for region
-    p <- ggplot2::ggplot() +
-      #absences
-      ggplot2::geom_point(data = abs, ggplot2::aes(x = year, y = accepted_name, color = "black"), alpha = 0.2) +
-      #presences
-      ggplot2::geom_point(data = pres, ggplot2::aes(x = as.numeric(year), y = accepted_name, fill = "black")) +
-      ggplot2::ggtitle(paste0("Survey: ", SurveyName)) +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
-                     axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1, size = 9),
-                     text = element_text(size = 20),
-                     legend.position = "bottom") +
-      ggplot2::scale_fill_manual(values=c('black'), labels = c("presence"), name = "") +
-      ggplot2::scale_colour_manual(values=c('black'), labels = c("absence"), name = "") +
-      ggplot2::scale_x_continuous(breaks = allyears)
+    # p <- ggplot2::ggplot() +
+    #   #absences
+    #   ggplot2::geom_point(data = abs, ggplot2::aes(x = year, y = accepted_name, color = "black"), alpha = 0.2) +
+    #   #presences
+    #   ggplot2::geom_point(data = pres, ggplot2::aes(x = as.numeric(year), y = accepted_name, fill = "black")) +
+    #   ggplot2::ggtitle(paste0("Survey: ", SurveyName)) +
+    #   ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+    #                  axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1, size = 9),
+    #                  text = element_text(size = 20),
+    #                  legend.position = "bottom") +
+    #   ggplot2::scale_fill_manual(values=c('black'), labels = c("presence"), name = "") +
+    #   ggplot2::scale_colour_manual(values=c('black'), labels = c("absence"), name = "") +
+    #   ggplot2::scale_x_continuous(breaks = allyears)
     
     #ggplot2::ggsave(p, filename = here::here("outputs", "Flags", "taxonomic_flagging", paste0(region, "_taxonomic_flagging.png")))
     
@@ -980,18 +263,33 @@ flag_spp <- function(data, SurveyName){
     #                paste0(region, "_taxonomic_flagging.png")),
     #     width = 16*200, height = 10*200, res = 200)
     # print(p)
-    dev.off()
+    # dev.off()
     
   }else{
     
     print("----- No species flagged for this region")
   }
   
-  
+}
+
+```
+
+```{r flag compilation}
+
+survey_list <- unique(data_full_trends$SurveyName)
+
+for (i in survey_list) {
+  flag_spp(data, survey = i)
 }
 
 
-flag_spp(data, SurveyName = "Aleutian Islands Bottom Trawl Survey")
+#bringing csv files back into combine them into one df
+folder_path <- here::here("data_processing_rcode", "output", "flags")
+
+files <- list.files(path = folder_path, pattern = "\\.csv$", full.names = FALSE)
+
+
+
 
 ```
 
@@ -1006,7 +304,7 @@ data_trends_export <- data_summary %>%
 
 
 The following table provides the number of species that fall into each category, using this version of the metrics.
-```{r summary table4}
+```{r summary table}
 
 library(knitr)
 
@@ -1018,7 +316,19 @@ kable(trendsummary)
 
 ```
 The following visualizations capture the trends of the species that fall into each category, using this version of metrics.
-```{r viz of trends4}
+```{r viz of trends}
+
+#regional review (temp)
+trend_NESpring <- data_full_trends %>% 
+  filter(SurveyName == "NEFSC Spring Bottom Trawl")
+
+ggplot(trend_NESpring, aes(Year, Name)) +
+  geom_tile(aes(fill= Absence_Presence)) +
+  ggtitle("NEFSC Spring Bottom Trawl") +
+  theme_minimal() +
+  scale_fill_viridis(discrete=TRUE, option="viridis") +
+  scale_y_discrete(label = function(x) stringr::str_trunc(x, 15))
+
 
 #Persistently Present 
 trend_pres <- data_full_trends %>% 
