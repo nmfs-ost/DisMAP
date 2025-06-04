@@ -278,15 +278,6 @@ data_export <- data_full %>%
 ```
 
 
-```{r make data_full, eval=FALSE}
-ggplot(data_full, aes(WTCPUE)) +
-  # scale_colour_brewer(palette = "Spectral") +
-  geom_histogram() +
-  facet_wrap(vars(SurveyName)) +
-  theme_minimal()
-```
-
-
 ## Vizualizations
 
 ```{r}
@@ -308,7 +299,7 @@ The goal of this data processing is for users to be able to clearly see trends i
 The "Haul Frequency" figure below reflects the number of hauls that each species was present in, across surveyed years for the Northeast Spring Bottom Trawl Survey. 
 
 *(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 
 #These will need to be adjusted to list the common name
 
