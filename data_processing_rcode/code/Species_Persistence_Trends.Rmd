@@ -286,17 +286,38 @@ for (i in survey_list) {
 #bringing csv files back into combine them into one df
 folder_path <- here::here("data_processing_rcode", "output", "flags")
 
-files <- list.files(path = folder_path, pattern = "\\.csv$", full.names = FALSE)
+files <- list.files(path = folder_path, pattern = "\\.csv$", full.names = TRUE)
+# files_clean <- paste0(list.files(path = folder_path, pattern = "\\.csv$", full.names = FALSE)) 
+  
+df_list <- list()
 
+for (n in seq_along(files)){
+  #read in csv
+  temp_df <- read_csv(files[n])
+  # Get the file name without path and extension
+  name <- tools::file_path_sans_ext(basename(files[n]))
+  # Remove the string "flag" at the end, if present
+  name <- sub("_flags$", "", name)
+  # Add the source column as the first column
+  temp_df <- cbind(survey = name, temp_df)
+  # Store in list
+  df_list[[n]] <- temp_df
+}
 
+flags_combo <- do.call(rbind, df_list) %>% 
+  rename(SurveyName = survey,
+         Species = spp)
 
+flags_combo$Notes <- c(rep("Preliminary trend - under review", nrow(flags_combo)))
 
 ```
 
 ```{r export data_full_trends}
 
+
 data_trends_export <- data_summary %>% 
-  select(Region, SurveyName, Species, Common, TrendCategory)
+  left_join(flags_combo, by = c("SurveyName", "Species")) %>% 
+  select(Region, SurveyName, Species, Common, TrendCategory, Notes)
 
 # write.csv(data_trends_export, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorTrend.csv"))
 
