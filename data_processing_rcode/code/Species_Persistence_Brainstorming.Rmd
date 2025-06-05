@@ -1,10 +1,11 @@
 ---
-title: 'Species Persistence: Visualization Options'
-author: "Claire Gonzales (2025 Knauss Fellow, NOAA Affiliate)"
-date: "2025-05-06"
+title: 'Species Persistence: Data Processing and Visualization'
+author: "NOAA Fisheries' Office of Science and Technology"
+date: "2025-06-05"
 output:
   html_document:
     toc: yes
+    toc_float: true
     theme: readable
     code_folding: hide
   word_document:
@@ -22,6 +23,7 @@ library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
 library(readr)
+library(tidyverse)
 ```
 
 
@@ -29,14 +31,14 @@ library(readr)
 
 ## Background
 
-This document presents various analyses for evaluating species persistence (emergence, consistence persistence, or removal) as a new analysis module on [DisMAP](https://apps-st.fisheries.noaa.gov/dismap/). 
+This document presents various analyses for evaluating species persistence as a new analysis module on [DisMAP](https://apps-st.fisheries.noaa.gov/dismap/). 
 
-**Feedback on the usefulness of these analyses and visualizations would be greatly appreciated. Specifically, we would appreciate any comments on which visualization of the data (if any) you feel would be most useful to DisMAP end-users. Please feel free to contact Melissa and Claire at any time with questions or comments.**
+**The Species Persistence module is in a pilot period. Feedback is encouraged and can always be given by submitting a pull request through GitHub or emailing [dismap.contact@noaa.gov](dismap.contact@noaa.gov).**
 
 
-The goals for this indicator are four-fold:
+The goals for this analysis are four-fold:
 
-* Visualize changes in biomass (or presence/absence) for a particular species, from year to year
+* Visualize changes in observed biomass for a particular species, from year to year
 * Categorize survey abundance as being: 
   + absent, 
   + rare, 
@@ -44,23 +46,17 @@ The goals for this indicator are four-fold:
   + common,
   + abundant
   + or highly abundant
-* Measure overall prevalence pattern of a particular species, across all survey years (*in development and not presented here*)
-* Categorize trend as (*in development and not presented here*):
+* Measure overall prevalence pattern of a particular species, across all survey years
+* Categorize trend as:
   + increasing, 
   + decreasing,
   + or consistent
 
-In this current draft of the analyses, we present data processing steps as well as four draft heat maps. The heat maps reflect
-
-  1. the frequency of tows a particular species is caught in (by year and by survey),
-  2. the proportion of tows for a particular species is caught in (by year and by survey),
-  3. the percentile of biomass for a particular species (by year and by survey), and
-  4. the binned percentile of biomass for a particular species (by year and by survey).
 
 ```{r wrangling, message = FALSE}
 # data <- data.frame(base::readRDS(file = here::here("data_processing_rcode/output/data_clean/alldata_withzeros.rds")))
 
-## creating an example dataset for last year. Normally, data would be pulled in from the RDS and titled `data`, as shown at the top of this code chunk ##
+## building a dataset for last year. Normally, data would be pulled in from the RDS and titled `data`, as shown at the top of this code chunk ##
 
 bfish <- read_csv(here::here("data_processing_rcode/data", "BFISH_DisMAP_2024_update_v2.csv")) 
 
@@ -99,6 +95,7 @@ data <- rbind(bfish, ai, ebs, gmex, goa, nbs, neus_fall, neus_spri, seus_fall, s
 This section captures the data by calculating percentile/rank of biomass of a specific species, compared to all the species biomass in that survey region and survey year.
 
 ```{r prep}
+# need to edit naming for regions versus surveys
 data$survey <- ifelse(data$region == "Aleutian Islands", "Aleutian Islands Bottom Trawl Survey",
                          ifelse(data$region == "Eastern Bering Sea", "Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey",
                                 ifelse(data$region == "Northern Bering Sea", "Northern Bering Sea Crab/Groundfish Survey - Eastern Bering Sea Shelf Survey Extension",
@@ -185,6 +182,7 @@ data_rank$Bin <- ifelse(data_rank$Percentile == 0.0, "Absent",
 
 ```
 
+Then, we assign all species with survey biomass > 0 as present in that year's survey and < 0 as being absent in that year's survey.
 ```{r presence_absence}
 
 data_rank$Absence_Presence <- ifelse(data_rank$WTCPUE == 0, "0",
@@ -195,18 +193,8 @@ data_rank$Absence_Presence <- ifelse(data_rank$WTCPUE == 0, "0",
 ```
 
 
-```{r test_viz, message=FALSE, eval=FALSE}
-
-ggplot(data_rank, aes(Percentile)) +
-  # scale_colour_brewer(palette = "Spectral") +
-  geom_histogram() +
-  facet_wrap(vars(SurveyName)) +
-  theme_minimal()
-
-```
 ### Presence in hauls
 This section will calculate the number of hauls that a species is present in, per survey and per year. Measuring the presence in hauls will capture the prevalence of that species in the survey (i.e., how prominent is this species in the survey?), over time.
-
 
 ```{r functions, message = FALSE}
 
@@ -230,7 +218,7 @@ num_hauls_year <- function(dat, ...){
 ```
 
 We calculate the number of hauls total (in each survey and survey year) and the number of hauls for which a particular species was caught. We then also calculate the proportion of total hauls each species was caught in (for each survey and survey year).
-```{r prep2}
+```{r build data_haul}
 
 presyr <- present_every_year(data_update, region, survey, spp, common, year)
 
@@ -264,23 +252,22 @@ data_full <- data_rank %>%
   mutate(Proportion = ifelse(is.na(Proportion), 0, Proportion))
 
 # saveRDS(data_full, file = "data_full.RData")
-  
 ```
 
-```{r exporting data_full}
-#writing the csv for John here
 
+```{r exporting data_full}
+# writing the csv for DisMAP development team here
 data_export <- data_full %>% 
   select(Region, SurveyName, Year, Species, Common, Bin, WTCPUE)
 
 # write.csv(data_export, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorPercentileBin.csv"))
-
 ```
 
 
 ## Vizualizations
 
 ```{r}
+#load packages needed for visualization section
 library(tidyverse)
 library(hrbrthemes)
 library(viridis)
@@ -288,307 +275,15 @@ library(plotly)
 library(heatmaply)
 ```
 
-The goal of this data processing is for users to be able to clearly see trends in the prevalence of species in surveys over time so that they can notice species that might be emerging or disappearing in a region. We have chosen two example surveys/regions for testing visualizations of data processing: the Northeast Spring Bottom Trawl Survey and the Aleutian Island Bottom Trawl Survey.
+The goal of this data processing is for users to be able to clearly see trends in the prevalence of species in surveys over time so that they can notice species that might be emerging or disappearing in a region.
 
-
-*The example visualizations below are depicted as heat maps because of their similarities to the mocked-up version of the module on DisMAP*
-
-**Note: These visualizations are interactive. To see the values depicted in each cell, simply hover your cursor over the plot. To zoom in on a set of species or years, hold and drag your cursor to draw a box around the desired region.**
-
-### NEFSC Spring Example Heatmaps
-The "Haul Frequency" figure below reflects the number of hauls that each species was present in, across surveyed years for the Northeast Spring Bottom Trawl Survey. 
-
-*(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
-```{r, eval=TRUE}
-
-#These will need to be adjusted to list the common name
-
-data_1 <- data_full %>%
-  filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
-  ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Percentile, -Bin, -Proportion, -Absence_Presence) %>% 
-  pivot_wider(names_from = Year, values_from = Presence)
-
-# data_1$Year <- as.character(data_1$Year)
-
-mat_1 <- as.matrix(data_1)
-rownames(mat_1) <- mat_1[,1]
-mat_1 <- as.data.frame(mat_1) %>% 
-  dplyr::select(-Species) %>% 
-  mutate_if(is.character, as.numeric)
-# mat_1 <- as.matrix(mat_1) %>% 
-  # mutate_if(is.character, as.numeric)
-
-p1 <- heatmaply(mat_1,
-                dendrogram = "none",
-                xlab = "", 
-                ylab = "",
-                main = "Ex 1: NEFSC Spring Bottom Trawl (Haul Freq.)",
-                # scale = "column",
-                # margins = c(60,100,40,20),
-                # grid_color = "white",
-                # grid_width = 0.000005,
-                # titleX = FALSE,
-                hide_colorbar = FALSE,
-                # branches_lwd = 0.1,
-                label_names = c("Species", "Year", "Presence"),
-                fontsize_row = 5, 
-                fontsize_col = 5,
-                labCol = colnames(mat_1),
-                labRow = rownames(mat_1),
-                heatmap_layers = theme(axis.line = element_blank())
-                )
-
-p1
-```
-
-The "Haul Proportion" figure below reflects the proportion of hauls that each species was present in (hauls present divided by total hauls in a survey), across surveyed years for the Northeast Spring Bottom Trawl Survey.
-
-*(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
-```{r, eval=FALSE}
-data_2 <- data_full %>%
-  filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
-  ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Percentile, -Absence_Presence) %>% 
-  pivot_wider(names_from = Year, values_from = Proportion)
-
-# data_1$Year <- as.character(data_1$Year)
-
-mat_2 <- as.matrix(data_2)
-rownames(mat_2) <- mat_2[,1]
-mat_2 <- as.data.frame(mat_2) %>% 
-  dplyr::select(-Species) %>% 
-  mutate_if(is.character, as.numeric)
-
-
-p2 <- heatmaply(mat_2,
-                dendrogram = "none",
-                xlab = "", 
-                ylab = "",
-                main = "Ex 2: NEFSC Spring Bottom Trawl (Haul Proportion)",
-                hide_colorbar = FALSE,
-                label_names = c("Species", "Year", "Percentile"),
-                fontsize_row = 5, 
-                fontsize_col = 5,
-                labCol = colnames(mat_2),
-                labRow = rownames(mat_2),
-                heatmap_layers = theme(axis.line = element_blank())
-                )
-
-p2
-```
-
-
-The "Percentiles" figure below reflects the biomass of each species, calculated as a percentile of all the species biomass values across an entire survey. Percentiles are calculated for all survey years for the Northeast Spring Bottom Trawl Survey.
-
-*(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
-```{r, eval=FALSE}
-data_3 <- data_full %>%
-  filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
-  ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Proportion, -Absence_Presence) %>% 
-  pivot_wider(names_from = Year, values_from = Percentile)
-
-# data_1$Year <- as.character(data_1$Year)
-
-mat_3 <- as.matrix(data_3)
-rownames(mat_3) <- mat_3[,1]
-mat_3 <- as.data.frame(mat_3) %>% 
-  dplyr::select(-Species) %>% 
-  mutate_if(is.character, as.numeric)
-# mat_1 <- as.matrix(mat_1) %>% 
-  # mutate_if(is.character, as.numeric)
-
-p3 <- heatmaply(mat_3,
-                dendrogram = "none",
-                xlab = "", 
-                ylab = "",
-                main = "Ex 3: NEFSC Spring Bottom Trawl (Percentiles)",
-                hide_colorbar = FALSE,
-                label_names = c("Species", "Year", "Percentile"),
-                fontsize_row = 5, 
-                fontsize_col = 5,
-                labCol = colnames(mat_3),
-                labRow = rownames(mat_3),
-                heatmap_layers = theme(axis.line = element_blank())
-                )
-
-p3
-```
-
-The "Binned Percentile" figure below reflects the Percentile values in Ex 3 figure (above) binned as "Absent" (biomass and percentile of 0), "Rare" (< 10th percentile), "Less Common" (10th - 25th percentile), "Common" (25th - 75th percentile), "Abundant" (75th - 90th percentile), of "Highly Abundant" (> 90th percentile). Percentile Bins are calculated for all survey years for the Northeast Spring Bottom Trawl Survey.
-```{r, eval=FALSE}
-data_4 <- data_full %>%
-  filter(SurveyName == "NEFSC Spring Bottom Trawl") %>% 
-  ungroup() %>% 
-  select(Region, SurveyName, Year, Species, Common, Bin)
-
-data_4$Bin <- factor(data_4$Bin, levels = c('Absent', 'Rare', 'Less Common', 'Common', 'Abundant', 'Highly Abundant'))
-
-p4 <- ggplot(data_4, aes(Year, Common)) +
-  geom_tile(aes(fill= Bin)) +
-  ggtitle("Ex 4: NEFSC Spring Bottom Trawl (Binned Percentiles)") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  theme(axis.text.y = element_text(size = 4))
-
-
-ggplotly(p4)
-```
-
-
-### Aleutian Islands Example Heatmaps
-The "Haul Frequency" figure below reflects the number of hauls that each species was present in, across surveyed years for the Aleutian Islands Bottom Trawl Survey.
-
-*(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
-```{r, eval=FALSE}
-data_5 <- data_full %>%
-  filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
-  ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Percentile, -Bin, -Proportion, -Absence_Presence) %>% 
-  pivot_wider(names_from = Year, values_from = Presence)
-
-# data_1$Year <- as.character(data_1$Year)
-
-mat_5 <- as.matrix(data_5)
-rownames(mat_5) <- mat_5[,1]
-mat_5 <- as.data.frame(mat_5) %>% 
-  dplyr::select(-Species) %>% 
-  mutate_if(is.character, as.numeric)
-
-
-p5 <- heatmaply(mat_5,
-                dendrogram = "none",
-                xlab = "", 
-                ylab = "",
-                main = "Ex 5: Aleutian Islands Bottom Trawl Survey (Haul Freq.)",
-                hide_colorbar = FALSE,
-                label_names = c("Species", "Year", "Presence"),
-                fontsize_row = 5, 
-                fontsize_col = 5,
-                labCol = colnames(mat_5),
-                labRow = rownames(mat_5),
-                heatmap_layers = theme(axis.line = element_blank())
-                )
-
-p5
-```
-The "Haul Proportion" figure below reflects the proportion of hauls that each species was present in (hauls present divided by total hauls in a survey), across surveyed years for the Aleutian Islands Bottom Trawl Survey.
-
-*(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
-```{r, eval=FALSE}
-data_6 <- data_full %>%
-  filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
-  ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Percentile, -Absence_Presence) %>% 
-  pivot_wider(names_from = Year, values_from = Proportion)
-
-# data_1$Year <- as.character(data_1$Year)
-
-mat_6 <- as.matrix(data_6)
-rownames(mat_6) <- mat_6[,1]
-mat_6 <- as.data.frame(mat_6) %>% 
-  dplyr::select(-Species) %>% 
-  mutate_if(is.character, as.numeric)
-
-
-p6 <- heatmaply(mat_6,
-                dendrogram = "none",
-                xlab = "", 
-                ylab = "",
-                main = "Ex 6: Aleutian Islands (Haul Proportion)",
-                hide_colorbar = FALSE,
-                label_names = c("Species", "Year", "Percentile"),
-                fontsize_row = 5, 
-                fontsize_col = 5,
-                labCol = colnames(mat_6),
-                labRow = rownames(mat_6),
-                heatmap_layers = theme(axis.line = element_blank())
-                )
-
-p6
-```
-
-The "Percentiles" figure below reflects the biomass of each species, calculated as a percentile of all the species biomass values across an entire survey. Percentiles are calculated for all survey years for the Aleutian Islands Bottom Trawl Survey.
-
-*(In the live version on the module, the zero values here would be coded to be a different color (e.g. white or gray) to clearly distinguish them from non-zero values)*
-```{r, eval=FALSE}
-data_7 <- data_full %>%
-  filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
-  ungroup() %>% 
-  dplyr::select(-Region, -SurveyName, -Common, -WTCPUE, -Presence, -Bin, -Proportion, -Absence_Presence) %>% 
-  pivot_wider(names_from = Year, values_from = Percentile)
-
-# data_1$Year <- as.character(data_1$Year)
-
-mat_7 <- as.matrix(data_7)
-rownames(mat_7) <- mat_7[,1]
-mat_7 <- as.data.frame(mat_7) %>% 
-  dplyr::select(-Species) %>% 
-  mutate_if(is.character, as.numeric)
-# mat_1 <- as.matrix(mat_1) %>% 
-  # mutate_if(is.character, as.numeric)
-
-p7 <- heatmaply(mat_7,
-                dendrogram = "none",
-                xlab = "", 
-                ylab = "",
-                main = "Ex 7: Aleutian Islands Bottom Trawl Survey (Percentiles)",
-                hide_colorbar = FALSE,
-                label_names = c("Species", "Year", "Percentile"),
-                fontsize_row = 5, 
-                fontsize_col = 5,
-                labCol = colnames(mat_7),
-                labRow = rownames(mat_7),
-                heatmap_layers = theme(axis.line = element_blank())
-                )
-
-p7
-```
-
-The "Binned Percentile" figure below reflects the Percentile values in Ex 3 figure (above) binned as "Absent" (biomass and percentile of 0), "Rare" (< 10th percentile), "Less Common" (10th - 25th percentile), "Common" (25th - 75th percentile), "Abundant" (75th - 90th percentile), of "Highly Abundant" (> 90th percentile). Percentile Bins are calculated for all survey years for the Aleutian Islands Bottom Trawl Survey.
-```{r, eval=FALSE}
-data_8 <- data_full %>%
-  filter(SurveyName == "Aleutian Islands Bottom Trawl Survey") %>% 
-  ungroup()
-
-data_8$Bin <- factor(data_8$Bin, levels = c('Absent', 'Rare', 'Less Common', 'Common', 'Abundant', 'Highly Abundant'))
-
-p8 <- ggplot(data_8, aes(Year, Common)) +
-  geom_tile(aes(fill= Bin)) +
-  ggtitle("Ex 8: Aleutian Islands (Binned Percentiles)") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  theme(axis.text.y = element_text(size = 4))
-
-
-ggplotly(p8)
-```
+**Note: Many of these visualizations are interactive. To see the values depicted in each cell, simply hover your cursor over the plot. To zoom in on a set of species or years, hold and drag your cursor to draw a box around the desired region.**
 
 ### All Surveys - Facet Wrapped
+This code block needs to be changed to `eval = TRUE` to run/knit. Default is currently `eval = FALSE` because this chunk takes some time to process.
+```{r all surveys viz, eval=FALSE, message=FALSE, warning=FALSE}
 
-```{r scratch 1, eval=FALSE}
-data_all <- data_full
-
-data_all$Bin <- factor(data_all$Bin, levels = c('Absent', 'Rare', 'Less Common', 'Common', 'Abundant', 'Highly Abundant'))
-
-p_all <- ggplot(data_all, aes(Year, Common)) +
-  geom_tile(aes(fill= Bin)) +
-  # ggtitle("All Surveys (Binned Percentiles)") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  # theme(axis.text.y = element_text(size = 8)) +
-  facet_wrap(~SurveyName, nrow = 6)
-
-
-ggplotly(p_all)
-
-
-```
-
-```{r scratch 2, eval=FALSE, message=FALSE, warning=FALSE}
-
-#### This takes a really long time to knit so be prepared! ####
+#### This takes a long time to knit so be prepared! ####
 
 data_all <- data_full %>%
   ungroup()
@@ -612,7 +307,6 @@ for(v in surveys) {
     # theme(axis.text.y = element_text(size = 8))
   
   # Convert ggplot to ggplotly and display
-  
   plotlist[[v]] <- ggplotly(p)
   
 }
@@ -622,16 +316,27 @@ htmltools::tagList(setNames(plotlist, NULL))
 ```
 
 
-## Cummulative assessment
+## Trend assessment
 
-```{r}
+**Trend Categories**
+
+- Persistently Present: Consistently observed in surveys across years;
+- Established: Species previously wasn't observed in surveys and now is consistently observed in surveys;
+- Potentially Emerging: Species previously wasn't consistently observed in surveys but is potentially shifting towards being consistently observed;
+- Potentially Disappearing: Species was previously observed in surveys but is potentially shifting towards being consistently not observed;
+- Disappeared: Species was previously observed in surveys but now is consistently not observed in surveys;
+- Sporadic - Primarily Present: Species is observed in over half of surveys but observations are inconsistent; and
+- Sporadic - Primarily Absent: Species is observed in less than half of surveys and observations are inconsistent.
+
+```{r organization}
 data_cumm <- data_full %>% 
   select(Region, SurveyName, Year, Species, Common, Absence_Presence)
 
 data_cumm$Absence_Presence <- as.numeric(data_cumm$Absence_Presence)
 ```
 
-```{r}
+To do this, first we identify instances in which a species shifts from being present in a survey one year to being absent in a survey the following year, and vice versa.
+```{r col vs ext}
 holding <- data.frame(SurveyName = character(), Species = character(), Year = numeric(), Diff = numeric(), stringsAsFactors = FALSE)
 
 
@@ -663,11 +368,6 @@ for(v in surveys) {
 
       Diff <- var_2$Absence_Presence[1] - var_1$Absence_Presence[1]
 
-      #this step (below) might be redundant
-      # survey <- paste(v)
-      # spp <- paste(p)
-      # Diff <- diff
-
       temp <- data.frame(SurveyName = v, Species = p, Year = years[i+1], Diff = Diff, stringsAsFactors = FALSE)
 
       holding <- rbind(holding, temp)
@@ -678,9 +378,8 @@ for(v in surveys) {
 
 ```
 
-
 ```{r adding common names}
-# Creating a speices list will allow me to join in the common names at the end of the next chunk
+# Creating a speices list will allow for joining in the common names at the end of the next chunk
 spp_list <- distinct(data_full %>% 
   ungroup() %>% 
   select(SurveyName, Species, Common))
@@ -688,21 +387,25 @@ spp_list <- distinct(data_full %>%
 ```
 
 ```{r}
+# Identifying when species goes from absent to present in survey
 data_ce_col <- holding %>% 
   filter(Diff == 1) %>% 
   group_by(SurveyName, Species) %>% 
   summarise(col = n())
 
+# Identifying when species goes from present to absent in survey
 data_ce_ext <- holding %>% 
   filter(Diff == -1) %>% 
   group_by(SurveyName, Species) %>% 
   summarise(ext = n())
 
+# Identifying when species remains as either absent or present in survey
 data_ce_stable <- holding %>% 
   filter(Diff == 0) %>% 
   group_by(SurveyName, Species) %>% 
   summarise(stable = n())
 
+# merging three objects above
 data_ce <- data_ce_stable %>%
   full_join(data_ce_col, by = c("SurveyName", "Species")) %>% 
   full_join(data_ce_ext, by = c("SurveyName", "Species")) %>% 
@@ -714,9 +417,9 @@ data_ce <- data_ce_stable %>%
 # saveRDS(data_ce, file = "data_ce.RData")
 ```
 
-
+We also tallied the amount of years that a species was absent or present in a particular survey.
 ```{r grouped absence/presence df}
-#creating a data frame that groups the tally of absences vs presences to help with definitions of trends
+# creating a data frame that groups the tally of absences vs presences to help with definitions of trends
 # Reminder for `Absence_Presence` column: Absence is 0 and Presence is 1
 data_ap_a <- data_cumm %>% 
   filter(Absence_Presence == 0) %>% 
@@ -735,7 +438,7 @@ data_ap <- data_ap_p %>%
 ```
 
 ```{r df col/ext and ab/pre}
-
+# creating an object with all four columns above for each species in a particular survey
 data_ce_ap <- data_ce %>% 
   left_join(data_ap, by = c("SurveyName", "Species", "Common")) %>% 
   select(Region, SurveyName, Species, Common, col, ext, Absence, Presence) %>% 
@@ -746,20 +449,28 @@ data_ce_ap <- data_ce %>%
 ```
 
 
-**Definitions**
 
-- Persistently Present: Is observed in surveys and has always been observed in surveys
-- Established: It wasn’t observed in surveys and now it’s definitely observed in surveys
-- Emerging: It wasn’t really observed in surveys and now it’s maybe beginning to be observed in surveys
-- Potentially Disappearing: It was observed in surveys in some capacity but now might be possibly leaving
-- Disappeared: It was observed in surveys in some capacity but has now fully left
-- Sporadic - Primarily Present: Mix of present and absent observations throughout time, but there is more presences than absences
-- Sporadic - Primarily Absent: Mix of present and absent observations throughout time, but there is more absences than presences
+**Trend Category Metrics**
+
+- *Persistently Present*: Observed in >=85% of survey years
+- *Emerged*: Observed in >=50% of years, observed more in the second half of the survey years (compared to the first half of survey years), observed in >= 75% of the second half of survey years, and observed in at least nine (presence >= 9) of the final ten survey years
+- *Potentially Emerging*: Observed in <= 50% of years in the first half of survey years and observed in at least four (presence >= 4) of the final five survey years, or has one switch from not being observed to being observed (referred to as a "colonizing event") and has zero switches from being observed to not being observed (referred to as a leaving event)
+- *Potentially Disappearing*: Observed in >= 50% of years in the first half of survey years and observed in at most one (presence <= 1) of the final five survey years, or has one switch from being observed to not being observed (leaving event) and has zero switches from not being observed to being observed (colonizing event)
+- *Disappeared*: Observed in <=50% of years, observed more in the first half of the survey years (compared to the second half of survey years), observed in <= 25% of the second half of survey years, and observed in at most one (presence <= 1) of the final ten survey years
+- *Sporadic - Primarily Present*: Observed in >=50% of years
+- *Sporadic - Primarily Absent*: Observed in <50% of years
+
+```{r build data df}
+#adding colonzation and extinction event columns to data frame to use in trend categorization
+data <- data_full %>% 
+  left_join(data_ce, by = c("SurveyName", "Species", "Common"))
+
+```
 
 ```{r function add_trend_category}
 
-add_trend_category <- function(data_full) {
-  data_full %>%
+add_trend_category <- function(data) {
+  data %>%
     arrange(Region, SurveyName, Species, Common, Year) %>%
     group_by(Region, SurveyName, Species, Common) %>%
     group_modify(~{
@@ -782,17 +493,24 @@ add_trend_category <- function(data_full) {
       last5_n <- min(5, n_years)
       last5_idx <- seq(n_years - last5_n + 1, n_years)
       abs_last5 <- if(length(last5_idx) > 0) sum(abs_vec[last5_idx] == 1, na.rm = TRUE) else NA_real_
+      
+      # Indices for last 10 years
+      last10_n <- min(10, n_years)
+      last10_idx <- seq(n_years - last10_n + 1, n_years)
+      abs_last10 <- if(length(last10_idx) > 0) sum(abs_vec[last10_idx] == 1, na.rm = TRUE) else NA_real_
 
       trend_category <- case_when(
         percent_present >= 0.85 & abs_last5 >= 4 ~ "Persistently Present",
-        percent_present > 0.5 & abs_last5 >= 4 &
+        percent_present >= 0.5 & abs_last10 >= 9 &
           percent_last_half >= 0.75 &
-          abs_first_half <= abs_last_half ~ "Established",
-        percent_present <= 0.5 & abs_last5 <= 1 &
-          percent_last_half <= 0.35 &
+          abs_first_half <= abs_last_half ~ "Emerged",
+        percent_present <= 0.5 & abs_last10 <= 1 &
+          percent_last_half <= 0.25 &
           abs_first_half >= abs_last_half ~ "Disappeared",
-        abs_last5 >= 4 & percent_first_half <= 0.5 ~ "Potentially Emerging",
-        abs_last5 <= 1 & percent_first_half >= 0.5 ~ "Potentially Disappearing",
+        abs_last5 >= 4 & percent_first_half <= 0.50 ~ "Potentially Emerging",
+        any(df$col == 1 & df$ext == 0, na.rm = TRUE) ~ "Potentially Emerging",
+        abs_last5 <= 1 & percent_first_half >= 0.50 ~ "Potentially Disappearing",
+        any(df$col == 0 & df$ext == 1, na.rm = TRUE) ~ "Potentially Disappearing",
         percent_present >= 0.5 ~ "Sporadic - Primarily Present",
         percent_present < 0.5 ~ "Sporadic - Primarily Absent",
         TRUE ~ NA_character_
@@ -804,101 +522,156 @@ add_trend_category <- function(data_full) {
 }
 
 # Usage:
-data_full_trends <- add_trend_category(data_full) 
+data_full_trends <- add_trend_category(data) %>%
+  mutate(Name = paste(Common, SurveyName, sep = "_"))
 
-data_summary <- add_trend_category(data_full) %>%
+data_summary <- add_trend_category(data) %>%
   select(Region, SurveyName, Species, Common, TrendCategory) %>%
   distinct()
 ```
 
+```{r species flag function}
+
+data <- data_full_trends
+
+flag_spp <- function(data, survey){
+  
+  cat("taxonomy check for survey: ", survey, sep="\n")
+  
+  #select region (survey column)
+  data_survey <- data %>% 
+    dplyr::mutate(SurveyName = forcats::as_factor(SurveyName)) %>% 
+    dplyr::filter(SurveyName == survey)
+  
+  
+  #get grouped species names per year
+  df <- data_survey %>%
+    dplyr::select(Species, Year, Absence_Presence) %>%
+    dplyr::group_by(Species) %>%
+    dplyr::distinct()
+
+  
+  #make species x year matrix
+  years <- unique(df$Year)
+  df2 <- data.frame(matrix(ncol = length(years)+1, nrow = length(df$Species)))
+  x <- c('spp', unique(df$Year))
+  colnames(df2) <- x
+  df2$spp <- df$Species
+  
+  #fill up matrix with FALSE/TRUE depending on species presence/absence
+  n <- 2
+  for (y in years) {
+    df2[, n] <- sapply(df2$spp, function(spp_name) {
+      any(df$Species == spp_name & df$Year == y & df$Absence_Presence == 1)
+      })
+    n <- n + 1
+    }
+  
+  #summarize
+  df2 <- df2 %>%
+    dplyr::group_by(spp) %>%
+    dplyr::summarize_all(any)
+  
+  #create new dataframe
+  df3 <- data.frame(matrix(ncol = 3, nrow = length(df2$spp)))
+  colnames(df3) <- c('spp', 'rlmax', 'PresToAbs')
+  
+  #fill up the dataframe
+  for (n in 1:length(df2$spp)){
+    
+    #Compute the lengths and values of runs of equal values in a vector
+    r <- rle(df2[n,])
+    
+    sp <- c(df2[n,1])
+    
+    rlmax <- max(r$lengths)
+    
+    df3[n,1] <- sp
+    df3[n,2] <- rlmax #maximum run length
+    df3[n,3] <- length(r$values) #total nb of runs
+    
+  }
+  
+  #get species with maximum run length lower than 95% of the years (56)
+  #and that occurred in less than 4 runs
+  x <- round(0.95*length(years))
+  df3 <- df3[df3$rlmax < x,]
+  df3 <- df3[df3$PresToAbs < 4,]
+  
+  testdf <- data.frame(spp = df3$spp)
+  
+  if (dim(testdf)[1] > 0) {
+    
+    #write txt of flagged spp in region
+    # sink(here::here("outputs", "Flags", "taxonomic_flagging", paste0(region, "_flagspp.txt")))
+    # cat(testdf$spp, sep = " ; ")
+    # sink()
+    
+    #write stats of species flagged
+    # data_out <- data.frame("name" = c("Total number of species", "Percentage of species flagged"),
+    #                    "nb" = c(length(df2$spp), round(100*(length(testdf$spp) /  length(df2$spp)), 1)))
+    # write.csv(data_out, file = here::here("data_processing_rcode", "output", paste0(survey, "_stats.csv")), row.names = FALSE)
+    
+    #write df of species flagged
+    survey_clean <- gsub("[/\\]", "_", survey)  # Replace slashes/backslashes with underscore
+    write.csv(df3, file = here::here("data_processing_rcode", "output", "flags", paste0(survey_clean, "_flags.csv")), row.names = FALSE)
+    
+    #create absence dataframe for plotting
+    allyears <- min(years):max(years)
+    abs <- data.frame("accepted_name" = rep(df3$spp, each = length(allyears)),
+                      "year" = rep(allyears, length(df3$spp)))
+    
+    #get presence dataframe for plotting
+    pres <- subset(data_survey, Species %in% testdf$spp) %>%
+      dplyr::select(Species, Year)
+
+  }else{
+    
+    print("----- No species flagged for this region")
+  }
+  
+}
+
+```
 
 
-```{r viz of trends}
-trendsummary <- data_summary %>%
-  group_by(TrendCategory) %>%
-  summarize(n = n())
+```{r flag compilation}
 
-#Potentially Emerging (n=4)
-trend_emerging <- data_full_trends %>% 
-  filter(TrendCategory == "Potentially Emerging")
+survey_list <- unique(data_full_trends$SurveyName)
 
-ggplot(trend_emerging, aes(Year, Common)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Potentially Emerging") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis")
+for (i in survey_list) {
+  flag_spp(data, survey = i)
+}
 
-#Disappeared (n=15)
-trend_disapp <- data_full_trends %>% 
-  filter(TrendCategory == "Disappeared")
 
-ggplot(trend_disapp, aes(Year, Common)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Disappeared") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis")
+#bringing csv files back into combine them into one df
+folder_path <- here::here("data_processing_rcode", "output", "flags")
 
-#Potentially Disappearing (n=30)
-trend_potdis <- data_full_trends %>% 
-  filter(TrendCategory == "Potentially Disappearing")
+files <- list.files(path = folder_path, pattern = "\\.csv$", full.names = TRUE)
+# files_clean <- paste0(list.files(path = folder_path, pattern = "\\.csv$", full.names = FALSE)) 
+  
+df_list <- list()
 
-ggplot(trend_potdis, aes(Year, Common)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Potentially Disappearing") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis")
+for (n in seq_along(files)){
+  #read in csv
+  temp_df <- read_csv(files[n])
+  # Get the file name without path and extension
+  name <- tools::file_path_sans_ext(basename(files[n]))
+  # Remove the string "flag" at the end, if present
+  name <- sub("_flags$", "", name)
+  # Add the source column as the first column
+  temp_df <- cbind(survey = name, temp_df)
+  # Store in list
+  df_list[[n]] <- temp_df
+}
 
-#Sporadic - Primarily Absent (n=38)
-trend_spoab <- data_full_trends %>% 
-  filter(TrendCategory == "Sporadic - Primarily Absent")
+flags_combo <- do.call(rbind, df_list) %>% 
+  rename(SurveyName = survey,
+         Species = spp) %>% 
+  mutate(SurveyName = gsub("_", "/", SurveyName))
 
-p4 <- ggplot(trend_spoab, aes(Year, Common)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Sporadic - Primarily Absent") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis")
+flags_combo$Notes <- c(rep("Preliminary trend - under review", nrow(flags_combo)))
 
-ggplotly(p4)
-
-#Sporadic - Primarily Present (n=94)
-trend_spopre <- data_full_trends %>% 
-  filter(TrendCategory == "Sporadic - Primarily Present")
-
-p5 <- ggplot(trend_spopre, aes(Year, Common)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Sporadic - Primarily Present") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis")
-
-ggplotly(p5)
-
-#Established (n=146)
-trend_estab <- data_full_trends %>% 
-  filter(TrendCategory == "Established")
-
-p6 <- ggplot(trend_estab, aes(Year, Common)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Established") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis")
-
-ggplotly(p6)
-
-#Persistently Present (n=1123)
-trend_pres <- data_full_trends %>% 
-  filter(TrendCategory == "Persistently Present")
-
-# p7 <-
-ggplot(trend_pres, aes(Year, Common)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Persistently Present") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis")
-
-# ggplotly(p7)
-
-# [1] "Sporadic - Primarily Absent"  "Persistently Present"         "Established"                  "Sporadic - Primarily Present"
-# [5] "Potentially Disappearing"     "Disappeared"                  "Potentially Emerging"  
 ```
 
 
