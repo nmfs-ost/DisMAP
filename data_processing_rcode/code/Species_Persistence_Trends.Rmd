@@ -241,30 +241,7 @@ flag_spp <- function(data, survey){
     #get presence dataframe for plotting
     pres <- subset(data_survey, Species %in% testdf$spp) %>%
       dplyr::select(Species, Year)
-    
-    #make summary scatterplot for region
-    # p <- ggplot2::ggplot() +
-    #   #absences
-    #   ggplot2::geom_point(data = abs, ggplot2::aes(x = year, y = accepted_name, color = "black"), alpha = 0.2) +
-    #   #presences
-    #   ggplot2::geom_point(data = pres, ggplot2::aes(x = as.numeric(year), y = accepted_name, fill = "black")) +
-    #   ggplot2::ggtitle(paste0("Survey: ", SurveyName)) +
-    #   ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
-    #                  axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1, size = 9),
-    #                  text = element_text(size = 20),
-    #                  legend.position = "bottom") +
-    #   ggplot2::scale_fill_manual(values=c('black'), labels = c("presence"), name = "") +
-    #   ggplot2::scale_colour_manual(values=c('black'), labels = c("absence"), name = "") +
-    #   ggplot2::scale_x_continuous(breaks = allyears)
-    
-    #ggplot2::ggsave(p, filename = here::here("outputs", "Flags", "taxonomic_flagging", paste0(region, "_taxonomic_flagging.png")))
-    
-    # png(here::here("outputs", "Flags", "taxonomic_flagging", 
-    #                paste0(region, "_taxonomic_flagging.png")),
-    #     width = 16*200, height = 10*200, res = 200)
-    # print(p)
-    # dev.off()
-    
+
   }else{
     
     print("----- No species flagged for this region")
@@ -306,7 +283,8 @@ for (n in seq_along(files)){
 
 flags_combo <- do.call(rbind, df_list) %>% 
   rename(SurveyName = survey,
-         Species = spp)
+         Species = spp) %>% 
+  mutate(SurveyName = gsub("_", "/", SurveyName))
 
 flags_combo$Notes <- c(rep("Preliminary trend - under review", nrow(flags_combo)))
 
@@ -336,8 +314,9 @@ trendsummary <- data_summary %>%
 kable(trendsummary)
 
 ```
+
 The following visualizations capture the trends of the species that fall into each category, using this version of metrics.
-```{r viz of trends}
+```{r viz of trends, eval = FALSE}
 
 #regional review (temp)
 trend_NESpring <- data_full_trends %>% 
@@ -444,21 +423,3 @@ ggplotly(p4)
 
 ```
 
-
-### Problems
-
-The following trends are still categorized as "Potentially emerging", despite having many consecutive years of presence. Does this align will with our definition of "Potentially emerging"? Or would it be better suited for "Established" by this point?
-```{r ex2}
-ex2 <- data_full_trends4 %>% 
-  filter(TrendCategory == "Potentially Emerging") %>% 
-  filter(Common == "Oblique smoothcockle" | Common == "Atlantic moonfish")
-
-pex2 <- ggplot(ex2, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Potentially Emerging") +
-  theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 12))
-
-ggplotly(pex2)
-```
