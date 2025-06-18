@@ -90,6 +90,14 @@ data <- rbind(bfish, ai, ebs, gmex, goa, nbs, neus_fall, neus_spri, seus_fall, s
 
 ## Data Processing
 
+```{r tech report table, eval=FALSE}
+#eval default is false because this chunk is only needed for tech report generation
+summary <- data %>% 
+  group_by(region) %>% 
+  summarize(count = n_distinct(spp))
+
+```
+
 
 ### Biomass percentile
 This section captures the data by calculating percentile/rank of biomass of a specific species, compared to all the species biomass in that survey region and survey year.
