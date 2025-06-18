@@ -1959,7 +1959,8 @@ rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, prob
 
 # Compile BFISH data (Hawaii) =================================================
 
-bfish_catch <- read_csv(here::here("data_processing_rcode/data", "BFISH_DisMAP_2024_update_v2.csv"))
+bfish_catch <- read_csv(here::here("data_processing_rcode/data", "BFISH_DisMAP_2024_update_v2.csv")) %>%
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue)
 
 #NOTE: psu is changed to haulid in this dataset to help match the other fieldnames (helpful with compiling)
 #This should be reconciled ASAP
@@ -2135,6 +2136,7 @@ spplist <- presyrsum %>%
   filter(presyr >= 2) %>%
   select(region, spp, common)
 
+# these species were removed based on the 3/4 years criteria above but we have decided to add them back in based on commercial/recreational importance
 spp_addin<-read.csv("data_processing_rcode/data/Add_managed_spp.csv",header=T, sep=",")
 spplist<-rbind(spplist, spp_addin) %>%
   distinct()
@@ -2171,7 +2173,9 @@ spplist_IDW <- presyrsum %>%
   filter(presyr >= (maxyrs * 3/4)) %>%
   select(region, spp, common)
 
+# these species were removed based on the 3/4 years criteria above but we have decided to add them back in based on commercial/recreational importance
 spp_addin<-read.csv("data_processing_rcode/data/Add_managed_spp.csv",header=T, sep=",")
+
 spplist2<-rbind(spplist_IDW, spp_addin) %>%
   distinct() %>%
   mutate(DistributionProjectName="NMFS/Rutgers IDW Interpolation")
