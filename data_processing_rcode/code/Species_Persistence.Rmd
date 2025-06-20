@@ -44,13 +44,18 @@ The goals for this analysis are four-fold:
   + rare, 
   + less common,
   + common,
-  + abundant
+  + abundant,
   + or highly abundant
 * Measure overall prevalence pattern of a particular species, across all survey years
 * Categorize trend as:
-  + increasing, 
-  + decreasing,
-  + or consistent
+  + Persistently Present, 
+  + Emerged,
+  + Potentially Emerging,
+  + Potentially Disappearing,
+  + Disappeared,
+  + Sporadic - Primarily Present,
+  + or Sporadic - Primarily Absent
+
 
 
 ```{r wrangling, message = FALSE}
