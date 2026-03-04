@@ -73,6 +73,7 @@ bfish <- read_csv(here::here("data_processing_rcode/data", "BFISH_DisMAP_2024_up
 
 
 data <- rbind(data, bfish)
+rm(bfish)
 ```
 
 
@@ -85,10 +86,6 @@ summary <- data %>%
   summarize(count = n_distinct(spp))
 
 ```
-
-
-### Biomass percentile
-This section captures the data by calculating percentile/rank of biomass of a specific species, compared to all the species biomass in that survey region and survey year.
 
 ```{r prep}
 # need to edit naming for regions versus surveys
@@ -128,6 +125,8 @@ data_update$region <- ifelse(data_update$region_old == "Aleutian Islands", "Aleu
 
 ```
 
+### Biomass percentile
+This section captures the data by calculating percentile/rank of biomass of a specific species, compared to all the species biomass in that survey region and survey year.
 We calculate total biomass for each species in each year for each survey. Then we remove zero biomass records because these values would skew percentile calculations in the following step. These will be added back in after the percentile calculations.
 ```{r}
 data_sum <- data_update %>%
@@ -338,17 +337,6 @@ This section:
 - *Sporadic - Primarily Present*: Species is observed in over half of surveys but observations are inconsistent; and
 - *Sporadic - Primarily Absent*: Species is observed in less than half of surveys and observations are inconsistent.
 
-
-**Trend Category Metrics** (that is how the species were determined to be in each category)
-
-- *Persistently Present*: Observed in >=85% of survey years and observed in 4 out of the last 5 survey years
-- *Emerged*: Observed in >=50% of years, observed more in the second half of the survey years (compared to the first half of survey years), observed in >= 75% of the second half of survey years, and observed in at least nine (presence >= 9) of the final ten survey years
-- *Potentially Emerging*: Observed in <= 50% of years in the first half of survey years and observed in at least four (presence >= 4) of the final five survey years, or has one switch from not being observed to being observed (referred to as a "colonizing event") and has zero switches from being observed to not being observed (referred to as a leaving event)
-- *Potentially Disappearing*: Observed in >= 50% of years in the first half of survey years and observed in at most one (presence <= 1) of the final five survey years, or has one switch from being observed to not being observed (leaving event) and has zero switches from not being observed to being observed (colonizing event)
-- *Disappeared*: Observed in <=50% of years, observed more in the first half of the survey years (compared to the second half of survey years), observed in <= 25% of the second half of survey years, and observed in at most one (presence <= 1) of the final ten survey years
-- *Sporadic - Primarily Present*: Observed in >=50% of years
-- *Sporadic - Primarily Absent*: Observed in <50% of years
-
 ```{r organization}
 data_cumm <- data_full %>% 
   select(Region, SurveyName, Year, Species, Common, Absence_Presence)
@@ -447,54 +435,87 @@ data <- data_full %>%
 
 ```{r function add_trend_category}
 
-add_trend_category <- function(data) {
-  data %>%
-    arrange(Region, SurveyName, Species, Common, Year) %>%
-    group_by(Region, SurveyName, Species, Common) %>%
+add_trend_category <- function(data){
+    data %>%
+    arrange(region, FishRegionsurvey, spp, common, year) %>%
+    group_by(region, FishRegionsurvey, spp, common) %>%
     group_modify(~{
       df <- .x
       n_years <- nrow(df)
-      abs_vec <- df$Absence_Presence
-      percent_present <- sum(abs_vec == 1, na.rm = TRUE) / n_years
-
-      # Indices for first/last half
-      half_n <- floor(n_years / 2)
-      first_half_idx <- seq_len(half_n)
-      last_half_idx <- seq(n_years - half_n + 1, n_years)
-
-      abs_first_half <- if(length(first_half_idx) > 0) sum(abs_vec[first_half_idx] == 1, na.rm = TRUE) else NA_real_
-      abs_last_half <- if(length(last_half_idx) > 0) sum(abs_vec[last_half_idx] == 1, na.rm = TRUE) else NA_real_
-      percent_first_half <- if(length(first_half_idx) > 0) abs_first_half / length(first_half_idx) else NA_real_
-      percent_last_half <- if(length(last_half_idx) > 0) abs_last_half / length(last_half_idx) else NA_real_
-
-      # Indices for last 5 years
-      last5_n <- min(5, n_years)
-      last5_idx <- seq(n_years - last5_n + 1, n_years)
-      abs_last5 <- if(length(last5_idx) > 0) sum(abs_vec[last5_idx] == 1, na.rm = TRUE) else NA_real_
+      abs_vec <- as.numeric(df$Absence_Presence)
       
-      # Indices for last 10 years
+      # 1. Basic Stats
+      percent_present <- mean(abs_vec, na.rm = TRUE)
+      
+      # 2. Windowed Stats (First 1/3 vs Last 1/3)
+      third_n <- max(1, floor(n_years / 3))
+      first_third <- abs_vec[1:third_n]
+      last_third  <- abs_vec[(n_years - third_n + 1):n_years]
+      
+      mean_first <- mean(first_third, na.rm = TRUE)
+      mean_last  <- mean(last_third, na.rm = TRUE)
+      
+      # 3. Recent Window (Last 5 years)
+      last5_idx <- (max(1, n_years - 4)):n_years
+      recent_5  <- abs_vec[last5_idx]
+      sum_recent_5 <- sum(recent_5, na.rm = TRUE)
+      
+      # 4. New logic for the last 10 years
       last10_n <- min(10, n_years)
-      last10_idx <- seq(n_years - last10_n + 1, n_years)
-      abs_last10 <- if(length(last10_idx) > 0) sum(abs_vec[last10_idx] == 1, na.rm = TRUE) else NA_real_
-
+      last10_idx <- (n_years - last10_n + 1):n_years
+      recent_10 <- abs_vec[last10_idx]
+      mean_recent_10 <- mean(recent_10, na.rm = TRUE)
+      
+      # 3. Recent Window (Last 10 years)
+      last10_idx <- (max(1, n_years - 9)):n_years
+      recent_10  <- abs_vec[last10_idx]
+      sum_recent_10 <- sum(recent_10, na.rm = TRUE)
+      
+      # 5. Run Length Encoding (Streaks)
+      # Calculates the length of the final 'streak' of 1s or 0s
+      runs <- rle(abs_vec)
+      last_run_val <- tail(runs$values, 1)
+      last_run_len <- tail(runs$lengths, 1)
+      
+      # 5. Logic Hierarchy (Established vs. Trending)
       trend_category <- case_when(
-        percent_present >= 0.85 & abs_last5 >= 4 ~ "Persistently Present",
-        percent_present >= 0.5 & abs_last10 >= 9 &
-          percent_last_half >= 0.75 &
-          abs_first_half <= abs_last_half ~ "Emerged",
-        percent_present <= 0.5 & abs_last10 <= 1 &
-          percent_last_half <= 0.25 &
-          abs_first_half >= abs_last_half ~ "Disappeared",
-        abs_last5 >= 4 & percent_first_half <= 0.50 ~ "Potentially Emerging",
-        any(df$col == 1 & df$ext == 0, na.rm = TRUE) ~ "Potentially Emerging",
-        abs_last5 <= 1 & percent_first_half >= 0.50 ~ "Potentially Disappearing",
-        any(df$col == 0 & df$ext == 1, na.rm = TRUE) ~ "Potentially Disappearing",
-        percent_present >= 0.5 ~ "Sporadic - Primarily Present",
-        percent_present < 0.5 ~ "Sporadic - Primarily Absent",
-        TRUE ~ NA_character_
+        
+        # 1. PERSISTENTLY PRESENT
+        # Species that were ALWAYS high (not a new establishment)
+        # and any absences are not a recent streak of 3+ absences
+        percent_present >= 0.85 & !(last_run_val == 0 & last_run_len >= 3)
+        ~"Persistently Present",
+          
+        # 2, ABSENT / VAGRANT
+        # It was very rarely seen (percent_present <= 0.05)
+        # and if caught the hits aren't a recent streak of presences 
+        percent_present <= 0.05 & !(last_run_val == 1 & last_run_len >= 3) ~ "Absent",
+        
+        # 3. ESTABLISHED / SUSTAINED (Emerged + Stabilized)
+        # Low start/Sporadic start that is now high and consistent
+        #A species that has "stabilized" usually satisfies two conditions:
+          #High recent occupancy: They are present in almost all of the most recent years
+          #Low early occupancy: They were infrequent or absent in the beginning of the time series.
+        (mean_first <= 0.50 & mean_last >= 0.85 & last_run_val == 1 & last_run_len >=5) ~ "Established",
+        
+        # 4. POTENTIALLY EMERGING
+        # Trend is upward, caught recently, but not 'solid' yet
+        (mean_first <= 0.50 & mean_first < mean_last & sum_recent_5 >= 4) ~ "Potentially Emerging",
+        
+        # 5. DISSAPPEARED / SUSTAINED ABSENCE 
+        # high start, but gone now
+        (mean_first >= 0.50 & mean_last <= 0.15 & last_run_val == 0 & last_run_len >=5)
+        ~ "Dissappeared",
+        
+        # 6. POTENTIALLY DISAPPEARING
+        (mean_first >= 0.50 & mean_first > mean_last & sum_recent_5 <= 1) ~ "Potentially Disappearing",
+        
+        # 7. SPORADIC
+        TRUE ~ "Sporadic"
       )
+      
       df$TrendCategory <- trend_category
-      df
+      return(df)
     }) %>%
     ungroup()
 }
@@ -1270,11 +1291,11 @@ ggplot(trend_pres, aes(Year, Name)) +
 
 #Emerged
 trend_estab <- data_full_trends %>% 
-  filter(TrendCategory == "Emerged")
+  filter(TrendCategory == "Established")
 
 p6 <- ggplot(trend_estab, aes(Year, Name)) +
   geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Emerged") +
+  ggtitle("Established") +
   theme_minimal() +
   scale_fill_viridis(discrete=TRUE, option="viridis") +
   scale_y_discrete(label = function(x) stringr::str_trunc(x, 15))
@@ -1321,13 +1342,13 @@ p7 <- ggplot(trend_potdis, aes(Year, Name)) +
 
 ggplotly(p7)
 
-#Sporadic - Primarily Present 
+#Sporadic 
 trend_spopre <- data_full_trends %>% 
-  filter(TrendCategory == "Sporadic - Primarily Present")
+  filter(TrendCategory == "Sporadic")
 
 p5 <- ggplot(trend_spopre, aes(Year, Name)) +
   geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Sporadic - Primarily Present") +
+  ggtitle("Sporadic") +
   theme_minimal() +
   scale_fill_viridis(discrete=TRUE, option="viridis") +
   scale_y_discrete(label = function(x) stringr::str_trunc(x, 15))
@@ -1335,18 +1356,505 @@ p5 <- ggplot(trend_spopre, aes(Year, Name)) +
 ggplotly(p5)
 
 
-#Sporadic - Primarily Absent 
-trend_spoab <- data_full_trends %>% 
-  filter(TrendCategory == "Sporadic - Primarily Absent")
+```
 
-p4 <- ggplot(trend_spoab, aes(Year, Name)) +
-  geom_tile(aes(fill= Absence_Presence)) +
-  ggtitle("Sporadic - Primarily Absent") +
+##MANAGEMENT COUNCIL JURISDICTION ANALYSIS (for the NEFSC survey data only)
+The following script does the same analysis as above, but parses the NE Bottom trawl data out into the two different management council jurisdictions. 
+``` {r classify by fishery jurisdiction, eval = TRUE}
+
+library(sf)
+library(dplyr)
+
+# 1. Load multi-polygon shapefile
+boundaries <- st_read(here::here("data_processing_rcode/data/fishery_management_council_regions_20210609", "20210609_fishery_management_council_regions.shp"))
+boundaries_exploded<-st_cast(boundaries, "POLYGON")
+selected_boundaries<-boundaries_exploded %>%
+  filter(FishRegion %in% c("New England", "NEMA", "South Atlantic")) 
+# Apply the fix duplicate vertices issues
+map_cleaned <- st_make_valid(selected_boundaries)
+# Casts each individual Polygon back into its own Multipolygon wrapper
+EC_Councils <- st_cast(map_cleaned, "MULTIPOLYGON")
+
+# 2. Convert your dataframe to a spatial object
+# We'll create a copy so we don't overwrite the original 'df' immediately
+pts_sf <- st_as_sf(data_update, coords = c("lon", "lat"), crs = 4326, remove=FALSE)
+
+# 3. Align the Coordinate Reference Systems (Crucial!)
+EC_Councils <- st_transform(EC_Councils, st_crs(pts_sf))
+
+# 4. Perform a Left Spatial Join
+# 'left = TRUE' ensures we keep ALL points, even those that fall outside both polygons
+df_labeled_sf <- st_join(pts_sf, EC_Councils, join = st_intersects, left = TRUE)
+df_labeled_sf_NEUS <- df_labeled_sf %>%
+  filter(region=="Northeast US")
+
+# 5. Clean up and return to a standard dataframe
+df_NEUS <- df_labeled_sf_NEUS %>%
+  st_drop_geometry() %>%
+  select(region, survey, haulid, year, spp, common, wtcpue, stratum, stratumarea, lat, lon, depth, FishRegion) %>%
+  #filter(!is.na(FishRegion)) %>%
+  unite("FishRegionsurvey", FishRegion, survey, sep=" ", remove=FALSE)
+
+# 6. Visualize to make sure the points are labeled correctly 
+ggplot() +
+  geom_sf(data = EC_Councils, aes(fill = FishRegion), alpha = 0.3) +
+  geom_point(data = df_NEUS, aes(x=lon, y=lat, color = FishRegion)) +
   theme_minimal() +
-  scale_fill_viridis(discrete=TRUE, option="viridis") +
-  scale_y_discrete(label = function(x) stringr::str_trunc(x, 15))
-
-ggplotly(p4)
+  labs(title = "Points Labeled by Fishery Management Council Jurisdiction")
 
 ```
 
+#Proportion of total biomass by species in each Council region 
+We calculate total biomass for each species within each Council region for each year by survey, and then calculate the total biomass for each species caught in the NEFSC trawl survey, and determine what proportion of that total biomass falls within each Council Region. 
+
+```{r}
+data_sum_NEUSregions <- df_NEUS %>%
+  select(region, survey, year, spp, common, wtcpue, FishRegion, FishRegionsurvey) %>%
+  group_by(region, survey, year, spp, common, FishRegion, FishRegionsurvey) %>%
+  summarise(FMCwtcpue = sum(wtcpue))
+
+data_sum_Total <- df_NEUS %>%
+  select(region, survey, year, spp, common, wtcpue) %>%
+  group_by(region, survey, year, spp, common) %>%
+  summarise(Totwtcpue = sum(wtcpue))
+
+data_sum_All <- left_join(data_sum_NEUSregions, data_sum_Total, by=c("region", "survey", "year", "spp", "common"))%>%
+  filter(!is.na(FishRegion)) %>%
+  mutate(prop=if_else(Totwtcpue ==0, 0, FMCwtcpue/Totwtcpue))
+
+```
+
+## Presistence trend categories by species, FMC region, and survey 
+
+```{r}
+#add a presenece vs. absense column to the dataframe 
+data_sum_All$Absence_Presence <- ifelse(data_sum_All$FMCwtcpue == 0, "0",
+                                     ifelse(data_sum_All$FMCwtcpue > 0, "1", "NA"))
+
+data_cumm <- data_sum_All %>% 
+  select(region, survey, year, spp, common, FishRegion, FishRegionsurvey, Absence_Presence)
+
+data_cumm$Absence_Presence <- as.numeric(data_cumm$Absence_Presence)
+```
+
+To do this, first we identify instances in which a species shifts from being present in a FMC survey region one year to being absent in a survey the following year, and vice versa.
+```{r col vs ext}
+holding <- data.frame(FishRegionsurvey = character(), spp = character(), year = numeric(), Diff = numeric(), stringsAsFactors = FALSE)
+
+
+FMCsurveys <- unique(data_cumm$FishRegionsurvey)
+
+for(v in FMCsurveys) {
+
+  firstfilt <- data_cumm %>%
+    filter(FishRegionsurvey == v)
+
+  spps <- unique(firstfilt$spp)
+
+  for (p in spps) {
+
+    myfilt <- firstfilt %>%
+      filter(spp == p)
+
+    years <- c(myfilt$year)
+    years <- years[order(years)]
+
+
+    for (i in 1:(length(years)-1)) {
+
+      var_1 <- myfilt %>%
+        filter(year == years[i])
+
+      var_2 <- myfilt %>%
+        filter(year == years[i+1])
+
+      Diff <- var_2$Absence_Presence[1] - var_1$Absence_Presence[1]
+
+      temp <- data.frame(FishRegionsurvey = v, spp = p, year = years[i+1], Diff = Diff, stringsAsFactors = FALSE)
+
+      holding <- rbind(holding, temp)
+
+    }
+  }
+}
+
+```
+
+
+```{r adding common names}
+# Creating a species list will allow for joining in the common names at the end of the next chunk
+spp_list <- distinct(data_sum_All %>% 
+  ungroup() %>% 
+  select(FishRegionsurvey, spp, common))
+
+```
+
+
+```{r}
+# Identifying when species goes from absent to present in survey
+data_ce_col <- holding %>% 
+  filter(Diff == 1) %>% 
+  group_by(FishRegionsurvey, spp) %>% 
+  summarise(col = n())
+
+# Identifying when species goes from present to absent in survey
+data_ce_ext <- holding %>% 
+  filter(Diff == -1) %>% 
+  group_by(FishRegionsurvey, spp) %>% 
+  summarise(ext = n())
+
+# Identifying when species remains as either absent or present in survey
+data_ce_stable <- holding %>% 
+  filter(Diff == 0) %>% 
+  group_by(FishRegionsurvey, spp) %>% 
+  summarise(stable = n())
+
+# merging three objects above
+data_ce <- data_ce_stable %>%
+  full_join(data_ce_col, by = c("FishRegionsurvey", "spp")) %>% 
+  full_join(data_ce_ext, by = c("FishRegionsurvey", "spp")) %>% 
+  replace(is.na(.), 0) %>% 
+  select(-stable) %>% 
+  left_join(spp_list, by = c("FishRegionsurvey", "spp")) %>% 
+  select(FishRegionsurvey, spp, common, col, ext)
+```
+
+```{r build data df}
+#adding colonization and extinction event columns to data frame to use in trend categorization
+data <- data_sum_All %>% 
+  left_join(data_ce, by = c("FishRegionsurvey", "spp", "common"))
+
+```
+
+```{r function add_trend_category}
+
+add_trend_category <- function(data){
+    data %>%
+    arrange(region, FishRegionsurvey, spp, common, year) %>%
+    group_by(region, FishRegionsurvey, spp, common) %>%
+    group_modify(~{
+      df <- .x
+      n_years <- nrow(df)
+      abs_vec <- as.numeric(df$Absence_Presence)
+      
+      # 1. Basic Stats
+      percent_present <- mean(abs_vec, na.rm = TRUE)
+      
+      # 2. Windowed Stats (First 1/3 vs Last 1/3)
+      third_n <- max(1, floor(n_years / 3))
+      first_third <- abs_vec[1:third_n]
+      last_third  <- abs_vec[(n_years - third_n + 1):n_years]
+      
+      mean_first <- mean(first_third, na.rm = TRUE)
+      mean_last  <- mean(last_third, na.rm = TRUE)
+      
+      # 3. Recent Window (Last 5 years)
+      last5_idx <- (max(1, n_years - 4)):n_years
+      recent_5  <- abs_vec[last5_idx]
+      sum_recent_5 <- sum(recent_5, na.rm = TRUE)
+      
+      # 4. New logic for the last 10 years
+      last10_n <- min(10, n_years)
+      last10_idx <- (n_years - last10_n + 1):n_years
+      recent_10 <- abs_vec[last10_idx]
+      mean_recent_10 <- mean(recent_10, na.rm = TRUE)
+      
+      # 3. Recent Window (Last 10 years)
+      last10_idx <- (max(1, n_years - 9)):n_years
+      recent_10  <- abs_vec[last10_idx]
+      sum_recent_10 <- sum(recent_10, na.rm = TRUE)
+      
+      # 5. Run Length Encoding (Streaks)
+      # Calculates the length of the final 'streak' of 1s or 0s
+      runs <- rle(abs_vec)
+      last_run_val <- tail(runs$values, 1)
+      last_run_len <- tail(runs$lengths, 1)
+      
+      # 5. Logic Hierarchy (Established vs. Trending)
+      trend_category <- case_when(
+        
+        # 1. PERSISTENTLY PRESENT
+        # Species that were ALWAYS high (not a new establishment)
+        # and any absences are not a recent streak of 3+ absences
+        percent_present >= 0.85 & !(last_run_val == 0 & last_run_len >= 3)
+        ~"Persistently Present",
+          
+        # 2, ABSENT / VAGRANT
+        # It was very rarely seen (percent_present <= 0.05)
+        # and if caught the hits aren't a recent streak of presences 
+        percent_present <= 0.05 & !(last_run_val == 1 & last_run_len >= 3) ~ "Absent",
+        
+        # 3. ESTABLISHED / SUSTAINED (Emerged + Stabilized)
+        # Low start/Sporadic start that is now high and consistent
+        #A species that has "stabilized" usually satisfies two conditions:
+          #High recent occupancy: They are present in almost all of the most recent years
+          #Low early occupancy: They were infrequent or absent in the beginning of the time series.
+        (mean_first <= 0.50 & mean_last >= 0.85 & last_run_val == 1 & last_run_len >=5) ~ "Established",
+        
+        # 4. POTENTIALLY EMERGING
+        # Trend is upward, caught recently, but not 'solid' yet
+        (mean_first <= 0.50 & mean_first < mean_last & sum_recent_5 >= 4) ~ "Potentially Emerging",
+        
+        # 5. DISSAPPEARED / SUSTAINED ABSENCE 
+        # high start, but gone now
+        (mean_first >= 0.50 & mean_last <= 0.15 & last_run_val == 0 & last_run_len >=5)
+        ~ "Dissappeared",
+        
+        # 6. POTENTIALLY DISAPPEARING
+        (mean_first >= 0.50 & mean_first > mean_last & sum_recent_5 <= 1) ~ "Potentially Disappearing",
+        
+        # 7. SPORADIC
+        TRUE ~ "Sporadic"
+      )
+      
+      df$TrendCategory <- trend_category
+      return(df)
+    }) %>%
+    ungroup()
+}
+
+# This dataframe will be used for the final data exporting
+data_summary <- add_trend_category(data) %>%
+  select(region, survey, FishRegion, FishRegionsurvey, spp, common, year, FMCwtcpue, Totwtcpue, prop, Absence_Presence, TrendCategory) %>%
+  distinct() %>% 
+  mutate(FishRegionsurvey = as.character(FishRegionsurvey),
+         spp = as.character(spp))
+
+##Trend summaries
+category_summary <- data_summary %>%
+  group_by(FishRegionsurvey, TrendCategory) %>%
+  summarize(species_count = n_distinct(spp), .groups = "drop") %>%
+  arrange(FishRegionsurvey, desc(species_count))
+
+print(category_summary)
+
+#visualize, check, validate
+#Validation
+# 1. Select one representative species for each category
+examples <- data_summary %>%
+  group_by(TrendCategory) %>%
+  slice_sample(n = 1) %>%
+  pull(common)
+
+# 2. Filter data for these specific examples
+plot_data <- data_summary %>%
+  filter(common %in% examples) %>%
+  mutate(Absence_Presence = factor (Absence_Presence, levels = c(0,1)))
+
+# 3. Create the Validation Plot
+ggplot(plot_data, aes(x = year, y = common, fill = Absence_Presence)) +
+  geom_tile(color = "white", linewidth = 0.2) + # Adds a small border between tiles
+  facet_wrap(~TrendCategory, scales = "free_y", ncol = 1) + # Group by TrendCategory
+  scale_fill_manual(
+    values = c("0" = "#f8d7da", "1" = "#004085"), # Light red vs Deep blue
+    labels = c("Absent", "Present"),
+    name = "Status"
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Species Trend Validation: Occupancy Barcodes",
+    subtitle = "Visualizing the 'Sustained' vs 'Sporadic' patterns",
+    x = "Year",
+    y = "Species Common Name"
+  ) +
+  theme(
+    strip.text = element_text(face = "bold", size = 10),
+    panel.grid = element_blank(), # Remove grid lines for a cleaner tile look
+    axis.text.y = element_text(size = 8)
+  )
+```
+
+```{r}
+## Looking Across surveys for individual species view
+# 1. Select the species you want to investigate
+# You can change these names to the specific fish you are interested in
+selected_spp <- c("Centropristis striata") 
+
+plot_data <- data_summary %>%
+  filter(spp %in% selected_spp) %>%
+  # Ensure the status is a factor for the discrete color scale
+  mutate(Absence_Presence = factor(Absence_Presence, levels = c(0, 1)))
+
+# 2. Create the Plot
+ggplot(plot_data, aes(x = year, y = paste(FishRegionsurvey, "-", TrendCategory), fill = Absence_Presence)) +
+  geom_tile(color = "white", linewidth = 0.1) +
+  # Facet by species name, allowing each species to have its own block
+  facet_wrap(~common, ncol = 1, scales = "free_y") + 
+  scale_fill_manual(
+    values = c("0" = "#f8d7da", "1" = "#004085"), # Light red (absent) vs Deep blue (present)
+    labels = c("Absent", "Present"),
+    name = "Status"
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Regional Occupancy Barcodes by Species",
+    subtitle = "Comparing presence/absence patterns across different fish surveys",
+    x = "Year",
+    y = "Fish Region Survey"
+  ) +
+  theme(
+    # Make the species headers bold and distinct
+    strip.text = element_text(face = "bold", size = 12, color = "darkslategrey"),
+    # Clean up the background
+    panel.grid = element_blank(),
+    # Adjust survey labels to be readable
+    axis.text.y = element_text(size = 8),
+    legend.position = "bottom",
+    # Add spacing between the species facets
+    panel.spacing = unit(1, "lines")
+  )
+
+```
+
+## Increasing vs. decreasing vs. stable trends in proportion biomass
+This section is caculates trend in proportion within each FMC and adds to dataframe
+
+```{r packages}
+install.packages("trend")
+library(trend)
+```
+
+```{r biomass inc vs dec}
+# 1. Define a function to categorize the trend
+get_trend_status <- function(prop_vector) {
+  # 1. Remove NAs for the calculation
+  clean_vec <- na.omit(prop_vector)
+  
+  # 2. Check for minimum data points (need at least 5 for MK test)
+  if(length(clean_vec) < 5) return("Incomplete Data")
+  
+  # 3. Check if the values are constant (e.g., all 0 or all 1)
+  # If the difference between max and min is ~0, it's stable/zero
+  if(max(clean_vec) - min(clean_vec) < 1e-9) return("Stable (Zero/Constant)")
+  
+  # 4. Run the test now that we know there is variation
+  test <- trend::mk.test(clean_vec)
+  p <- test$p.value
+  s <- test$estimates[1] 
+  
+  if (p < 0.05) {
+    if (s > 0) return("Significant Increase")
+    else return("Significant Decrease")
+  } else {
+    return("Stable")
+  }
+}
+
+# 2. Apply to the dataframe and create a new column
+data_summary <- data_summary %>%
+  group_by(spp, FishRegionsurvey) %>%
+  mutate(trend_status = get_trend_status(prop)) %>%
+  ungroup()
+
+#add a shorthand trend name
+data_summary <- data_summary %>%
+  mutate(Trend = case_when(
+    trend_status == "Significant Increase" ~ "↑ Inc",
+    trend_status == "Significant Decrease" ~ "↓ Dec",
+    TRUE ~ "Stable"
+  ))
+
+
+```
+
+```{r}
+#Plot the data with the trends
+##selected subset of species
+selected_spp <- c("Centropristis striata") 
+plot_data_spring <- data_summary %>%
+  filter(spp %in% selected_spp) %>%
+  # Ensure the status is a factor for the discrete color scale
+  mutate(FishRegion = factor(FishRegion, 
+                               levels = c("New England", "NEMA", "South Atlantic"))) %>%
+  filter(survey=="NEFSC Spring Bottom Trawl")
+
+# Convert year to numeric
+plot_data_spring$year <- as.numeric(as.character(plot_data_spring$year)) 
+
+## create a summary table for the trends info 
+library(ggpubr) # Great for arranging tables and plots
+
+# 1. Create the summary table data
+summary_tab <- plot_data_spring %>%
+  distinct(FishRegion, trend_status) %>%
+  mutate(Trend = case_when(
+    trend_status == "Significant Increase" ~ "↑ Inc",
+    trend_status == "Significant Decrease" ~ "↓ Dec",
+    TRUE ~ "— Stable"
+  )) %>%
+  select(Jurisdiction = FishRegion, Trend)
+
+# 2. Turn that data into a clean-looking table object
+table_plot <- ggtexttable(summary_tab, rows = NULL, theme = ttheme("default"))
+
+##plot the data
+color_palette <- scale_fill_manual(
+  name = "Jurisdiction", # Legend title
+  values = c("#275F6E","#3B8EA5","#D1E3F0")) # Example colors: Blue, Dark Blue, Off-White
+
+
+barplot <- ggplot(plot_data_spring, aes(x = year, y = prop, fill = FishRegion)) +
+  geom_bar(stat = "identity", position = "stack", width = 1) +
+   # Color palette and legend
+  color_palette +
+    # Add the trend labels
+  # geom_text(data = trend_labels, 
+  #           aes(x = mid_year, y = 0.5, label = label_text), # y=0.5 places it in the middle height
+  #           color = "white", 
+  #           fontface = "bold",
+  #           size = 3,
+  #           inherit.aes = FALSE) + # Important: prevents geom_text from looking for 'fill'
+  facet_wrap(~ spp, ncol = 2) +
+  labs(title = "Biomass Proportions with Significant Trends (p < 0.05)",
+       x = "Year", y = "Proportion") +
+  theme(
+    strip.text = element_text(hjust = 0), # Align species titles left
+    legend.position = "bottom",
+    axis.text.x = element_text(angle = 0)
+  )
+
+final_output <- ggarrange(barplot, table_plot, ncol=1, heights=c(2,1))
+
+```
+
+```{r}
+#Looking at a stacked barplot of proportion of biomass in each FMC
+#Create the Stacked Barplot ---
+# Choose a color palette for your 3 jurisdictions
+color_palette <- scale_fill_manual(
+  name = "Jurisdiction", # Legend title
+  values = c("#275F6E","#3B8EA5","#D1E3F0") # Example colors: Blue, Dark Blue, Off-White
+)
+
+#select subset of species
+selected_spp <- c("Dipturus laevis", "Rhizoprionodon terraenovae",
+                  "Centropristis striata") 
+plot_data_spring <- data_summary %>%
+  filter(spp %in% selected_spp) %>%
+  # Ensure the status is a factor for the discrete color scale
+  mutate(FishRegion = factor(FishRegion, 
+                               levels = c("New England", "NEMA", "South Atlantic"))) %>%
+  filter(survey=="NEFSC Spring Bottom Trawl")
+
+ggplot(plot_data_spring, aes(x = year, y = prop, fill = FishRegion)) +
+    # Stacked bars
+  geom_bar(stat = "identity", position = "stack", width = 0.8) +
+    # Color palette and legend
+  color_palette +
+    # Faceting by species
+  facet_wrap(~ spp, ncol = 2, scales = "free_x") + # Use 'free_x' if years vary
+    # Axis and title formatting
+  scale_y_continuous(labels = scales::label_percent()) +
+  labs(
+    title = "Proportion of Biomass by Management Jurisdiction",
+    x = "Year",
+    y = "Proportion of Total Biomass"
+  ) +
+    # Theme and appearance settings
+  theme_bw() +
+  theme(
+    strip.text = element_text(hjust = 0), # Align species titles left
+    legend.position = "bottom",
+    axis.text.x = element_text(angle = 90, hjust = -1)
+  )
+```
