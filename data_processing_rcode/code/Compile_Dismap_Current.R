@@ -1,7 +1,7 @@
-## ---- DISMAP 1/16/2026
+## ---- DISMAP 3/30/2026
 ## updated script to include "expanded survey data" for the new Survey Data Module
 
-## updated thru 2023 survey data for all regions except SEUS and Gmex(which is thru 2022)
+## updated thru 2025 survey data for all regions
 
 #--------------------------------------------------------------------------------------#
 #### LOAD LIBRARIES AND FUNCTIONS ####
@@ -75,22 +75,19 @@ HQ_PLOTS <- FALSE
 # 3. Remove ai,ebs,gmex,goa,neus,seus,wcann,wctri, scot. Keep `dat`. #DEFAULT: FALSE
 REMOVE_REGION_DATASETS <- FALSE
 
-# # 4. Create graphs based on the data similar to those shown on the website and outputs them to pdf. #DEFAULT:FALSE
-# PLOT_CHARTS <- FALSE
-
-# 5. If you would like to write out the clean data, would you prefer it in Rdata or CSV form?  Note the CSV's are much larger than the Rdata files. #DEFAULT:TRUE, FALSE generates CSV's instead of Rdata.
+# 4. If you would like to write out the clean data, would you prefer it in Rdata or CSV form?  Note the CSV's are much larger than the Rdata files. #DEFAULT:TRUE, FALSE generates CSV's instead of Rdata.
 PREFER_RDATA <- TRUE
 
-# 6. Output the clean full master data frame. #DEFAULT:FALSE
+# 5. Output the clean full master data frame. #DEFAULT:FALSE
 WRITE_MASTER_DAT <- FALSE
 
-# 7. Output the clean trimmed data frame. #DEFAULT:FALSE
+# 6. Output the clean trimmed data frame. #DEFAULT:FALSE
 WRITE_TRIMMED_DAT <- TRUE
 
 # 7. Generate dat.exploded table. #OPTIONAL, DEFAULT:TRUE
 DAT_EXPLODED <- TRUE
 
-# 9. Output the dat.exploded table #DEFAULT:FALSE
+# 8. Output the dat.exploded table #DEFAULT:FALSE
 WRITE_DAT_EXPLODED <- FALSE
 
 
@@ -338,7 +335,7 @@ ak_full<- ak_full %>%
   dplyr::ungroup()
 
 # clean up
-rm(haul, catch)
+rm(haul, catch, species)
 
 # now that main data set has been compiled and cleaned/standardized, can split out the different surveys
 ### Aleutian Islands survey -----
@@ -776,77 +773,43 @@ rm(wctri_catch, wctri_haul, wctri_species, wctri_strats)
 # Compile WCANN ===========================================================
 print("Compile WCANN")
 wcann_catch <- read_csv(here::here("data_processing_rcode/data", "wcann_catch.csv"), col_types = cols(
-  catch_id = col_integer(),
-  common_name = col_character(),
-  cpue_kg_per_ha_der = col_double(),
-  cpue_numbers_per_ha_der = col_double(),
-  date_yyyymmdd = col_integer(),
-  depth_m = col_double(),
-  latitude_dd = col_double(),
-  longitude_dd = col_double(),
-  pacfin_spid = col_character(),
-  partition = col_character(),
-  performance = col_character(),
-  program = col_character(),
-  project = col_character(),
-  sampling_end_hhmmss = col_character(),
-  sampling_start_hhmmss = col_character(),
-  scientific_name = col_character(),
-  station_code = col_double(),
-  subsample_count = col_integer(),
-  subsample_wt_kg = col_double(),
-  total_catch_numbers = col_integer(),
-  total_catch_wt_kg = col_double(),
-  tow_end_timestamp = col_datetime(format = ""),
-  tow_start_timestamp = col_datetime(format = ""),
-  trawl_id = col_double(),
-  vessel = col_character(),
-  vessel_id = col_integer(),
   year = col_integer(),
-  year_stn_invalid = col_integer()
-)) %>%
-  select("trawl_id","year","longitude_dd","latitude_dd","depth_m","scientific_name","total_catch_wt_kg","cpue_kg_per_ha_der", "partition", "performance")
+  trawl_id = col_double(),
+  tow = col_double(),
+  performance = col_character(),
+  project = col_character(),
+  partition = col_character(),
+  common_name = col_character(),
+  scientific_name = col_character(),
+  cpue_kg_per_ha_der = col_double(),
+  depth_m = col_double()
+  ))[,-1] %>% # remove "row number" column
+    select ("year", "trawl_id", "tow", "performance", "project", "partition",
+                "common_name", "scientific_name", "cpue_kg_per_ha_der", "depth_m") %>%
+    filter(performance !='Unsatisfactory',
+           project =='Groundfish Slope and Shelf Combination Survey')
 
 wcann_haul <- read_csv(here::here("data_processing_rcode/data", "wcann_haul.csv"), col_types = cols(
-  area_swept_ha_der = col_double(),
-  date_yyyymmdd = col_integer(),
-  depth_hi_prec_m = col_double(),
-  invertebrate_weight_kg = col_double(),
-  latitude_hi_prec_dd = col_double(),
-  longitude_hi_prec_dd = col_double(),
-  mean_seafloor_dep_position_type = col_character(),
-  midtow_position_type = col_character(),
-  nonspecific_organics_weight_kg = col_double(),
-  performance = col_character(),
-  program = col_character(),
-  project = col_character(),
-  sample_duration_hr_der = col_double(),
-  sampling_end_hhmmss = col_character(),
-  sampling_start_hhmmss = col_character(),
-  station_code = col_double(),
-  tow_end_timestamp = col_datetime(format = ""),
-  tow_start_timestamp = col_datetime(format = ""),
-  trawl_id = col_double(),
-  vertebrate_weight_kg = col_double(),
-  vessel = col_character(),
-  vessel_id = col_integer(),
   year = col_integer(),
-  year_stn_invalid = col_integer()
-)) %>%
-  select("trawl_id","year","longitude_hi_prec_dd","latitude_hi_prec_dd","depth_hi_prec_m","area_swept_ha_der", "performance")
-# It is ok to get warning message that missing column names filled in: 'X1' [1].
+  trawl_id = col_double(),
+  tow = col_double(),
+  performance = col_character(),
+  project = col_character(),
+  longitude_dd = col_double(),
+  latitude_dd = col_double(),
+  depth_hi_prec_m = col_double()
+  ))[,-1] %>% # remove "row number" column
+select("trawl_id","tow", "year","project", "longitude_dd","latitude_dd","depth_hi_prec_m", "performance") %>%
+  filter(performance !='Unsatisfactory',
+         project =='Groundfish Slope and Shelf Combination Survey')
 
-wcann <- left_join(wcann_haul, wcann_catch, by = c("trawl_id", "year", "performance")) %>%
-  filter(performance !='Unsatisfactory')
-
-wcann <- wcann %>%
+wcann <- left_join(wcann_haul, wcann_catch, by = c("year", "trawl_id", "tow")) %>%
   mutate(
     # create haulid
-    haulid = trawl_id,
-    # Add "strata" (define by lat, lon and depth bands) where needed # no need to use lon grids on west coast (so narrow)
-    #stratum = paste(floor(latitude_dd)+0.5, floor(depth_m/100)*100 + 50, sep= "-"),
-    # adjust for tow area # kg per hectare (10,000 m2)
-    wtcpue = total_catch_wt_kg/area_swept_ha_der
+    haulid = trawl_id
+  ) %>%
+  rename(
+    wtcpue = cpue_kg_per_ha_der
   )
 
 wcann$stratum<-ifelse(wcann$latitude_dd <=35.5 & wcann$depth_hi_prec_m<=183, "35.5-183",
@@ -908,15 +871,6 @@ wcann <- wcann %>%
 
 
 if (HQ_DATA_ONLY == TRUE){
-  # if want to keep the same footprint as wctri
-  # how many rows of data will be lost?
-  # nrow(wcann) - nrow(filter(wcann, stratum %in% wctri_fltr$stratum))
-  # # percent that will be lost - 61% !
-  # print((nrow(wcann) - nrow(filter(wcann, stratum %in% wctri_fltr$stratum)))/nrow(wcann))
-  #
-  # wcann_fltr <- wcann %>%
-  #   filter(stratum %in% wctri_fltr$stratum)
-
   ## Use the full WCANN footprint -- don't match to the WCtri footprint
   p1 <- wcann %>%
     select(stratum, year) %>%
@@ -934,7 +888,7 @@ if (HQ_DATA_ONLY == TRUE){
     distinct() %>%
     group_by(stratum) %>%
     summarise(count = n()) %>%
-    filter(count>=21) #this ensures that we only use strata that are sampled in all years. Should be updated annually.
+    filter(count>=22) #this ensures that we only use strata that are sampled in all years. Should be updated annually.
 
   # how many rows will be lost if only stratum trawled ever year are kept?
   test2 <- wcann %>%
@@ -962,7 +916,7 @@ if (HQ_DATA_ONLY == TRUE){
     ggsave(plot = temp, filename = here::here("data_processing_rcode/output/plots", "wcann_hq_dat_removed.png"))
     rm(temp)
   }
-  rm(p1, p2)
+  rm(p1, p2, p3, p4, test, test2)
 }
 
 # cleanup
@@ -971,9 +925,10 @@ rm(wcann_catch, wcann_haul, wcann_strats)
 # Compile GMEX ===========================================================
 print("Compile GMEX")
 ##Read in data
-gmex_station <- read_csv(here::here("data_processing_rcode/data", "gmex_STAREC.csv"), col_types = cols(.default = col_character())) %>%
+gmex_station <- read_csv(here::here("data_processing_rcode/data", "gmex_starec.csv"), col_types = cols(.default = col_character())) %>%
   select('STATIONID', 'CRUISEID', 'CRUISE_NO', 'P_STA_NO', 'TIME_ZN', 'TIME_MIL', 'S_LATD', 'S_LATM', 'S_LOND', 'S_LONM', 'E_LATD', 'E_LATM', 'E_LOND', 'E_LONM', 'STAT_ZONE', 'DEPTH_SSTA', 'MO_DAY_YR', 'VESSEL_SPD', 'COMSTAT')
 
+## ISSUE: there are some longitudes that are not accurate (e.g., 913) which are not appearing for past trawls
 gmex_station <- type_convert(gmex_station, col_types = cols(
   STATIONID = col_integer(),
   CRUISEID = col_integer(),
@@ -981,13 +936,13 @@ gmex_station <- type_convert(gmex_station, col_types = cols(
   P_STA_NO = col_character(),
   TIME_ZN = col_integer(),
   TIME_MIL = col_character(),
-  S_LATD = col_integer(),
+  S_LATD = col_double(),
   S_LATM = col_double(),
-  S_LOND = col_integer(),
+  S_LOND = col_double(),
   S_LONM = col_double(),
-  E_LATD = col_integer(),
+  E_LATD = col_double(),
   E_LATM = col_double(),
-  E_LOND = col_integer(),
+  E_LOND = col_double(),
   E_LONM = col_double(),
   DEPTH_SSTA = col_double(),
   STAT_ZONE = col_double(),
@@ -998,7 +953,7 @@ gmex_station <- type_convert(gmex_station, col_types = cols(
 
 names(gmex_station)<-tolower(names(gmex_station))
 
-gmex_tow <-readr::read_delim(here::here("data_processing_rcode/data","gmex_INVREC.csv"),
+gmex_tow <-readr::read_delim(here::here("data_processing_rcode/data","gmex_invrec.csv"),
                              delim = ',', escape_backslash = T, escape_double = F)
 gmex_tow<-type_convert(gmex_tow, col_types = cols(
   INVRECID = col_integer(),
@@ -1034,8 +989,9 @@ gmex_tow<-type_convert(gmex_tow, col_types = cols(
 gmex_tow <- gmex_tow %>%
   select('CRUISEID','STATIONID', 'VESSEL', 'CRUISE_NO', 'P_STA_NO', 'INVRECID', 'GEAR_SIZE', 'GEAR_TYPE', 'MESH_SIZE', 'MIN_FISH', 'OP') %>%
   filter(GEAR_TYPE=='ST')
+names(gmex_tow) <- tolower(names(gmex_tow))
 
-gmex_bio <-readr::read_delim(here::here("data_processing_rcode/data","gmex_BGSREC.csv"),
+gmex_bio <-readr::read_delim(here::here("data_processing_rcode/data","gmex_bgsrec.csv"),
                              delim = ',', escape_backslash = T, escape_double = F)
 
 gmex_bio <- type_convert(gmex_bio, cols(
@@ -1050,10 +1006,10 @@ gmex_bio <- type_convert(gmex_bio, cols(
   BIO_BGS = col_integer(),
   SELECT_BGS = col_double()
 ))
+names(gmex_bio) <- tolower(names(gmex_bio))
 
-gmex_cruise <-read_csv(here::here("data_processing_rcode/data", "gmex_CRUISES.csv"), col_types = cols(.default = col_character())) %>%
+gmex_cruise <-read_csv(here::here("data_processing_rcode/data", "gmex_cruises.csv"), col_types = cols(.default = col_character())) %>%
   select(CRUISEID, VESSEL, TITLE)
-
 
 gmex_cruise <- type_convert(gmex_cruise, col_types = cols(CRUISEID = col_integer(), VESSEL = col_integer(), TITLE = col_character()))
 names(gmex_cruise)<-tolower(names(gmex_cruise))
@@ -1071,10 +1027,6 @@ gmex_spp<- gmex_spp %>%
 
 # This code updates the null invrecid values in gmex_bio based on stationid from gmex_tow.
 # Remaining null values (from reef fish cruises) are removed to create gmex_bio_mod.
-
-names(gmex_tow) <- tolower(names(gmex_tow))
-names(gmex_bio) <- tolower(names(gmex_bio))
-
 # get stationid and invrecid from gmex_tow
 get_stationid_invrecid <- gmex_tow %>%
   dplyr::select(stationid, invrecid) %>%
@@ -1087,7 +1039,7 @@ bgsrec_null_invrecid <- gmex_bio %>%
   dplyr::mutate(invrecid = inv_invrecid) %>%
   dplyr::select(-inv_invrecid)
 
-# extract bgsrec table records with valid invrecid
+# extract gmex_bio records with valid invrecid
 bgsrec_with_invrecid <- gmex_bio %>%
   dplyr::filter(!is.na(invrecid))
 
@@ -1099,7 +1051,7 @@ gmex_bio_mod <- bgsrec_null_invrecid %>%
   dplyr::arrange(bgsid)
 
 # drop unwanted data objects
-rm(bgsrec_null_invrecid,bgsrec_null_check1,bgsrec_null_check2,bgsrec_with_invrecid,get_stationid_invrecid, gmex_bio)
+rm(bgsrec_null_invrecid,bgsrec_with_invrecid,get_stationid_invrecid, gmex_bio)
 # garbage collect to free up memory
 gc()
 
@@ -1204,7 +1156,7 @@ gmex_tow <- gmex_tow %>%
     haulid = paste(formatC(vessel, width=3, flag=0), formatC(cruise_no, width=3, flag=0), formatC(p_sta_no, width=5, flag=0, format='d'), sep='-'),
     # Extract year where needed
     year = year(mo_day_yr),
-    # Calculate decimal lat and lon, depth in m, where needed
+    # # Calculate decimal lat and lon, depth in m, where needed
     s_latd = ifelse(s_latd == 0, NA, s_latd),
     s_lond = ifelse(s_lond == 0, NA, s_lond),
     e_latd = ifelse(e_latd == 0, NA, e_latd),
@@ -1216,11 +1168,10 @@ gmex_tow <- gmex_tow %>%
   filter(year >= 2010)
 
 
-## Create gmex object by left_joining gmex_bio_utax3 to gmex_tow
+## Merge gmex_tow with updated gmex_bio tables (e.g., gmex_bio_utax3) to create gmex object
 ## Counts and weights collapsed for multiple records for a taxa within an invrecid.
 gmex <- gmex_tow %>%
   left_join(gmex_bio_utax3, by = c("cruiseid","stationid","invrecid"))
-
 
 gmex <- gmex %>%
   dplyr::mutate(uop = op) %>%
@@ -1361,17 +1312,25 @@ rm(gmex_bio, gmex_cruise, gmex_spp, gmex_station, gmex_tow, problems, gmex_bio_m
 
 # Compile Northeast US ===========================================================
 print("Compile NEUS")
-## 2023 update, NEFSC gave data set already with the conversions done
+## starting in 2023 update, NEFSC gave data set already with the conversions done
 #read strata file
 neus_strata <- read_csv(here::here("data_processing_rcode/data", "neus_strata.csv"), col_types = cols(.default = col_character())) %>%
   select(stratum, stratum_area) %>%
   mutate(stratum = as.double(stratum)) %>%
   distinct()
 
-#read in catch file, which includes both spring and fall survey. Need to parse them out
+#read in catch file, which includes both spring and fall survey thru 2024. Need to parse them out
 neus_catch <- read.csv("data_processing_rcode/data/neus_catch.csv", header=T, sep=",")%>%
   filter(!is.na(SCINAME)) %>%
   mutate(SVSPP = as.character(SVSPP))
+
+#read in 2025 data
+neus_catch_2025<-read.csv("data_processing_rcode/data/NEFSC_BTS_ALLCATCHES_2025SPR_FALL.csv", header=T, sep=",")%>%
+  filter(!is.na(SCINAME)) %>%
+  mutate(SVSPP = as.character(SVSPP))
+
+neus_catch<- rbind(neus_catch, neus_catch_2025)
+
 neus_fall_catch<-neus_catch %>%
   filter(SEASON=="FALL")
 neus_spring_catch<-neus_catch %>%
@@ -1451,10 +1410,10 @@ if (HQ_DATA_ONLY == TRUE){
     select(stratum, year) %>%
     distinct() %>%
     group_by(stratum) %>%
-    summarise(count = n()) %>%
-    filter(count >= 47)
+    summarise(count = n())%>%
+    filter(count >= 50)
 
-  # how many rows will be lost if only stratum trawled fairly consistently (>46 years - so all but 2 of the years) are kept?
+  # how many rows will be lost if only stratum trawled fairly consistently (>48 years - so all but 2 of the years) are kept?
   test2 <- neus_fall %>%
     filter(year != 2017, year > 1973) %>%
     filter(stratum %in% test$stratum)
@@ -1554,7 +1513,7 @@ if (HQ_DATA_ONLY == TRUE){
     distinct() %>%
     group_by(stratum) %>%
     summarise(count = n())%>%
-    filter(count >= 45) #Update annually; note: every year would be 47, but that would lost some key strata in the south
+    filter(count >= 46) #Update annually; note: every year would be 48, but that would lost some key strata in the south
 
   # how many rows will be lost if only stratum trawled ALMOST ever year are kept?
   test2 <- neus_spring %>%
@@ -1592,18 +1551,15 @@ rm(neus_strata)
 # Compile SEUS ===========================================================
 print("Compile SEUS")
 # turns everything into a character so import as character anyway
-seus_catch <- read_csv(here::here("data_processing_rcode", "data", "seus_catch.csv"), col_types = cols(.default = col_character())) %>%
-  # remove symbols
+#starting in 2026 the files were provided in a new format requiring changes to code structure
+install.packages("readxl")
+library(readxl)
+
+seus_catch<- read_excel(here::here("data_processing_rcode", "data", "SEAMAP-SA_CTS.xlsx"), sheet = "CTS_AbundBio_1989-2025") %>%
+# remove symbols
   mutate_all(list(~str_replace(., "=", ""))) %>%
   mutate_all(list(~str_replace(., '"', ''))) %>%
   mutate_all(list(~str_replace(., '\"', '')))
-
-# The 9 parsing failures are due to the metadata at the end of the file that does not fit into the data columns
-
-# problems should have 0 obs
-problems <- problems(seus_catch) %>%
-  filter(!is.na(col))
-stopifnot(nrow(problems) == 0)
 
 # convert the columns to their correct formats
 seus_catch <- type_convert(seus_catch, col_types = cols(
@@ -1611,67 +1567,70 @@ seus_catch <- type_convert(seus_catch, col_types = cols(
   PROJECTAGENCY = col_character(),
   DATE = col_character(),
   EVENTNAME = col_character(),
-  COLLECTIONNUMBER = col_character(),
+  #COLLECTIONNUMBER = col_character(),
   VESSELNAME = col_character(),
   GEARNAME = col_character(),
-  GEARCODE = col_character(),
-  SPECIESCODE = col_character(),
+  #GEARCODE = col_character(),
+  #SPECIESCODE = col_character(),
   MRRI_CODE = col_character(),
   SPECIESSCIENTIFICNAME = col_character(),
-  SPECIESCOMMONNAME = col_character(),
+  #SPECIESCOMMONNAME = col_character(),
   NUMBERTOTAL = col_integer(),
   SPECIESTOTALWEIGHT = col_double(),
-  SPECIESSUBWEIGHT = col_double(),
-  SPECIESWGTPROCESSED = col_character(),
-  WEIGHTMETHODDESC = col_character(),
-  ORGWTUNITS = col_character(),
+  #SPECIESSUBWEIGHT = col_double(),
+  #SPECIESWGTPROCESSED = col_character(),
+  #WEIGHTMETHODDESC = col_character(),
+  #ORGWTUNITS = col_character(),
   EFFORT = col_character(),
-  CATCHSUBSAMPLED = col_logical(),
-  CATCHWEIGHT = col_double(),
-  CATCHSUBWEIGHT = col_double(),
-  TIMESTART = col_character(),
+  #CATCHSUBSAMPLED = col_logical(),
+  #CATCHWEIGHT = col_double(),
+  #CATCHSUBWEIGHT = col_double(),
+  #TIMESTART = col_character(),
   DURATION = col_integer(),
-  TOWTYPETEXT = col_character(),
-  LOCATION = col_character(),
+  #TOWTYPETEXT = col_character(),
+  #LOCATION = col_character(),
   REGION = col_character(),
   DEPTHZONE = col_character(),
-  ACCSPGRIDCODE = col_character(),
-  STATIONCODE = col_character(),
-  EVENTTYPEDESCRIPTION = col_character(),
+  #ACCSPGRIDCODE = col_character(),
+  #STATIONCODE = col_character(),
+  #EVENTTYPEDESCRIPTION = col_character(),
   TEMPSURFACE = col_double(),
   TEMPBOTTOM = col_double(),
   SALINITYSURFACE = col_double(),
   SALINITYBOTTOM = col_double(),
-  SDO = col_character(),
-  BDO = col_character(),
-  TEMPAIR = col_double(),
+  #SDO = col_character(),
+  #BDO = col_character(),
+  #TEMPAIR = col_double(),
   LATITUDESTART = col_double(),
   LATITUDEEND = col_double(),
   LONGITUDESTART = col_double(),
   LONGITUDEEND = col_double(),
-  SPECSTATUSDESCRIPTION = col_character(),
-  LASTUPDATED = col_character(),
+  DEPTHSTART = col_double(),
+  DEPTHEND = col_double(),
+ # SPECSTATUSDESCRIPTION = col_character(),
+ # LASTUPDATED = col_character(),
   SEASON = col_character()
 ))
 
-seus_haul <- read_csv(here::here("data_processing_rcode/data", "seus_haul.csv"), col_types = cols(.default = col_character())) %>%
-  distinct(EVENTNAME, DEPTHSTART)  %>%
+seus_haul<- read_excel(here::here("data_processing_rcode", "data", "SEAMAP-SA_CTS.xlsx"), sheet = "CTS_Event_1989-2025") %>%
   # remove symbols
   mutate_all(list(~str_replace(., "=", ""))) %>%
   mutate_all(list(~str_replace(., '"', ''))) %>%
-  mutate_all(list(~str_replace(., '"', '')))
-
-# problems should have 0 obs
-problems <- problems(seus_haul) %>%
-  filter(!is.na(col))
-stopifnot(nrow(problems) == 0)
+  mutate_all(list(~str_replace(., '\"', '')))
 
 seus_haul <- type_convert(seus_haul, col_types = cols(
   EVENTNAME = col_character(),
   DEPTHSTART = col_integer()
 ))
 
-seus <- left_join(seus_catch, seus_haul, by = "EVENTNAME")
+##merge catch and haul dataframes
+# Find all columns that exist in both datasets, excluding your join key
+common_cols <- intersect(names(seus_catch), names(seus_haul))
+cols_to_drop <- setdiff(common_cols, "EVENTNAME")
+
+# Join while dropping all of them from the second dataframe
+seus <- seus_catch %>%
+  left_join(seus_haul %>% select(-all_of(cols_to_drop)), by = "EVENTNAME")
 
 # contains strata areas
 seus_strata <- read_csv(here::here("data_processing_rcode/data", "seus_strata.csv"), col_types = cols(
@@ -1691,61 +1650,58 @@ seus <- left_join(seus, seus_strata, by = "STRATA")
 
 #Survey was changed in 2023 to reflect new months categorized in each season
 #We want to preserve the historical season definitions but assign the new definitions for years 2023 and above
-#So, here we break datasets in to pre2023 and post2023 to assign seasons and then recombine
+#So, here we break dataset in to pre2023 and post2023 to assign seasons and then recombine
 seus_pre2023 <- seus %>%
   filter(EVENTNAME < 2023000)
 
 seus_post2023 <- seus %>%
   filter(EVENTNAME >= 2023000)
 
-seus_post2023$SEASON <- ifelse(seus_post2023$SEASON == "AFAL", "fall",
-                               ifelse(seus_post2023$SEASON == "ASPR", "spring", NA))
+seus_post2023 <- seus_post2023 %>%
+  mutate(SEASON = ifelse(MONTH >= 4 & MONTH <= 6, "spring", SEASON),
+         SEASON = ifelse(MONTH >= 8 & MONTH <= 12, "fall", SEASON))
 
 #Create a 'SEASON' column using 'MONTH' as a criteria
 seus_pre2023 <- seus_pre2023 %>%
-  mutate(DATE = as.Date(DATE, "%m/%d/%Y"),
-         MONTH = month(DATE)) %>%
-  # create season column -- FLAG, in 2023 the survey was conducted in two "seasons" see here for details: https://seamap.org/seamap-sa-coastal-trawl/
-  mutate(SEASON = NA,
-         SEASON = ifelse(MONTH >= 1 & MONTH <= 3, "winter", SEASON),
+  mutate(SEASON = ifelse(MONTH >= 1 & MONTH <= 3, "winter", SEASON),
          SEASON = ifelse(MONTH >= 4 & MONTH <= 6, "spring", SEASON),
          SEASON = ifelse(MONTH >= 7 & MONTH <= 8, "summer", SEASON),
          #September EVENTS were grouped with summer, should be fall because all
          #hauls made in late-September during fall-survey
-         SEASON = ifelse(MONTH >= 9 & MONTH <= 12, "fall", SEASON)) %>%
-  select(-MONTH)
+         SEASON = ifelse(MONTH >= 9 & MONTH <= 12, "fall", SEASON))
 
 seus <- rbind(seus_post2023, seus_pre2023)
 
 # find rows where weight wasn't provided for a species
+## ISSUE: are 0 or very small wgts (e.g., 0.001) when there was 1 or 2 of a species caught errors?
 misswt <- seus %>%
   filter(is.na(SPECIESTOTALWEIGHT)) %>%
-  select(SPECIESCODE, SPECIESSCIENTIFICNAME) %>%
+  select(MRRI_CODE, SPECIESSCIENTIFICNAME) %>%
   distinct()
 
-# calculate the mean weight for those species
-meanwt <- seus %>%
-  filter(SPECIESCODE %in% misswt$SPECIESCODE) %>%
-  group_by(SPECIESCODE) %>%
-  summarise(mean_wt = mean(SPECIESTOTALWEIGHT, na.rm = T))
-
-# rows that need to be changed
-change <- seus %>%
-  filter(is.na(SPECIESTOTALWEIGHT))
-
-# remove those rows from SEUS
-seus <- anti_join(seus, change)
-
-# change the rows
-change <- change %>%
-  select(-SPECIESTOTALWEIGHT)
-
-# update the column values
-change <- left_join(change, meanwt, by = "SPECIESCODE") %>%
-  rename(SPECIESTOTALWEIGHT = mean_wt)
-
-# rejoin to the data
-seus <- rbind(seus, change)
+    # # calculate the mean weight for those species
+    # meanwt <- seus %>%
+    #   filter(SPECIESCODE %in% misswt$SPECIESCODE) %>%
+    #   group_by(SPECIESCODE) %>%
+    #   summarise(mean_wt = mean(SPECIESTOTALWEIGHT, na.rm = T))
+    #
+    # # rows that need to be changed
+    # change <- seus %>%
+    #   filter(is.na(SPECIESTOTALWEIGHT))
+    #
+    # # remove those rows from SEUS
+    # seus <- anti_join(seus, change)
+    #
+    # # change the rows
+    # change <- change %>%
+    #   select(-SPECIESTOTALWEIGHT)
+    #
+    # # update the column values
+    # change <- left_join(change, meanwt, by = "SPECIESCODE") %>%
+    #   rename(SPECIESTOTALWEIGHT = mean_wt)
+    #
+    # # rejoin to the data
+    # seus <- rbind(seus, change)
 
 
 #Data entry error fixes for lat/lon coordinates
@@ -1759,6 +1715,7 @@ seus <- seus %>%
     LATITUDEEND = ifelse(LATITUDEEND  > 100, LATITUDEEND/10, LATITUDEEND)
   )
 
+### STOPPED HERE 3/27/2026: Need to reach back out to AMY in SE about the below code. not sure it is all needed anymore
 # calculate trawl distance in order to calculate effort
 # create a matrix of starting positions
 start <- as.matrix(seus[,c("LONGITUDESTART", "LATITUDESTART")], nrow = nrow(seus), ncol = 2)

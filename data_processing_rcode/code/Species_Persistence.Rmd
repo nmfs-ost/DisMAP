@@ -76,17 +76,7 @@ data <- rbind(data, bfish)
 rm(bfish)
 ```
 
-
 ## Data Processing
-
-```{r tech report table, eval=FALSE}
-#eval default is false because this chunk is only needed for tech report generation
-summary <- data %>% 
-  group_by(region) %>% 
-  summarize(count = n_distinct(spp))
-
-```
-
 ```{r prep}
 # need to edit naming for regions versus surveys
 data$survey <- ifelse(data$region == "Aleutian Islands", "Aleutian Islands Bottom Trawl Survey",
@@ -437,8 +427,8 @@ data <- data_full %>%
 
 add_trend_category <- function(data){
     data %>%
-    arrange(region, FishRegionsurvey, spp, common, year) %>%
-    group_by(region, FishRegionsurvey, spp, common) %>%
+    arrange(Region, SurveyName, Species, Common, Year) %>%
+    group_by(Region, SurveyName, Species, Common) %>%
     group_modify(~{
       df <- .x
       n_years <- nrow(df)
@@ -1289,7 +1279,7 @@ ggplot(trend_pres, aes(Year, Name)) +
   scale_fill_viridis(discrete=TRUE, option="viridis") +
   scale_y_discrete(label = function(x) stringr::str_trunc(x, 15))
 
-#Emerged
+#Established
 trend_estab <- data_full_trends %>% 
   filter(TrendCategory == "Established")
 
@@ -1438,7 +1428,7 @@ data_cumm$Absence_Presence <- as.numeric(data_cumm$Absence_Presence)
 ```
 
 To do this, first we identify instances in which a species shifts from being present in a FMC survey region one year to being absent in a survey the following year, and vice versa.
-```{r col vs ext}
+```{r colinization vs. extinction events}
 holding <- data.frame(FishRegionsurvey = character(), spp = character(), year = numeric(), Diff = numeric(), stringsAsFactors = FALSE)
 
 
@@ -1481,7 +1471,7 @@ for(v in FMCsurveys) {
 ```
 
 
-```{r adding common names}
+```{r adding common}
 # Creating a species list will allow for joining in the common names at the end of the next chunk
 spp_list <- distinct(data_sum_All %>% 
   ungroup() %>% 
@@ -1519,14 +1509,14 @@ data_ce <- data_ce_stable %>%
   select(FishRegionsurvey, spp, common, col, ext)
 ```
 
-```{r build data df}
+```{r build dataframe}
 #adding colonization and extinction event columns to data frame to use in trend categorization
 data <- data_sum_All %>% 
   left_join(data_ce, by = c("FishRegionsurvey", "spp", "common"))
 
 ```
 
-```{r function add_trend_category}
+```{r add_trend_category function}
 
 add_trend_category <- function(data){
     data %>%
@@ -1710,11 +1700,10 @@ ggplot(plot_data, aes(x = year, y = paste(FishRegionsurvey, "-", TrendCategory),
 This section is caculates trend in proportion within each FMC and adds to dataframe
 
 ```{r packages}
-install.packages("trend")
 library(trend)
 ```
 
-```{r biomass inc vs dec}
+```{r prop inc vs dec}
 # 1. Define a function to categorize the trend
 get_trend_status <- function(prop_vector) {
   # 1. Remove NAs for the calculation
@@ -1776,13 +1765,7 @@ library(ggpubr) # Great for arranging tables and plots
 
 # 1. Create the summary table data
 summary_tab <- plot_data_spring %>%
-  distinct(FishRegion, trend_status) %>%
-  mutate(Trend = case_when(
-    trend_status == "Significant Increase" ~ "↑ Inc",
-    trend_status == "Significant Decrease" ~ "↓ Dec",
-    TRUE ~ "— Stable"
-  )) %>%
-  select(Jurisdiction = FishRegion, Trend)
+  distinct(FishRegion, TrendCategory, Trend) 
 
 # 2. Turn that data into a clean-looking table object
 table_plot <- ggtexttable(summary_tab, rows = NULL, theme = ttheme("default"))
@@ -1816,45 +1799,8 @@ barplot <- ggplot(plot_data_spring, aes(x = year, y = prop, fill = FishRegion)) 
 final_output <- ggarrange(barplot, table_plot, ncol=1, heights=c(2,1))
 
 ```
-
-```{r}
-#Looking at a stacked barplot of proportion of biomass in each FMC
-#Create the Stacked Barplot ---
-# Choose a color palette for your 3 jurisdictions
-color_palette <- scale_fill_manual(
-  name = "Jurisdiction", # Legend title
-  values = c("#275F6E","#3B8EA5","#D1E3F0") # Example colors: Blue, Dark Blue, Off-White
-)
-
-#select subset of species
-selected_spp <- c("Dipturus laevis", "Rhizoprionodon terraenovae",
-                  "Centropristis striata") 
-plot_data_spring <- data_summary %>%
-  filter(spp %in% selected_spp) %>%
-  # Ensure the status is a factor for the discrete color scale
-  mutate(FishRegion = factor(FishRegion, 
-                               levels = c("New England", "NEMA", "South Atlantic"))) %>%
-  filter(survey=="NEFSC Spring Bottom Trawl")
-
-ggplot(plot_data_spring, aes(x = year, y = prop, fill = FishRegion)) +
-    # Stacked bars
-  geom_bar(stat = "identity", position = "stack", width = 0.8) +
-    # Color palette and legend
-  color_palette +
-    # Faceting by species
-  facet_wrap(~ spp, ncol = 2, scales = "free_x") + # Use 'free_x' if years vary
-    # Axis and title formatting
-  scale_y_continuous(labels = scales::label_percent()) +
-  labs(
-    title = "Proportion of Biomass by Management Jurisdiction",
-    x = "Year",
-    y = "Proportion of Total Biomass"
-  ) +
-    # Theme and appearance settings
-  theme_bw() +
-  theme(
-    strip.text = element_text(hjust = 0), # Align species titles left
-    legend.position = "bottom",
-    axis.text.x = element_text(angle = 90, hjust = -1)
-  )
+##Data Expore: NEFSC FMC trends 
+```{r NEFSC data export}
+write.csv(data_summary, here::here("data_processing_rcode","output","data_clean","NEFSC_FMC_SpeciesPersistenceIndicatorTrend.csv"))
 ```
+
