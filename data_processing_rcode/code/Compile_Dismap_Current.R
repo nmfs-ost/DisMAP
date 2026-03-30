@@ -320,15 +320,11 @@ ak_full<- ak_full %>%
                   # remove any additional rows where spp contains the word "egg"
                   !grepl("egg", spp),
                 !grepl("Polychaete tubes", spp)) %>%
-  readr::type_convert(col_types = cols(
-    lat = col_double(),
-    lon = col_double(),
-    year = col_integer(),
-    wtcpue = col_double(),
-    spp = col_character(),
-    depth = col_integer(),
-    haulid = col_character()
-  )) %>%
+  mutate(
+    across(c(lat, lon, wtcpue), as.numeric),
+    across(c(year, depth), as.integer),
+    across(c(spp, haulid), as.character)
+  ) %>%
   dplyr::group_by(region, haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>%
   dplyr::summarise(wtcpue = sum(wtcpue, na.rm = TRUE)) %>%
   dplyr::select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue) %>%
@@ -774,7 +770,7 @@ rm(wctri_catch, wctri_haul, wctri_species, wctri_strats)
 print("Compile WCANN")
 wcann_catch <- read_csv(here::here("data_processing_rcode/data", "wcann_catch.csv"), col_types = cols(
   year = col_integer(),
-  trawl_id = col_double(),
+  trawl_id = col_character(),
   tow = col_double(),
   performance = col_character(),
   project = col_character(),
@@ -791,7 +787,7 @@ wcann_catch <- read_csv(here::here("data_processing_rcode/data", "wcann_catch.cs
 
 wcann_haul <- read_csv(here::here("data_processing_rcode/data", "wcann_haul.csv"), col_types = cols(
   year = col_integer(),
-  trawl_id = col_double(),
+  trawl_id = col_character(),
   tow = col_double(),
   performance = col_character(),
   project = col_character(),
@@ -1156,6 +1152,9 @@ gmex_tow <- gmex_tow %>%
     haulid = paste(formatC(vessel, width=3, flag=0), formatC(cruise_no, width=3, flag=0), formatC(p_sta_no, width=5, flag=0, format='d'), sep='-'),
     # Extract year where needed
     year = year(mo_day_yr),
+    # fix data entry errors for lon (longitudes < - 360 (like -900) don't exist and are due to missing decimal)
+    s_lond = ifelse(s_lond > 360, s_lond/10, s_lond),
+    e_lond = ifelse(e_lond > 360, e_lond/10, e_lond),
     # # Calculate decimal lat and lon, depth in m, where needed
     s_latd = ifelse(s_latd == 0, NA, s_latd),
     s_lond = ifelse(s_lond == 0, NA, s_lond),
@@ -1552,7 +1551,7 @@ rm(neus_strata)
 print("Compile SEUS")
 # turns everything into a character so import as character anyway
 #starting in 2026 the files were provided in a new format requiring changes to code structure
-install.packages("readxl")
+#install.packages("readxl")
 library(readxl)
 
 seus_catch<- read_excel(here::here("data_processing_rcode", "data", "SEAMAP-SA_CTS.xlsx"), sheet = "CTS_AbundBio_1989-2025") %>%
@@ -1581,7 +1580,7 @@ seus_catch <- type_convert(seus_catch, col_types = cols(
   #SPECIESWGTPROCESSED = col_character(),
   #WEIGHTMETHODDESC = col_character(),
   #ORGWTUNITS = col_character(),
-  EFFORT = col_character(),
+  EFFORT = col_double(),
   #CATCHSUBSAMPLED = col_logical(),
   #CATCHWEIGHT = col_double(),
   #CATCHSUBWEIGHT = col_double(),
@@ -1673,7 +1672,7 @@ seus_pre2023 <- seus_pre2023 %>%
 seus <- rbind(seus_post2023, seus_pre2023)
 
 # find rows where weight wasn't provided for a species
-## ISSUE: are 0 or very small wgts (e.g., 0.001) when there was 1 or 2 of a species caught errors?
+## ISSUE: are 0 or very small wgts (e.g., 0.001) when there was 1 or 2 of a species caught, errors?
 misswt <- seus %>%
   filter(is.na(SPECIESTOTALWEIGHT)) %>%
   select(MRRI_CODE, SPECIESSCIENTIFICNAME) %>%
@@ -1715,26 +1714,16 @@ seus <- seus %>%
     LATITUDEEND = ifelse(LATITUDEEND  > 100, LATITUDEEND/10, LATITUDEEND)
   )
 
-### STOPPED HERE 3/27/2026: Need to reach back out to AMY in SE about the below code. not sure it is all needed anymore
-# calculate trawl distance in order to calculate effort
-# create a matrix of starting positions
-start <- as.matrix(seus[,c("LONGITUDESTART", "LATITUDESTART")], nrow = nrow(seus), ncol = 2)
-# create a matrix of ending positions
-end <- as.matrix(seus[,c("LONGITUDEEND", "LATITUDEEND")], nrow = nrow(seus), ncol = 2)
-# add distance to seus table
+### In 2026 the data provided provided an Area Swept value (=EFFORT) and also a species total weight that already combined
+    # port and starboard samples so the below script is not needed, but may be needed again in the future.
+  #NOTE NEEDED IN 2026: In seus there are two 'COLLECTIONNUMBERS' per 'EVENTNAME', with no exceptions,
+  #for each side of the boat;
+  #EFFORT is always the same for each COLLECTIONNUMBER
+  # We sum the two tows in seus (port and starboard tows), and this steps deletes any haul id x spp duplicates
 seus <- seus %>%
-  mutate(distance_m = geosphere::distHaversine(p1 = start, p2 = end),
-         distance_km = distance_m / 1000.0,
-         distance_mi = distance_m / 1609.344) %>%
-  # calculate effort = mean area swept
-  # EFFORT = 0 where the boat didn't move, distance_m = 0
-  mutate(EFFORT = (13.5 * distance_m)/10000,
-         # Create a unique haulid
-         haulid = EVENTNAME,
-         # Extract year where needed
-         year = substr(EVENTNAME, 1,4)
-  ) %>%
   rename(
+    year = YEAR,
+    haulid = EVENTNAME,
     stratum = STRATA,
     lat = LATITUDESTART,
     lon = LONGITUDESTART,
@@ -1742,13 +1731,7 @@ seus <- seus %>%
     spp = SPECIESSCIENTIFICNAME,
     stratumarea = STRATAHECTARE)
 
-seus$year <- as.integer(seus$year)
-
-#In seus there are two 'COLLECTIONNUMBERS' per 'EVENTNAME', with no exceptions,
-#for each side of the boat;
-#EFFORT is always the same for each COLLECTIONNUMBER
-# We sum the two tows in seus (port and starboard tows), and this steps deletes any haul id x spp duplicates
-seus <- seus %>%
+seus<- seus %>%
   group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp, SEASON, EFFORT) %>%
   # remove non-fish and records with no species or common name
   filter(
@@ -1761,12 +1744,12 @@ seus <- seus %>%
     spp = ifelse(grepl("LIBINIA", spp), "LIBINIA", spp)
   )  %>%
   #now this accounts for both sides of the boat, and merging within specified gensuses
-  summarise(biomass = sumna(SPECIESTOTALWEIGHT)) %>%
-  mutate(wtcpue=biomass/(EFFORT*2)) %>%
+  #summarise(biomass = sumna(SPECIESTOTALWEIGHT)) %>% #note: add this line back in if total weight not already combined
+  mutate(wtcpue=SPECIESTOTALWEIGHT/EFFORT) %>% #Note: make effort *2 if need to combine port and starboard tows in future
   # add temporary region column that will be converted to seasonal
   mutate(region = "Southeast US") %>%
+  ungroup() %>%
   select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue, SEASON) %>%
-  ungroup()
 
 #remove infinite wtcpue values (where effort was 0, causes wtcpue to be inf)
 seus <- seus[!is.infinite(seus$wtcpue),]
@@ -1792,8 +1775,14 @@ if (HQ_DATA_ONLY == TRUE){
     ggplot(aes(x = lon, y = lat)) +
     geom_jitter()
 
+  #get # of years
+  yrs<-seusSPRING %>%
+    select(year) %>%
+    distinct()
+
   test <- seusSPRING %>%
     select(stratum, year) %>%
+    filter(year != 1989) %>% #Spring 1989 data are not comparable to the time series (e.g., nocturnal sampling)
     distinct() %>%
     group_by(stratum) %>%
     summarise(count = n()) %>%
@@ -1801,14 +1790,16 @@ if (HQ_DATA_ONLY == TRUE){
 
   # how many rows will be lost if only stratum trawled ever year are kept?
   test2 <- seusSPRING %>%
-    filter(stratum %in% test$stratum)
+    filter(stratum %in% test$stratum) %>%
+    filter(year != 1989)
   nrow(seusSPRING) - nrow(test2)
   # percent that will be lost
   print((nrow(seusSPRING) - nrow(test2))/nrow(seusSPRING))
-  # 6% are removed
+  # 8.6% are removed
 
   seusSPRING_fltr <- seusSPRING %>%
-    filter(stratum %in% test$stratum)
+    filter(stratum %in% test$stratum)%>%
+    filter(year != 1989)
 
   p3 <- seusSPRING_fltr %>%
     select(stratum, year) %>%
@@ -1830,6 +1821,7 @@ if (HQ_DATA_ONLY == TRUE){
 
 # SEUS summer ====
 #Separate the summer season and convert to dataframe
+##NOTE: summer sampling stopped after 2022
 seusSUMMER <- seus %>%
   filter(SEASON == "summer") %>%
   select(-SEASON) %>%
@@ -1890,13 +1882,17 @@ if (HQ_DATA_ONLY == TRUE){
     ggplot(aes(x = lon, y = lat)) +
     geom_jitter()
 
+  yrs<-seusFALL %>%
+    select(year) %>%
+    distinct()
+
   test <- seusFALL %>%
     #filter(year != 2018,  year != 2019) %>%
     select(stratum, year) %>%
     distinct() %>%
     group_by(stratum) %>%
     summarise(count = n()) %>%
-    filter(count >= 31) #FLAG: review this annually!
+    filter(count >= 33) #FLAG: review this annually!
 
   test2 <- seusFALL %>%
     #filter(year != 2018,  year != 2019) %>%
@@ -1904,7 +1900,7 @@ if (HQ_DATA_ONLY == TRUE){
   nrow(seusFALL) - nrow(test2)
   # percent that will be lost
   print((nrow(seusFALL) - nrow(test2))/nrow(seusFALL))
-  # 9.6% are removed
+  # 13.1% are removed
 
   seusFALL_fltr <- seusFALL  %>%
     #filter(year != 2018,  year != 2019) %>%
@@ -1932,15 +1928,17 @@ if (HQ_DATA_ONLY == TRUE){
 #clean up
 rm(test, test2, p1, p2, p3, p4)
 
-rm(seus_catch, seus_haul, seus_strata, end, start, meanwt, misswt, biomass, problems, change, seus)
+rm(seus_catch, seus_haul, seus_strata)
 
 # Compile BFISH data (Hawaii) =================================================
 
-bfish_catch <- read_csv(here::here("data_processing_rcode/data", "BFISH_DisMAP_2024_update_v2.csv")) %>%
+bfish_catch <- read_csv(here::here("data_processing_rcode/data", "BFISH_DisMAP_2024_update.csv"), col_types = cols(
+                          psu = col_character())) %>%
+  rename(haulid = psu) %>%
+  mutate(stratumarea = NA) %>%
   select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue)
 
-#NOTE: psu is changed to haulid in this dataset to help match the other fieldnames (helpful with compiling)
-#This should be reconciled ASAP
+#NOTE: psu is changed to haulid in this dataset to help match the other field names (helpful with compiling)
 
 
 # Compile TAX ===============================================================
@@ -1982,7 +1980,7 @@ if(isTRUE(WRITE_MASTER_DAT)){
 # Master Data Set ===========================================================
 print("Join into Master Data Set")
 #Full unfiltered data set
-dat <- rbind(ai, ebs, gmex, goa, nbs, neus_fall, neus_spring, seusFALL, seusSPRING, seusSUMMER, wcann, wctri) %>%
+dat <- rbind(ai, ebs, goa, nbs, neus_fall, neus_spring, seusFALL, seusSPRING, seusSUMMER, wcann, wctri) %>%
   # Remove NA values in wtcpue
   filter(!is.na(wtcpue)) %>%
   # remove any extra white space from around spp and common names
