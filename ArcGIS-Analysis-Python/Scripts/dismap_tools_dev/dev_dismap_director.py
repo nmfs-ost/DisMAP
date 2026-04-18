@@ -9,24 +9,24 @@
 # Copyright:   (c) john.f.kennedy 2024
 # Licence:     <your licence>
 # -------------------------------------------------------------------------------
-import os
-import sys  # built-ins first
+import os, sys  # built-ins first
 import traceback
+import importlib
 import inspect
 
-import arcpy  # third-parties second  # noqa: F401
+import arcpy  # third-parties second
 
 def main(project_gdb=""):
     try:
         from time import gmtime, localtime, strftime, time
         # Set a start time so that we can see how log things take
         start_time = time()
-        arcpy.AddMessage(f"{'-' * 80}")
-        arcpy.AddMessage(f"Python Script:  {os.path.basename(__file__)}")
-        arcpy.AddMessage(f"Location:       ..\Documents\ArcGIS\Projects\..\{os.path.basename(os.path.dirname(__file__))}\{os.path.basename(__file__)}")
-        arcpy.AddMessage(f"Python Version: {sys.version}")
-        arcpy.AddMessage(f"Environment:    {os.path.basename(sys.exec_prefix)}")
-        arcpy.AddMessage(f"{'-' * 80}\n")
+        print(f"{'-' * 80}")
+        print(f"Python Script:  {os.path.basename(__file__)}")
+        print(f"Location:       ..\Documents\ArcGIS\Projects\..\{os.path.basename(os.path.dirname(__file__))}\{os.path.basename(__file__)}")
+        print(f"Python Version: {sys.version}")
+        print(f"Environment:    {os.path.basename(sys.exec_prefix)}")
+        print(f"{'-' * 80}\n")
 
         # Set varaibales
         project_folder      = os.path.dirname(project_gdb)
@@ -418,21 +418,19 @@ def main(project_gdb=""):
         # Elapsed time
         end_time = time()
         elapse_time =  end_time - start_time
-        arcpy.AddMessage(f"\n{'-' * 80}")
-        arcpy.AddMessage(f"Python script: {os.path.basename(__file__)}\nCompleted: {strftime('%a %b %d %I:%M %p', localtime())}")
-        arcpy.AddMessage(u"Elapsed Time {0} (H:M:S)".format(strftime("%H:%M:%S", gmtime(elapse_time))))
-        arcpy.AddMessage(f"{'-' * 80}")
+        print(f"\n{'-' * 80}")
+        print(f"Python script: {os.path.basename(__file__)}\nCompleted: {strftime('%a %b %d %I:%M %p', localtime())}")
+        print(u"Elapsed Time {0} (H:M:S)".format(strftime("%H:%M:%S", gmtime(elapse_time))))
+        print(f"{'-' * 80}")
         del elapse_time, end_time, start_time
         del gmtime, localtime, strftime, time
-    except:  # noqa: E722
+    except:
         traceback.print_exc()
         raise SystemExit
     else:
         # While in development, leave here. For test, move to finally
         rk = [key for key in locals().keys() if not key.startswith('__')]
-        if rk:
-            arcpy.AddMessage(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##")
-        del rk
+        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"); del rk
         return True
     finally:
         pass
@@ -448,7 +446,7 @@ if __name__ == '__main__':
         #project_name = "December 1 2024"
         #project_name = "June 1 2025"
         #for project_name in ["June 1 2025"]:
-        for project_name in ["February 1 2026",]:
+        for project_name in ["December 1 2024", "June 1 2025"]:
             project_folder = rf"{base_project_folder}"
             project_gdb    = rf"{project_folder}\{project_name}\{project_name}.gdb"
             main(project_gdb=project_gdb)
@@ -458,7 +456,7 @@ if __name__ == '__main__':
         # Imports
     except SystemExit:
         pass
-    except:  # noqa: E722
+    except:
         traceback.print_exc()
     else:
         pass
