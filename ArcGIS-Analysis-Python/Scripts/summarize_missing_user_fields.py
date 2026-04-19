@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+import csv
+import collections
+import os
+
+csv_path = os.path.join(os.path.dirname(__file__), 'metadata_validation_report.csv')
+if not os.path.exists(csv_path):
+    print('Report not found:', csv_path)
+    raise SystemExit(2)
+
+counter = collections.Counter()
+rows = 0
+with open(csv_path, encoding='utf-8') as f:
+    reader = csv.DictReader(f)
+    for row in reader:
+        rows += 1
+        miss = row.get('missing_user_action', '') or ''
+        for k in miss.split(';'):
+            k = k.strip()
+            if k:
+                counter[k] += 1
+
+print('Total metadata files:', rows)
+print('\nTop missing user-maintained fields:')
+for key, cnt in counter.most_common():
+    print(f'{key}: {cnt}')

@@ -16,6 +16,41 @@ This folder holds all the R scripts needed to download and process the regional 
 2. ArcGIS Analysis - Python
 This folder houses the scripts for generating the interpolated biomass and calculating the distribution indicators (latitude, depth, range limits, etc). 
 
+### Metadata utilities
+
+The Python directory now includes several utilities to support
+ArcGIS metadata management:
+
+* **`Scripts/validate_metadata_exports.py`** – scans XML files
+  exported into `February 1 2026/Metadata_Export` and writes a
+  report (`Scripts/metadata_validation_report.csv`) listing which
+  records are missing key elements.  Fields that are typically supplied
+  by a user (title, abstract, contact, mdFileID, publication date,
+  maintenance frequency, presentation form, keywords, etc.) are
+  distinguished from those automatically populated by ArcGIS (bounding
+  box, Esri creation date, spatial reference).
+
+* **`Scripts/summarize_missing_user_fields.py`** – reads the CSV report
+  and prints a summary of the most frequently missing user‑maintained
+  fields (mdFileID, contact, publication_date, maintenance_frequency,
+  presentation_form were missing in every record, with abstracts and
+  keywords omitted from a smaller subset).
+
+* **`ArcGIS2InPort.xsl`** – existing XSLT that translates an ArcGIS
+  metadata record into the InPort JSON/XML schema used for portal
+  ingestion.
+
+* **`prepare_inport_transaction.xsl`** – new wrapper XSLT that imports
+  `ArcGIS2InPort.xsl` and emits a `<metadata-action>` element.  The
+  action will be `create` if the input record lacks an `mdFileID`; when
+  present the value is assumed to reference an existing InPort item and
+  the wrapper emits `update` plus a `<catalog-item-id>`.
+
+These tools make it easier to validate metadata completeness and to
+generate payloads suitable for automating record creation or updates in
+InPort.
+
+
 ## Suggestions and Comments
 
 If you see that the data, product, or metadata can be improved, you are

@@ -1,0 +1,26 @@
+[general]
+creator=R package 'raster'
+created=2019-12-13 14:09:44
+[georeference]
+nrows=832
+ncols=2098
+xmin=-723848.740275327
+ymin=457505.639391134
+xmax=1374151.25972467
+ymax=1289505.63939113
+projection=+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
+[data]
+datatype=FLT4S
+byteorder=little
+nbands=1
+bandorder=BIL
+categorical=FALSE
+minvalue=-17.4656688372294
+maxvalue=1445.37040201823
+nodatavalue=-3.4e+38
+[legend]
+legendtype=
+values=
+color=
+[description]
+layername=goa_bathp1c
