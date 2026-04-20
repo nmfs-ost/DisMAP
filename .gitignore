@@ -41,7 +41,7 @@
 /ArcGIS-Analysis-Python/
 .vscode
 .github
-.pre-commit-config.yaml
+#.pre-commit-config.yaml
 
 /code/.quarto/
 *.tex

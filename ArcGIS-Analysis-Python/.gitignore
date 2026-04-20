@@ -11,7 +11,6 @@
 __pycache__
 **/__pycache__
 
-
 # include python files anywhere
 !*.py
 !*.pyt
@@ -44,12 +43,15 @@ __init__.py
 **/*.zip
 
 # For Metadta branch
-!/August 1 2025/CSV_Data/*.csv
-!/August 1 2025/Dataset_Shapefiles/*
-/August 1 2025/Dataset_Shapefiles/*.zip
-!/August 1 2025/Layers/*
-!/Bathymetry/Alaska Bathymetry/*
-/Bathymetry/Alaska Bathymetry/*.zip
-!/Bathymetry/GEBCO Bathymetry/*
-!/Bathymetry/Hawaii Bathymetry/*
+!/August-1-2025/CSV_Data/*.csv
+!/August-1-2025/Dataset_Shapefiles/*
+/August-1-2025/Dataset_Shapefiles/*.zip
+!/August-1-2025/Layers/*
+!/Bathymetry/Alaska-Bathymetry/*
+/Bathymetry/Alaska-Bathymetry/*.zip
+!/Bathymetry/GEBCO-Bathymetry/*
+/Bathymetry/GEBCO-Bathymetry/*.zip
+!/Bathymetry/Hawaii-Bathymetry/*
+/Bathymetry/Hawaii-Bathymetry/*.zip
 
+# End of File (EOF)
