@@ -942,7 +942,7 @@ gmex_station <- type_convert(gmex_station, col_types = cols(
   E_LONM = col_double(),
   DEPTH_SSTA = col_double(),
   STAT_ZONE = col_double(),
-  MO_DAY_YR = col_date(format = "%d/%m/%Y"),
+  MO_DAY_YR = col_date(format = "%m/%d/%Y"), # note in 2026 this column was reformatted to be mo/day/yr (in previous years it was %d/%mo/%yr)
   VESSEL_SPD = col_double(),
   COMSTAT = col_character()
 ))
