@@ -921,7 +921,7 @@ rm(wcann_catch, wcann_haul, wcann_strats)
 # Compile GMEX ===========================================================
 print("Compile GMEX")
 ##Read in data
-gmex_station <- read_csv(here::here("data_processing_rcode/data", "gmex_starec.csv"), col_types = cols(.default = col_character())) %>%
+gmex_station <- read_csv(here::here("data_processing_rcode/data", "gmex_STAREC_2025.csv"), col_types = cols(.default = col_character())) %>%
   select('STATIONID', 'CRUISEID', 'CRUISE_NO', 'P_STA_NO', 'TIME_ZN', 'TIME_MIL', 'S_LATD', 'S_LATM', 'S_LOND', 'S_LONM', 'E_LATD', 'E_LATM', 'E_LOND', 'E_LONM', 'STAT_ZONE', 'DEPTH_SSTA', 'MO_DAY_YR', 'VESSEL_SPD', 'COMSTAT')
 
 ## ISSUE: there are some longitudes that are not accurate (e.g., 913) which are not appearing for past trawls
@@ -1126,7 +1126,6 @@ gmex_bio_utax3 <- gmex_bio_utax2 %>%
             # Note: Extrapolated counts (cntexp) & weights (select_bgs) of a taxa for a tow is the sum of all records of that taxon.
             tcntexp = sum(cntexp, na.rm=TRUE),
             tselect_bgs = sum(select_bgs,na.rm=TRUE))
-
 
 ## Determine which tows to keep initially from the original gmex_tow object
 ## Adding additional variable from gmex_station and gmex_cruise
