@@ -7,9 +7,11 @@ Script documentation
                                         arcpy.SetParameterAsText()
 """
 
-import inspect
+
 import os
+import inspect
 import traceback
+import json
 
 import arcpy
 
@@ -56,6 +58,23 @@ def script_tool(project_gdb=""):
                 "field_attrdef": "Bio_Inc_Dec",
                 "field_attrdefs": "DisMAP Project GDB Data Dictionary",
                 "field_attrdomv": {"udom": "Bio_Inc_Dec"},
+            },
+            "Child_GUID": {
+                "field_aliasName": "Child GUID",
+                "field_baseName": "Child_GUID",
+                "field_defaultValue": "null",
+                "field_domain": "",
+                "field_editable": "true",
+                "field_isNullable": "true",
+                "field_length": 30,
+                "field_name": "Child_GUID",
+                "field_precision": 0,
+                "field_required": "true",
+                "field_scale": 0,
+                "field_type": "String",
+                "field_attrdef": "Child_GUID",
+                "field_attrdefs": "DisMAP Project GDB Data Dictionary",
+                "field_attrdomv": {"udom": "Child_GUID"},
             },
             "CSVFile": {
                 "field_aliasName": "CSV File",
@@ -619,6 +638,23 @@ def script_tool(project_gdb=""):
                 "field_attrdef": "Geographic Area",
                 "field_attrdefs": "DisMAP Project GDB Data Dictionary",
                 "field_attrdomv": {"udom": "Geographic Area"},
+            },
+            "Grandchild_GUID": {
+                "field_aliasName": "Grandchild_GUID",
+                "field_baseName": "Grandchild_GUID",
+                "field_defaultValue": "null",
+                "field_domain": "",
+                "field_editable": "true",
+                "field_isNullable": "true",
+                "field_length": 30,
+                "field_name": "Grandchild_GUID",
+                "field_precision": 0,
+                "field_required": "true",
+                "field_scale": 0,
+                "field_type": "String",
+                "field_attrdef": "Grandchild_GUID",
+                "field_attrdefs": "DisMAP Project GDB Data Dictionary",
+                "field_attrdomv": {"udom": "Grandchild_GUID"},
             },
             "GroupName": {
                 "field_aliasName": "Group Name",
@@ -1197,6 +1233,23 @@ def script_tool(project_gdb=""):
                 "field_attrdef": "Offset Longitude",
                 "field_attrdefs": "DisMAP Project GDB Data Dictionary",
                 "field_attrdomv": {"udom": "Offset Longitude"},
+            },
+            "Parent_GUID": {
+                "field_aliasName": "Parent GUID",
+                "field_baseName": "Parent_GUID",
+                "field_defaultValue": "null",
+                "field_domain": "",
+                "field_editable": "true",
+                "field_isNullable": "true",
+                "field_length": 30,
+                "field_name": "Parent_GUID",
+                "field_precision": 0,
+                "field_required": "true",
+                "field_scale": 0,
+                "field_type": "String",
+                "field_attrdef": "Parent_GUID",
+                "field_attrdefs": "DisMAP Project GDB Data Dictionary",
+                "field_attrdomv": {"udom": "Parent_GUID"},
             },
             "Percentile": {
                 "field_aliasName": "Percentile",
@@ -2107,7 +2160,7 @@ def script_tool(project_gdb=""):
 
         table_definitions = {k: v for k, v in sorted(data_dictionary.items())}
 
-        import json
+
 # "C:\\Users\\john.f.kennedy\\Documents\\ArcGIS\\Projects\\DisMAP\\ArcGIS-Analysis-Python\\August-1-2025\\CSV_Data\\"
 # "C:\\Users\\john.f.kennedy\\Documents\\ArcGIS\\Projects\\DisMAP\\ArcGIS-Analysis-Python\\August-1-2025\\CSV_Data\\table_definitions.json'
         # Write to File
@@ -2118,7 +2171,7 @@ def script_tool(project_gdb=""):
             json.dump(table_definitions, json_file, indent=4)
         del json_file
         del json_path
-        del json
+
 
         for table in table_definitions:
             # arcpy.AddMessage(f"{table}")
@@ -2160,7 +2213,7 @@ def script_tool(project_gdb=""):
         #    del _fields
         #    del key
 
-        import json
+
 
         # Write to File
         json_path = os.path.join(project_folder, "CSV_Data\\field_definitions.json")
@@ -2168,7 +2221,7 @@ def script_tool(project_gdb=""):
             json.dump(field_definitions, json_file, indent=4)
         del json_file
         del json_path
-        del json
+
 
         del field_definitions
         del data_dictionary, table_names
