@@ -1,4 +1,4 @@
-## ---- DISMAP 3/30/2026
+## ---- DISMAP 5/05/2026
 ## updated script to include "expanded survey data" for the new Survey Data Module
 
 ## updated thru 2025 survey data for all regions
@@ -1715,10 +1715,10 @@ seus <- seus %>%
 
 ### In 2026 the data provided provided an Area Swept value (=EFFORT) and also a species total weight that already combined
     # port and starboard samples so the below script is not needed, but may be needed again in the future.
-  #NOTE NEEDED IN 2026: In seus there are two 'COLLECTIONNUMBERS' per 'EVENTNAME', with no exceptions,
-  #for each side of the boat;
-  #EFFORT is always the same for each COLLECTIONNUMBER
-  # We sum the two tows in seus (port and starboard tows), and this steps deletes any haul id x spp duplicates
+    #NOTE NEEDED IN 2026: In seus there are two 'COLLECTIONNUMBERS' per 'EVENTNAME', with no exceptions,
+    #for each side of the boat;
+      #EFFORT is always the same for each COLLECTIONNUMBER
+      # We sum the two tows in seus (port and starboard tows), and this steps deletes any haul id x spp duplicates
 seus <- seus %>%
   rename(
     year = YEAR,
@@ -1748,7 +1748,7 @@ seus<- seus %>%
   # add temporary region column that will be converted to seasonal
   mutate(region = "Southeast US") %>%
   ungroup() %>%
-  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue, SEASON) %>%
+  select(region, haulid, year, lat, lon, stratum, stratumarea, depth, spp, wtcpue, SEASON)
 
 #remove infinite wtcpue values (where effort was 0, causes wtcpue to be inf)
 seus <- seus[!is.infinite(seus$wtcpue),]
@@ -1979,6 +1979,7 @@ if(isTRUE(WRITE_MASTER_DAT)){
 # Master Data Set ===========================================================
 print("Join into Master Data Set")
 #Full unfiltered data set
+#TO DO: Add gmex back in once that part of the code is reviewed
 dat <- rbind(ai, ebs, goa, nbs, neus_fall, neus_spring, seusFALL, seusSPRING, seusSUMMER, wcann, wctri) %>%
   # Remove NA values in wtcpue
   filter(!is.na(wtcpue)) %>%
@@ -2000,6 +2001,9 @@ dat_spp <- dat %>%
 not_in_tax <- anti_join(dat_spp, tax, by = c("spp" = "survey_name"))
 not_in_tax <- not_in_tax %>% group_by(spp) %>%
   summarise_all(funs(toString(unique(na.omit(.))))) #FLAG: Update to replace `funs()`, which has been deprecated
+
+#if not_in_tax > 0 obs print it out to add those species to Tax file
+write.csv(not_in_tax, "not_in_tax.csv")
 
 #========================== end species name check ===========
 
@@ -2045,7 +2049,9 @@ if(isTRUE(WRITE_MASTER_DAT)){
 
 
 # Master "Filtered" dataset
-dat_fltr <- rbind(ai_fltr, ebs_fltr, nbs_fltr, gmex_fltr, goa_fltr, neus_fall_fltr, neus_spring_fltr, seusFALL_fltr, seusSPRING_fltr, seusSUMMER_fltr, wcann_fltr, wctri_fltr) %>%
+## TO DO: Add back in gmex_fltr once that region's code has been fixed
+
+dat_fltr <- rbind(ai_fltr, ebs_fltr, nbs_fltr, goa_fltr, neus_fall_fltr, neus_spring_fltr, seusFALL_fltr, seusSPRING_fltr, seusSUMMER_fltr, wcann_fltr, wctri_fltr) %>%
   # Remove NA values in wtcpue
   filter(!is.na(wtcpue)) %>%
   # remove any extra white space from around spp and common names
@@ -2257,7 +2263,7 @@ dat.exploded$CoreSpecies[is.na(dat.exploded$CoreSpecies)] <- "No"
 
 #stop and....
 ## GO TO create_data_for_map_generation.R now
-# Update Filter table by running code below
+# Update Filter table
 
 ###################### CAN STOP HERE ##########################################
 
