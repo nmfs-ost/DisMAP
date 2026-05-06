@@ -29,6 +29,7 @@ library(RColorBrewer)
 library(readr)
 library(tidyverse)
 library(broom)
+library(trend)
 
 #### DATA PROCESSING/WRANGLING ####
 ### Run `Compile_Dismap_Current.R` first before this analysis ###
@@ -622,7 +623,6 @@ ggplot(plot_data, aes(x = Year, y = Common, fill = Absence_Presence)) +
 
 ####MANAGEMENT COUNCIL JURISDICTION ANALYSIS (for the NEFSC survey data only)####
 #The following script does the same analysis as above, but parses the NE Bottom trawl data out into the two different management council jurisdictions.
-
 library(sf)
 library(dplyr)
 
@@ -658,11 +658,11 @@ df_NEUS <- df_labeled_sf_NEUS %>%
   unite("FishRegionsurvey", FishRegion, survey, sep=" ", remove=FALSE)
 
 # # 6. Visualize to make sure the points are labeled correctly
-# Plot_FMC<- ggplot() +
-#   geom_sf(data = EC_Councils, aes(fill = FishRegion), alpha = 0.3) +
-#   #geom_point(data = df_NEUS, aes(x=lon, y=lat, color = FishRegion)) +
-#   theme_minimal() +
-#   labs(title = "Points Labeled by Fishery Management Council Jurisdiction")
+Plot_FMC<- ggplot() +
+  geom_sf(data = EC_Councils, aes(fill = FishRegion), alpha = 0.3) +
+  geom_point(data = df_NEUS, aes(x=lon, y=lat, color = FishRegion)) +
+  theme_minimal() +
+  labs(title = "Points Labeled by Fishery Management Council Jurisdiction")
 
 #### Proportion of total biomass by species in each Council region ####
 data_sum_NEUSregions <- df_NEUS %>%
@@ -1011,6 +1011,9 @@ barplot <- ggplot(plot_data_spring, aes(x = Year, y = Prop, fill = FMC)) +
   )
 
 final_output <- ggarrange(barplot, table_plot, ncol=1, heights=c(2,1))
+
+
+################## STOP HERE #########################################
 
 #### COMBINED FULL DATASETS ####
 #Adding the NE data to the data_percentiles_export
