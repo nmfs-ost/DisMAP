@@ -1,4 +1,4 @@
-## ---- DISMAP 5/05/2026
+## ---- DISMAP 5/18/2026
 ## updated script to include "expanded survey data" for the new Survey Data Module
 
 ## updated thru 2025 survey data for all regions
@@ -921,15 +921,16 @@ rm(wcann_catch, wcann_haul, wcann_strats)
 # Compile GMEX ===========================================================
 print("Compile GMEX")
 ##Read in data
-gmex_station <- read_csv(here::here("data_processing_rcode/data", "gmex_STAREC_2025.csv"), col_types = cols(.default = col_character())) %>%
-  select('STATIONID', 'CRUISEID', 'CRUISE_NO', 'P_STA_NO', 'TIME_ZN', 'TIME_MIL', 'S_LATD', 'S_LATM', 'S_LOND', 'S_LONM', 'E_LATD', 'E_LATM', 'E_LOND', 'E_LONM', 'STAT_ZONE', 'DEPTH_SSTA', 'MO_DAY_YR', 'VESSEL_SPD', 'COMSTAT')
+gmex_station <- read_csv(here::here("data_processing_rcode/data", "starec.csv"), col_types = cols(.default = col_character())) %>%
+  select('STATIONID', 'CRUISEID', 'CRUISE_NO', 'P_STA_NO', 'S_STA_NO',
+         'TIME_ZN', 'TIME_MIL', 'S_LATD', 'S_LATM', 'S_LOND', 'S_LONM', 'E_LATD', 'E_LATM', 'E_LOND', 'E_LONM', 'STAT_ZONE', 'DEPTH_SSTA', 'MO_DAY_YR', 'VESSEL_SPD', 'COMSTAT')
 
-## ISSUE: there are some longitudes that are not accurate (e.g., 913) which are not appearing for past trawls
 gmex_station <- type_convert(gmex_station, col_types = cols(
   STATIONID = col_integer(),
   CRUISEID = col_integer(),
   CRUISE_NO = col_integer(),
   P_STA_NO = col_character(),
+  S_STA_NO = col_character(),
   TIME_ZN = col_integer(),
   TIME_MIL = col_character(),
   S_LATD = col_double(),
@@ -942,15 +943,16 @@ gmex_station <- type_convert(gmex_station, col_types = cols(
   E_LONM = col_double(),
   DEPTH_SSTA = col_double(),
   STAT_ZONE = col_double(),
-  MO_DAY_YR = col_date(format = "%m/%d/%Y"), # note in 2026 this column was reformatted to be mo/day/yr (in previous years it was %d/%mo/%yr)
+  MO_DAY_YR = col_date(format = "%m/%d/%Y"),
   VESSEL_SPD = col_double(),
   COMSTAT = col_character()
 ))
 
 names(gmex_station)<-tolower(names(gmex_station))
 
-gmex_tow <-readr::read_delim(here::here("data_processing_rcode/data","gmex_invrec.csv"),
+gmex_tow <-readr::read_delim(here::here("data_processing_rcode/data","invrec.csv"),
                              delim = ',', escape_backslash = T, escape_double = F)
+
 gmex_tow<-type_convert(gmex_tow, col_types = cols(
   INVRECID = col_integer(),
   STATIONID = col_integer(),
@@ -978,16 +980,15 @@ gmex_tow<-type_convert(gmex_tow, col_types = cols(
   CRU_SEL_WT = col_double(),
   OTH_SMP_WT = col_double(),
   OTH_SEL_WT = col_double(),
-  COMBIO = col_character(),
-  X28 = col_character()
-))
+  COMBIO = col_character()
+  ))
 
 gmex_tow <- gmex_tow %>%
   select('CRUISEID','STATIONID', 'VESSEL', 'CRUISE_NO', 'P_STA_NO', 'INVRECID', 'GEAR_SIZE', 'GEAR_TYPE', 'MESH_SIZE', 'MIN_FISH', 'OP') %>%
   filter(GEAR_TYPE=='ST')
 names(gmex_tow) <- tolower(names(gmex_tow))
 
-gmex_bio <-readr::read_delim(here::here("data_processing_rcode/data","gmex_bgsrec.csv"),
+gmex_bio <-readr::read_delim(here::here("data_processing_rcode/data","bgsrec.csv"),
                              delim = ',', escape_backslash = T, escape_double = F)
 
 gmex_bio <- type_convert(gmex_bio, cols(
@@ -1004,13 +1005,15 @@ gmex_bio <- type_convert(gmex_bio, cols(
 ))
 names(gmex_bio) <- tolower(names(gmex_bio))
 
-gmex_cruise <-read_csv(here::here("data_processing_rcode/data", "gmex_cruises.csv"), col_types = cols(.default = col_character())) %>%
+gmex_cruise <-read_csv(here::here("data_processing_rcode/data", "cruises.csv"), col_types = cols(.default = col_character())) %>%
   select(CRUISEID, VESSEL, TITLE)
 
 gmex_cruise <- type_convert(gmex_cruise, col_types = cols(CRUISEID = col_integer(), VESSEL = col_integer(), TITLE = col_character()))
 names(gmex_cruise)<-tolower(names(gmex_cruise))
 
-gmex_spp <-read_csv(here::here("data_processing_rcode/data","gmex_BCT_NFR_01182023.csv")) %>%
+## NOTE biocode table is now included with GSMFC SEAMAP Download. The external file is no longer needed.
+## The following code was modified to substitute the biocodes table included with GSMFC csv download
+gmex_spp <-read_csv(here::here("data_processing_rcode/data","biocodes.csv")) %>%
   mutate_if(is.logical, as.character)
 problems(gmex_spp)
 names(gmex_spp)<-tolower(names(gmex_spp))
@@ -1020,71 +1023,30 @@ gmex_spp<- gmex_spp %>%
 
 
 ### Merging gmex_tow and gmex_bio tables ###
-
-# This code updates the null invrecid values in gmex_bio based on stationid from gmex_tow.
-# Remaining null values (from reef fish cruises) are removed to create gmex_bio_mod.
-# get stationid and invrecid from gmex_tow
-get_stationid_invrecid <- gmex_tow %>%
-  dplyr::select(stationid, invrecid) %>%
-  rename(inv_invrecid = invrecid)
-
-# extract gmex_bio records with missing invrecid and update based on stationid from get_stationid_invrecid
-bgsrec_null_invrecid <- gmex_bio %>%
-  dplyr::filter(is.na(invrecid)) %>%
-  dplyr::left_join(get_stationid_invrecid, by = 'stationid') %>%
-  dplyr::mutate(invrecid = inv_invrecid) %>%
-  dplyr::select(-inv_invrecid)
-
-# extract gmex_bio records with valid invrecid
-bgsrec_with_invrecid <- gmex_bio %>%
-  dplyr::filter(!is.na(invrecid))
-
-# stack bgsrec_null_invrec now updated with valid invrecid and bgsrec_with_invrecid
-gmex_bio_mod <- bgsrec_null_invrecid %>%
-  dplyr::bind_rows(bgsrec_with_invrecid) %>%
-  # Remove null invrecids
-  dplyr::filter(!is.na(invrecid)) %>%
-  dplyr::arrange(bgsid)
-
-# drop unwanted data objects
-rm(bgsrec_null_invrecid,bgsrec_with_invrecid,get_stationid_invrecid, gmex_bio)
-# garbage collect to free up memory
-gc()
-
-
-### Resolve taxonomic coding ###
+#### Resolve taxonomic coding ###
 
 # Gmex_bio_mod has a few instances of invalid bio_bgs (biocode) values.
+# DSH NOTE: GSMFC 05/08/2026 there should be no records without invrecid
 # Also, multiple code/taxonomic combinations may refer to the same organisms under different names.
-# Gmex_bio_mod reflects the code/taxonomic use at time of data ingest.
-# Gmex_spp will allow translation of cases where multiple code/taxonomic refer to the same organism.
+# gmex_bio reflects the code/taxonomic use at time of data ingest.
+# gmex_spp will allow translation of cases where multiple code/taxonomic refer to the same organism.
 # Since multiple changes may have occurred, the ciu_biocode (currently in use biocode) value ties multiple records
 # that are now inactive to the current active biocode. Inactive biocodes have the variable inactive set to zero.
 
 # The following script updates biocode to ciu_biocode in gmex_bio_mod, using gmex_spp to merge.
 
-# starting with our gmex_bio_mod from above
-gmex_bio_utax1 <- gmex_bio_mod %>%
-  # convert bgsrec table bio_bgs varialbe to numeric integer
-  dplyr::mutate(bio_bgs = as.integer(bio_bgs)) %>%
+# starting with our gmex_bio from above
+gmex_bio_utax1 <- gmex_bio %>%
   # rename bio_bgs to biocode to allow for easier manipulation with master biocode table (mbt)
   dplyr::rename(biocode = bio_bgs) %>%
-  # fix invalid zero code and make it the code (999999998) for unidentified specimen
-  dplyr::mutate(biocode = ifelse(biocode == 0,999999998,biocode)) %>%
-  # fix invalid unidentified fish code 100000001 to proper code
-  dplyr::mutate(biocode = ifelse(biocode == 100000001,100000000,biocode)) %>%
-  # fix invalid unidentified crustacean code 200000001 to proper code
-  dplyr::mutate(biocode = ifelse(biocode == 200000001,200000000,biocode)) %>%
-  # fix invalid unidentified crustacean code 300000001  and 300000001 to proper code
-  dplyr::mutate(biocode = ifelse(biocode == 300000001,300000000,biocode)) %>%
-  dplyr::mutate(biocode = ifelse(biocode == 300000002,300000000,biocode)) %>%
+  # new GSMFC database has two bogus biocodes that need converted to unidentifed specimen
+  dplyr::mutate(biocode = ifelse(biocode %in% c(108011501, 596101003),999999998, biocode)) %>%
   # update older inactive biocodes to those currently in use (ciu_biocode)
   dplyr::left_join(dplyr::select(gmex_spp,biocode,taxon,ciu_biocode), by = "biocode") %>%
-  # rename taxon to bgs taxon to keep the original name associated with a biocode
+  # rename taxon to bgs_taxon to keep the original name associated with a biocode
   dplyr::rename(bgs_taxon = taxon) %>%
   # do a left join to bring in taxon associated with ciu_taxon
   dplyr::left_join(dplyr::select(gmex_spp,biocode,taxon), by = c("ciu_biocode" = "biocode"))
-
 
 # Collapse taxa with known identification issues and collapse all sponges to single category
 # These updates undergo a review with each updated version of gmex_spp.
@@ -1116,8 +1078,11 @@ gmex_bio_utax2 <- gmex_bio_utax1 %>%
   mutate(taxon = ifelse(ciu_biocode %in% c(228012000),'RIMAPENAEUS',taxon)) %>%
   # Astropecten species have changed, distribution overlap with major east west differences
   mutate(biocode = ifelse(ciu_biocode >= 691010101 & ciu_biocode <= 691010112,691010100,biocode)) %>%
-  mutate(taxon = ifelse(ciu_biocode %in% c(691010100),'ASTROPECTEN',taxon))
-
+  mutate(taxon = ifelse(ciu_biocode %in% c(691010100),'ASTROPECTEN',taxon)) %>%
+  # In the Gulf of Mexico the species of sea nettle (jellyfish) Chrysoara quinquecirrha are now recongnized as C. chesapeakei
+  # Recommending to analyze at genus level
+  mutate(biocode = ifelse(ciu_biocode %in% c(616010100, 616010101, 618030300, 618030301,618030302), 618030300, biocode)) %>%
+  mutate(taxon = ifelse(ciu_biocode %in% c(618030300),'CHRYSAORA',taxon))
 
 ## Collapse gmex_bio_utax2 to have single entry for each taxa for a distinct invrecid (tow)
 gmex_bio_utax3 <- gmex_bio_utax2 %>%
@@ -1135,7 +1100,6 @@ gmex_tow <- gmex_tow %>%
   # add cruise title and dropping duplicated variable vessel
   left_join(select(gmex_cruise, -c("vessel")), by = c("cruiseid"))
 
-
 ## filtering gmex_tow
 gmex_tow <- gmex_tow %>%
   # Trim to high quality SEAMAP summer trawls
@@ -1148,6 +1112,7 @@ gmex_tow <- gmex_tow %>%
            (is.na(op) | op == "W")) %>%
   mutate(
     # Create a unique haulid
+    #DSH NOTE: Have MK check as vessel is now character.
     haulid = paste(formatC(vessel, width=3, flag=0), formatC(cruise_no, width=3, flag=0), formatC(p_sta_no, width=5, flag=0, format='d'), sep='-'),
     # Extract year where needed
     year = year(mo_day_yr),
@@ -1163,27 +1128,70 @@ gmex_tow <- gmex_tow %>%
     lon = -rowMeans(cbind(s_lond + s_lonm/60, e_lond + e_lonm/60), na.rm=T),
   ) %>%
   ## filter for target years
-  filter(year >= 2010)
+  filter(year >= 2010)  %>%
+  ## 5/2026 NOTE: Get rid of 2010 Oregon II vessel = 4 cruise_no = 290 non SEAMAP sampling...
+  dplyr::mutate(keep_rec = 1) %>%
+  dplyr::mutate(keep_rec = ifelse(vessel == 4 & cruise_no == 290 & is.na(s_sta_no), 0, keep_rec)) %>%
+  dplyr::filter(keep_rec == 1) #%>%
+  ## 5/2026: Get rid of really shallow stations which mostly 2 to 5 fathom that are no longer targeted
+  #dplyr::filter(depth_ssta >= 7.25) # ~ 4fathoms
 
+## 5/2026 update: Get NMFS Fishing Grids shapefile to be use to correct stat_zone = 0 in gmex_tow in CSR 4326 WGS84;
+library(sf)
+gom_ssz <- sf::st_read(here::here("data_processing_rcode/data/gmex_shp","nmfs_gom_fishing_grid_2015.shp"))
+gom_ssz <- gom_ssz %>%
+  dplyr::select(StatZone) %>%
+  dplyr::rename(ssz = StatZone)
+
+## 5/2026 update: Convert gmex_tow to spatial object
+# Use sf package to build spatial points of gmex_tow based on lon lat;
+gmex_tow <- sf::st_as_sf(gmex_tow, coords = c("lon","lat"), crs = 4326, remove=FALSE)
+# Spatial join but use sf_use_s2(FALSE) to prevent more restrictive intersection
+sf::sf_use_s2(FALSE)
+gmex_tow <- sf::st_join(x = gmex_tow, y = gom_ssz, left = TRUE)
+
+# 5/2026 update: This is just getting counts to make sure the time format and other fix are ok.
+with(gmex_tow, addmargins(table(year, stat_zone, useNA = "always")))
+
+# 5/2026 update: Update stat_zone with ssz only for cases where stat_zone = 0
+# Also removing geometry of gmex_tow, reverting to dataframe and
+# dropping variables.
+gmex_tow <- gmex_tow %>%
+  dplyr::mutate(stat_zone = ifelse(stat_zone == 0, ssz, stat_zone)) %>%
+  sf::st_drop_geometry() %>%
+  dplyr::select(-c(keep_rec, ssz))
+
+# 5/2026 update: This is just getting counts to make sure the time format fix is ok.
+with(gmex_tow, addmargins(table(year, stat_zone, useNA = "always")))
+
+# 5/2026 update: Remove ssz spatial object
+rm(gom_ssz)
 
 ## Merge gmex_tow with updated gmex_bio tables (e.g., gmex_bio_utax3) to create gmex object
 ## Counts and weights collapsed for multiple records for a taxa within an invrecid.
 gmex <- gmex_tow %>%
   left_join(gmex_bio_utax3, by = c("cruiseid","stationid","invrecid"))
 
+## 5/2026 update: Getting record counts to check before and after on gmex records
+with(gmex,table(op,useNA = "always"))
+
+###
 gmex <- gmex %>%
   dplyr::mutate(uop = op) %>%
-  ## Update tow that should have been op coded based on 03/03/2025 download and only years >= 2010
+  ## Update tow that should have been op coded based on 05/08/2026 GSMFC CSV download and only years >= 2010
   dplyr::mutate(uop =
                   ifelse(vessel == '95' & cruise_no == '1701' & p_sta_no == '95007' & invrecid == 138972, 'M', uop)) %>%
   dplyr::mutate(uop =
                   ifelse(vessel == '17' & cruise_no == '1503' & p_sta_no == '00030' & invrecid == 139159, 'M', uop)) %>%
+  ## 5/2026 update: Reverting this to good tow with zero catch;
+  # dplyr::mutate(uop =
+  #                 ifelse(vessel == '35' & cruise_no == '1202' & p_sta_no == '35006' & invrecid == 111362, 'T', uop)) %>%
+  ## 5/2026 update: invrecid updated to reflect updated invrecid in 05/08/2026 GSMFC CSV for 17-1002-00068
   dplyr::mutate(uop =
-                  ifelse(vessel == '35' & cruise_no == '1202' & p_sta_no == '35006' & invrecid == 111362, 'T', uop)) %>%
+                  ifelse(vessel == '17' & cruise_no == '1002' & p_sta_no == '00068' & invrecid == 158653, 'Z', uop)) %>%
+  ## 5/2026 update: invrecid updated to reflect updated invrecid in 05/08/2026 GSMFC CSV for 17-1002-00054
   dplyr::mutate(uop =
-                  ifelse(vessel == '17' & cruise_no == '1002' & p_sta_no == '00068' & invrecid == 135137, 'Z', uop)) %>%
-  dplyr::mutate(uop =
-                  ifelse(vessel == '17' & cruise_no == '1002' & p_sta_no == '00054' & invrecid == 135123, 'X', uop)) %>%
+                  ifelse(vessel == '17' & cruise_no == '1002' & p_sta_no == '00054' & invrecid == 158639, 'X', uop)) %>%
   dplyr::mutate(uop =
                   ifelse(vessel == '35' & cruise_no == '1902' & p_sta_no == '00011' & invrecid == 142353, 'G', uop)) %>%
   dplyr::mutate(uop =
@@ -1191,11 +1199,14 @@ gmex <- gmex %>%
   dplyr::filter(is.na(uop) | uop == "W") %>%
   dplyr::select(-c("uop"))
 
+## 5/2026 update: Geting record counts to check before and after on gmex records
+with(gmex,table(op,useNA = "always"))
+
 
 # add stratum code defined by STAT_ZONE and depth bands (note depth in recorded as m, and depth bands based on 0-20 fathoms
 # and 21-60 fathoms))
 gmex$depth_zone <- ifelse(gmex$depth_ssta<=36.576, "20",
-                        ifelse(gmex$depth_ssta>36.576, "60", NA))
+                          ifelse(gmex$depth_ssta>36.576, "60", NA))
 
 gmex <- gmex %>%
   mutate(stratum = paste(stat_zone, depth_zone, sep= "-"))
@@ -1241,8 +1252,9 @@ gmex <- gmex %>%
   # remove unidentified spp
   filter(
     spp != '' | !is.na(spp),
-    !spp %in% c('UNID CRUSTA', 'UNID OTHER', 'UNID.FISH', 'CRUSTACEA(INFRAORDER) BRACHYURA', 'MOLLUSCA AND UNID.OTHER #01', 'ALGAE', 'MISCELLANEOUS INVERTEBR', 'OTHER INVERTEBRATES')
-  ) %>%
+    !spp %in% c('UNIDENTIFIED FISH', 'UNIDENTIFIED SPECIMEN', 'BRACHYURA', 'MOLLUSCA', 'ALGAE', 'MISCELLANEOUS INVERTEBRATES',
+                'MISCELLANEOUS', 'OTHER INVERTEBRATES',
+                'PHAEOPHYCEAE', 'SARGASSUM' ,'RHODOPHYCEAE', 'RHODOMELACEAE')) %>%
   group_by(haulid, stratum, stratumarea, year, lat, lon, depth, spp) %>%
   summarise(wtcpue = sumna(wtcpue)) %>%
   # add region column
@@ -1253,12 +1265,13 @@ gmex <- gmex %>%
 
 if (HQ_DATA_ONLY == TRUE){
   # look at the graph and make sure decisions to keep or eliminate data make sense
-
+  #note data already filtered for years > 2010 in above steps
   p1 <- gmex %>%
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +
     geom_jitter() +
     theme(axis.text.x = element_text(angle = 90, size = rel(0.80)))
+
 
   p2 <- gmex %>%
     select(lat, lon) %>%
@@ -1272,7 +1285,7 @@ if (HQ_DATA_ONLY == TRUE){
     distinct() %>%
     group_by(stratum) %>%
     summarise(count = n()) %>%
-    filter(count >=11) # Update annually. This removes strata that are poorly sampled through time.
+    filter(count >=13) # Update annually. This removes strata not sampled in >2yrs.
 
   # how many rows will be lost if years where all strata sampled (>2008) are kept?
   test2 <- gmex %>%
@@ -1285,8 +1298,7 @@ if (HQ_DATA_ONLY == TRUE){
   gmex_fltr <- gmex %>%
     filter(stratum %in% test$stratum)
   # %>%
-    # filter(year>=2010, year != 2023)
-
+  # filter(year>=2010, year != 2023)
 
   p3 <- gmex_fltr %>%
     select(stratum, year) %>%
@@ -1306,7 +1318,8 @@ if (HQ_DATA_ONLY == TRUE){
   }
   rm(test, test2, p1, p2, p3, p4)
 }
-rm(gmex_bio, gmex_cruise, gmex_spp, gmex_station, gmex_tow, problems, gmex_bio_mod, gmex_bio_utax2, gmex_bio_utax1, dups)
+
+rm(gmex_cruise, gmex_spp, gmex_station, gmex_tow, gmex_bio_mod, gmex_bio_utax2, gmex_bio_utax1, dups)
 
 # Compile Northeast US ===========================================================
 print("Compile NEUS")
@@ -1980,7 +1993,7 @@ if(isTRUE(WRITE_MASTER_DAT)){
 print("Join into Master Data Set")
 #Full unfiltered data set
 #TO DO: Add gmex back in once that part of the code is reviewed
-dat <- rbind(ai, ebs, goa, nbs, neus_fall, neus_spring, seusFALL, seusSPRING, seusSUMMER, wcann, wctri) %>%
+dat <- rbind(ai, ebs, goa, nbs, gmex, neus_fall, neus_spring, seusFALL, seusSPRING, seusSUMMER, wcann, wctri) %>%
   # Remove NA values in wtcpue
   filter(!is.na(wtcpue)) %>%
   # remove any extra white space from around spp and common names
@@ -2003,7 +2016,7 @@ not_in_tax <- not_in_tax %>% group_by(spp) %>%
   summarise_all(funs(toString(unique(na.omit(.))))) #FLAG: Update to replace `funs()`, which has been deprecated
 
 #if not_in_tax > 0 obs print it out to add those species to Tax file
-write.csv(not_in_tax, "not_in_tax.csv")
+#write.csv(not_in_tax, "not_in_tax.csv")
 
 #========================== end species name check ===========
 
@@ -2029,12 +2042,6 @@ spp_na<-dat %>%
 # sppNA_unique<-unique(spp_na[c("spp")])
 # write.csv(sppNA_unique, "sppNA_unique.csv")
 
-# #get list of higher order taxon names by region/survey and use to generate the list of higher order names to exclude later on
-#   dat_HO_list<-dat %>%
-#     filter(grepl("HigherOrder", rank)) %>%
-#     select(c("region", "spp", "rank")) %>%
-#     distinct()
-
 if(isTRUE(REMOVE_REGION_DATASETS)) {
   rm(ai, ebs, gmex, goa, neus_fall, neus_spring, seusFALL, seusSPRING, seusSUMMER, wcann, wctri, tax)
 }
@@ -2049,9 +2056,7 @@ if(isTRUE(WRITE_MASTER_DAT)){
 
 
 # Master "Filtered" dataset
-## TO DO: Add back in gmex_fltr once that region's code has been fixed
-
-dat_fltr <- rbind(ai_fltr, ebs_fltr, nbs_fltr, goa_fltr, neus_fall_fltr, neus_spring_fltr, seusFALL_fltr, seusSPRING_fltr, seusSUMMER_fltr, wcann_fltr, wctri_fltr) %>%
+dat_fltr <- rbind(ai_fltr, ebs_fltr, nbs_fltr, goa_fltr, gmex_fltr, neus_fall_fltr, neus_spring_fltr, seusFALL_fltr, seusSPRING_fltr, seusSUMMER_fltr, wcann_fltr, wctri_fltr) %>%
   # Remove NA values in wtcpue
   filter(!is.na(wtcpue)) %>%
   # remove any extra white space from around spp and common names
@@ -2080,13 +2085,7 @@ spp_na<-dat_fltr %>%
   filter(is.na(dat_fltr$spp) & is.na(dat_fltr$common)) %>%
   select(c("region", "spp", "common")) %>%
   distinct()
-# rm(spp_na)
-
-#This code chunk is for Appendix II in the Tech report (the species removed from dataset by taxon check and filtering)
-filtered_spp <- anti_join(dat, dat_fltr, by = c("region", "spp")) %>%
-  select(region, spp, common) %>%
-  distinct()
-# write.csv(filtered_spp, "filter_removed_spp.csv")
+rm(spp_na)
 
 if(isTRUE(REMOVE_REGION_DATASETS)) {
   rm(ai_fltr, ebs_fltr, gmex_fltr, goa_fltr, neus_fall_fltr, neus_spring_fltr, seusFALL_fltr, seusSPRING_fltr, seusSUMMER_fltr, wcann_fltr, wctri_fltr, tax)
@@ -2137,7 +2136,7 @@ trimmed_dat_fltr_expanded <- dat_fltr %>%
 
 #add an EBS+NBS combined region =========================
 #select years from compiled EBS that match the NBS survey years
-years<-c(2010, 2017, 2019, 2021, 2022, 2023)
+years<-c(2010, 2017, 2019, 2021, 2022, 2023, 2025)
 enbs_trimmed<- trimmed_dat_fltr_expanded  %>% filter(region %in% c("Eastern Bering Sea", "Northern Bering Sea"),
                                                      year %in% years) %>%
   mutate(region="Eastern and Northern Bering Sea")
@@ -2275,11 +2274,11 @@ spp_survey<-dat.exploded %>%
   distinct()
 
 ##This creates a df for Appendix I of tech report (list of all species in all the modules)
-spp__techreport <- dat.exploded %>%
+spp_techreport <- dat.exploded %>%
   group_by(spp, common) %>%
   summarise(regions = paste(unique(region), collapse = ", "),
             .groups = "drop")
-write.csv(spp__techreport, "SppList_AppendixI.csv")
+write.csv(spp_techreport, "SppList_AppendixI.csv")
 
 #Species available in the Single Species Shift Module
 spp_IDW<-dat.exploded %>%
@@ -2316,3 +2315,8 @@ num_spp_summary<-left_join(num_spp_summary, spp_reg_counts_Core, by=c("region"))
 write.csv(num_spp_summary, file=here("data_processing_rcode/output/data_clean", "summary_unique_spp_table_1_16_26.csv"))
 # write.csv(spplist_core, file=here("data_processing_rcode/output/data_clean","core_spp_list_7_10_25.csv"))
 
+#This code chunk is for Appendix II in the Tech report (the species removed from dataset by taxon check and filtering)
+filtered_spp <- anti_join(dat, trimmed_dat_fltr_expanded, by = c("region", "spp")) %>%
+  select(region, spp, common) %>%
+  distinct()
+write.csv(filtered_spp, "AppendixII_tech_report_removed_spp.csv")
