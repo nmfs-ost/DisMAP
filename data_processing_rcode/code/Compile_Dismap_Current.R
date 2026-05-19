@@ -1417,12 +1417,12 @@ if (HQ_DATA_ONLY == TRUE){
     geom_jitter()
 
   test <- neus_fall %>%
-    # filter(year != 2017, year >= 1974) %>%
+    filter(year!=2017, year >= 1974) %>%
     select(stratum, year) %>%
     distinct() %>%
     group_by(stratum) %>%
     summarise(count = n())%>%
-    filter(count >= 50)
+    filter(count >= 48)
 
   # how many rows will be lost if only stratum trawled fairly consistently (>48 years - so all but 2 of the years) are kept?
   test2 <- neus_fall %>%
@@ -2312,7 +2312,7 @@ spp_reg_counts_Core<-spplist_core%>%
 
 num_spp_summary<-left_join(spp_pers, spp_reg_counts_IDW, by=c("region"))
 num_spp_summary<-left_join(num_spp_summary, spp_reg_counts_Core, by=c("region"))
-write.csv(num_spp_summary, file=here("data_processing_rcode/output/data_clean", "summary_unique_spp_table_1_16_26.csv"))
+write.csv(num_spp_summary, file=here("data_processing_rcode/output/data_clean", "summary_unique_spp_table.csv"))
 # write.csv(spplist_core, file=here("data_processing_rcode/output/data_clean","core_spp_list_7_10_25.csv"))
 
 #This code chunk is for Appendix II in the Tech report (the species removed from dataset by taxon check and filtering)

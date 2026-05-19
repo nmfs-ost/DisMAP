@@ -73,7 +73,7 @@ species_filter_new <- species_filter_old %>%
   right_join(data_priority, by = c("FilterSubRegion", "Species", "CommonName")) %>%
   rbind(hawaii)
 
-write.csv(species_filter_new, file=here("data_processing_rcode", "Species_Filter_2026.csv"))
+write.csv(species_filter_new, file=here("data_processing_rcode", "Species_Filter.csv"))
 ## Write the csv^ and then check for any NA entries (taxon and FMP info)! ##
 ### These are new species and need to be filled in manually ###
 
