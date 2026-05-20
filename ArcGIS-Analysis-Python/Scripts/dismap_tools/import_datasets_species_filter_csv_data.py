@@ -5,11 +5,10 @@ Script documentation
 - Update derived parameter values using arcpy.SetParameter() or
                                         arcpy.SetParameterAsText()
 """
-import inspect
 import os
-import sys
+import sys # built-ins first
 import traceback
-
+import inspect
 import arcpy
 
 def trace():
@@ -23,29 +22,23 @@ def trace():
 
 def get_encoding_index_col(csv_file):
     try:
-        import datetime
         # Imports
         import chardet
         import pandas as pd
-
         # Open the file in binary mode
-        with open(csv_file, "rb") as f:
+        with open(csv_file, 'rb') as f:
             # Read the file's content
             data = f.read()
         # Detect the encoding using chardet.detect()
         encoding_result = chardet.detect(data)
         # Retrieve the encoding information
-        __encoding = encoding_result["encoding"]
+        __encoding = encoding_result['encoding']
         del f, data, encoding_result
         # arcpy.AddMessage the detected encoding
-        # arcpy.AddMessage("Detected Encoding:", __encoding)
+        #arcpy.AddMessage("Detected Encoding:", __encoding)
         dtypes = {}
         # Read the CSV file into a DataFrame
-        df = pd.read_csv(
-            csv_file,
-            encoding=__encoding,
-            delimiter=",",
-        )
+        df = pd.read_csv(csv_file, encoding  = __encoding, delimiter = ",",)
         # Analyze the data types and lengths
         for column in df.columns:
             dtypes[column] = df[column].dtype
@@ -58,387 +51,215 @@ def get_encoding_index_col(csv_file):
         del chardet, pd
         # Function Parameter
         del csv_file
-
-
-    except arcpy.ExecuteWarning:
-        arcpy.AddWarning(
-            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
-        )
     except arcpy.ExecuteError:
-        arcpy.AddError(
-            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
-        )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
-    except SystemExit:
-        # This is not an error, so we allow the script to exit.
-        pass
-    except Exception as e:
-        arcpy.AddError(
-            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
-        )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(arcpy.GetMessages(2))
+        raise SystemExit
+    except Exception:
+        traceback.print_exc()
+        arcpy.AddError(arcpy.GetMessages(2))
+        raise SystemExit
+    except:  # noqa: E722
+        traceback.print_exc()
+        arcpy.AddError(arcpy.GetMessages(2))
+        raise SystemExit
     else:
-        arcpy.AddMessage("\nScript finished successfully.")
         return __encoding, __index_column
     finally:
         pass
-        # arcpy.AddMessage(f"\n{'--End' * 10}--")
-
-
-# Helper function to find an element by XPath and set its text
-def find_and_set(root_element, path, text):
-    element = root_element.find(path)
-    if element is not None:
-        element.text = text
-
-# Helper function to create a contact element block
-def create_contact_element(contact_info, role_code, parent_tag):
-    contact_element = etree.Element(parent_tag)
-    etree.SubElement(contact_element, "rpIndName").text = contact_info.get(
-        "rpIndName"
-    )
-    etree.SubElement(contact_element, "rpOrgName").text = contact_info.get(
-        "rpOrgName"
-    )
-    etree.SubElement(contact_element, "rpPosName").text = contact_info.get(
-        "rpPosName"
-    )
-
-    rpCntInfo = etree.SubElement(contact_element, "rpCntInfo")
-    cnt_info_data = contact_info.get("cntInfo", {}) # Safely get cntInfo, default to an empty dict if not present
-    cntAddress = etree.SubElement(rpCntInfo, "cntAddress")
-    etree.SubElement(cntAddress, "delPoint").text = cnt_info_data.get(
-        "delPoint", ""
-    )
-    etree.SubElement(cntAddress, "city").text = cnt_info_data.get("city", "")
-    etree.SubElement(cntAddress, "adminArea").text = cnt_info_data.get(
-        "adminArea", ""
-    )
-    etree.SubElement(cntAddress, "postCode").text = cnt_info_data.get(
-        "postCode", ""
-    )
-    etree.SubElement(cntAddress, "country").text = cnt_info_data.get(
-        "country", ""
-    )
-    etree.SubElement(cntAddress, "eMailAdd").text = cnt_info_data.get(
-        "eMailAdd", ""
-    )
-
-    cntPhone = etree.SubElement(rpCntInfo, "cntPhone")
-    etree.SubElement(cntPhone, "voiceNum").text = cnt_info_data.get("voiceNum", "")
-
-    cntOnlineRes = etree.SubElement(rpCntInfo, "cntOnlineRes")
-    etree.SubElement(cntOnlineRes, "linkage").text = cnt_info_data.get("linkage", "")
-
-    role_element = etree.SubElement(contact_element, "role")
-    etree.SubElement(role_element, "RoleCd").set("value", role_code)
-
-    return contact_element
-
 
 def worker(project_gdb="", csv_file=""):
     try:
-        import datetime
         # Test if passed workspace exists, if not raise SystemExit
         if not arcpy.Exists(project_gdb) or not arcpy.Exists(csv_file):
-            raise SystemExit(
-                f"{os.path.basename(project_gdb)} OR {os.path.basename(csv_file)} is missing!!"
-            )
+            raise SystemExit(f"{os.path.basename(project_gdb)} OR {os.path.basename(csv_file)} is missing!!")
         # Imports
-        import dismap_tools
         from arcpy import metadata as md
-
+        import dismap_tools
         # Set History and Metadata logs, set serverity and message level
-        arcpy.SetLogHistory(
-            True
-        )  # Look in %AppData%\Roaming\Esri\ArcGISPro\ArcToolbox\History
+        arcpy.SetLogHistory(True) # Look in %AppData%\Roaming\Esri\ArcGISPro\ArcToolbox\History
         arcpy.SetLogMetadata(True)
-        arcpy.SetSeverityLevel(
-            2
-        )  # 0—A tool will not throw an exception, even if the tool produces an error or warning.
-        # 1—If a tool produces a warning or an error, it will throw an exception.
-        # 2—If a tool produces an error, it will throw an exception. This is the default.
-        arcpy.SetMessageLevels(
-            ["NORMAL"]
-        )  # NORMAL, COMMANDSYNTAX, DIAGNOSTICS, PROJECTIONTRANSFORMATION
+        arcpy.SetSeverityLevel(2) # 0—A tool will not throw an exception, even if the tool produces an error or warning.
+                                  # 1—If a tool produces a warning or an error, it will throw an exception.
+                                  # 2—If a tool produces an error, it will throw an exception. This is the default.
+        arcpy.SetMessageLevels(['NORMAL']) # NORMAL, COMMANDSYNTAX, DIAGNOSTICS, PROJECTIONTRANSFORMATION
         # Set basic workkpace variables
-        table_name = os.path.basename(csv_file).replace(".csv", "")
-        csv_data_folder = os.path.dirname(csv_file)
-        project_folder = os.path.dirname(csv_data_folder)
+        table_name        = os.path.basename(csv_file).replace(".csv", "")
+        csv_data_folder   = os.path.dirname(csv_file)
+        project_folder    = os.path.dirname(csv_data_folder)
         scratch_workspace = os.path.join(project_folder, "Scratch\\scratch.gdb")
         # Set basic workkpace variables
-        arcpy.env.workspace = project_gdb
-        arcpy.env.scratchWorkspace = r"Scratch\\scratch.gdb"
-        arcpy.env.overwriteOutput = True
+        arcpy.env.workspace                = project_gdb
+        arcpy.env.scratchWorkspace         = r"Scratch\\scratch.gdb"
+        arcpy.env.overwriteOutput          = True
         arcpy.env.parallelProcessingFactor = "100%"
-        # arcpy.AddMessage(table_name)
-        # arcpy.AddMessage(csv_data_folder)
+        #arcpy.AddMessage(table_name)
+        #arcpy.AddMessage(csv_data_folder)
         field_csv_dtypes = dismap_tools.dTypesCSV(csv_data_folder, table_name)
         field_gdb_dtypes = dismap_tools.dTypesGDB(csv_data_folder, table_name)
-        # arcpy.AddMessage(field_csv_dtypes)
-        # arcpy.AddMessage(field_gdb_dtypes)
+        #arcpy.AddMessage(field_csv_dtypes)
+        #arcpy.AddMessage(field_gdb_dtypes)
         arcpy.AddMessage(f"\tCreating Table: {table_name}")
-        arcpy.management.CreateTable(
-            project_gdb, f"{table_name}", "", "", table_name.replace("_", " ")
-        )
-        arcpy.AddMessage("\t{0}\n".format(arcpy.GetMessages().replace("\n", "\n\t")))
+        arcpy.management.CreateTable(project_gdb, f"{table_name}", "", "", table_name.replace("_", " "))
+        arcpy.AddMessage("\t{0}\n".format(arcpy.GetMessages().replace("\n", '\n\t')))
+        import pandas as pd
+        import numpy as np
         import warnings
-
-##        import numpy as np
-##        import pandas as pd
-##
-##        arcpy.AddMessage(f"> Importing {table_name} CSV Table")
-##        # csv_table = f"{table_name}.csv"
-##        # https://pandas.pydata.org/pandas-docs/stable/getting_started/intro_tutorials/09_timeseries.html?highlight=datetime
-##        # https://www.tutorialsandyou.com/python/numpy-data-types-66.html
-##        # df = pd.read_csv('my_file.tsv', sep='\t', header=0)  ## not setting the index_col
-##        # df.set_index(['0'], inplace=True)
-##        # C:\. . .\ArcGIS\Pro\bin\Python\envs\arcgispro-py3\lib\site-packages\numpy\lib\arraysetops.py:583:
-##        # FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-##        # mask |= (ar1 == a)
-##        # A fix: https://www.youtube.com/watch?v=TTeElATMpoI
-##        # TLDR: pandas are Jedi; numpy are the hutts; and python is the galatic empire
-##        # encoding, index_column = dismap_tools.get_encoding_index_col(csv_file)
-##        encoding, index_column = get_encoding_index_col(csv_file)
-##        with warnings.catch_warnings():
-##            warnings.simplefilter(action="ignore", category=FutureWarning)
-##            # DataFrame
-##            df = pd.read_csv(
-##                csv_file,
-##                index_col=index_column,
-##                encoding=encoding,
-##                delimiter=",",
-##                dtype=field_csv_dtypes,
-##            )
-##        del encoding, index_column
-##        # arcpy.AddMessage(field_csv_dtypes)
-##        # arcpy.AddMessage(field_gdb_dtypes)
-##        del field_csv_dtypes
-##        # arcpy.AddMessage(df)
-##        # Replace NaN with an empty string. When pandas reads a cell
-##        # with missing data, it asigns that cell with a Null or nan
-##        # value. So, we are changing that value to an empty string of ''.
-##        # https://community.esri.com/t5/python-blog/those-pesky-null-things/ba-p/902664
-##        # https://community.esri.com/t5/python-blog/numpy-snippets-6-much-ado-about-nothing-nan-stuff/ba-p/893702
-##        df.fillna("", inplace=True)
-##        # df.fillna(np.nan)
-##        # df = df.replace({np.nan: None})
-##        # Alternatively, apply to all columns at once
-##        df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
-##        arcpy.AddMessage(f">-> Creating the {table_name} Geodatabase Table")
-##        try:
-##            array = np.array(np.rec.fromrecords(df.values), dtype=field_gdb_dtypes)
-##        except:  # noqa: E722
-##            traceback.print_exc()
-##            raise SystemExit
-##        del df
-##        del field_gdb_dtypes
-##        # Temporary table
-##        tmp_table = rf"memory\{table_name.lower()}_tmp"
-##        try:
-##            arcpy.da.NumPyArrayToTable(array, tmp_table)
-##            del array
-##        # Captures ArcPy type of error
-##        except:  # noqa: E722
-##            traceback.print_exc()
-##            raise SystemExit
-##        arcpy.AddMessage(f">-> Copying the {table_name} Table from memory to the GDB")
-##        fields = [f.name for f in arcpy.ListFields(tmp_table) if f.type == "String"]
-##        for field in fields:
-##            arcpy.management.CalculateField(
-##                tmp_table,
-##                field=field,
-##                expression=f"'' if !{field}! is None else !{field}!",
-##            )
-##            arcpy.AddMessage(
-##                "Calculate Field:\t{0}\n".format(
-##                    arcpy.GetMessages().replace("\n", "\n\t")
-##                )
-##            )
-##            del field
-##        del fields
-##        dataset_path = rf"{project_gdb}\{table_name}"
-##        arcpy.management.CopyRows(tmp_table, dataset_path, "")
-##        arcpy.AddMessage(
-##            "Copy Rows:\t{0}\n".format(arcpy.GetMessages().replace("\n", "\n\t"))
-##        )
-##        # Remove the temporary table
-##        arcpy.management.Delete(tmp_table)
-##
-##        # Alter Fields
-##        dismap_tools.alter_fields(csv_data_folder, dataset_path)
-##
-##        # --- Data-Driven Metadata Creation (Refactored) ---
-##        from arcpy import metadata as md
-##        from lxml import etree
-##        import json # Moved here to avoid conflict with global datetime import
-##
-##        arcpy.AddMessage(">-> Applying data-driven metadata")
-##        metadata_applied_successfully = False
-##        try:
-##            # Load contact dictionary
-##            contact_dict_path = os.path.join(
-##                project_folder, "CSV_Data", "contact_dict.json"
-##            )
-##            with open(contact_dict_path, 'r') as f:
-##                contact_data = json.load(f)
-##
-##        except FileNotFoundError:
-##            arcpy.AddWarning(f"Metadata generation skipped: 'contact_dict.json' not found at '{contact_dict_path}'.")
-##            return # Skip metadata generation if essential file is missing
-##        except json.JSONDecodeError:
-##            arcpy.AddWarning(f"Metadata generation skipped: 'contact_dict.json' at '{contact_dict_path}' contains invalid JSON.")
-##            return # Skip metadata generation if essential file is malformed
-##        finally: del contact_dict_path
-##
-##        # Load the XML template
-##            template_xml_path = os.path.join(
-##                project_folder, "Layers", "metadata_templates", "csv_metadata_template.xml"
-##            )
-##            if not os.path.exists(template_xml_path):
-##                _create_csv_metadata_template(template_xml_path)
-##            try:
-##                parser = etree.XMLParser(encoding='UTF-8', remove_blank_text=True)
-##                target_tree = etree.parse(template_xml_path, parser)
-##                target_root = target_tree.getroot()
-##            except FileNotFoundError:
-##                arcpy.AddWarning(f"Metadata generation skipped: 'csv_metadata_template.xml' not found at '{template_xml_path}'.")
-##                return # Skip metadata generation if essential file is missing
-##            except etree.XMLSyntaxError:
-##                arcpy.AddWarning(f"Metadata generation skipped: 'csv_metadata_template.xml' at '{template_xml_path}' contains invalid XML.")
-##                return # Skip metadata generation if essential file is malformed
-##            del template_xml_path, parser
-##
-##            # Map JSON keys to their parent XML XPaths in the template
-##            contact_map = {
-##                "citRespParty": "./dataIdInfo/idCitation",
-##                "idPoC": "./dataIdInfo",
-##                "distorCont": "./distInfo/distributor",
-##                "mdContact": ".",
-##                "stepProc": ".//prcStep",
-##            }
-##
-##            # Populate contacts by injecting them into the XML tree
-##            for key, xpath in contact_map.items():
-##                if key in contact_data:
-##                    try:
-##                        parent_element = target_root.find(xpath)
-##                        if parent_element is not None:
-##                            # Remove any existing contacts of the same type before adding new ones
-##                            for old_contact in parent_element.findall(key):
-##                                parent_element.remove(old_contact)
-##                            for contact_info in contact_data[key]:
-##                                contact_xml_block = create_contact_element(
-##                                    contact_info, contact_info["role"], key
-##                                )
-##                                parent_element.append(contact_xml_block)
-##                    except KeyError as ke:
-##                        arcpy.AddWarning(f"Skipping contact '{key}' due to missing key in contact_data: {ke}.")
-##
-##            # Populate other dynamic fields using lxml, not string replacement
-##            arcpy.AddMessage(">-> Populating dynamic metadata fields using lxml")
-##            current_time = datetime.datetime.now()
-##
-##            # Core Identification & other fields
-##            find_and_set(target_root, "./dataIdInfo/idCitation/resTitle", table_name.replace("_", " "))
-##            find_and_set(target_root, "./dataIdInfo/idAbs", f"This table, '{table_name.replace('_', ' ')}', contains ancillary data for the DisMAP project, imported from a source CSV file. It serves as a foundational dataset for geospatial analysis and data visualization within the portal.")
-##            find_and_set(target_root, "./dataIdInfo/idPurp", "This table is used as a lookup table for various attributes within the DisMAP project, supporting fisheries science and management.")
-##            find_and_set(target_root, "./dataIdInfo/idCredit", "These data were produced by the NMFS Office of Science and Technology as part of the Distribution Mapping and Analysis Portal (DisMAP) initiative.")
-##            find_and_set(target_root, "./dataIdInfo/resConst/Consts/useLimit", "***No Warranty*** The user assumes the entire risk related to its use of these data. NMFS is providing these data \"as is\" and NMFS disclaims any and all warranties, whether express or implied, including (without limitation) any implied warranties of merchantability or fitness for a particular purpose. No warranty expressed or implied is made regarding the accuracy or utility of the data on any other system or for general or scientific purposes, nor shall the act of distribution constitute any such warranty. It is strongly recommended that careful attention be paid to the contents of the metadata file associated with these data to evaluate dataset limitations, restrictions or intended use. In no event will NMFS be liable to you or to any third party for any direct, indirect, incidental, consequential, special or exemplary damages or lost profit resulting from any use or misuse of these data.")
-##            # Dates
-##            find_and_set(target_root, "./Esri/CreaDate", current_time.strftime("%Y%m%d"))
-##            find_and_set(target_root, "./Esri/CreaTime", current_time.strftime("%H%M%S") + "00")
-##            find_and_set(target_root, "./mdDateSt", current_time.strftime("%Y%m%d"))
-##            find_and_set(target_root, "./dataIdInfo/idCitation/date/pubDate", "2025-08-01") # This seems like a fixed date, keep as is.
-##            find_and_set(target_root, ".//prcStep/stepDateTm", current_time.isoformat())
-##
-##            # Apply the new metadata to the geodatabase table
-##            dataset_md = md.Metadata(dataset_path)
-##            dataset_md.xml = etree.tostring(
-##                target_root, encoding="UTF-8", xml_declaration=True, pretty_print=True
-##            )
-##            dataset_md.save()
-##            metadata_applied_successfully = True
-##
-##        # --- End of Metadata Logic ---
-##
-##        # Load Metadata
-##        # dataset_md = md.Metadata(dataset_path)
-##        # dataset_md.synchronize("ALWAYS")
-##        # dataset_md.save()
-##        # del dataset_md
-##        arcpy.AddMessage(f"Compacting the {os.path.basename(project_gdb)} GDB")
-##        arcpy.management.Compact(project_gdb)
-##        arcpy.AddMessage("\t" + arcpy.GetMessages().replace("\n", "\n\t"))
-##        # Basic variables
-##        del tmp_table, dataset_path
-##        del table_name, csv_data_folder, project_folder, scratch_workspace
-##        # Imports
-##        del dismap_tools, pd, np, warnings
-##        # Function parameters
-##        del project_gdb, csv_file
-
-    except arcpy.ExecuteError as e:
-        arcpy.AddWarning(f"ArcPy metadata error for {table_name}: {e}.")
+        arcpy.AddMessage(f"> Importing {table_name} CSV Table")
+        #csv_table = f"{table_name}.csv"
+        # https://pandas.pydata.org/pandas-docs/stable/getting_started/intro_tutorials/09_timeseries.html?highlight=datetime
+        # https://www.tutorialsandyou.com/python/numpy-data-types-66.html
+        #df = pd.read_csv('my_file.tsv', sep='\t', header=0)  ## not setting the index_col
+        #df.set_index(['0'], inplace=True)
+        # C:\. . .\ArcGIS\Pro\bin\Python\envs\arcgispro-py3\lib\site-packages\numpy\lib\arraysetops.py:583:
+        # FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+        # mask |= (ar1 == a)
+        # A fix: https://www.youtube.com/watch?v=TTeElATMpoI
+        # TLDR: pandas are Jedi; numpy are the hutts; and python is the galatic empire
+        #encoding, index_column = dismap_tools.get_encoding_index_col(csv_file)
+        encoding, index_column = get_encoding_index_col(csv_file)
+        with warnings.catch_warnings():
+            warnings.simplefilter(action='ignore', category=FutureWarning)
+            # DataFrame
+            df = pd.read_csv(
+                             csv_file,
+                             index_col = index_column,
+                             encoding  = encoding,
+                             delimiter = ",",
+                             dtype     = field_csv_dtypes,
+                            )
+        del encoding, index_column
+        #arcpy.AddMessage(field_csv_dtypes)
+        #arcpy.AddMessage(field_gdb_dtypes)
+        del field_csv_dtypes
+        #arcpy.AddMessage(df)
+        # Replace NaN with an empty string. When pandas reads a cell
+        # with missing data, it asigns that cell with a Null or nan
+        # value. So, we are changing that value to an empty string of ''.
+        # https://community.esri.com/t5/python-blog/those-pesky-null-things/ba-p/902664
+        # https://community.esri.com/t5/python-blog/numpy-snippets-6-much-ado-about-nothing-nan-stuff/ba-p/893702
+        df.fillna('', inplace=True)
+        #df.fillna(np.nan)
+        #df = df.replace({np.nan: None})
+        # Alternatively, apply to all columns at once
+        df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+        arcpy.AddMessage(f">-> Creating the {table_name} Geodatabase Table")
+        try:
+            array = np.array(np.rec.fromrecords(df.values), dtype = field_gdb_dtypes)
+        except:  # noqa: E722
+            traceback.print_exc()
+            raise SystemExit
+        del df
+        del field_gdb_dtypes
+        # Temporary table
+        tmp_table = rf"memory\{table_name.lower()}_tmp"
+        try:
+            arcpy.da.NumPyArrayToTable(array, tmp_table)
+            del array
+        # Captures ArcPy type of error
+        except:  # noqa: E722
+            traceback.print_exc()
+            raise SystemExit
+        arcpy.AddMessage(f">-> Copying the {table_name} Table from memory to the GDB")
+        fields = [f.name for f in arcpy.ListFields(tmp_table) if f.type == "String"]
+        for field in fields:
+            arcpy.management.CalculateField(tmp_table, field=field, expression=f"'' if !{field}! is None else !{field}!")
+            arcpy.AddMessage("Calculate Field:\t{0}\n".format(arcpy.GetMessages().replace("\n", '\n\t')))
+            del field
+        del fields
+        dataset_path = rf"{project_gdb}\{table_name}"
+        arcpy.management.CopyRows(tmp_table, dataset_path, "")
+        arcpy.AddMessage("Copy Rows:\t{0}\n".format(arcpy.GetMessages().replace("\n", '\n\t')))
+        # Remove the temporary table
+        arcpy.management.Delete(tmp_table)
+        del tmp_table
+        #arcpy.conversion.ExportTable(in_table = dataset_path, out_table  = rf"{csv_data_folder}\_{table_name}.csv", where_clause="", use_field_alias_as_name = "NOT_USE_ALIAS")
+        #arcpy.AddMessage("Export Table:\t{0}\n".format(arcpy.GetMessages().replace("\n", '\n\t')))
+        # Alter Fields
+        dismap_tools.alter_fields(csv_data_folder, dataset_path)
+        dismap_tools.import_metadata(csv_data_folder=csv_data_folder,dataset=dataset_path)
+        # Load Metadata
+        #dataset_md = md.Metadata(dataset_path)
+        #dataset_md.synchronize("ALWAYS")
+        #dataset_md.save()
+        #del dataset_md
+        arcpy.AddMessage(f"Compacting the {os.path.basename(project_gdb)} GDB")
+        arcpy.management.Compact(project_gdb)
+        arcpy.AddMessage("\t"+arcpy.GetMessages().replace("\n", "\n\t"))
+        # Basic variables
+        del dataset_path
+        del table_name, csv_data_folder, project_folder, scratch_workspace
+        # Imports
+        del dismap_tools, md, pd, np, warnings
+        # Function parameters
+        del project_gdb, csv_file
+    except KeyboardInterrupt:
+        raise SystemExit
+    except arcpy.ExecuteWarning:
+        arcpy.AddWarning(arcpy.GetMessages(1))
+    except arcpy.ExecuteError:
+        arcpy.AddError(arcpy.GetMessages(2))
         traceback.print_exc()
-    except KeyError as e:
-        arcpy.AddWarning(f"Metadata generation for {table_name} failed due to missing key: {e}. Check the metadata template or contact_dict.json.")
+        raise SystemExit
+    except SystemExit:
+        sys.exit()
+    except Exception:
+        arcpy.AddError(arcpy.GetMessages(2))
         traceback.print_exc()
-    except Exception as e:
-        arcpy.AddWarning(f"An unexpected error occurred during metadata generation for {table_name}: {e}.")
+        raise SystemExit
+    except:  # noqa: E722
+        arcpy.AddError(arcpy.GetMessages(2))
         traceback.print_exc()
-
-
+        raise SystemExit
+    else:
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk:
+            arcpy.AddMessage(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##")
+        del rk
+        return True
+    finally:
+        pass
 def update_datecode(csv_file="", project_name=""):
     try:
-        # sys.path.append(os.path.abspath('../dev'))
+        #sys.path.append(os.path.abspath('../dev'))
         # Imports
-        import warnings
-
         import dismap_tools
         import pandas as pd
-
+        import warnings
         # Set History and Metadata logs, set serverity and message level
-        arcpy.SetLogHistory(
-            True
-        )  # Look in %AppData%\Roaming\Esri\ArcGISPro\ArcToolbox\History
+        arcpy.SetLogHistory(True) # Look in %AppData%\Roaming\Esri\ArcGISPro\ArcToolbox\History
         arcpy.SetLogMetadata(True)
-        arcpy.SetSeverityLevel(
-            2
-        )  # 0—A tool will not throw an exception, even if the tool produces an error or warning.
-        # 1—If a tool produces a warning or an error, it will throw an exception.
-        # 2—If a tool produces an error, it will throw an exception. This is the default.
-        arcpy.SetMessageLevels(
-            ["NORMAL"]
-        )  # NORMAL, COMMANDSYNTAX, DIAGNOSTICS, PROJECTIONTRANSFORMATION
-        table_name = os.path.basename(csv_file).replace(".csv", "")
+        arcpy.SetSeverityLevel(2) # 0—A tool will not throw an exception, even if the tool produces an error or warning.
+                                  # 1—If a tool produces a warning or an error, it will throw an exception.
+                                  # 2—If a tool produces an error, it will throw an exception. This is the default.
+        arcpy.SetMessageLevels(['NORMAL']) # NORMAL, COMMANDSYNTAX, DIAGNOSTICS, PROJECTIONTRANSFORMATION
+        table_name      = os.path.basename(csv_file).replace(".csv", "")
         csv_data_folder = os.path.dirname(csv_file)
         # Set basic arcpy.env variables
-        arcpy.env.overwriteOutput = True
+        arcpy.env.overwriteOutput          = True
         arcpy.env.parallelProcessingFactor = "100%"
         field_csv_dtypes = dismap_tools.dTypesCSV(csv_data_folder, table_name)
         arcpy.AddMessage(f"\tUpdating CSV file: {os.path.basename(csv_file)}")
-        # arcpy.AddMessage(f"\t\t{csv_file}")
+        #arcpy.AddMessage(f"\t\t{csv_file}")
         # C:\. . .\ArcGIS\Pro\bin\Python\envs\arcgispro-py3\lib\site-packages\numpy\lib\arraysetops.py:583:
         # FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
         # mask |= (ar1 == a)
         # A fix: https://www.youtube.com/watch?v=TTeElATMpoI
         # TLDR: pandas are Jedi; numpy are the hutts; and python is the galatic empire
         with warnings.catch_warnings():
-            warnings.simplefilter(action="ignore", category=FutureWarning)
+            warnings.simplefilter(action='ignore', category=FutureWarning)
             # DataFrame
-            df = pd.read_csv(
-                csv_file,
-                index_col=0,
-                encoding="utf-8",
-                delimiter=",",
-                dtype=field_csv_dtypes,
-            )
+            df = pd.read_csv(csv_file,
+                             index_col = 0,
+                             encoding  = "utf-8",
+                             delimiter = ',',
+                             dtype     = field_csv_dtypes,
+                            )
         old_date_code = df.DateCode.unique()[0]
         arcpy.AddMessage(f"\tOld Date Code: {old_date_code}")
         arcpy.AddMessage(f"\tNew Date Code: {dismap_tools.date_code(project_name)}")
-        df = df.replace(regex=old_date_code, value=dismap_tools.date_code(project_name))
-        df.to_csv(path_or_buf=f"{csv_file}", sep=",")
+        df = df.replace(regex = old_date_code, value = dismap_tools.date_code(project_name))
+        df.to_csv(path_or_buf = f"{csv_file}", sep = ',')
         del df, pd, warnings
         del old_date_code
         arcpy.AddMessage(f"\tCompleted updating CSV file: {os.path.basename(csv_file)}")
@@ -448,88 +269,43 @@ def update_datecode(csv_file="", project_name=""):
         del dismap_tools
         # Function parameters
         del csv_file, project_name
+    except KeyboardInterrupt:
+        raise SystemExit
     except arcpy.ExecuteWarning:
-        arcpy.AddWarning(
-            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
-        )
+        arcpy.AddWarning(arcpy.GetMessages(1))
     except arcpy.ExecuteError:
-        arcpy.AddError(
-            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
-        )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(arcpy.GetMessages(2))
+        traceback.print_exc()
+        raise SystemExit
     except SystemExit:
-        # This is not an error, so we allow the script to exit.
-        raise
-    except Exception as e:
-        arcpy.AddError(
-            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
-        )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(arcpy.GetMessages(2))
+        traceback.print_exc()
+        raise SystemExit
+    except Exception:
+        arcpy.AddError(arcpy.GetMessages(2))
+        traceback.print_exc()
+        raise SystemExit
+    except:  # noqa: E722
+        arcpy.AddError(arcpy.GetMessages(2))
+        traceback.print_exc()
+        raise SystemExit
     else:
-        arcpy.AddMessage("\nScript finished successfully.")
+        # While in development, leave here. For test, move to finally
+        rk = [key for key in locals().keys() if not key.startswith('__')]
+        if rk:
+            arcpy.AddMessage(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##")
+        del rk
         return True
     finally:
         pass
-        #arcpy.AddMessage(f"\n{'--End' * 10}--")
-
-
-def _create_csv_metadata_template(template_path):
-    """
-    Creates a basic XML metadata template file for CSV data.
-    """
-    try:
-        os.makedirs(os.path.dirname(template_path), exist_ok=True)
-##        if not os.path.exists(os.path.dirname(template_path)):
-##            os.makedirs(os.path.dirname(template_path))
-##            os.makedirs(os.path.dirname(template_path), exist_ok=True)
-
-        current_datetime = datetime.datetime.now() # Use datetime.datetime
-        crea_date = current_datetime.strftime("%Y%m%d")
-        crea_time = current_datetime.strftime("%H%M%S") + "00"
-
-        template_content = f"""<?xml version="1.0" encoding="UTF-8"?>
-<metadata xml:lang="en">
-  <Esri>
-    <CreaDate>{crea_date}</CreaDate>
-    <CreaTime>{crea_time}</CreaTime>
-    <ArcGISFormat>1.0</ArcGISFormat>
-    <SyncOnce>TRUE</SyncOnce>
-  </Esri>
-  <dataIdInfo>
-    <idCitation>
-      <resTitle>CSV Data Table</resTitle>
-    </idCitation>
-    <idAbs>This is a generic metadata template for CSV data tables used in the DisMAP project.</idAbs>
-    <idPurp>This template provides a basic structure for metadata associated with CSV files, ensuring consistency and discoverability within the DisMAP project.</idPurp>
-    <idCredit>NMFS Office of Science and Technology</idCredit>
-    <resConst>
-      <Consts>
-        <useLimit>***No Warranty*** The user assumes the entire risk related to its use of these data. NMFS is providing these data "as is" and NMFS disclaims any and all warranties, whether express or implied, including (without limitation) any implied warranties of merchantability or fitness for a particular purpose. No warranty expressed or implied is made regarding the accuracy or utility of the data on any other system or for a particular purpose. No warranty expressed or implied is made regarding the accuracy or utility of the data on any other system or for general or scientific purposes, nor shall the act of distribution constitute any such warranty. It is strongly recommended that careful attention be paid to the contents of the metadata file associated with these data to evaluate dataset limitations, restrictions or intended use. In no event will NMFS be liable to you or to any third party for any direct, indirect, incidental, consequential, special or exemplary damages or lost profit resulting from any use or misuse of these data.</useLimit>
-      </Consts>
-    </resConst>
-  </dataIdInfo>
-</metadata>"""
-
-        with open(template_path, "w", encoding="utf-8") as f:
-            f.write(template_content)
-        arcpy.AddMessage(f"Created missing CSV metadata template: {os.path.basename(template_path)}")
-
-    except Exception as e:
-        arcpy.AddError(f"Error creating CSV metadata template: {e}")
-        traceback.print_exc() # Added traceback for debugging
-        raise
-
-
-
-def script_tool(home_folder, project_name):
+def script_tool(project_folder=""):
     """Script code goes below"""
     try:
-        from io import StringIO
-        from time import gmtime, localtime, strftime, time
-
-        import dismap_tools
-        from arcpy import metadata as md
         from lxml import etree
+        from arcpy import metadata as md
+        from  io import StringIO
+        import dismap_tools
+        from time import gmtime, localtime, strftime, time
         # Set a start time so that we can see how log things take
         start_time = time()
         arcpy.AddMessage(f"{'-' * 80}")
@@ -539,116 +315,65 @@ def script_tool(home_folder, project_name):
         arcpy.AddMessage(f"Environment:    {os.path.basename(sys.exec_prefix)}")
         arcpy.AddMessage(f"{'-' * 80}\n")
         # Imports
-        # from dev_import_datasets_species_filter_csv_data import worker
+        #from dev_import_datasets_species_filter_csv_data import worker
         # Set basic arcpy.env variables
-        arcpy.env.overwriteOutput = True
+        arcpy.env.overwriteOutput          = True
         arcpy.env.parallelProcessingFactor = "100%"
-
-
-        project_folder = os.path.join(home_folder, f"{project_name}")
-        project_gdb    = os.path.join(project_folder, f"{project_name}.gdb")
-
-        metadata_template_folder = os.path.join(project_folder, "Layers\\metadata_templates")
-        csv_data_folder          = os.path.join(project_folder, "CSV_Data")
-        datasets_csv             = os.path.join(project_folder, "Datasets.csv")
-        species_filter_csv       = os.path.join(csv_data_folder, "Species_Filter.csv")
-        survey_metadata_csv      = os.path.join(csv_data_folder, "DisMAP_Survey_Info.csv")
-
-        SpeciesPersistenceIndicatorTrend = os.path.join(csv_data_folder, "SpeciesPersistenceIndicatorTrend.csv")
-        SpeciesPersistenceIndicatorPercentileBin = os.path.join(csv_data_folder, "SpeciesPersistenceIndicatorPercentileBin.csv")
-
-        arcpy.management.Copy(
-            os.path.join(home_folder, f"Initial-Data\\Datasets_{dismap_tools.date_code(project_name)}.csv"), datasets_csv,
-        )
-        arcpy.management.Copy(
-            os.path.join(home_folder, f"Initial-Data\\Species_Filter_{dismap_tools.date_code(project_name)}.csv"),
-            species_filter_csv,
-        )
-        arcpy.management.Copy(
-            os.path.join(home_folder, f"Initial-Data\\DisMAP_Survey_Info_{dismap_tools.date_code(project_name)}.csv"),
-            survey_metadata_csv,
-        )
-        arcpy.management.Copy(
-            os.path.join(home_folder, f"Initial-Data\\SpeciesPersistenceIndicatorTrend_{dismap_tools.date_code(project_name)}.csv"),
-            SpeciesPersistenceIndicatorTrend,
-        )
-        arcpy.management.Copy(
-            os.path.join(home_folder, f"Initial-Data\\SpeciesPersistenceIndicatorPercentileBin_{dismap_tools.date_code(project_name)}.csv"),
-            SpeciesPersistenceIndicatorPercentileBin,
-        )
+        #project_folder      = rf"{os.path.dirname(project_gdb)}"
+        project_name        = rf"{os.path.basename(project_folder)}"
+        project_gdb         = rf"{project_folder}\{project_name}.gdb"
+        home_folder         = rf"{os.path.dirname(project_folder)}"
+        csv_data_folder     = rf"{project_folder}\CSV_Data"
+        datasets_csv        = rf"{csv_data_folder}\Datasets.csv"
+        species_filter_csv  = rf"{csv_data_folder}\Species_Filter.csv"
+        survey_metadata_csv = rf"{csv_data_folder}\DisMAP_Survey_Info.csv"
+        SpeciesPersistenceIndicatorTrend = rf"{csv_data_folder}\SpeciesPersistenceIndicatorTrend.csv"
+        SpeciesPersistenceIndicatorPercentileBin = rf"{csv_data_folder}\SpeciesPersistenceIndicatorPercentileBin.csv"
+        arcpy.management.Copy(rf"{home_folder}\Initial Data\Datasets_{dismap_tools.date_code(project_name)}.csv", datasets_csv)
+        arcpy.management.Copy(rf"{home_folder}\Initial Data\Species_Filter_{dismap_tools.date_code(project_name)}.csv", species_filter_csv)
+        arcpy.management.Copy(rf"{home_folder}\Initial Data\DisMAP_Survey_Info_{dismap_tools.date_code(project_name)}.csv", survey_metadata_csv)
+        arcpy.management.Copy(rf"{home_folder}\Initial Data\SpeciesPersistenceIndicatorTrend_{dismap_tools.date_code(project_name)}.csv", SpeciesPersistenceIndicatorTrend)
+        arcpy.management.Copy(rf"{home_folder}\Initial Data\SpeciesPersistenceIndicatorPercentileBin_{dismap_tools.date_code(project_name)}.csv", SpeciesPersistenceIndicatorPercentileBin)
         import json
-
-        if not os.path.exists(metadata_template_folder):
-            os.makedirs(metadata_template_folder)
-
-        template_xml_path = os.path.join(
-            metadata_template_folder, "csv_metadata_template.xml"
-        )
-
-        if not os.path.exists(template_xml_path):
-            _create_csv_metadata_template(template_xml_path)
-
         json_path = rf"{csv_data_folder}\root_dict.json"
-        with open(json_path, "r", encoding='utf-8') as json_file:
+        with open(json_path, "r") as json_file:
             root_dict = json.load(json_file)
         del json_file
         del json_path
         del json
-
-        datasets = [
-            datasets_csv,
-            species_filter_csv,
-            survey_metadata_csv,
-            SpeciesPersistenceIndicatorTrend,
-            SpeciesPersistenceIndicatorPercentileBin,
-        ]
+        contacts = rf"{home_folder}\Datasets\DisMAP Contacts 2026 02 01.xml"
+        datasets = [datasets_csv, species_filter_csv, survey_metadata_csv, SpeciesPersistenceIndicatorTrend, SpeciesPersistenceIndicatorPercentileBin]
         for dataset in datasets:
             arcpy.AddMessage(rf"Metadata for: {os.path.basename(dataset)}")
             dataset_md = md.Metadata(dataset)
             dataset_md.synchronize("ALWAYS")
-            # Start with a clean slate and import the full template
-            dataset_md.copy(md.Metadata())
             dataset_md.save()
-            dataset_md.importMetadata(template_xml_path, "ARCGIS_METADATA")
-            dataset_md.save() # Save after import
+            dataset_md.importMetadata(contacts, "ARCGIS_METADATA")
+            dataset_md.save()
+            dataset_md.synchronize("OVERWRITE")
+            dataset_md.save()
             dataset_md.synchronize("ALWAYS")
             dataset_md.save()
-            target_tree = etree.parse(
-                StringIO(dataset_md.xml),
-                parser=etree.XMLParser(encoding="UTF-8", remove_blank_text=True),
-            )
+            target_tree = etree.parse(StringIO(dataset_md.xml), parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True))
             target_root = target_tree.getroot()
-            target_root[:] = sorted(
-                target_root, key=lambda x: root_dict.get(x.tag, 99)
-            ) # Sort elements based on root_dict
-
-            # Customize Title
-            title = os.path.basename(dataset).replace(".csv", "").replace("_", " ")
-            resTitle = target_root.find("./dataIdInfo/idCitation/resTitle")
-            if resTitle is not None:
-                resTitle.text = title
-
-            etree.indent(target_root, space="    ")
-            dataset_md.xml = etree.tostring(
-                target_tree,
-                encoding="UTF-8",
-                method="xml", # Specify method for consistency
-                xml_declaration=True,
-                pretty_print=True,
-            )
+            target_root[:] = sorted(target_root, key=lambda x: root_dict[x.tag])  # noqa: F821
+            new_item_name = target_root.find("Esri/DataProperties/itemProps/itemName").text
+            #arcpy.AddMessage(new_item_name)
+            etree.indent(target_root, space='    ')
+            dataset_md.xml = etree.tostring(target_tree, encoding='UTF-8', method='xml', xml_declaration=True, pretty_print=True)
             dataset_md.save()
             dataset_md.synchronize("ALWAYS")
             dataset_md.save()
-            # arcpy.AddMessage(dataset_md.xml)
-            del dataset_md, title, resTitle
-            del dataset, target_tree, target_root
+            #arcpy.AddMessage(dataset_md.xml)
+            del dataset_md
+            del dataset
         del datasets
-        del csv_data_folder, metadata_template_folder
+        del csv_data_folder
         #
         UpdateDatecode = True
         if UpdateDatecode:
             # Update DateCode
-            # arcpy.AddMessage(datasets_csv)
+            #arcpy.AddMessage(datasets_csv)
             arcpy.AddMessage(project_name)
             update_datecode(csv_file=datasets_csv, project_name=project_name)
         del UpdateDatecode
@@ -658,116 +383,86 @@ def script_tool(home_folder, project_name):
             worker(project_gdb=project_gdb, csv_file=datasets_csv)
         del DatasetsCSVFile
         #
-        SpeciesFilterCSVFile = False
+        SpeciesFilterCSVFile = True
         if SpeciesFilterCSVFile:
             worker(project_gdb=project_gdb, csv_file=species_filter_csv)
         del SpeciesFilterCSVFile
         #
-        DisMAPSurveyInfoFile = False
+        DisMAPSurveyInfoFile = True
         if DisMAPSurveyInfoFile:
             worker(project_gdb=project_gdb, csv_file=survey_metadata_csv)
         del DisMAPSurveyInfoFile
         #
-        SpeciesPersistenceIndicatorPercentileBinFile = False
+        SpeciesPersistenceIndicatorPercentileBinFile = True
         if SpeciesPersistenceIndicatorPercentileBinFile:
-            worker(
-                project_gdb=project_gdb,
-                csv_file=SpeciesPersistenceIndicatorPercentileBin,
-            )
+            worker(project_gdb=project_gdb, csv_file=SpeciesPersistenceIndicatorPercentileBin)
         del SpeciesPersistenceIndicatorPercentileBinFile
         #
-        SpeciesPersistenceIndicatorTrendFile = False
+        SpeciesPersistenceIndicatorTrendFile = True
         if SpeciesPersistenceIndicatorTrendFile:
             worker(project_gdb=project_gdb, csv_file=SpeciesPersistenceIndicatorTrend)
         del SpeciesPersistenceIndicatorTrendFile
         # # # # # #
         # Declared Varaiables
         del SpeciesPersistenceIndicatorPercentileBin, SpeciesPersistenceIndicatorTrend
-        del (
-            datasets_csv,
-            species_filter_csv,
-            survey_metadata_csv,
-            home_folder,
-            project_name,
-        )
+        del datasets_csv, species_filter_csv, survey_metadata_csv, home_folder, project_name
         # Declared Variables
-        #d el contacts, target_tree, target_root, new_item_name, root_dict
+        del contacts, target_tree, target_root, new_item_name, root_dict
         # Imports
         del etree, md, StringIO, dismap_tools
         # Function Parameters
         del project_folder
         # Elapsed time
         end_time = time()
-        elapse_time = end_time - start_time
+        elapse_time =  end_time - start_time
         arcpy.AddMessage(f"\n{'-' * 80}")
-        arcpy.AddMessage(
-            f"Python script: {os.path.basename(__file__)}\nCompleted: {strftime('%a %b %d %I:%M %p', localtime())}"
-        )
-        arcpy.AddMessage(
-            "Elapsed Time {0} (H:M:S)".format(strftime("%H:%M:%S", gmtime(elapse_time)))
-        )
+        arcpy.AddMessage(f"Python script: {os.path.basename(__file__)}\nCompleted: {strftime('%a %b %d %I:%M %p', localtime())}")
+        arcpy.AddMessage(u"Elapsed Time {0} (H:M:S)".format(strftime("%H:%M:%S", gmtime(elapse_time))))
         arcpy.AddMessage(f"{'-' * 80}")
         del elapse_time, end_time, start_time
         del gmtime, localtime, strftime, time
 
-        # Compact GDB
-        # arcpy.AddMessage(f"\nCompacting: {os.path.basename(project_gdb)}" )
-        arcpy.management.Compact(project_gdb)
-
-    except arcpy.ExecuteWarning:
-        arcpy.AddWarning(
-            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
-        )
     except arcpy.ExecuteError:
-        arcpy.AddError(
-            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
-        )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
-    except SystemExit:
-        # This is not an error, so we allow the script to exit.
-        raise
-    except Exception as e:
-        arcpy.AddError(
-            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
-        )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        #Return Geoprocessing tool specific errors
+        line, filename, err = trace()
+        arcpy.AddError("Geoprocessing error on " + line + " of " + filename + " :")
+        for msg in range(0, arcpy.GetMessageCount()):
+            if arcpy.GetSeverity(msg) == 2:
+                arcpy.AddReturnMessage(msg)
+        return False
+    except:  # noqa: E722
+        #Gets non-tool errors
+        line, filename, err = trace()
+        arcpy.AddError("Python error on " + line + " of " + filename)
+        arcpy.AddError(err)
+        return False
     else:
-        arcpy.AddMessage("\nScript finished successfully.")
         return True
-    finally:
-        arcpy.AddMessage(f"\n{'--End' * 10}--")
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     try:
 
-        home_folder  = arcpy.GetParameterAsText(0)
-        project_name = arcpy.GetParameterAsText(1)
-
-        if not home_folder:
-            home_folder = os.path.join(os.path.expanduser("~"), "Documents\\ArcGIS\\Projects\\DisMAP\\ArcGIS-Analysis-Python")
+        project_folder = arcpy.GetParameterAsText(0)
+        if not project_folder:
+            project_folder = os.path.join(os.path.expanduser('~'), "Documents\\ArcGIS\\Projects\\DisMAP\\ArcGIS-Analysis-Python\\February 1 2026")
         else:
             pass
 
-        if not project_name:
-            project_name = "August-1-2025"
-        else: # This else block is empty, can be removed.
-            pass
+        script_tool(project_folder)
 
-        script_tool(home_folder, project_name)
+        arcpy.SetParameterAsText(1, "Result")
 
-        arcpy.SetParameterAsText(2, "Result")
-
-        del home_folder, project_name
+        del project_folder
 
     except arcpy.ExecuteError:
-        arcpy.AddError(arcpy.GetMessages(2))
-        traceback.print_exc()
-    except Exception as e:
-        arcpy.AddError(e)
-        traceback.print_exc()
-    except SystemExit:
-        # This is not an error, so we allow the script to exit.
-        pass
-
-# This is an autogenerated comment.
+        #Return Geoprocessing tool specific errors
+        line, filename, err = trace()
+        arcpy.AddError("Geoprocessing error on " + line + " of " + filename + " :")
+        for msg in range(0, arcpy.GetMessageCount()):
+            if arcpy.GetSeverity(msg) == 2:
+                arcpy.AddReturnMessage(msg)
+    except:  # noqa: E722
+        #Gets non-tool errors
+        line, filename, err = trace()
+        arcpy.AddError("Python error on " + line + " of " + filename)
+        arcpy.AddError(err)
