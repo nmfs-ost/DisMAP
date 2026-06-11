@@ -12,19 +12,8 @@
 import os
 import sys
 import traceback
-import arcpy  # third-parties second
-
-def trace():
-    import sys  # noqa: E401
-    import traceback
-
-    tb = sys.exc_info()[2]
-    tbinfo = traceback.format_tb(tb)[0]
-    line = tbinfo.split(", ")[1]
-    # filename = sys.path[0] + os.sep + f"{os.path.basename(__file__)}"
-    filename = os.path.basename(__file__)
-    synerror = traceback.format_exc().splitlines()[-1]
-    return line, filename, synerror
+import inspect
+import arcpy
 
 
 def feature_sharing_draft_report(sd_draft=""):
@@ -49,65 +38,39 @@ def feature_sharing_draft_report(sd_draft=""):
         del DOM, key_list, value_list, docs
         del sd_draft
 
+    except arcpy.ExecuteWarning:
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
     except arcpy.ExecuteError:
-        # Return Geoprocessing tool specific errors
-        line, filename, err = trace()
-        arcpy.AddError("Geoprocessing error on " + line + " of " + filename + " :")
-        for msg in range(0, arcpy.GetMessageCount()):
-            if arcpy.GetSeverity(msg) == 2:
-                arcpy.AddReturnMessage(msg)
-        return False
-    except:  # noqa: E722
-        # Gets non-tool errors
-        line, filename, err = trace()
-        arcpy.AddError("Python error on " + line + " of " + filename)
-        arcpy.AddError(err)
-        return False
-    else:
-        return True
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
+        traceback.print_exc()
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:")
+        traceback.print_exc()
 
 
-def create_feature_class_layers(project_gdb=""):
+def create_feature_class_layers(project_folder=""):
     try:
         # Import
         from arcpy import metadata as md
-        from dismap_tools import (clear_folder, dataset_title_dict,
-                                  parse_xml_file_format_and_save)
+        from dismap_tools import dataset_title_dict
 
-        # Test if passed workspace exists, if not sys.exit()
-        if not arcpy.Exists(project_gdb):
-            sys.exit()(f"{os.path.basename(project_gdb)} is missing!!")
-
-        # Set History and Metadata logs, set serverity and message level
-        arcpy.SetLogHistory(
-            True
-        )  # Look in %AppData%\Roaming\Esri\ArcGISPro\ArcToolbox\History
-        arcpy.SetLogMetadata(True)
-        arcpy.SetSeverityLevel(
-            1
-        )  # 0—A tool will not throw an exception, even if the tool produces an error or warning.
-        # 1—If a tool produces a warning or an error, it will throw an exception.
-        # 2—If a tool produces an error, it will throw an exception. This is the default.
-        arcpy.SetMessageLevels(
-            ["NORMAL"]
-        )  # NORMAL, COMMANDSYNTAX, DIAGNOSTICS, PROJECTIONTRANSFORMATION
-
-        # Set basic workkpace variables
-        project_folder = os.path.dirname(project_gdb)
+        # Set varaibales
+        project_gdb = os.path.join(project_folder, os.path.basename(project_folder) + ".gdb")
         project_name = os.path.basename(project_folder)
-        csv_data_folder = os.path.join(project_folder, f"CSV_Data")
+        csv_data_folder = os.path.join(project_folder, "CSV_Data")
         scratch_folder = os.path.join(project_folder, "Scratch")
         scratch_workspace = os.path.join(project_folder, "Scratch\\scratch.gdb")
-
-        # Clear Scratch Folder
-        clear_folder(folder=scratch_folder)
-
-        # Create Scratch Workspace for Project
-        if not arcpy.Exists(os.path.join(scratch_folder, "scratch.gdb")):
-            if not arcpy.Exists(scratch_folder):
-                os.makedirs(scratch_folder)
-            if not arcpy.Exists(os.path.join(scratch_folder, "scratch.gdb")):
-                arcpy.management.CreateFileGDB(rf"{scratch_folder}", "scratch")
 
         # Set basic workkpace variables
         arcpy.env.workspace = project_gdb
@@ -125,13 +88,14 @@ def create_feature_class_layers(project_gdb=""):
         datasets = []
 
         # datasets.extend(arcpy.ListFeatureClasses("AI_IDW_Sample_Locations"))
-        datasets.extend(arcpy.ListFeatureClasses("*Sample_Locations"))
-        datasets.extend(arcpy.ListFeatureClasses("DisMAP_Regions"))
-        datasets.extend(arcpy.ListTables("Indicators"))
-        datasets.extend(arcpy.ListTables("Species_Filter"))
-        datasets.extend(arcpy.ListTables("DisMAP_Survey_Info"))
-        datasets.extend(arcpy.ListTables("SpeciesPersistenceIndicatorPercentileBin"))
-        datasets.extend(arcpy.ListTables("SpeciesPersistenceIndicatorTrend"))
+##        datasets.extend(arcpy.ListFeatureClasses("*Sample_Locations"))
+##        datasets.extend(arcpy.ListFeatureClasses("DisMAP_Regions"))
+##        datasets.extend(arcpy.ListTables("Indicators"))
+##        datasets.extend(arcpy.ListTables("Species_Filter"))
+##        datasets.extend(arcpy.ListTables("DisMAP_Survey_Info"))
+##        datasets.extend(arcpy.ListTables("SpeciesPersistenceIndicatorPercentileBin"))
+##        datasets.extend(arcpy.ListTables("SpeciesPersistenceIndicatorTrend"))
+        datasets.extend(arcpy.ListTables("SpatialGroup_SpeciesPersistenceIndicator"))
 
         for dataset in sorted(datasets):
 
@@ -172,9 +136,6 @@ def create_feature_class_layers(project_gdb=""):
                 feature_class_layer = arcpy.management.MakeTableView(
                     in_table=feature_class_path,
                     out_view=feature_service_title,
-                    where_clause="",
-                    workspace=project_gdb,
-                    field_info="OBJECTID OBJECTID VISIBLE NONE;DatasetCode DatasetCode VISIBLE NONE;Region Region VISIBLE NONE;Season Season VISIBLE NONE;DateCode DateCode VISIBLE NONE;Species Species VISIBLE NONE;CommonName CommonName VISIBLE NONE;CoreSpecies CoreSpecies VISIBLE NONE;Year Year VISIBLE NONE;DistributionProjectName DistributionProjectName VISIBLE NONE;DistributionProjectCode DistributionProjectCode VISIBLE NONE;SummaryProduct SummaryProduct VISIBLE NONE;CenterOfGravityLatitude CenterOfGravityLatitude VISIBLE NONE;MinimumLatitude MinimumLatitude VISIBLE NONE;MaximumLatitude MaximumLatitude VISIBLE NONE;OffsetLatitude OffsetLatitude VISIBLE NONE;CenterOfGravityLatitudeSE CenterOfGravityLatitudeSE VISIBLE NONE;CenterOfGravityLongitude CenterOfGravityLongitude VISIBLE NONE;MinimumLongitude MinimumLongitude VISIBLE NONE;MaximumLongitude MaximumLongitude VISIBLE NONE;OffsetLongitude OffsetLongitude VISIBLE NONE;CenterOfGravityLongitudeSE CenterOfGravityLongitudeSE VISIBLE NONE;CenterOfGravityDepth CenterOfGravityDepth VISIBLE NONE;MinimumDepth MinimumDepth VISIBLE NONE;MaximumDepth MaximumDepth VISIBLE NONE;OffsetDepth OffsetDepth VISIBLE NONE;CenterOfGravityDepthSE CenterOfGravityDepthSE VISIBLE NONE",
                 )
                 feature_class_layer_file = (
                     rf"{project_folder}\Layers\{feature_class_layer}.lyrx"
@@ -192,22 +153,23 @@ def create_feature_class_layers(project_gdb=""):
                 arcpy.management.Delete(feature_class_layer)
                 del feature_class_layer
 
+                print("*" * 50)
+
+                print(feature_class_path)
+                print(feature_service_title)
+
+                print("*" * 50)
+
             else:
                 pass
 
-            if [
-                f.name
-                for f in arcpy.ListFields(feature_class_path)
-                if f.name == "StdTime"
-            ]:
+            if [f.name for f in arcpy.ListFields(feature_class_path) if f.name == "StdTime"]:
                 arcpy.AddMessage("\tSet Time Enabled if time field is in dataset")
                 # Get time information from a layer in a layer file
                 layer_file = arcpy.mp.LayerFile(feature_class_layer_file)
                 layer = layer_file.listLayers()[0]
                 layer.enableTime("StdTime", "StdTime", True)
-                layer.time.timeZone = arcpy.mp.ListTimeZones(
-                    "(UTC) Coordinated Universal Time"
-                )[0]
+                layer.time.timeZone = arcpy.mp.ListTimeZones("(UTC) Coordinated Universal Time")[0]
                 layer_file.save()
                 del layer
 
@@ -249,148 +211,159 @@ def create_feature_class_layers(project_gdb=""):
                 arcpy.AddMessage("\tDataset does not have a time field")
 
             layer_file = arcpy.mp.LayerFile(feature_class_layer_file)
+            #print(layer_file.listTables()[0])
 
-            # aprx.listBasemaps() to get a list of available basemaps
-            #
-            #    ['Charted Territory Map',
-            #     'Colored Pencil Map',
-            #     'Community Map',
-            #     'Dark Gray Canvas',
-            #     'Firefly Imagery Hybrid',
-            #     'GEBCO Basemap (NOAA NCEI Visualization)',
-            #     'GEBCO Basemap/Contours (NOAA NCEI Visualization)',
-            #     'GEBCO Gray Basemap (NOAA NCEI Visualization)',
-            #     'GEBCO Gray Basemap/Contours (NOAA NCEI Visualization)',
-            #     'Human Geography Dark Map',
-            #     'Human Geography Map',
-            #     'Imagery',
-            #     'Imagery Hybrid',
-            #     'Light Gray Canvas',
-            #     'Mid-Century Map',
-            #     'Modern Antique Map',
-            #     'National Geographic Style Map',
-            #     'Navigation',
-            #     'Navigation (Dark)',
-            #     'Newspaper Map',
-            #     'NOAA Charts',
-            #     'NOAA ENC® Charts',
-            #     'Nova Map',
-            #     'Oceans',
-            #     'OpenStreetMap',
-            #     'Streets',
-            #     'Streets (Night)',
-            #     'Terrain with Labels',
-            #     'Topographic']
+            layer_file_md = md.Metadata(layer_file.listTables()[0])
+            print(layer_file_md.title)
 
-            if aprx.listMaps(feature_service_title):
-                aprx.deleteItem(aprx.listMaps(feature_service_title)[0])
-                aprx.save()
-            else:
-                pass
 
-            arcpy.AddMessage(f"\tCreating Map: {feature_service_title}")
-            aprx.createMap(f"{feature_service_title}", "Map")
-            aprx.save()
-
-            current_map = aprx.listMaps(feature_service_title)[0]
-
-            basemap = "Terrain with Labels"
-            current_map.addLayer(layer_file)
-            current_map.addBasemap(basemap)
-            aprx.save()
-            del basemap
-
-            arcpy.AddMessage("\t\tCreate map thumbnail and update metadata")
-            current_map_view = current_map.defaultView
-            current_map_view.exportToPNG(
-                rf"{project_folder}\Layers\{feature_service_title}.png",
-                width=288,
-                height=192,
-                resolution=96,
-                color_mode="24-BIT_TRUE_COLOR",
-                embed_color_profile=True,
-            )
-            del current_map_view
-
-            fc_md = md.Metadata(feature_class_path)
-            fc_md.title = feature_service_title
-            fc_md.thumbnailUri = rf"{project_folder}\Layers\{feature_service_title}.png"
-            fc_md.save()
-            fc_md.reload()
-            fc_md.saveAsXML(
-                rf"{project_folder}\Metadata_Export\{feature_service_title}.xml"
-            )
-            del fc_md
-
-            parse_xml_file_format_and_save(
-                csv_data_folder=csv_data_folder,
-                xml_file=rf"{project_folder}\Metadata_Export\{feature_service_title}.xml",
-                sort=True,
-            )
-            # parse_xml_file_format_and_save(csv_data_folder=csv_data_folder, xml_file="", sort=True)
-
-            in_md = md.Metadata(feature_class_path)
-            layer_file.metadata.copy(in_md)
-            layer_file.metadata.save()
-            layer_file.save()
-            current_map.metadata.copy(in_md)
-            current_map.metadata.save()
-            aprx.save()
-            del in_md
-
-            arcpy.AddMessage(f"\t\tLayer File Path:     {layer_file.filePath}")
-            arcpy.AddMessage(f"\t\tLayer File Version:  {layer_file.version}")
-            arcpy.AddMessage("\t\tLayer File Metadata:")
-            arcpy.AddMessage(
-                f"\t\t\tLayer File Title:              {layer_file.metadata.title}"
-            )
-            # arcpy.AddMessage(f"\t\t\tLayer File Tags:               {layer_file.metadata.tags}")
-            # arcpy.AddMessage(f"\t\t\tLayer File Summary:            {layer_file.metadata.summary}")
-            # arcpy.AddMessage(f"\t\t\tLayer File Description:        {layer_file.metadata.description}")
-            # arcpy.AddMessage(f"\t\t\tLayer File Credits:            {layer_file.metadata.credits}")
-            # arcpy.AddMessage(f"\t\t\tLayer File Access Constraints: {layer_file.metadata.accessConstraints}")
-
-            arcpy.AddMessage("\t\tList of layers or tables in Layer File:")
-            if current_map.listLayers(feature_service_title):
-                layer = current_map.listLayers(feature_service_title)[0]
-            elif current_map.listTables(feature_service_title):
-                layer = current_map.listTables(feature_service_title)[0]
-            else:
-                arcpy.AddWarning("Something wrong")
-
-            in_md = md.Metadata(feature_class_path)
-            layer.metadata.copy(in_md)
-            layer.metadata.save()
-            layer_file.save()
-            aprx.save()
-            del in_md
-
-            arcpy.AddMessage(f"\t\t\tLayer Name: {layer.name}")
-            arcpy.AddMessage("\t\t\tLayer Metadata:")
-            arcpy.AddMessage(
-                f"\t\t\t\tLayer Title:              {layer.metadata.title}"
-            )
-            # arcpy.AddMessage(f"\t\t\t\tLayer Tags:               {layer.metadata.tags}")
-            # arcpy.AddMessage(f"\t\t\t\tLayer Summary:            {layer.metadata.summary}")
-            # arcpy.AddMessage(f"\t\t\t\tLayer Description:        {layer.metadata.description}")
-            # arcpy.AddMessage(f"\t\t\t\tLayer Credits:            {layer.metadata.credits}")
-            # arcpy.AddMessage(f"\t\t\t\tLayer Access Constraints: {layer.metadata.accessConstraints}")
-            del layer
-            del layer_file
-            del feature_class_layer_file
-            del feature_class_path
-
-            aprx.deleteItem(current_map)
-            del current_map
-            aprx.save()
-
-            # del dataset_code, point_feature_type, feature_class_name, region, season
-            # del date_code, distribution_project_code
-            # del feature_class_path
-
-            del desc
-            del feature_service_title
-            del dataset
+##            # aprx.listBasemaps() to get a list of available basemaps
+##            #
+##            #    ['Charted Territory Map',
+##            #     'Colored Pencil Map',
+##            #     'Community Map',
+##            #     'Dark Gray Canvas',
+##            #     'Firefly Imagery Hybrid',
+##            #     'GEBCO Basemap (NOAA NCEI Visualization)',
+##            #     'GEBCO Basemap/Contours (NOAA NCEI Visualization)',
+##            #     'GEBCO Gray Basemap (NOAA NCEI Visualization)',
+##            #     'GEBCO Gray Basemap/Contours (NOAA NCEI Visualization)',
+##            #     'Human Geography Dark Map',
+##            #     'Human Geography Map',
+##            #     'Imagery',
+##            #     'Imagery Hybrid',
+##            #     'Light Gray Canvas',
+##            #     'Mid-Century Map',
+##            #     'Modern Antique Map',
+##            #     'National Geographic Style Map',
+##            #     'Navigation',
+##            #     'Navigation (Dark)',
+##            #     'Newspaper Map',
+##            #     'NOAA Charts',
+##            #     'NOAA ENC® Charts',
+##            #     'Nova Map',
+##            #     'Oceans',
+##            #     'OpenStreetMap',
+##            #     'Streets',
+##            #     'Streets (Night)',
+##            #     'Terrain with Labels',
+##            #     'Topographic']
+##
+##            if aprx.listMaps(feature_service_title):
+##                aprx.deleteItem(aprx.listMaps(feature_service_title)[0])
+##                aprx.save()
+##            else:
+##                pass
+##
+##            arcpy.AddMessage(f"\tCreating Map: {feature_service_title}")
+##            aprx.createMap(f"{feature_service_title}", "Map")
+##            aprx.save()
+##
+##            current_map = aprx.listMaps(feature_service_title)[0]
+##
+##            basemap = "Terrain with Labels"
+##            current_map.addLayer(layer_file)
+##            current_map.addBasemap(basemap)
+##            aprx.save()
+##            del basemap
+##
+##            arcpy.AddMessage("\t\tCreate map thumbnail and update metadata")
+##            current_map_view = current_map.defaultView
+##            current_map_view.exportToPNG(
+##                rf"{project_folder}\Layers\{feature_service_title}.png",
+##                width=288,
+##                height=192,
+##                resolution=96,
+##                color_mode="24-BIT_TRUE_COLOR",
+##                embed_color_profile=True,
+##            )
+##            del current_map_view
+##
+##            fc_md = md.Metadata(feature_class_path)
+##            #fc_md.title = feature_service_title
+##            print("*" * 50)
+##            print(fc_md.title)
+##            print("*" * 50)
+##            if not fc_md.thumbnailUri:
+##                fc_md.thumbnailUri = rf"{project_folder}\Layers\{feature_service_title}.png"
+##            else:
+##                pass
+##            fc_md.save()
+##            fc_md.reload()
+##            fc_md.saveAsXML(
+##                rf"{project_folder}\Metadata_Export\{feature_service_title}.xml"
+##            )
+##            del fc_md
+##
+##            # parse_xml_file_format_and_save(
+##            #     csv_data_folder=csv_data_folder,
+##            #     xml_file=rf"{project_folder}\Metadata_Export\{feature_service_title}.xml",
+##            #     sort=True,
+##            # )
+##            # parse_xml_file_format_and_save(csv_data_folder=csv_data_folder, xml_file="", sort=True)
+##
+##            in_md = md.Metadata(feature_class_path)
+##            layer_file.metadata.copy(in_md)
+##            layer_file.metadata.save()
+##            layer_file.save()
+##            current_map.metadata.copy(in_md)
+##            current_map.metadata.save()
+##            aprx.save()
+##            del in_md
+##
+##            arcpy.AddMessage(f"\t\tLayer File Path:     {layer_file.filePath}")
+##            arcpy.AddMessage(f"\t\tLayer File Version:  {layer_file.version}")
+##            arcpy.AddMessage("\t\tLayer File Metadata:")
+##            arcpy.AddMessage(
+##                f"\t\t\tLayer File Title:              {layer_file.metadata.title}"
+##            )
+##            # arcpy.AddMessage(f"\t\t\tLayer File Tags:               {layer_file.metadata.tags}")
+##            # arcpy.AddMessage(f"\t\t\tLayer File Summary:            {layer_file.metadata.summary}")
+##            # arcpy.AddMessage(f"\t\t\tLayer File Description:        {layer_file.metadata.description}")
+##            # arcpy.AddMessage(f"\t\t\tLayer File Credits:            {layer_file.metadata.credits}")
+##            # arcpy.AddMessage(f"\t\t\tLayer File Access Constraints: {layer_file.metadata.accessConstraints}")
+##
+##            arcpy.AddMessage("\t\tList of layers or tables in Layer File:")
+##            if current_map.listLayers(feature_service_title):
+##                layer = current_map.listLayers(feature_service_title)[0]
+##            elif current_map.listTables(feature_service_title):
+##                layer = current_map.listTables(feature_service_title)[0]
+##            else:
+##                arcpy.AddWarning("Something wrong")
+##
+##            in_md = md.Metadata(feature_class_path)
+##            layer.metadata.copy(in_md)
+##            layer.metadata.save()
+##            layer_file.save()
+##            aprx.save()
+##            del in_md
+##
+##            arcpy.AddMessage(f"\t\t\tLayer Name: {layer.name}")
+##            arcpy.AddMessage("\t\t\tLayer Metadata:")
+##            arcpy.AddMessage(
+##                f"\t\t\t\tLayer Title:              {layer.metadata.title}"
+##            )
+##            # arcpy.AddMessage(f"\t\t\t\tLayer Tags:               {layer.metadata.tags}")
+##            # arcpy.AddMessage(f"\t\t\t\tLayer Summary:            {layer.metadata.summary}")
+##            # arcpy.AddMessage(f"\t\t\t\tLayer Description:        {layer.metadata.description}")
+##            # arcpy.AddMessage(f"\t\t\t\tLayer Credits:            {layer.metadata.credits}")
+##            # arcpy.AddMessage(f"\t\t\t\tLayer Access Constraints: {layer.metadata.accessConstraints}")
+##            del layer
+##            del layer_file
+##            del feature_class_layer_file
+##            del feature_class_path
+##
+##            aprx.deleteItem(current_map)
+##            del current_map
+##            aprx.save()
+##
+##            # del dataset_code, point_feature_type, feature_class_name, region, season
+##            # del date_code, distribution_project_code
+##            # del feature_class_path
+##
+##            del desc
+##            del feature_service_title
+##            del dataset
 
         del datasets_dict
         del datasets
@@ -400,66 +373,44 @@ def create_feature_class_layers(project_gdb=""):
         del csv_data_folder, project_folder, project_name
 
         # Imports
-        del dataset_title_dict, parse_xml_file_format_and_save, md
+        del dataset_title_dict, md
 
         # Function Parameters
         del project_gdb
 
+    except arcpy.ExecuteWarning:
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
     except arcpy.ExecuteError:
-        # Return Geoprocessing tool specific errors
-        line, filename, err = trace()
-        arcpy.AddError("Geoprocessing error on " + line + " of " + filename + " :")
-        for msg in range(0, arcpy.GetMessageCount()):
-            if arcpy.GetSeverity(msg) == 2:
-                arcpy.AddReturnMessage(msg)
-        return False
-    except:  # noqa: E722
-        # Gets non-tool errors
-        line, filename, err = trace()
-        arcpy.AddError("Python error on " + line + " of " + filename)
-        arcpy.AddError(err)
-        return False
-    else:
-        return True
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
+        traceback.print_exc()
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:")
+        traceback.print_exc()
 
 
-def create_feature_class_services(project_gdb=""):
+def create_feature_class_services(project_folder=""):
     try:
         # Import
         from arcpy import metadata as md
         from dismap_tools import dataset_title_dict
 
-        # Test if passed workspace exists, if not sys.exit()
-        if not arcpy.Exists(project_gdb):
-            sys.exit()(f"{os.path.basename(project_gdb)} is missing!!")
-
-        # Set History and Metadata logs, set serverity and message level
-        arcpy.SetLogHistory(
-            True
-        )  # Look in %AppData%\Roaming\Esri\ArcGISPro\ArcToolbox\History
-        arcpy.SetLogMetadata(True)
-        arcpy.SetSeverityLevel(
-            1
-        )  # 0—A tool will not throw an exception, even if the tool produces an error or warning.
-        # 1—If a tool produces a warning or an error, it will throw an exception.
-        # 2—If a tool produces an error, it will throw an exception. This is the default.
-        arcpy.SetMessageLevels(
-            ["NORMAL"]
-        )  # NORMAL, COMMANDSYNTAX, DIAGNOSTICS, PROJECTIONTRANSFORMATION
-
         # Set basic workkpace variables
-        project_folder = os.path.dirname(project_gdb)
+        project_gdb = os.path.join(project_folder, os.path.basename(project_folder) + ".gdb")
         project_name = os.path.basename(project_folder)
-        csv_data_folder = os.path.join(project_folder, f"CSV_Data")
+        csv_data_folder = os.path.join(project_folder, "CSV_Data")
         scratch_folder = os.path.join(project_folder, "Scratch")
         scratch_workspace = os.path.join(project_folder, "Scratch\\scratch.gdb")
-
-        # Create Scratch Workspace for Project
-        if not arcpy.Exists(os.path.join(scratch_folder, "scratch.gdb")):
-            if not arcpy.Exists(scratch_folder):
-                os.makedirs(scratch_folder)
-            if not arcpy.Exists(os.path.join(scratch_folder, "scratch.gdb")):
-                arcpy.management.CreateFileGDB(rf"{scratch_folder}", "scratch")
 
         # Set basic workkpace variables
         arcpy.env.workspace = project_gdb
@@ -484,6 +435,7 @@ def create_feature_class_services(project_gdb=""):
         datasets.extend(arcpy.ListTables("DisMAP_Survey_Info"))
         datasets.extend(arcpy.ListTables("SpeciesPersistenceIndicatorPercentileBin"))
         datasets.extend(arcpy.ListTables("SpeciesPersistenceIndicatorTrend"))
+        datasets.extend(arcpy.ListTables("SpatialGroup_SpeciesPersistenceIndicator"))
 
         # LogInAGOL = False
         # if LogInAGOL:
@@ -553,6 +505,8 @@ def create_feature_class_services(project_gdb=""):
             if aprx.listMaps(feature_service_title):
                 aprx.deleteItem(aprx.listMaps(feature_service_title)[0])
                 aprx.save()
+            else:
+                pass
 
             arcpy.AddMessage(f"\tCreating Map: {feature_service_title}")
             aprx.createMap(feature_service_title, "Map")
@@ -689,7 +643,6 @@ def create_feature_class_services(project_gdb=""):
 
             UploadServiceDefinition = True
             if UploadServiceDefinition:
-                # if project != "April 1 2023":
                 arcpy.AddMessage(
                     f"\tUpload {os.path.basename(sd_draft).replace('sddraft', 'sd')} Service Definition"
                 )
@@ -703,8 +656,7 @@ def create_feature_class_services(project_gdb=""):
                     in_public="PRIVATE",
                     in_organization="NO_SHARE_ORGANIZATION",  # in_groups       = ""
                 )
-                # else:
-                #    arcpy.AddWarning(f"Project is {project}")
+
             del UploadServiceDefinition
 
             del sd_draft
@@ -749,23 +701,25 @@ def create_feature_class_services(project_gdb=""):
         # Function Parameters
         del project_gdb
 
+    except arcpy.ExecuteWarning:
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
     except arcpy.ExecuteError:
-        # Return Geoprocessing tool specific errors
-        line, filename, err = trace()
-        arcpy.AddError("Geoprocessing error on " + line + " of " + filename + " :")
-        for msg in range(0, arcpy.GetMessageCount()):
-            if arcpy.GetSeverity(msg) == 2:
-                arcpy.AddReturnMessage(msg)
-        return False
-    except:  # noqa: E722
-        # Gets non-tool errors
-        line, filename, err = trace()
-        arcpy.AddError("Python error on " + line + " of " + filename)
-        arcpy.AddError(err)
-        return False
-    else:
-        return True
-
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
+        traceback.print_exc()
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:")
+        traceback.print_exc()
 
 ##def update_metadata_from_published_md(project_gdb=""):
 ##    try:
@@ -874,28 +828,25 @@ def create_feature_class_services(project_gdb=""):
 ##        # Function Parameters
 ##        del base_project_file, project
 ##
-##    except SystemExit:
-##        sys.exit()
-##    except:
+##    except arcpy.ExecuteWarning:
+##        arcpy.AddWarning(
+##            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+##        )
+##    except arcpy.ExecuteError:
+##        arcpy.AddError(
+##            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+##        )
+##        arcpy.AddError("Traceback:\n")
 ##        traceback.print_exc()
-##        sys.exit()
-##    else:
-##        try:
-##            leave_out_keys = ["leave_out_keys", "remaining_keys", "results"]
-##            remaining_keys = [key for key in locals().keys() if not key.startswith('__') and key not in leave_out_keys]
-##            if remaining_keys:
-##                arcpy.AddWarning(f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}")
-##            del leave_out_keys, remaining_keys
-##
-##            return results if "results" in locals().keys() else ["NOTE!! The 'results' variable not yet set!!"]
-##
-##        except:
-##            traceback.print_exc()
-##    finally:
-##        try:
-##            if "results" in locals().keys(): del results
-##        except UnboundLocalError:
-##            pass
+##    except SystemExit:
+##        # This is not an error, so we allow the script to exit.
+##        pass
+##    except Exception as e:
+##        arcpy.AddError(
+##            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+##        )
+##        arcpy.AddError("Traceback:")
+##        traceback.print_exc()
 
 
 def create_image_services(project_gdb=""):
@@ -1000,31 +951,21 @@ def create_image_services(project_gdb=""):
         mosiac_sddraft = rf"{project_folder}\Publish\{mosiac_name}.sddraft"
 
         # Create service definition draft
-        try:
-            arcpy.AddMessage("Creating SD draft")
-            # arcpy.CreateImageSDDraft(Md, Sddraft, Name, 'ARCGIS_SERVER', con, False, None, "Ortho Images","ortho images,image service")
-            arcpy.CreateImageSDDraft(
-                mosiac_path,
-                mosiac_sddraft,
-                mosiac_name,
-                "ARCGIS_SERVER",
-                con,
-                False,
-                None,
-                "Biomass Rasters",
-                "biomass rasters,image service",
-            )
-        except arcpy.ExecuteError:
-            # Return Geoprocessing tool specific errors
-            line, filename, err = trace()
-            arcpy.AddError("Geoprocessing error on " + line + " of " + filename + " :")
-            for msg in range(0, arcpy.GetMessageCount()):
-                if arcpy.GetSeverity(msg) == 2:
-                    arcpy.AddReturnMessage(msg)
-            import traceback
 
-            traceback.print_exc()
-            return False
+        arcpy.AddMessage("Creating SD draft")
+        # arcpy.CreateImageSDDraft(Md, Sddraft, Name, 'ARCGIS_SERVER', con, False, None, "Ortho Images","ortho images,image service")
+        arcpy.CreateImageSDDraft(
+            mosiac_path,
+            mosiac_sddraft,
+            mosiac_name,
+            "ARCGIS_SERVER",
+            con,
+            False,
+            None,
+            "Biomass Rasters",
+            "biomass rasters,image service",
+        )
+
         ##        # Analyze the service definition draft
         ##        analysis = arcpy.mapping.AnalyzeForSD(Sddraft)
         ##        arcpy.AddMessage("The following information was returned during analysis of the image service:")
@@ -1073,22 +1014,25 @@ def create_image_services(project_gdb=""):
         # Function Parameters
         del project_gdb
 
+    except arcpy.ExecuteWarning:
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
     except arcpy.ExecuteError:
-        # Return Geoprocessing tool specific errors
-        line, filename, err = trace()
-        arcpy.AddError("Geoprocessing error on " + line + " of " + filename + " :")
-        for msg in range(0, arcpy.GetMessageCount()):
-            if arcpy.GetSeverity(msg) == 2:
-                arcpy.AddReturnMessage(msg)
-        return False
-    except Exception:
-        # Gets non-tool errors
-        line, filename, err = trace()
-        arcpy.AddError("Python error on " + line + " of " + filename)
-        arcpy.AddError(err)
-        return False
-    else:
-        return True
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
+        traceback.print_exc()
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:")
+        traceback.print_exc()
 
 
 def create_maps(project_gdb=""):
@@ -1268,28 +1212,31 @@ def create_maps(project_gdb=""):
         # Function Parameters
         del project_gdb
 
+    except arcpy.ExecuteWarning:
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
     except arcpy.ExecuteError:
-        # Return Geoprocessing tool specific errors
-        line, filename, err = trace()
-        arcpy.AddError("Geoprocessing error on " + line + " of " + filename + " :")
-        for msg in range(0, arcpy.GetMessageCount()):
-            if arcpy.GetSeverity(msg) == 2:
-                arcpy.AddReturnMessage(msg)
-        return False
-    except:  # noqa: E722
-        # Gets non-tool errors
-        line, filename, err = trace()
-        arcpy.AddError("Python error on " + line + " of " + filename)
-        arcpy.AddError(err)
-        return False
-    else:
-        return True
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
+        traceback.print_exc()
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:")
+        traceback.print_exc()
 
 
-def script_tool(project_gdb=""):
+def script_tool(project_folder=""):
     try:
         # Imports
-        from time import gmtime, localtime, strftime, time
+        from time import localtime, strftime, time
 
         # Set a start time so that we can see how log things take
         start_time = time()
@@ -1303,137 +1250,96 @@ def script_tool(project_gdb=""):
         )
         arcpy.AddMessage(f"{'-' * 80}\n")
 
-        # Set varaibales
-        project_folder = os.path.dirname(project_gdb)
-        scratch_folder = rf"{project_folder}\Scratch"
-        del project_folder
+        CreateFeatureClassLayers = True
+        if CreateFeatureClassLayers:
+            create_feature_class_layers(project_folder)
+        del CreateFeatureClassLayers
 
-        # Create project scratch workspace, if missing
-        if not arcpy.Exists(os.path.join(scratch_folder, "scratch.gdb")):
-            if not arcpy.Exists(scratch_folder):
-                os.makedirs(scratch_folder)
-            if not arcpy.Exists(os.path.join(scratch_folder, "scratch.gdb")):
-                arcpy.management.CreateFileGDB(rf"{scratch_folder}", "scratch")
-        del scratch_folder
+        CreateFeaturClasseServices = False
+        if CreateFeaturClasseServices:
+            create_feature_class_services(project_folder)
+        del CreateFeaturClasseServices
 
-        # Set basic arcpy.env variables
-        arcpy.env.overwriteOutput = True
-        arcpy.env.parallelProcessingFactor = "100%"
+        CreateImagesServices = False
+        if CreateImagesServices:
+            create_image_services(project_folder)
+        del CreateImagesServices
 
-        try:
+        # UpdateMetadataFromPublishedMd = False
+        # if UpdateMetadataFromPublishedMd:
+        #    update_metadata_from_published_md(project_folder)
+        # del UpdateMetadataFromPublishedMd
 
-            CreateFeatureClassLayers = False
-            if CreateFeatureClassLayers:
-                create_feature_class_layers(project_gdb=project_gdb)
-            del CreateFeatureClassLayers
+        CreateMaps = False
+        if CreateMaps:
+            create_maps(project_folder)
+        del CreateMaps
 
-            CreateFeaturClasseServices = False
-            if CreateFeaturClasseServices:
-                create_feature_class_services(project_gdb=project_gdb)
-            del CreateFeaturClasseServices
-
-            CreateImagesServices = True
-            if CreateImagesServices:
-                create_image_services(project_gdb=project_gdb)
-            del CreateImagesServices
-
-            # UpdateMetadataFromPublishedMd = False
-            # if UpdateMetadataFromPublishedMd:
-            #    update_metadata_from_published_md(project_gdb=project_gdb)
-            # del UpdateMetadataFromPublishedMd
-
-            CreateMaps = False
-            if CreateMaps:
-                create_maps(project_gdb=project_gdb)
-            del CreateMaps
-
-        ##            CreateBasicTemplateXMLFiles = False
-        ##            if CreateBasicTemplateXMLFiles:
-        ##                create_basic_template_xml_files(project_gdb=project_gdb)
-        ##            del CreateBasicTemplateXMLFiles
-        ##
-        ##            ImportBasicTemplateXmlFiles = False
-        ##            if ImportBasicTemplateXmlFiles:
-        ##                import_basic_template_xml_files(project_gdb=project_gdb)
-        ##            del ImportBasicTemplateXmlFiles
-
-        except SystemExit:
-            arcpy.AddError(arcpy.GetMessages(2))
-            traceback.print_exc()
-            sys.exit()
+    ##            CreateBasicTemplateXMLFiles = False
+    ##            if CreateBasicTemplateXMLFiles:
+    ##                create_basic_template_xml_files(project_folder)
+    ##            del CreateBasicTemplateXMLFiles
+    ##
+    ##            ImportBasicTemplateXmlFiles = False
+    ##            if ImportBasicTemplateXmlFiles:
+    ##                import_basic_template_xml_files(project_folder)
+    ##            del ImportBasicTemplateXmlFiles
 
         # Variable created in function
-        #
-        # Function Parameters
-        del project_gdb
-        # Elapsed time
-        end_time = time()
-        elapse_time = end_time - start_time
-        hours, rem = divmod(end_time - start_time, 3600)
-        minutes, seconds = divmod(rem, 60)
-        arcpy.AddMessage(f"\n{'-' * 80}")
-        arcpy.AddMessage(f"Python script: {os.path.basename(__file__)}")
-        arcpy.AddMessage(
-            f"Start Time:    {strftime('%a %b %d %I:%M %p', localtime(start_time))}"
-        )
-        arcpy.AddMessage(
-            f"End Time:      {strftime('%a %b %d %I:%M %p', localtime(end_time))}"
-        )
-        arcpy.AddMessage(
-            f"Elapsed Time   {int(hours):0>2}:{int(minutes):0>2}:{seconds:05.2f} (H:M:S)"
-        )
-        arcpy.AddMessage(f"{'-' * 80}")
-        del hours, rem, minutes, seconds
-        del elapse_time, end_time, start_time
-        del gmtime, localtime, strftime, time
 
+        # Function Parameters
+        del project_folder
+
+    except arcpy.ExecuteWarning:
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
     except arcpy.ExecuteError:
-        # Return Geoprocessing tool specific errors
-        line, filename, err = trace()
-        arcpy.AddError("Geoprocessing error on " + line + " of " + filename + " :")
-        for msg in range(0, arcpy.GetMessageCount()):
-            if arcpy.GetSeverity(msg) == 2:
-                arcpy.AddReturnMessage(msg)
-        return False
-    except:  # noqa: E722
-        # Gets non-tool errors
-        line, filename, err = trace()
-        arcpy.AddError("Python error on " + line + " of " + filename)
-        arcpy.AddError(err)
-        return False
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
+        traceback.print_exc()
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:")
+        traceback.print_exc()
     else:
-        return True
+        arcpy.AddMessage("\nScript finished successfully.\n")
+    finally:
+        arcpy.AddMessage(f"\n{'--End' * 10}--")
 
 
 if __name__ == "__main__":
     try:
-        project_gdb = arcpy.GetParameterAsText(0)
 
-        if not project_gdb:
-            project_gdb = os.path.join(
-                os.path.expanduser("~"),
-                "Documents\\ArcGIS\\Projects\\DisMAP\\ArcGIS-Analysis-Python\\February 1 2026\\February 1 2026.gdb",
-            )
+        project_folder = arcpy.GetParameterAsText(0)
+        if not project_folder:
+            # project_name = "February-1-2026"
+            # project_name = "August-1-2025"
+            project_name = "June-1-2026"
+            project_folder = os.path.join(os.path.expanduser('~'), f"Documents\\ArcGIS\\Projects\\DisMAP\\ArcGIS-Analysis-Python\\{project_name}")
         else:
             pass
 
-        script_tool(project_gdb)
+        script_tool(project_folder)
 
         arcpy.SetParameterAsText(1, "Result")
 
-        del project_gdb
+        del project_folder
 
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
     except arcpy.ExecuteError:
-        # Return Geoprocessing tool specific errors
-        line, filename, err = trace()
-        arcpy.AddError("Geoprocessing error on " + line + " of " + filename + " :")
-        for msg in range(0, arcpy.GetMessageCount()):
-            if arcpy.GetSeverity(msg) == 2:
-                arcpy.AddReturnMessage(msg)
-    except:  # noqa: E722
-        # Gets non-tool errors
-        line, filename, err = trace()
-        arcpy.AddError("Python error on " + line + " of " + filename)
-        arcpy.AddError(err)
+        arcpy.AddError(arcpy.GetMessages(2))
+        traceback.print_exc()
+    except Exception:
+        traceback.print_exc()
 
 # This is an autogenerated comment.

@@ -42,6 +42,23 @@ def script_tool(project_gdb=""):
         )
 
         field_definitions = {
+            "Absence_Presence": {
+                "field_aliasName": "Absence Presence",
+                "field_baseName": "Absence_Presence",
+                "field_defaultValue": "null",
+                "field_domain": "",
+                "field_editable": "true",
+                "field_isNullable": "true",
+                "field_length": 4,
+                "field_name": "Absence_Presence",
+                "field_precision": 0,
+                "field_required": "true",
+                "field_scale": 0,
+                "field_type": "Integer",
+                "field_attrdef": "Absence Presence",
+                "field_attrdefs": "DisMAP Project GDB Data Dictionary",
+                "field_attrdomv": {"udom": "Absence Presence"},
+            },
             "Bio_Inc_Dec": {
                 "field_aliasName": "Bio_Inc_Dec",
                 "field_baseName": "Bio_Inc_Dec",
@@ -1302,6 +1319,40 @@ def script_tool(project_gdb=""):
                 "field_attrdefs": "DisMAP Project GDB Data Dictionary",
                 "field_attrdomv": {"udom": "Point Feature Type"},
             },
+            "Prop": {
+                "field_aliasName": "Prop",
+                "field_baseName": "Prop",
+                "field_defaultValue": "null",
+                "field_domain": "",
+                "field_editable": "true",
+                "field_isNullable": "true",
+                "field_length": 0,
+                "field_name": "Prop",
+                "field_precision": 0,
+                "field_required": "true",
+                "field_scale": 0,
+                "field_type": "Double",
+                "field_attrdef": "Prop",
+                "field_attrdefs": "DisMAP Project GDB Data Dictionary",
+                "field_attrdomv": {"udom": "Prop"},
+            },
+            "Prop_inc_dec": {
+                "field_aliasName": "Prop_inc_dec",
+                "field_baseName": "Prop_inc_dec",
+                "field_defaultValue": "null",
+                "field_domain": "",
+                "field_editable": "true",
+                "field_isNullable": "true",
+                "field_length": 100,
+                "field_name": "Prop_inc_dec",
+                "field_precision": 0,
+                "field_required": "true",
+                "field_scale": 0,
+                "field_type": "String",
+                "field_attrdef": "Prop_inc_dec",
+                "field_attrdefs": "DisMAP Project GDB Data Dictionary",
+                "field_attrdomv": {"udom": "Prop_inc_dec"},
+            },
             "ProductName": {
                 "field_aliasName": "Product Name",
                 "field_baseName": "ProductName",
@@ -1386,6 +1437,40 @@ def script_tool(project_gdb=""):
                 "field_attrdef": "Season",
                 "field_attrdefs": "DisMAP Project GDB Data Dictionary",
                 "field_attrdomv": {"udom": "Season"},
+            },
+            "SpatialGroup": {
+                "field_aliasName": "SpatialGroup",
+                "field_baseName": "SpatialGroup",
+                "field_defaultValue": "null",
+                "field_domain": "",
+                "field_editable": "true",
+                "field_isNullable": "true",
+                "field_length": 50,
+                "field_name": "SpatialGroup",
+                "field_precision": 0,
+                "field_required": "true",
+                "field_scale": 0,
+                "field_type": "String",
+                "field_attrdef": "SpatialGroup",
+                "field_attrdefs": "DisMAP Project GDB Data Dictionary",
+                "field_attrdomv": {"udom": "SpatialGroup"},
+            },
+            "SpatialName": {
+                "field_aliasName": "Spatial Name",
+                "field_baseName": "SpatialName",
+                "field_defaultValue": "null",
+                "field_domain": "",
+                "field_editable": "true",
+                "field_isNullable": "true",
+                "field_length": 50,
+                "field_name": "SpatialName",
+                "field_precision": 0,
+                "field_required": "true",
+                "field_scale": 0,
+                "field_type": "String",
+                "field_attrdef": "Spatial Name",
+                "field_attrdefs": "DisMAP Project GDB Data Dictionary",
+                "field_attrdomv": {"udom": "Spatial Name"},
             },
             "Species": {
                 "field_aliasName": "Species",
@@ -1773,8 +1858,8 @@ def script_tool(project_gdb=""):
                 "field_precision": 0,
                 "field_required": "true",
                 "field_scale": 0,
-                # "field_type": "String",
-                "field_type": "Integer",
+                "field_type": "String",
+                #"field_type": "Integer",
                 "field_attrdef": "Years",
                 "field_attrdefs": "DisMAP Project GDB Data Dictionary",
                 "field_attrdomv": {"udom": "Years"},
@@ -2011,6 +2096,20 @@ def script_tool(project_gdb=""):
             "HaulProportion",
             "HaulBin",
         ]
+        _SpatialGroup_SpeciesPersistenceIndicator = [
+            "Region",
+            "SurveyName",
+            "Year",
+            "Species",
+            "CommonName",
+            "WTCPUE",
+            "Prop",
+            "Absence_Presence",
+            "Prop_inc_dec",
+            "TrendCategory",
+            "SpatialGroup",
+            "SpatialName",
+        ]
 
         # datasets_table = arcpy.ListTables("Datasets")[0]
         # datasets_table_fields = [f.name for f in arcpy.ListFields(datasets_table) if f.type not in ["Geometry", "OID"] and f.name not in ["Shape_Area", "Shape_Length"]]
@@ -2047,26 +2146,38 @@ def script_tool(project_gdb=""):
             "DisMAP_Survey_Info",
             "SpeciesPersistenceIndicatorTrend",
             "SpeciesPersistenceIndicatorPercentileBin",
+            "SpatialGroup_SpeciesPersistenceIndicator",
         ]
 
         for table_name in table_names:
             arcpy.AddMessage(table_name)
             if table_name == "DisMAP_Regions":
                 data_dictionary[table_name] = _Region
+
             elif table_name == "Datasets":
                 data_dictionary[table_name] = _Datasets
+
             elif table_name == "LayerSpeciesYearImageName":
                 data_dictionary[table_name] = _LayerSpeciesYearImageName
+
             elif table_name == "Indicators":
                 data_dictionary[table_name] = _Indicators
+
             elif table_name == "Species_Filter":
                 data_dictionary[table_name] = _Species_Filter
+
             elif table_name == "DisMAP_Survey_Info":
                 data_dictionary[table_name] = _DisMAP_Survey_Info
+
+            elif table_name == "SpatialGroup_SpeciesPersistenceIndicator":
+                data_dictionary[table_name] = _SpatialGroup_SpeciesPersistenceIndicator
+
             elif table_name == "SpeciesPersistenceIndicatorPercentileBin":
                 data_dictionary[table_name] = _SpeciesPersistenceIndicatorPercentileBin
+
             elif table_name == "SpeciesPersistenceIndicatorTrend":
                 data_dictionary[table_name] = _SpeciesPersistenceIndicatorTrend
+
             elif table_name.endswith("_IDW"):  # or table_name.endswith("_GLMME"):
                 if table_name.endswith("_IDW"):
                     data_dictionary[table_name] = _IDW
@@ -2260,7 +2371,7 @@ def script_tool(project_gdb=""):
         arcpy.AddError(
             f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(f"Traceback:\n{traceback.print_exc()}")
     except SystemExit:
         # This is not an error, so we allow the script to exit.
         pass
@@ -2268,7 +2379,7 @@ def script_tool(project_gdb=""):
         arcpy.AddError(
             f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(f"Traceback:\n{traceback.print_exc()}")
     else:
         arcpy.AddMessage("\nScript finished successfully.")
         return True
@@ -2281,7 +2392,8 @@ if __name__ == "__main__":
 
         project_gdb = arcpy.GetParameterAsText(0)
         if not project_gdb:
-            project_name = "August-1-2025"
+            # project_name = "August-1-2025"
+            project_name = "June-1-2026"
             project_gdb = os.path.join(
                 os.path.expanduser("~"),
                 f"Documents\\ArcGIS\\Projects\\DisMAP\\ArcGIS-Analysis-Python\\{project_name}\\{project_name}.gdb",

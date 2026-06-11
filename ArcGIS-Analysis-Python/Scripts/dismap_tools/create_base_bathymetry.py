@@ -23,7 +23,7 @@ def trace():
     tbinfo = traceback.format_tb(tb)[0]
     line = tbinfo.split(", ")[1] if ", " in tbinfo else "?"
     filename = sys.path[0] + os.sep + "test.py"
-    synerror = traceback.format_exc()
+    synerror = traceback.print_exc()
     return line, filename, synerror
 
 

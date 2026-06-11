@@ -691,7 +691,7 @@ def script_tool(project_gdb=""):
         arcpy.AddError(
             f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(f"Traceback:\n{traceback.print_exc()}")
     except SystemExit:
         # This is not an error, so we allow the script to exit.
         pass
@@ -699,7 +699,7 @@ def script_tool(project_gdb=""):
         arcpy.AddError(
             f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(f"Traceback:\n{traceback.print_exc()}")
     else:
         arcpy.AddMessage("\nScript finished successfully.")
         return True
@@ -712,7 +712,8 @@ if __name__ == "__main__":
 
         project_gdb = arcpy.GetParameterAsText(0)
         if not project_gdb:
-            project_name = "August-1-2025"
+            # project_name = "August-1-2025"
+            project_name = "June-1-2026"
             project_gdb = os.path.join(
                 os.path.expanduser("~"),
                 f"Documents\\ArcGIS\\Projects\\DisMAP\\ArcGIS-Analysis-Python\\{project_name}\\{project_name}.gdb",

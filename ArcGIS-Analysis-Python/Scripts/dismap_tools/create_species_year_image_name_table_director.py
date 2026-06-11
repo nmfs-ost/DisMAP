@@ -24,7 +24,7 @@ def trace():
     tbinfo = traceback.format_tb(tb)[0]
     line = tbinfo.split(", ")[1]
     filename = sys.path[0] + os.sep + "test.py"
-    synerror = traceback.format_exc().splitlines()[-1]
+    synerror = traceback.print_exc().splitlines()[-1]
     return line, filename, synerror
 
 

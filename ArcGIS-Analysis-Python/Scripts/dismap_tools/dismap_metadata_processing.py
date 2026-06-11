@@ -11,7 +11,7 @@
 # -------------------------------------------------------------------------------
 import importlib
 import inspect
-import os  # built-ins first
+import os
 import sys
 import traceback
 
@@ -26,30 +26,23 @@ def line_info(msg):
     return f"Script: {os.path.basename(i.filename)}\n\tNear Line: {i.lineno}\n\tFunction: {i.function}\n\tMessage: {msg}"
 
 
-def create_basic_template_xml_files(base_project_file="", project=""):
+def create_basic_template_xml_files(project_folder=""):
     try:
         # Import
-        import dismap
         from arcpy import metadata as md
-
-        importlib.reload(dismap)
-        from dismap import dataset_title_dict, pretty_format_xml_file
+        from dismap_tools import dataset_title_dict, parse_xml_file_format_and_save
 
         arcpy.env.overwriteOutput = True
         arcpy.env.parallelProcessingFactor = "100%"
-        arcpy.SetLogMetadata(True)
-        arcpy.SetSeverityLevel(2)
-        arcpy.SetMessageLevels(
-            ["NORMAL"]
-        )  # NORMAL, COMMANDSYNTAX, DIAGNOSTICS, PROJECTIONTRANSFORMATION
 
-        base_project_folder = rf"{os.path.dirname(base_project_file)}"
-        base_project_file = rf"{base_project_folder}\DisMAP.aprx"
-        project_folder = rf"{base_project_folder}\{project}"
-        project_gdb = rf"{project_folder}\{project}.gdb"
-        metadata_folder = rf"{project_folder}\Template Metadata"
-        crfs_folder = rf"{project_folder}\CRFs"
-        scratch_folder = rf"{project_folder}\Scratch"
+##        base_project_folder = rf"{os.path.dirname(base_project_file)}"
+##        base_project_file = rf"{base_project_folder}\DisMAP.aprx"
+##        project_folder = rf"{base_project_folder}\{project}"
+        project         = os.path.basename(project_folder)
+        project_gdb     = os.path.join(project_folder, f"{project}.gdb")
+        metadata_folder = os.path.join(project_folder, "Template Metadata")
+        crfs_folder     = os.path.join(project_folder, "CRFs")
+        scratch_folder  = os.path.join(project_folder, "Scratch")
 
         metadata_dictionary = dataset_title_dict(project_gdb)
 
@@ -109,7 +102,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
                     dataset_md.saveAsXML(
                         datasets_table_template, "REMOVE_ALL_SENSITIVE_INFO"
                     )
-                    pretty_format_xml_file(datasets_table_template)
+                    parse_xml_file_format_and_save(datasets_table_template)
                     del datasets_table_template
 
                     del dataset_md
@@ -146,7 +139,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
                     dataset_md.saveAsXML(
                         species_filter_table_template, "REMOVE_ALL_SENSITIVE_INFO"
                     )
-                    pretty_format_xml_file(species_filter_table_template)
+                    parse_xml_file_format_and_save(species_filter_table_template)
                     del species_filter_table_template
 
                     del dataset_md
@@ -186,7 +179,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
                     dataset_md.saveAsXML(
                         indicators_template, "REMOVE_ALL_SENSITIVE_INFO"
                     )
-                    pretty_format_xml_file(indicators_template)
+                    parse_xml_file_format_and_save(indicators_template)
                     del indicators_template
 
                     del dataset_md
@@ -224,7 +217,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
                         layer_species_year_image_name_template,
                         "REMOVE_ALL_SENSITIVE_INFO",
                     )
-                    pretty_format_xml_file(layer_species_year_image_name_template)
+                    parse_xml_file_format_and_save(layer_species_year_image_name_template)
                     del layer_species_year_image_name_template
 
                     del dataset_md
@@ -257,7 +250,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
 
                     boundary_template = rf"{metadata_folder}\boundary_template.xml"
                     dataset_md.saveAsXML(boundary_template, "REMOVE_ALL_SENSITIVE_INFO")
-                    pretty_format_xml_file(boundary_template)
+                    parse_xml_file_format_and_save(boundary_template)
                     del boundary_template
 
                     del dataset_md
@@ -294,7 +287,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
                     dataset_md.saveAsXML(
                         extent_points_template, "REMOVE_ALL_SENSITIVE_INFO"
                     )
-                    pretty_format_xml_file(extent_points_template)
+                    parse_xml_file_format_and_save(extent_points_template)
                     del extent_points_template
 
                     del dataset_md
@@ -327,7 +320,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
 
                     fishnet_template = rf"{metadata_folder}\fishnet_template.xml"
                     dataset_md.saveAsXML(fishnet_template, "REMOVE_ALL_SENSITIVE_INFO")
-                    pretty_format_xml_file(fishnet_template)
+                    parse_xml_file_format_and_save(fishnet_template)
                     del fishnet_template
 
                     del dataset_md
@@ -360,7 +353,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
 
                     lat_long_template = rf"{metadata_folder}\lat_long_template.xml"
                     dataset_md.saveAsXML(lat_long_template, "REMOVE_ALL_SENSITIVE_INFO")
-                    pretty_format_xml_file(lat_long_template)
+                    parse_xml_file_format_and_save(lat_long_template)
                     del lat_long_template
 
                     del dataset_md
@@ -393,7 +386,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
 
                     region_template = rf"{metadata_folder}\region_template.xml"
                     dataset_md.saveAsXML(region_template, "REMOVE_ALL_SENSITIVE_INFO")
-                    pretty_format_xml_file(region_template)
+                    parse_xml_file_format_and_save(region_template)
                     del region_template
 
                     del dataset_md
@@ -430,7 +423,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
                     dataset_md.saveAsXML(
                         sample_locations_template, "REMOVE_ALL_SENSITIVE_INFO"
                     )
-                    pretty_format_xml_file(sample_locations_template)
+                    parse_xml_file_format_and_save(sample_locations_template)
                     del sample_locations_template
 
                     del dataset_md
@@ -467,7 +460,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
                     dataset_md.saveAsXML(
                         grid_points_template, "REMOVE_ALL_SENSITIVE_INFO"
                     )
-                    pretty_format_xml_file(grid_points_template)
+                    parse_xml_file_format_and_save(grid_points_template)
                     del grid_points_template
 
                     del dataset_md
@@ -502,14 +495,14 @@ def create_basic_template_xml_files(base_project_file="", project=""):
                     dataset_md.saveAsXML(
                         dismap_regions_template, "REMOVE_ALL_SENSITIVE_INFO"
                     )
-                    pretty_format_xml_file(dismap_regions_template)
+                    parse_xml_file_format_and_save(dismap_regions_template)
                     del dismap_regions_template
 
                     del dataset_md
 
                 elif dataset_name.endswith("Bathymetry"):
 
-                    print(f"\tBathymetry")
+                    print("\tBathymetry")
 
                     dataset_md = md.Metadata(dataset_path)
                     empty_md = md.Metadata()
@@ -537,7 +530,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
                     dataset_md.saveAsXML(
                         bathymetry_template, "REMOVE_ALL_SENSITIVE_INFO"
                     )
-                    pretty_format_xml_file(bathymetry_template)
+                    parse_xml_file_format_and_save(bathymetry_template)
                     del bathymetry_template
 
                     del dataset_md
@@ -570,7 +563,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
 
                     latitude_template = rf"{metadata_folder}\latitude_template.xml"
                     dataset_md.saveAsXML(latitude_template, "REMOVE_ALL_SENSITIVE_INFO")
-                    pretty_format_xml_file(latitude_template)
+                    parse_xml_file_format_and_save(latitude_template)
                     del latitude_template
 
                     del dataset_md
@@ -605,7 +598,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
                     dataset_md.saveAsXML(
                         longitude_template, "REMOVE_ALL_SENSITIVE_INFO"
                     )
-                    pretty_format_xml_file(longitude_template)
+                    parse_xml_file_format_and_save(longitude_template)
                     del longitude_template
 
                     del dataset_md
@@ -642,7 +635,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
                     dataset_md.saveAsXML(
                         raster_mask_template, "REMOVE_ALL_SENSITIVE_INFO"
                     )
-                    pretty_format_xml_file(raster_mask_template)
+                    parse_xml_file_format_and_save(raster_mask_template)
                     del raster_mask_template
 
                     del dataset_md
@@ -675,7 +668,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
 
                     mosaic_template = rf"{metadata_folder}\mosaic_template.xml"
                     dataset_md.saveAsXML(mosaic_template, "REMOVE_ALL_SENSITIVE_INFO")
-                    pretty_format_xml_file(mosaic_template)
+                    parse_xml_file_format_and_save(mosaic_template)
                     del mosaic_template
 
                     del dataset_md
@@ -714,7 +707,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
 
                     crf_template = rf"{metadata_folder}\crf_template.xml"
                     dataset_md.saveAsXML(crf_template, "REMOVE_ALL_SENSITIVE_INFO")
-                    pretty_format_xml_file(crf_template)
+                    parse_xml_file_format_and_save(crf_template)
                     del crf_template
 
                     del dataset_md
@@ -756,7 +749,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
                         dataset_md.saveAsXML(
                             idw_region_table_template, "REMOVE_ALL_SENSITIVE_INFO"
                         )
-                        pretty_format_xml_file(idw_region_table_template)
+                        parse_xml_file_format_and_save(idw_region_table_template)
                         del idw_region_table_template
 
                         del dataset_md
@@ -795,7 +788,7 @@ def create_basic_template_xml_files(base_project_file="", project=""):
                         dataset_md.saveAsXML(
                             glmme_region_table_template, "REMOVE_ALL_SENSITIVE_INFO"
                         )
-                        pretty_format_xml_file(glmme_region_table_template)
+                        parse_xml_file_format_and_save(glmme_region_table_template)
                         del glmme_region_table_template
 
                         del dataset_md
@@ -815,45 +808,34 @@ def create_basic_template_xml_files(base_project_file="", project=""):
         del metadata_dictionary, workspaces
 
         # Imports
-        del dismap, dataset_title_dict, pretty_format_xml_file
+        del dismap, dataset_title_dict, parse_xml_file_format_and_save
         del md
 
         # Function Parameters
         del base_project_file, project
 
-    except KeyboardInterrupt:
-        raise SystemExit
     except arcpy.ExecuteWarning:
-        arcpy.AddWarning(str(traceback.print_exc()) + arcpy.GetMessages())
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
     except arcpy.ExecuteError:
-        arcpy.AddError(str(traceback.print_exc()) + arcpy.GetMessages())
-    except Exception:
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
         traceback.print_exc()
-    except:
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:\n")
         traceback.print_exc()
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [
-                key
-                for key in locals().keys()
-                if not key.startswith("__") and key not in leave_out_keys
-            ]
-            if remaining_keys:
-                arcpy.AddWarning(
-                    f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}"
-                )
-            del leave_out_keys, remaining_keys
-            return (
-                results
-                if "results" in locals().keys()
-                else ["NOTE!! The 'results' variable not yet set!!"]
-            )
-        except:
-            raise Exception(traceback.print_exc())
-    finally:
-        if "results" in locals().keys():
-            del results
+        # arcpy.AddMessage("\nScript finished successfully.")
+        return True
 
 
 def import_basic_template_xml_files(base_project_file="", project=""):
@@ -863,7 +845,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
         from arcpy import metadata as md
 
         importlib.reload(dismap)
-        from dismap import (dataset_title_dict, pretty_format_xml_file,
+        from dismap import (dataset_title_dict, parse_xml_file_format_and_save,
                             unique_years)
 
         arcpy.env.overwriteOutput = True
@@ -949,14 +931,14 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Table\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Table\{dataset_name}.xml"
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -997,14 +979,14 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Table\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Table\{dataset_name}.xml"
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1064,14 +1046,14 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Table\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Table\{dataset_name}.xml"
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1115,14 +1097,14 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Table\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Table\{dataset_name}.xml"
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1163,7 +1145,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Boundary\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = (
@@ -1172,7 +1154,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1213,7 +1195,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Extent_Points\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = (
@@ -1222,7 +1204,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1263,14 +1245,14 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Fishnet\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Fishnet\{dataset_name}.xml"
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1311,7 +1293,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Lat_Long\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = (
@@ -1320,7 +1302,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1359,14 +1341,14 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Region\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Region\{dataset_name}.xml"
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1412,7 +1394,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                         rf"{current_md_folder}\Sample_Locations\{dataset_name}.xml"
                     )
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = (
@@ -1421,7 +1403,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1467,7 +1449,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\GRID_Points\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = (
@@ -1476,7 +1458,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1517,14 +1499,14 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Region\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Region\{dataset_name}.xml"
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1532,7 +1514,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                 elif dataset_name.endswith("Bathymetry"):
 
-                    print(f"\tBathymetry")
+                    print("\tBathymetry")
 
                     bathymetry_template = (
                         rf"{current_md_folder}\Bathymetry\bathymetry_template.xml"
@@ -1565,7 +1547,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Bathymetry\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = (
@@ -1574,7 +1556,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1615,7 +1597,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Latitude\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = (
@@ -1624,7 +1606,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1665,7 +1647,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Longitude\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = (
@@ -1674,7 +1656,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1715,7 +1697,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Raster_Mask\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = (
@@ -1724,7 +1706,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1768,14 +1750,14 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\Mosaic\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\Mosaic\{dataset_name}.xml"
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1836,14 +1818,14 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                     out_xml = rf"{current_md_folder}\CRF\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     target_file_path = rf"{inport_md_folder}\CRF\{dataset_name}.xml"
                     custom_xslt_path = rf"{inport_md_folder}\ArcGIS2InPort.xsl"
 
                     dataset_md.saveAsUsingCustomXSLT(target_file_path, custom_xslt_path)
-                    pretty_format_xml_file(target_file_path)
+                    parse_xml_file_format_and_save(target_file_path)
 
                     del target_file_path, custom_xslt_path
 
@@ -1896,7 +1878,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                         out_xml = rf"{current_md_folder}\Table\{dataset_name}.xml"
                         dataset_md.saveAsXML(out_xml)
-                        pretty_format_xml_file(out_xml)
+                        parse_xml_file_format_and_save(out_xml)
                         del out_xml
 
                         target_file_path = (
@@ -1907,7 +1889,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                         dataset_md.saveAsUsingCustomXSLT(
                             target_file_path, custom_xslt_path
                         )
-                        pretty_format_xml_file(target_file_path)
+                        parse_xml_file_format_and_save(target_file_path)
 
                         del target_file_path, custom_xslt_path
 
@@ -1955,7 +1937,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
 
                         out_xml = rf"{current_md_folder}\Table\{dataset_name}.xml"
                         dataset_md.saveAsXML(out_xml)
-                        pretty_format_xml_file(out_xml)
+                        parse_xml_file_format_and_save(out_xml)
                         del out_xml
 
                         target_file_path = (
@@ -1966,7 +1948,7 @@ def import_basic_template_xml_files(base_project_file="", project=""):
                         dataset_md.saveAsUsingCustomXSLT(
                             target_file_path, custom_xslt_path
                         )
-                        pretty_format_xml_file(target_file_path)
+                        parse_xml_file_format_and_save(target_file_path)
 
                         del target_file_path, custom_xslt_path
 
@@ -1987,46 +1969,34 @@ def import_basic_template_xml_files(base_project_file="", project=""):
         del metadata_dictionary, workspaces
 
         # Imports
-        del dismap, dataset_title_dict, pretty_format_xml_file, unique_years
+        del dismap, dataset_title_dict, parse_xml_file_format_and_save, unique_years
         del md
 
         # Function Parameters
         del base_project_file, project
 
-    except KeyboardInterrupt:
-        raise SystemExit
     except arcpy.ExecuteWarning:
-        arcpy.AddWarning(arcpy.GetMessages(1))
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
     except arcpy.ExecuteError:
-        arcpy.AddError(arcpy.GetMessages(2))
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
         traceback.print_exc()
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
     except Exception as e:
-        print(e)
-    except:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:\n")
         traceback.print_exc()
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [
-                key
-                for key in locals().keys()
-                if not key.startswith("__") and key not in leave_out_keys
-            ]
-            if remaining_keys:
-                arcpy.AddWarning(
-                    f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}"
-                )
-            del leave_out_keys, remaining_keys
-            return (
-                results
-                if "results" in locals().keys()
-                else ["NOTE!! The 'results' variable not yet set!!"]
-            )
-        except:
-            raise Exception(traceback.print_exc())
-    finally:
-        if "results" in locals().keys():
-            del results
+        # arcpy.AddMessage("\nScript finished successfully.")
+        return True
 
 
 def create_thumbnails(base_project_file="", project=""):
@@ -2036,7 +2006,7 @@ def create_thumbnails(base_project_file="", project=""):
         from arcpy import metadata as md
 
         importlib.reload(dismap)
-        from dismap import pretty_format_xml_file
+        from dismap import parse_xml_file_format_and_save
 
         arcpy.env.overwriteOutput = True
         arcpy.env.parallelProcessingFactor = "100%"
@@ -2092,7 +2062,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Table\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2105,7 +2075,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Table\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2118,7 +2088,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Table\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2131,7 +2101,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Table\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2144,7 +2114,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Boundary\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2157,7 +2127,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Extent_Points\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2170,7 +2140,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Fishnet\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2183,7 +2153,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Lat_Long\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2196,7 +2166,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Region\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2209,7 +2179,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Sample_Locations\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2222,7 +2192,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\GRID_Points\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2235,20 +2205,20 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Region\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
 
                 elif dataset_name.endswith("Bathymetry"):
 
-                    print(f"\tBathymetry")
+                    print("\tBathymetry")
 
                     dataset_md = md.Metadata(dataset_path)
 
                     out_xml = rf"{metadata_folder}\Bathymetry\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2261,7 +2231,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Latitude\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2274,7 +2244,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Longitude\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2287,7 +2257,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Raster_Mask\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2300,7 +2270,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\Mosaic\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2313,7 +2283,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                     out_xml = rf"{metadata_folder}\CRF\{dataset_name}.xml"
                     dataset_md.saveAsXML(out_xml)
-                    pretty_format_xml_file(out_xml)
+                    parse_xml_file_format_and_save(out_xml)
                     del out_xml
 
                     del dataset_md
@@ -2328,7 +2298,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                         out_xml = rf"{metadata_folder}\Table\{dataset_name}.xml"
                         dataset_md.saveAsXML(out_xml)
-                        pretty_format_xml_file(out_xml)
+                        parse_xml_file_format_and_save(out_xml)
                         del out_xml
 
                         del dataset_md
@@ -2339,7 +2309,7 @@ def create_thumbnails(base_project_file="", project=""):
 
                         out_xml = rf"{metadata_folder}\Table\{dataset_name}.xml"
                         dataset_md.saveAsXML(out_xml)
-                        pretty_format_xml_file(out_xml)
+                        parse_xml_file_format_and_save(out_xml)
                         del out_xml
 
                         del dataset_md
@@ -2364,45 +2334,34 @@ def create_thumbnails(base_project_file="", project=""):
         del project_folder, scratch_folder
 
         # Imports
-        del dismap, pretty_format_xml_file
+        del dismap, parse_xml_file_format_and_save
         del md
 
         # Function Parameters
         del base_project_file, project
 
-    except KeyboardInterrupt:
-        raise SystemExit
     except arcpy.ExecuteWarning:
-        arcpy.AddWarning(str(traceback.print_exc()) + arcpy.GetMessages())
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
     except arcpy.ExecuteError:
-        arcpy.AddError(str(traceback.print_exc()) + arcpy.GetMessages())
-    except Exception:
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
         traceback.print_exc()
-    except:
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:\n")
         traceback.print_exc()
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [
-                key
-                for key in locals().keys()
-                if not key.startswith("__") and key not in leave_out_keys
-            ]
-            if remaining_keys:
-                arcpy.AddWarning(
-                    f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}"
-                )
-            del leave_out_keys, remaining_keys
-            return (
-                results
-                if "results" in locals().keys()
-                else ["NOTE!! The 'results' variable not yet set!!"]
-            )
-        except:
-            raise Exception(traceback.print_exc())
-    finally:
-        if "results" in locals().keys():
-            del results
+        # arcpy.AddMessage("\nScript finished successfully.")
+        return True
 
 
 def export_to_inport_xml_files(base_project_file="", project=""):
@@ -2415,7 +2374,7 @@ def export_to_inport_xml_files(base_project_file="", project=""):
         from arcpy import metadata as md
 
         importlib.reload(dismap)
-        from dismap import pretty_format_xml_file
+        from dismap import parse_xml_file_format_and_save
 
         arcpy.env.overwriteOutput = True
         arcpy.env.parallelProcessingFactor = "100%"
@@ -2459,7 +2418,7 @@ def export_to_inport_xml_files(base_project_file="", project=""):
             del dataset_md
 
             try:
-                pretty_format_xml_file(target_file_path)
+                parse_xml_file_format_and_save(target_file_path)
             except Exception:
                 raise Exception
 
@@ -2474,48 +2433,34 @@ def export_to_inport_xml_files(base_project_file="", project=""):
         del project_folder, scratch_folder, crfs_folder
 
         # Imports
-        del dismap, pretty_format_xml_file
+        del dismap, parse_xml_file_format_and_save
         del md
 
         # Function Parameters
         del base_project_file, project
 
-    except KeyboardInterrupt:
-        raise SystemExit
     except arcpy.ExecuteWarning:
-        arcpy.AddWarning(str(traceback.print_exc()) + arcpy.GetMessages())
-        raise SystemExit
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
     except arcpy.ExecuteError:
-        arcpy.AddError(str(traceback.print_exc()) + arcpy.GetMessages())
-        raise SystemExit
-    except SystemExit as se:
-        arcpy.AddError(se)
-        raise SystemExit
-    except:
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
+        traceback.print_exc()
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:\n")
         traceback.print_exc()
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [
-                key
-                for key in locals().keys()
-                if not key.startswith("__") and key not in leave_out_keys
-            ]
-            if remaining_keys:
-                arcpy.AddWarning(
-                    f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}"
-                )
-            del leave_out_keys, remaining_keys
-            return (
-                results
-                if "results" in locals().keys()
-                else ["NOTE!! The 'results' variable not yet set!!"]
-            )
-        except:
-            raise Exception(traceback.print_exc())
-    finally:
-        if "results" in locals().keys():
-            del results
+        # arcpy.AddMessage("\nScript finished successfully.")
+        return True
 
 
 def create_maps(base_project_file="", project="", dataset=""):
@@ -2525,7 +2470,7 @@ def create_maps(base_project_file="", project="", dataset=""):
         from arcpy import metadata as md
 
         importlib.reload(dismap)
-        from dismap import pretty_format_xml_file
+        from dismap import parse_xml_file_format_and_save
 
         arcpy.env.overwriteOutput = True
         arcpy.env.parallelProcessingFactor = "100%"
@@ -2869,225 +2814,123 @@ def create_maps(base_project_file="", project="", dataset=""):
         del project_folder, scratch_folder
 
         # Imports
-        del dismap, pretty_format_xml_file
+        del dismap, parse_xml_file_format_and_save
         del md
 
         # Function Parameters
         del base_project_file, project
 
-    except KeyboardInterrupt:
-        raise SystemExit
     except arcpy.ExecuteWarning:
-        arcpy.AddWarning(str(traceback.print_exc()) + arcpy.GetMessages())
-        raise Exception
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
     except arcpy.ExecuteError:
-        arcpy.AddError(str(traceback.print_exc()) + arcpy.GetMessages())
-        raise Exception
-    except Exception:
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
         traceback.print_exc()
-    except:
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:\n")
         traceback.print_exc()
     else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [
-                key
-                for key in locals().keys()
-                if not key.startswith("__") and key not in leave_out_keys
-            ]
-            if remaining_keys:
-                arcpy.AddWarning(
-                    f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}"
-                )
-            del leave_out_keys, remaining_keys
-            return (
-                results
-                if "results" in locals().keys()
-                else ["NOTE!! The 'results' variable not yet set!!"]
-            )
-        except:
-            raise Exception(traceback.print_exc())
-    finally:
-        if "results" in locals().keys():
-            del results
+        # arcpy.AddMessage("\nScript finished successfully.")
+        return True
 
 
-def main(project=""):
+def script_tool(project_folder=""):
     try:
-        # Imports
-        import dismap
 
-        importlib.reload(dismap)
+        CreateBasicTemplateXMLFiles = True
+        if CreateBasicTemplateXMLFiles:
+            create_basic_template_xml_files(project_folder)
+        del CreateBasicTemplateXMLFiles
 
-        arcpy.env.overwriteOutput = True
-        arcpy.env.parallelProcessingFactor = "100%"
-
-        base_project_folder = os.path.dirname(os.path.dirname(__file__))
-        base_project_file = rf"{base_project_folder}\DisMAP.aprx"
-        project_gdb = rf"{base_project_folder}\{project}\{project}.gdb"
-
-        # Test if passed workspace exists, if not raise SystemExit
-        if not arcpy.Exists(base_project_file):
-            raise SystemExit(
-                line_info(f"{os.path.basename(base_project_file)} is missing!!")
-            )
-
-        # Test if passed workspace exists, if not raise SystemExit
-        if not arcpy.Exists(project_gdb):
-            raise SystemExit(line_info(f"{os.path.basename(project_gdb)} is missing!!"))
-
-        del base_project_folder
-
-        Backup = False
-        if Backup:
-            dismap.backup_gdb(project_gdb)
-        del Backup
-
-        # Imports
-        del dismap
-        # Function parameters
-
-        results = []
-
-        try:
-
-            CreateBasicTemplateXMLFiles = True
-            if CreateBasicTemplateXMLFiles:
-                result = create_basic_template_xml_files(base_project_file, project)
-                results.extend(result)
-                del result
-            del CreateBasicTemplateXMLFiles
-
-            ImportBasicTemplateXmlFiles = True
-            if ImportBasicTemplateXmlFiles:
-                result = import_basic_template_xml_files(base_project_file, project)
-                results.extend(result)
-                del result
-            del ImportBasicTemplateXmlFiles
-
-            CreateThumbnails = False
-            if CreateThumbnails:
-                result = create_thumbnails(base_project_file, project)
-                results.extend(result)
-                del result
-            del CreateThumbnails
-
-            CreateMaps = False
-            if CreateMaps:
-                result = create_maps(
-                    base_project_file, project, dataset=rf"{project_gdb}\DisMAP_Regions"
-                )
-                results.extend(result)
-                del result
-            del CreateMaps
-
-            ExportToInportXmlFiles = False
-            if ExportToInportXmlFiles:
-                result = export_to_inport_xml_files(base_project_file, project)
-                results.extend(result)
-                del result
-            del ExportToInportXmlFiles
-
-        except Exception as e:
-            arcpy.AddError(str(e))
+##        ImportBasicTemplateXmlFiles = False
+##        if ImportBasicTemplateXmlFiles:
+##            import_basic_template_xml_files(base_project_file, project)
+##        del ImportBasicTemplateXmlFiles
+##
+##        CreateThumbnails = False
+##        if CreateThumbnails:
+##            create_thumbnails(base_project_file, project)
+##        del CreateThumbnails
+##
+##        CreateMaps = False
+##        if CreateMaps:
+##            create_maps(
+##                base_project_file, project, dataset=rf"{project_gdb}\DisMAP_Regions"
+##            )
+##        del CreateMaps
+##
+##        ExportToInportXmlFiles = False
+##        if ExportToInportXmlFiles:
+##            export_to_inport_xml_files(base_project_file, project)
+##        del ExportToInportXmlFiles
 
         # Variable created in function
-        del project_gdb
-        # Function parameters
-        del base_project_file, project
 
-    except KeyboardInterrupt:
-        raise SystemExit
+        # Function parameters
+        del project_folder
+
     except arcpy.ExecuteWarning:
-        arcpy.AddWarning(arcpy.GetMessages(1))
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
+    except arcpy.ExecuteError:
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
+        traceback.print_exc()
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:")
+        traceback.print_exc()
+
+    else:
+        arcpy.AddMessage("\nScript finished successfully.\n")
+    finally:
+        arcpy.AddMessage(f"\n{'--End' * 10}--")
+
+
+if __name__ == '__main__':
+    try:
+
+        project_folder = arcpy.GetParameterAsText(0)
+
+        if not project_folder:
+            release = "February-1-2026"
+            #release = "August-1-2025"
+            project_folder = os.path.join(os.path.expanduser('~'), f"Documents\\ArcGIS\\Projects\\DisMAP\\ArcGIS-Analysis-Python\\{release}")
+        else:
+            pass
+
+        script_tool(project_folder)
+
+        arcpy.SetParameterAsText(1, "Result")
+
+        del project_folder
+
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
     except arcpy.ExecuteError:
         arcpy.AddError(arcpy.GetMessages(2))
         traceback.print_exc()
     except Exception:
-        pass
-    except:
         traceback.print_exc()
-    else:
-        try:
-            leave_out_keys = ["leave_out_keys", "results"]
-            remaining_keys = [
-                key
-                for key in locals().keys()
-                if not key.startswith("__") and key not in leave_out_keys
-            ]
-            if remaining_keys:
-                arcpy.AddWarning(
-                    f"Remaining Keys in '{inspect.stack()[0][3]}': ##--> '{', '.join(remaining_keys)}' <--## Line Number: {traceback.extract_stack()[-1].lineno}"
-                )
-            del leave_out_keys, remaining_keys
-            return (
-                results
-                if "results" in locals().keys()
-                else ["NOTE!! The 'results' variable not yet set!!"]
-            )
-        except:
-            raise Exception(traceback.print_exc())
-    finally:
-        if "results" in locals().keys():
-            del results
 
-
-if __name__ == "__main__":
-    try:
-        # Import this Python module
-        import dismap_metadata_processing
-
-        importlib.reload(dismap_metadata_processing)
-
-        print(f"{'-' * 90}")
-        print(f"Python Script:  {os.path.basename(__file__)}")
-        print(f"Location:       {os.path.dirname(__file__)}")
-        print(
-            f"Python Version: {sys.version} Environment: {os.path.basename(sys.exec_prefix)}"
-        )
-        print(f"{'-' * 90}\n")
-
-        # project = "May 1 2024"
-        # project = "July 1 2024"
-        # project = "December 1 2024"
-        project = "April 1 2023"
-
-        # Tested on 8/1/2024 -- PASSED
-        main(project=project)
-
-        del project
-
-        from time import localtime, strftime
-
-        print(f"\n{'-' * 90}")
-        print(
-            f"Python script: {os.path.basename(__file__)} successfully completed {strftime('%a %b %d %I:%M %p', localtime())}"
-        )
-        print(f"{'-' * 90}")
-        del localtime, strftime
-
-    except:
-        traceback.print_exc()
-    else:
-        leave_out_keys = ["leave_out_keys"]
-        leave_out_keys.extend(
-            [
-                name
-                for name, obj in inspect.getmembers(sys.modules[__name__])
-                if inspect.isfunction(obj) or inspect.ismodule(obj)
-            ]
-        )
-        remaining_keys = [
-            key
-            for key in locals().keys()
-            if not key.startswith("__") and key not in leave_out_keys
-        ]
-        if remaining_keys:
-            arcpy.AddWarning(
-                f"Remaining Keys: ##--> '{', '.join(remaining_keys)}' <--##"
-            )
-        del leave_out_keys, remaining_keys
-    finally:
-        pass
 
 # This is an autogenerated comment.

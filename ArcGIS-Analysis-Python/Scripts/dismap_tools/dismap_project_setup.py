@@ -130,7 +130,8 @@ def script_tool(new_project_folder, project_folders):
         arcpy.AddError(
             f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError("Traceback:\n")
+        traceback.print_exc()
     except SystemExit:
         # This is not an error, so we allow the script to exit.
         pass
@@ -138,7 +139,8 @@ def script_tool(new_project_folder, project_folders):
         arcpy.AddError(
             f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError("Traceback:\n")
+        traceback.print_exc()
     else:
         arcpy.AddMessage("\nScript finished successfully.")
         return True
@@ -152,13 +154,15 @@ if __name__ == "__main__":
         project_folders = arcpy.GetParameterAsText(1)
 
         if not new_project_folder:
-            new_project_folder = "August-1-2025"
+            # new_project_folder = "August-1-2025"
+            # new_project_folder = "February-1-2026"
+            new_project_folder = "June-1-2026"
         else:
             pass
 
         if not project_folders:
             project_folders = (
-                "CRFs;CSV_Data;Dataset_Shapefiles;Gemini_Metadata;Images;Layers;Metadata_Export;Publish"
+                "CRFs;CSV_Data;Dataset_Shapefiles;Images;Layers;Metadata_ArcGIS;Metadata_Export;Metadata_Gemini;Metadata_InPort;Publish"
             )
         else:
             pass
@@ -170,6 +174,7 @@ if __name__ == "__main__":
         del new_project_folder, project_folders
 
     except SystemExit:
+        # This is not an error, so we allow the script to exit.
         pass
     except arcpy.ExecuteError:
         arcpy.AddError(arcpy.GetMessages(2))

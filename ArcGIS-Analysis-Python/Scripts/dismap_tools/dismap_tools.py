@@ -26,7 +26,7 @@ def trace():
     tbinfo = traceback.format_tb(tb)[0]
     line = tbinfo.split(", ")[1]
     filename = sys.path[0] + os.sep + "test.py"
-    synerror = traceback.format_exc().splitlines()[-1]
+    synerror = traceback.print_exc().splitlines()[-1]
     return line, filename, synerror
 
 
@@ -35,7 +35,9 @@ def parse_xml_file_format_and_save(csv_data_folder="", xml_file="", sort=False):
 
         import json
 
-        json_path = rf"{csv_data_folder}\root_dict.json"
+        print(csv_data_folder)
+
+        json_path = os.path.join(csv_data_folder, "root_dict.json")
         # print(csv_data_folder)
         with open(json_path, "r", encoding='utf-8') as json_file:
             root_dict = json.load(json_file)
@@ -78,34 +80,38 @@ def parse_xml_file_format_and_save(csv_data_folder="", xml_file="", sort=False):
         del xml_file, etree
         del root_dict
         del csv_data_folder
-    except KeyboardInterrupt:
-        sys.exit()
-    except arcpy.ExecuteWarning: # Changed to warning and removed sys.exit()
-        arcpy.AddWarning(arcpy.GetMessages(1))
-        arcpy.AddWarning(arcpy.GetMessages(1)) # Changed to AddWarning
-        traceback.print_exc()
-        # sys.exit() # Removed sys.exit() for warnings
-    except arcpy.ExecuteError:
-        arcpy.AddError(arcpy.GetMessages(2))
-        traceback.print_exc()
-        sys.exit(1) # Added exit status
-    except Exception:
-        arcpy.AddError(arcpy.GetMessages(2))
-        traceback.print_exc()
-        sys.exit()
-    except Exception:
-        arcpy.AddError(arcpy.GetMessages(2))
-        traceback.print_exc()
-        sys.exit()
-    else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk: arcpy.AddMessage(
-            f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
+
+    except arcpy.ExecuteWarning:
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
         )
-        return True
-    finally:
+    except arcpy.ExecuteError:
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        traceback.print_exc()
+        raise SystemExit
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
         pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        traceback.print_exc()
+        raise SystemExit
+    except OSError as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        traceback.print_exc()
+        raise SystemExit
+    except FileNotFoundError as e:
+        arcpy.AddError(f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}")
+        traceback.print_exc()
+        raise SystemExit
+    else:
+        return True
 
 
 def print_xml_file(xml_file="", sort=False):
@@ -171,11 +177,6 @@ def print_xml_file(xml_file="", sort=False):
         traceback.print_exc()
         sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk: arcpy.AddMessage(
-            f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-        )
         return True
     finally:
         pass
@@ -244,11 +245,6 @@ def add_fields(csv_data_folder="", in_table=""):
         traceback.print_exc()
         sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk: arcpy.AddMessage(
-            f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-        )
         return True
     finally:
         pass
@@ -335,11 +331,6 @@ def alter_fields(csv_data_folder="", in_table=""):
         traceback.print_exc()
         sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk: arcpy.AddMessage(
-            f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-        )
         return True
     finally:
         pass
@@ -372,11 +363,6 @@ def backup_gdb(project_gdb=""):
         traceback.print_exc()
         sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk: arcpy.AddMessage(
-            f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-        )
         return True
     finally:
         pass
@@ -451,11 +437,6 @@ def basic_metadata(csv_data_folder="", in_table=""):
         traceback.print_exc()
         sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk: arcpy.AddMessage(
-            f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-        )
         return True
     finally:
         pass
@@ -727,11 +708,6 @@ def check_datasets(datasets=[]):
         traceback.print_exc()
         sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk: arcpy.AddMessage(
-            f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-        )
         return True
     finally:
         pass
@@ -824,9 +800,6 @@ def compare_metadata_xml(file1="", file2=""):
         traceback.print_exc()
         sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk: arcpy.AddMessage(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##")
         return __diff
     finally:
         pass
@@ -950,21 +923,8 @@ def convertSeconds(seconds):
 
 def dataset_title_dict(project_gdb=""):
     try:
-        # Test if passed workspace exists, if not raise Exception
-        if not arcpy.Exists(project_gdb):
-            arcpy.AddError(project_gdb)
-            arcpy.AddError(f"{os.path.basename(project_gdb)} is missing!!")
-            sys.exit()
-
-        if "Scratch" in project_gdb:
-            project = os.path.basename(os.path.dirname(os.path.dirname(project_gdb)))
-        else:
-            project = os.path.basename(os.path.dirname(project_gdb))
-
-        #print(project_gdb)
-        #print([f.name for f in arcpy.ListFields(os.path.join(project_gdb, "Datasets"))])
-
         project_folder = os.path.dirname(project_gdb)
+        project = os.path.basename(project_folder)
         csv_data_folder = os.path.join(project_folder, "CSV_Data")
         #print([f.name for f in arcpy.ListFields(os.path.join(csv_data_folder, "Datasets.csv"))])
 
@@ -1021,7 +981,7 @@ def dataset_title_dict(project_gdb=""):
                     "Dataset Service Title": table_name_st,
                     "Tags": tags,
                     "Summary": summary,
-                    "Description": f"This table represents the CSV Data files in ArcGIS format",
+                    "Description": "This table represents the CSV Data files in ArcGIS format",
                     "Credits": _credits,
                     "Access Constraints": access_constraints,
                 }
@@ -1084,7 +1044,7 @@ def dataset_title_dict(project_gdb=""):
                     "Dataset Service Title": bathymetry_rst,
                     "Tags": tags,
                     "Summary": summary,
-                    "Description": f"The bathymetry dataset represents the ocean depth at that grid cell.",
+                    "Description": "The bathymetry dataset represents the ocean depth at that grid cell.",
                     "Credits": _credits,
                     "Access Constraints": access_constraints,
                 }
@@ -1113,7 +1073,7 @@ def dataset_title_dict(project_gdb=""):
                     "Dataset Service Title": boundary_fcst,
                     "Tags": tags,
                     "Summary": summary,
-                    "Description": f"These files contain the spatial boundaries of the NOAA Fisheries Bottom-trawl surveys. This data set covers 8 regions of the United States: Northeast, Southeast, Gulf of Mexico, West Coast, Eastern Bering Sea, Aleutian Islands, Gulf of Alaska, and Hawai'i Islands.",
+                    "Description": "These files contain the spatial boundaries of the NOAA Fisheries Bottom-trawl surveys. This data set covers 8 regions of the United States: Northeast, Southeast, Gulf of Mexico, West Coast, Eastern Bering Sea, Aleutian Islands, Gulf of Alaska, and Hawai'i Islands.",
                     "Credits": _credits,
                     "Access Constraints": access_constraints,
                 }
@@ -1142,7 +1102,7 @@ def dataset_title_dict(project_gdb=""):
                     "Dataset Service Title": boundary_line_fcst,
                     "Tags": tags,
                     "Summary": summary,
-                    "Description": f"These files contain the spatial boundaries of the NOAA Fisheries Bottom-trawl surveys. This data set covers 8 regions of the United States: Northeast, Southeast, Gulf of Mexico, West Coast, Eastern Bering Sea, Aleutian Islands, Gulf of Alaska, and Hawai'i Islands.",
+                    "Description": "These files contain the spatial boundaries of the NOAA Fisheries Bottom-trawl surveys. This data set covers 8 regions of the United States: Northeast, Southeast, Gulf of Mexico, West Coast, Eastern Bering Sea, Aleutian Islands, Gulf of Alaska, and Hawai'i Islands.",
                     "Credits": _credits,
                     "Access Constraints": access_constraints,
                 }
@@ -1577,6 +1537,35 @@ def dataset_title_dict(project_gdb=""):
 
             else:
                 pass
+
+            if "SpatialGroup_SpeciesPersistenceIndicator" == dataset_code:
+
+                # arcpy.AddMessage(f"\tProcessing: {dataset_code} DisMAP_Survey_Info")
+
+                tb = dataset_code
+                tbs = f"{dataset_code}_{date_code(project)}"
+                tbst = f"Spatial Group Species Persistence Indicator Table {date_code(project)}"
+
+                __datasets_dict[tb] = {
+                    "Dataset Service": tbs,
+                    "Dataset Service Title": tbst,
+                    "Tags": "DisMAP; Spatial Group Species Persistence Indicator Table",
+                    "Summary": summary,
+                    "Description": "This table functions as a look-up table of values",
+                    "Credits": _credits,
+                    "Access Constraints": access_constraints,
+                }
+
+                # arcpy.AddMessage(f"\tLayerSpeciesYearImageName T:   {tb}")
+                # arcpy.AddMessage(f"\tLayerSpeciesYearImageName TS:  {tbs}")
+                # arcpy.AddMessage(f"\tLayerSpeciesYearImageName TST: {tbst}")
+
+                del tb, tbs, tbst
+
+            else:
+                pass
+
+
             if "SpeciesPersistenceIndicatorPercentileBin" == dataset_code:
 
                 # arcpy.AddMessage(f"\tProcessing: {dataset_code} DisMAP_Survey_Info")
@@ -1603,6 +1592,7 @@ def dataset_title_dict(project_gdb=""):
 
             else:
                 pass
+
             if "SpeciesPersistenceIndicatorTrend" == dataset_code:
 
                 # arcpy.AddMessage(f"\tProcessing: {dataset_code}")
@@ -1658,25 +1648,19 @@ def dataset_title_dict(project_gdb=""):
         del project, project_gdb
 
     except KeyboardInterrupt:
-        sys.exit()
+        raise SystemExit
     except arcpy.ExecuteWarning:
         arcpy.AddWarning(arcpy.GetMessages(1))
-        traceback.print_exc()
-        sys.exit()
     except arcpy.ExecuteError:
         arcpy.AddError(arcpy.GetMessages(2))
         traceback.print_exc()
-        sys.exit()
+        raise SystemExit
     except Exception:
         arcpy.AddError(arcpy.GetMessages(2))
         traceback.print_exc()
-        sys.exit()
+        raise SystemExit
     except SystemExit:
-        sys.exit()
-    except:  # noqa: E722
-        arcpy.AddError(arcpy.GetMessages(2))
-        traceback.print_exc()
-        sys.exit()
+        raise SystemExit
     else:
         return __datasets_dict
     finally:
@@ -1721,15 +1705,15 @@ def date_code(version):
         arcpy.AddError(
             f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(f"Traceback:\n{traceback.print_exc()}")
     except SystemExit:
         # This is not an error, so we allow the script to exit.
         pass
-    except Exception:
+    except Exception as e:
         arcpy.AddError(
             f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(f"Traceback:\n{traceback.print_exc()}")
     else:
         #arcpy.AddMessage("\nScript finished successfully.")
         return __results
@@ -1766,7 +1750,7 @@ def dTypesCSV(csv_data_folder="", table=""):
 
         _table_definitions = table_definitions(csv_data_folder, "")
         for key in _table_definitions:
-            # arcpy.AddMessage(key, _table_definitions[key])
+            #print(key, _table_definitions[key])
             del key
 
         fields = _table_definitions[table.replace(".csv", "")]
@@ -1784,30 +1768,27 @@ def dTypesCSV(csv_data_folder="", table=""):
 
         __results = copy.deepcopy(field_csv_dtypes)
         del field_csv_dtypes, copy
-    except KeyboardInterrupt:
-        sys.exit()
+
     except arcpy.ExecuteWarning:
-        arcpy.AddWarning(arcpy.GetMessages(1))
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
     except arcpy.ExecuteError:
-        arcpy.AddError(arcpy.GetMessages(2))
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
         traceback.print_exc()
-        sys.exit()
-    except Exception:
-        arcpy.AddError(arcpy.GetMessages(2))
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:")
         traceback.print_exc()
-        sys.exit()
-    except Exception:
-        arcpy.AddError(arcpy.GetMessages(2))
-        traceback.print_exc()
-        sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk:
-            arcpy.AddMessage(
-                f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-            )
-            del rk
         return __results
     finally:
         if "__results" in locals().keys():
@@ -1891,13 +1872,6 @@ def dTypesGDB(csv_data_folder="", table=""):
         traceback.print_exc()
         sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk:
-            arcpy.AddMessage(
-                f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-            )
-            del rk
         return __results
     finally:
         if "__results" in locals().keys():
@@ -1994,13 +1968,6 @@ def export_metadata(csv_data_folder="", in_table=""):
         traceback.print_exc()
         sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk:
-            arcpy.AddMessage(
-                f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-            )
-            del rk
         return __results
     finally:
         if "__results" in locals().keys():
@@ -2056,13 +2023,6 @@ def field_definitions(csv_data_folder="", field=""):
         traceback.print_exc()
         sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk:
-            arcpy.AddMessage(
-                f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-            )
-            del rk
         return __results
     finally:
         if "__results" in locals().keys():
@@ -2137,7 +2097,7 @@ def import_metadata(csv_data_folder="", dataset=""):
             arcpy.AddError(
                 f"{os.path.basename(csv_data_folder)} or {os.path.basename(dataset)} is empty"
             )
-            raise SystemExit
+            raise Exception
         else:
             pass
         # Import
@@ -2168,17 +2128,11 @@ def import_metadata(csv_data_folder="", dataset=""):
         # arcpy.AddMessage(f"{'-' * 10}")
         # raise SystemExit
 
-        # Test if passed workspace exists, if not raise Exception
-        if not arcpy.Exists(project_gdb):
-            arcpy.AddError(f"{os.path.basename(project_gdb)} is missing!!")
-            sys.exit()
-            raise SystemExit
-
         # arcpy.AddMessage(csv_data_folder)
 
         project_folder = os.path.dirname(csv_data_folder)
-        #metadata_folder = os.path.join(project_folder, "Metadata_Export")
-        metadata_folder = os.path.join(project_folder, "Gemini_Metadata")
+        metadata_folder = os.path.join(project_folder, "Metadata_Export")
+        #metadata_folder = os.path.join(project_folder, "Gemini_Metadata")
 
         # ArcPy Environments
         arcpy.env.overwriteOutput = True
@@ -2194,8 +2148,8 @@ def import_metadata(csv_data_folder="", dataset=""):
             metadata_dictionary = dataset_title_dict(project_gdb)
             if metadata_dictionary:
                 pass
-                # for key in metadata_dictionary:
-                # arcpy.AddMessage(f"{key}, {metadata_dictionary[key]}")
+                #for key in metadata_dictionary:
+                #    arcpy.AddMessage(f"{key}, {metadata_dictionary[key]}")
                 #    del key
             elif not metadata_dictionary:
                 arcpy.AddWarning("Metadata Dictionary is empty")
@@ -2211,55 +2165,59 @@ def import_metadata(csv_data_folder="", dataset=""):
 
         # Assign the Metadata object's content to a target item
         dataset_md = md.Metadata(dataset)
-        # resource_citation_contacts = rf"{metadata_folder}\resource_citation_contacts.xml"
-        resource_citation_contacts = rf"{metadata_folder}\contacts.xml"
-        # arcpy.AddMessage(resource_citation_contacts)
-        dataset_md.importMetadata(resource_citation_contacts)
-        dataset_md.save()
-        dataset_md.synchronize("OVERWRITE")
-        dataset_md.save()
-        dataset_md.synchronize("ALWAYS") # This line is redundant, already synchronized above
-        dataset_md.save()
-        del resource_citation_contacts  # , poc_template_md
+##        # resource_citation_contacts = rf"{metadata_folder}\resource_citation_contacts.xml"
+##        resource_citation_contacts = rf"{metadata_folder}\contacts.xml"
+##        # arcpy.AddMessage(resource_citation_contacts)
+##        dataset_md.importMetadata(resource_citation_contacts)
+##        dataset_md.save()
+##        dataset_md.synchronize("ALWAYS") # This line is redundant, already synchronized above
+##        dataset_md.save()
+##        del resource_citation_contacts  # , poc_template_md
+
         # Create a new Metadata object and add some content to it
         # https://pro.arcgis.com/en/pro-app/latest/arcpy/metadata/metadata-class.htm
         dataset_md.title = metadata_dictionary[dataset_name.replace(".csv", "")]["Dataset Service Title"]
         dataset_md.tags = metadata_dictionary[dataset_name.replace(".csv", "")]["Tags"]
         dataset_md.summary = metadata_dictionary[dataset_name.replace(".csv", "")]["Summary"]
         dataset_md.description = metadata_dictionary[dataset_name.replace(".csv", "")]["Description"]
-        dataset_md.credits = metadata_dictionary[dataset_name.replace(".csv", "")]["Credits"]
-        dataset_md.accessConstraints = metadata_dictionary[dataset_name.replace(".csv", "")][
-            "Access Constraints"
-        ]
+        # dataset_md.credits = metadata_dictionary[dataset_name.replace(".csv", "")]["Credits"]
+        # dataset_md.accessConstraints = metadata_dictionary[dataset_name.replace(".csv", "")]["Access Constraints"]
         dataset_md.save()
         dataset_md.synchronize("ALWAYS") # This line is redundant, already synchronized above
         dataset_md.save()
-        dataset_md.reload()
+        #dataset_md.reload()
         out_xml = rf"{metadata_folder}\{dataset_md.title}.xml"
-        # dataset_md.saveAsXML(out_xml, "REMOVE_ALL_SENSITIVE_INFO")
+        dataset_md.saveAsXML(out_xml, "REMOVE_ALL_SENSITIVE_INFO")
         # dataset_md.saveAsXML(out_xml, "REMOVE_MACHINE_NAMES")
-        dataset_md.saveAsXML(out_xml)
-
+        #dataset_md.saveAsXML(out_xml)
         parse_xml_file_format_and_save(
             csv_data_folder=csv_data_folder, xml_file=out_xml, sort=True
         )
 
     except arcpy.ExecuteWarning:
-        arcpy.AddWarning(arcpy.GetMessages(1))
-        traceback.print_exc()
-        sys.exit()
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
     except arcpy.ExecuteError:
-        arcpy.AddError(arcpy.GetMessages(2))
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError("Traceback:\n")
         traceback.print_exc()
-        sys.exit()
-    except Exception:
-        arcpy.AddError(arcpy.GetMessages(2))
+        raise SystemExit
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError("Traceback:\n")
         traceback.print_exc()
-        sys.exit()
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}\n{arcpy.GetMessages()}"
+        )
+
+        raise SystemExit
     else:
         return True
-    finally:
-        pass
 
 
 def metadata_dictionary_json(csv_data_folder="", dataset_name=""):
@@ -2295,11 +2253,6 @@ def metadata_dictionary_json(csv_data_folder="", dataset_name=""):
         traceback.print_exc()
         sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk: arcpy.AddMessage(
-            f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-        )
         return __results
     finally:
         if "__results" in locals().keys():
@@ -2382,11 +2335,6 @@ def pretty_format_xml_file(metadata=""):
         traceback.print_exc()
         raise SystemExit
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk: arcpy.AddMessage(
-            f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-        )
         return True
     finally:
         pass
@@ -2417,11 +2365,6 @@ def pretty_format_xml_files(metadata_folder=""):
         traceback.print_exc()
         sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk: arcpy.AddMessage(
-            f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-        )
         return __results
     finally:
         if "__results" in locals().keys():
@@ -2477,11 +2420,6 @@ def table_definitions(csv_data_folder="", dataset_name=""):
         traceback.print_exc()
         sys.exit()
     else:
-        # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith("__")]
-        if rk: arcpy.AddMessage(
-            f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
-        )
         return __results
     finally:
         if "__results" in locals().keys():
@@ -3099,7 +3037,7 @@ def test_bed_1(project_gdb=""):
         arcpy.AddError(
             f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(f"Traceback:\n{traceback.print_exc()}")
     except SystemExit:
         # This is not an error, so we allow the script to exit.
         pass
@@ -3107,7 +3045,7 @@ def test_bed_1(project_gdb=""):
         arcpy.AddError(
             f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(f"Traceback:\n{traceback.print_exc()}")
     else:
         arcpy.AddMessage("\nScript finished successfully.")
         return True
@@ -3421,7 +3359,7 @@ def test_bed_2(project=""):
         arcpy.AddError(
             f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(f"Traceback:\n{traceback.print_exc()}")
     except SystemExit:
         # This is not an error, so we allow the script to exit.
         pass
@@ -3429,7 +3367,7 @@ def test_bed_2(project=""):
         arcpy.AddError(
             f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(f"Traceback:\n{traceback.print_exc()}")
     else:
         arcpy.AddMessage("\nScript finished successfully.")
         return True
@@ -3565,7 +3503,7 @@ def script_tool(project_gdb=""):
         arcpy.AddError(
             f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(f"Traceback:\n{traceback.print_exc()}")
     except SystemExit:
         # This is not an error, so we allow the script to exit.
         pass
@@ -3573,11 +3511,12 @@ def script_tool(project_gdb=""):
         arcpy.AddError(
             f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
         )
-        arcpy.AddError(f"Traceback:\n{traceback.format_exc()}")
+        arcpy.AddError(f"Traceback:\n{traceback.print_exc()}")
     else:
         arcpy.AddMessage("\nScript finished successfully.")
         return True
-    finally: arcpy.AddMessage(f"\n{'--End' * 10}--")
+    finally:
+        arcpy.AddMessage(f"\n{'--End' * 10}--")
 
 
 if __name__ == "__main__":

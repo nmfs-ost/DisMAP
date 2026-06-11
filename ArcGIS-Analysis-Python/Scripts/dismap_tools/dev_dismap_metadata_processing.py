@@ -4434,15 +4434,14 @@ def metadata_dist_info_report(dataset_path=""):
                 old_linkage_element = onLineSrc.find("./linkage")
                 old_linkage = old_linkage_element.text
                 # print(old_linkage, flush=True)
-                old_item_name = old_linkage[
-                    old_linkage.find("/services/")
-                    + len("/services/") : old_linkage.find("/FeatureServer")
-                ]
+                old_item_name = old_linkage[old_linkage.find("/services/") + len("/services/") : old_linkage.find("/FeatureServer")]
+
                 if old_item_name != f"{_new_item_name}_{date_code(project)}":
                     # print('remove')
                     onLineSrc.getparent().remove(onLineSrc)
                 else:
                     pass
+
                 # print(old_item_name, f"{_new_item_name}_{date_code(project)}")
                 # new_linkage = old_linkage.replace(old_item_name, f"{_new_item_name}_{date_code(project)}")
                 # print(new_linkage, flush=True)
