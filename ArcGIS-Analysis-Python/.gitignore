@@ -41,7 +41,7 @@ __init__.py
 *.zip
 **/*.zip
 
-# Ignore zip files
+# Ignore CSV files
 *.csv
 **/*.csv
 
