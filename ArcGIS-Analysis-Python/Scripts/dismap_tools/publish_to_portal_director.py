@@ -91,11 +91,11 @@ def create_feature_class_layers(project_folder=""):
 ##        datasets.extend(arcpy.ListFeatureClasses("*Sample_Locations"))
 ##        datasets.extend(arcpy.ListFeatureClasses("DisMAP_Regions"))
 ##        datasets.extend(arcpy.ListTables("Indicators"))
-##        datasets.extend(arcpy.ListTables("Species_Filter"))
+        datasets.extend(arcpy.ListTables("Species_Filter"))
 ##        datasets.extend(arcpy.ListTables("DisMAP_Survey_Info"))
 ##        datasets.extend(arcpy.ListTables("SpeciesPersistenceIndicatorPercentileBin"))
 ##        datasets.extend(arcpy.ListTables("SpeciesPersistenceIndicatorTrend"))
-        datasets.extend(arcpy.ListTables("SpatialGroup_SpeciesPersistenceIndicator"))
+##        datasets.extend(arcpy.ListTables("SpatialGroup_SpeciesPersistenceIndicator"))
 
         for dataset in sorted(datasets):
 
@@ -111,20 +111,12 @@ def create_feature_class_layers(project_folder=""):
             if desc["dataType"] == "FeatureClass":
 
                 arcpy.AddMessage("\tMake Feature Layer")
-                feature_class_layer = arcpy.management.MakeFeatureLayer(
-                    feature_class_path, feature_service_title
-                )
-                feature_class_layer_file = (
-                    rf"{project_folder}\Layers\{feature_class_layer}.lyrx"
-                )
+                feature_class_layer = arcpy.management.MakeFeatureLayer(feature_class_path, feature_service_title)
+
+                feature_class_layer_file = (rf"{project_folder}\Layers\{feature_class_layer}.lyrx")
 
                 arcpy.AddMessage("\tSave Layer File")
-                _result = arcpy.management.SaveToLayerFile(
-                    in_layer=feature_class_layer,
-                    out_layer=feature_class_layer_file,
-                    is_relative_path="RELATIVE",
-                    version="CURRENT",
-                )
+                _result = arcpy.management.SaveToLayerFile(in_layer = feature_class_layer, out_layer = feature_class_layer_file, is_relative_path = "RELATIVE", version="CURRENT",)
                 del _result
 
                 arcpy.management.Delete(feature_class_layer)
@@ -133,36 +125,47 @@ def create_feature_class_layers(project_folder=""):
             elif desc["dataType"] == "Table":
 
                 arcpy.AddMessage("\tMake Table View")
-                feature_class_layer = arcpy.management.MakeTableView(
-                    in_table=feature_class_path,
-                    out_view=feature_service_title,
-                )
-                feature_class_layer_file = (
-                    rf"{project_folder}\Layers\{feature_class_layer}.lyrx"
-                )
+                table_view_layer = arcpy.management.MakeTableView(in_table=feature_class_path, out_view=feature_service_title,)
+                table_view_layer_file = rf"{project_folder}\Layers\{table_view_layer}.lyrx"
 
                 arcpy.AddMessage("\tSave Layer File")
-                _result = arcpy.management.SaveToLayerFile(
-                    in_layer=feature_class_layer,
-                    out_layer=feature_class_layer_file,
-                    is_relative_path="RELATIVE",
-                    version="CURRENT",
-                )
-                del _result
+                arcpy.management.SaveToLayerFile(in_layer = table_view_layer, out_layer = table_view_layer_file, is_relative_path = "RELATIVE", version = "CURRENT",)
 
-                arcpy.management.Delete(feature_class_layer)
-                del feature_class_layer
+                arcpy.management.Delete(table_view_layer)
+                del table_view_layer
 
-                print("*" * 50)
+                layer_file = arcpy.mp.LayerFile(table_view_layer_file)
 
-                print(feature_class_path)
-                print(feature_service_title)
+                table_md = md.Metadata(layer_file.listTables(feature_service_title)[0].dataSource)
 
-                print("*" * 50)
+                print("*" * 80)
+
+                #print(layer_file.listLayers())
+                #print(layer_file.listTables())
+
+                layer_file.metadata.copy(table_md)
+                layer_file.metadata.save()
+
+                print(layer_file.metadata.title)
+                #print(layer_file.metadata.thumbnailUri)
+
+
+                print("*" * 80)
+
+                del table_md
+
+
+            elif desc["dataType"] == "RasterDataset":
+                arcpy.AddMessage("\tRaster Dataset")
+
+
+            elif desc["dataType"] == "MosaicDataset":
+                arcpy.AddMessage("\tMosaic Dataset")
 
             else:
                 pass
 
+            # Test if time field exists
             if [f.name for f in arcpy.ListFields(feature_class_path) if f.name == "StdTime"]:
                 arcpy.AddMessage("\tSet Time Enabled if time field is in dataset")
                 # Get time information from a layer in a layer file
@@ -209,12 +212,6 @@ def create_feature_class_layers(project_folder=""):
                 del layer_file
             else:
                 arcpy.AddMessage("\tDataset does not have a time field")
-
-            layer_file = arcpy.mp.LayerFile(feature_class_layer_file)
-            #print(layer_file.listTables()[0])
-
-            layer_file_md = md.Metadata(layer_file.listTables()[0])
-            print(layer_file_md.title)
 
 
 ##            # aprx.listBasemaps() to get a list of available basemaps
@@ -406,10 +403,10 @@ def create_feature_class_services(project_folder=""):
         from dismap_tools import dataset_title_dict
 
         # Set basic workkpace variables
-        project_gdb = os.path.join(project_folder, os.path.basename(project_folder) + ".gdb")
-        project_name = os.path.basename(project_folder)
-        csv_data_folder = os.path.join(project_folder, "CSV_Data")
-        scratch_folder = os.path.join(project_folder, "Scratch")
+        project_name      = os.path.basename(project_folder)
+        project_gdb       = os.path.join(project_folder, f"{project_name}.gdb")
+        csv_data_folder   = os.path.join(project_folder, "CSV_Data")
+        scratch_folder    = os.path.join(project_folder, "Scratch")
         scratch_workspace = os.path.join(project_folder, "Scratch\\scratch.gdb")
 
         # Set basic workkpace variables
@@ -427,31 +424,15 @@ def create_feature_class_services(project_folder=""):
 
         datasets = []
 
-        # datasets.extend(arcpy.ListFeatureClasses("AI_IDW_Sample_Locations"))
-        datasets.extend(arcpy.ListFeatureClasses("*Sample_Locations"))
-        datasets.extend(arcpy.ListFeatureClasses("DisMAP_Regions"))
-        datasets.extend(arcpy.ListTables("Indicators"))
+##        # datasets.extend(arcpy.ListFeatureClasses("AI_IDW_Sample_Locations"))
+##        datasets.extend(arcpy.ListFeatureClasses("*Sample_Locations"))
+##        datasets.extend(arcpy.ListFeatureClasses("DisMAP_Regions"))
+##        datasets.extend(arcpy.ListTables("Indicators"))
         datasets.extend(arcpy.ListTables("Species_Filter"))
-        datasets.extend(arcpy.ListTables("DisMAP_Survey_Info"))
-        datasets.extend(arcpy.ListTables("SpeciesPersistenceIndicatorPercentileBin"))
-        datasets.extend(arcpy.ListTables("SpeciesPersistenceIndicatorTrend"))
-        datasets.extend(arcpy.ListTables("SpatialGroup_SpeciesPersistenceIndicator"))
-
-        # LogInAGOL = False
-        # if LogInAGOL:
-        # try:
-        # portal = "https://noaa.maps.arcgis.com/"
-        # user = "John.F.Kennedy_noaa"
-        # Sign in to portal
-        # arcpy.SignInToPortal("https://www.arcgis.com", "MyUserName", "MyPassword")
-        # For example: 'http://www.arcgis.com/'
-        # arcpy.SignInToPortal(portal)
-
-        # arcpy.AddMessage(f"###---> Signed into Portal: {arcpy.GetActivePortalURL()} <---###")
-        # del portal, user
-        # except:
-        # arcpy.AddError(f"###---> Signed into Portal faild <---###")
-        # del LogInAGOL
+##        datasets.extend(arcpy.ListTables("DisMAP_Survey_Info"))
+##        datasets.extend(arcpy.ListTables("SpeciesPersistenceIndicatorPercentileBin"))
+##        datasets.extend(arcpy.ListTables("SpeciesPersistenceIndicatorTrend"))
+##        datasets.extend(arcpy.ListTables("SpatialGroup_SpeciesPersistenceIndicator"))
 
         for dataset in sorted(datasets):
 
@@ -462,9 +443,7 @@ def create_feature_class_services(project_folder=""):
             arcpy.AddMessage(f"\tFS:  {feature_service}")
             arcpy.AddMessage(f"\tFST: {feature_service_title}")
 
-            feature_class_layer_file = (
-                rf"{project_folder}\Layers\{feature_service_title}.lyrx"
-            )
+            feature_class_layer_file = os.path.join(project_folder, f"Layers\\{feature_service_title}.lyrx")
 
             layer_file = arcpy.mp.LayerFile(feature_class_layer_file)
 
@@ -514,9 +493,13 @@ def create_feature_class_services(project_folder=""):
 
             current_map = aprx.listMaps(feature_service_title)[0]
 
-            in_md = md.Metadata(rf"{project_gdb}\{dataset}")
+            in_md = md.Metadata(os.path.join(project_gdb, dataset))
+            # print(current_map.metadata.title)
             current_map.metadata.copy(in_md)
             current_map.metadata.save()
+            print(current_map.metadata.title)
+            print(current_map.metadata.thumbnailUri)
+            print(in_md.thumbnailUri)
             aprx.save()
             del in_md
 
@@ -528,14 +511,18 @@ def create_feature_class_services(project_folder=""):
             arcpy.AddMessage("\t\tList of layers or tables in Layer File:")
             if current_map.listLayers(feature_service_title):
                 lyr = current_map.listLayers(feature_service_title)[0]
+
             elif current_map.listTables(feature_service_title):
                 lyr = current_map.listTables(feature_service_title)[0]
+
             else:
                 arcpy.AddWarning("Something wrong")
 
-            in_md = md.Metadata(rf"{project_gdb}\{dataset}")
-            lyr.metadata.copy(in_md)
-            lyr.metadata.save()
+            in_md = md.Metadata(os.path.join(project_gdb, dataset))
+            #print(lyr.dataSource)
+            #print(lyr.metadata.thumbnailUri)
+            #lyr.metadata.copy(in_md)
+            #lyr.metadata.save()
             aprx.save()
             del in_md
 
@@ -553,108 +540,134 @@ def create_feature_class_services(project_folder=""):
             )
             del server_type
 
-            sddraft.allowExporting = False
-            sddraft.offline = False
-            sddraft.offlineTarget = None
-            sddraft.credits = lyr.metadata.credits
-            sddraft.description = lyr.metadata.description
-            sddraft.summary = lyr.metadata.summary
-            sddraft.tags = lyr.metadata.tags
-            sddraft.useLimitations = lyr.metadata.accessConstraints
-            sddraft.overwriteExistingService = True
-            sddraft.portalFolder = f"DisMAP {project_name}"
+            sddraft.allowExporting              = False
+            sddraft.allowUpdateWithoutMValues   = True   # Default
+            sddraft.approvePublicDataCollection = False
+            sddraft.checkUniqueIDAssignment     = False
+            sddraft.credits                     = lyr.metadata.credits
+            sddraft.description                 = lyr.metadata.description
+            #sddraft.featureCapabilities
+            sddraft.maxRecordCount              = 10000
+            sddraft.offline                     = False
+            sddraft.offlineTarget               = None
+            sddraft.overwriteExistingService    = True
+            sddraft.portalFolder                = f"DisMAP {project_name}"
+            sddraft.preserveEditUsersAndTimestamps = False # Default
+            # sddraft.serverType
+            # sddraft.serviceName
+            # sddraft.sharing.groups
+            # sddraft.sharing.sharingLevel
+            # sddraft.summary                  = lyr.metadata.summary
+            # sddraft.tags                     = lyr.metadata.tags
+            # sddraft.timezone.ID
+            # sddraft.timezone.DaylightSavingTime
+            # sddraft.timezone.preferredTimezoneID
+            # sddraft.timezone.preferredTimezoneIDDaylightSavingTime
+            # sddraft.useCIMSymbols
+            # sddraft.useLimitations           = lyr.metadata.accessConstraints
+            # sddraft.zDefault.enable
+            # sddraft.zDefault.value
 
             del lyr
 
-            arcpy.AddMessage(
-                f"\t\tAllow Exporting:            {sddraft.allowExporting}"
-            )
-            arcpy.AddMessage(
-                f"\t\tCheck Unique ID Assignment: {sddraft.checkUniqueIDAssignment}"
-            )
-            arcpy.AddMessage(f"\t\tOffline:                    {sddraft.offline}")
-            arcpy.AddMessage(f"\t\tOffline Target:             {sddraft.offlineTarget}")
-            arcpy.AddMessage(
-                f"\t\tOverwrite Existing Service: {sddraft.overwriteExistingService}"
-            )
-            arcpy.AddMessage(f"\t\tPortal Folder:              {sddraft.portalFolder}")
-            arcpy.AddMessage(f"\t\tServer Type:                {sddraft.serverType}")
-            arcpy.AddMessage(f"\t\tService Name:               {sddraft.serviceName}")
-            # arcpy.AddMessage(f"\t\tCredits:                    {sddraft.credits}")
-            # arcpy.AddMessage(f"\t\tDescription:                {sddraft.description}")
-            # arcpy.AddMessage(f"\t\tSummary:                    {sddraft.summary}")
-            # arcpy.AddMessage(f"\t\tTags:                       {sddraft.tags}")
-            # arcpy.AddMessage(f"\t\tUse Limitations:            {sddraft.useLimitations}")
+            arcpy.AddMessage(f"\t\tAllow Exporting:                     {sddraft.allowExporting}")
+            arcpy.AddMessage(f"\t\tAllow allow Update Without M Values: {sddraft.allowUpdateWithoutMValues}")
+            arcpy.AddMessage(f"\t\tApprove Public Data Collection:      {sddraft.approvePublicDataCollection}")
+            arcpy.AddMessage(f"\t\tCheck Unique ID Assignment:          {sddraft.checkUniqueIDAssignment}")
+            arcpy.AddMessage(f"\t\tCredits:                             {sddraft.credits}")
+            arcpy.AddMessage(f"\t\tDescription:                         {sddraft.description}")
+            arcpy.AddMessage(f"\t\tFeature Capabilities:                {sddraft.featureCapabilities}")
+            arcpy.AddMessage(f"\t\tMaxRecordCount:                      {sddraft.maxRecordCount}")
+            arcpy.AddMessage(f"\t\tOffline:                             {sddraft.offline}")
+            arcpy.AddMessage(f"\t\tOffline Target:                      {sddraft.offlineTarget}")
+            arcpy.AddMessage(f"\t\tOverwrite Existing Service:          {sddraft.overwriteExistingService}")
+            arcpy.AddMessage(f"\t\tPortal Folder:                       {sddraft.portalFolder}")
+            arcpy.AddMessage(f"\t\tPreserveEditUsersAndTimestamps:      {sddraft.preserveEditUsersAndTimestamps}")
+            arcpy.AddMessage(f"\t\tServer Type:                         {sddraft.serverType}")
+            arcpy.AddMessage(f"\t\tService Name:                        {sddraft.serviceName}")
+            arcpy.AddMessage(f"\t\tSharing Groups:                      {sddraft.sharing.groups}")
+            arcpy.AddMessage(f"\t\tSharing Levek:                       {sddraft.sharing.sharingLevel}")
+            arcpy.AddMessage(f"\t\tSummary:                             {sddraft.summary}")
+            arcpy.AddMessage(f"\t\tTags:                                {sddraft.tags}")
+            #arcpy.AddMessage(f"\t\tTimezone ID:                         {sddraft.timezone.ID}")
+            #arcpy.AddMessage(f"\t\tTimezone Daylight Saving Time:       {sddraft.timezone.DaylightSavingTime}")
+            #arcpy.AddMessage(f"\t\tPreferred Timezone ID:                   {sddraft.timezone.preferredTimezoneID}")
+            #arcpy.AddMessage(f"\t\tPreferred Timezone Daylight Saving Time: {sddraft.timezone.preferredTimezoneID}")
+            arcpy.AddMessage(f"\t\tUse CIM Symbols:                         {sddraft.useCIMSymbols}")
+            arcpy.AddMessage(f"\t\tUse Limitations:                         {sddraft.useLimitations}")
+            arcpy.AddMessage(f"\t\tZ Default Enable:                        {sddraft.zDefault.enable}")
+            arcpy.AddMessage(f"\t\tZ Default Value:                         {sddraft.zDefault.value}")
 
             arcpy.AddMessage("\tExport to SD Draft")
             # Create Service Definition Draft file
-            sddraft.exportToSDDraft(
-                rf"{project_folder}\Publish\{feature_service}.sddraft"
-            )
+            sd_draft = os.path.join(project_folder, f"Publish\\{feature_service}.sddraft")
+
+            sddraft.exportToSDDraft(sd_draft)
 
             del sddraft
 
-            sd_draft = rf"{project_folder}\Publish\{feature_service}.sddraft"
+##            arcpy.AddMessage("\tModify SD Draft")
+##            # https://pro.arcgis.com/en/pro-app/latest/arcpy/sharing/featuresharingdraft-class.htm
+##            # https://www.esri.com/arcgis-blog/products/arcgis-pro/mapping/streamline-your-code-with-new-properties-in-arcpy-sharing
+##            import xml.dom.minidom as DOM
+##
+##            docs = DOM.parse(sd_draft)
+##            key_list = docs.getElementsByTagName("Key")
+##            value_list = docs.getElementsByTagName("Value")
+##
+##            for i in range(key_list.length):
+##                if key_list[i].firstChild.nodeValue == "maxRecordCount":
+##                    arcpy.AddMessage("\t\tUpdating maxRecordCount from 2000 to 10000")
+##                    value_list[i].firstChild.nodeValue = 2000
+##                if key_list[i].firstChild.nodeValue == "ServiceTitle":
+##                    arcpy.AddMessage(
+##                        f"\t\tUpdating ServiceTitle from {value_list[i].firstChild.nodeValue} to {feature_service_title}"
+##                    )
+##                    value_list[i].firstChild.nodeValue = feature_service_title
+##                # Doesn't work
+##                # if key_list[i].firstChild.nodeValue == "GeodataServiceName":
+##                #    arcpy.AddMessage(f"\t\tUpdating GeodataServiceName from {value_list[i].firstChild.nodeValue} to {feature_service}")
+##                #    value_list[i].firstChild.nodeValue = feature_service
+##                del i
+##
+##            # Write to the .sddraft file
+##            f = open(sd_draft, "w")
+##            docs.writexml(f)
+##            f.close()
+##            del f
+##
+##            del DOM, docs, key_list, value_list
 
-            arcpy.AddMessage("\tModify SD Draft")
-            # https://pro.arcgis.com/en/pro-app/latest/arcpy/sharing/featuresharingdraft-class.htm
-            # https://www.esri.com/arcgis-blog/products/arcgis-pro/mapping/streamline-your-code-with-new-properties-in-arcpy-sharing
-            import xml.dom.minidom as DOM
-
-            docs = DOM.parse(sd_draft)
-            key_list = docs.getElementsByTagName("Key")
-            value_list = docs.getElementsByTagName("Value")
-
-            for i in range(key_list.length):
-                if key_list[i].firstChild.nodeValue == "maxRecordCount":
-                    arcpy.AddMessage("\t\tUpdating maxRecordCount from 2000 to 10000")
-                    value_list[i].firstChild.nodeValue = 2000
-                if key_list[i].firstChild.nodeValue == "ServiceTitle":
-                    arcpy.AddMessage(
-                        f"\t\tUpdating ServiceTitle from {value_list[i].firstChild.nodeValue} to {feature_service_title}"
-                    )
-                    value_list[i].firstChild.nodeValue = feature_service_title
-                # Doesn't work
-                # if key_list[i].firstChild.nodeValue == "GeodataServiceName":
-                #    arcpy.AddMessage(f"\t\tUpdating GeodataServiceName from {value_list[i].firstChild.nodeValue} to {feature_service}")
-                #    value_list[i].firstChild.nodeValue = feature_service
-                del i
-
-            # Write to the .sddraft file
-            f = open(sd_draft, "w")
-            docs.writexml(f)
-            f.close()
-            del f
-
-            del DOM, docs, key_list, value_list
-
-            FeatureSharingDraftReport = True
+            FeatureSharingDraftReport = False
             if FeatureSharingDraftReport:
                 arcpy.AddMessage(f"\tReport for {os.path.basename(sd_draft)} SD File")
                 feature_sharing_draft_report(sd_draft)
             del FeatureSharingDraftReport
 
-            arcpy.AddMessage(f"\tCreate/Stage {os.path.basename(sd_draft)} SD File")
-            arcpy.server.StageService(
-                in_service_definition_draft=sd_draft,
-                out_service_definition=sd_draft.replace("sddraft", "sd"),
-                staging_version=5,
-            )
+            StageService = False
+            if StageService:
+                arcpy.AddMessage(f"\tCreate/Stage {os.path.basename(sd_draft)} SD File")
+                arcpy.server.StageService(
+                    in_service_definition_draft=sd_draft,
+                    out_service_definition=sd_draft.replace("sddraft", "sd"),
+                    staging_version=5,
+                )
+            del StageService
 
-            UploadServiceDefinition = True
+            UploadServiceDefinition = False
             if UploadServiceDefinition:
                 arcpy.AddMessage(
                     f"\tUpload {os.path.basename(sd_draft).replace('sddraft', 'sd')} Service Definition"
                 )
                 arcpy.server.UploadServiceDefinition(
                     in_sd_file=sd_draft.replace("sddraft", "sd"),
-                    in_server="HOSTING_SERVER",  # in_service_name = "", #in_cluster      = "",
-                    in_folder_type="FROM_SERVICE_DEFINITION",  # EXISTING #in_folder       = "",
-                    in_startupType="STARTED",
-                    in_override="OVERRIDE_DEFINITION",
-                    in_my_contents="NO_SHARE_ONLINE",
-                    in_public="PRIVATE",
-                    in_organization="NO_SHARE_ORGANIZATION",  # in_groups       = ""
+                    in_server           = "HOSTING_SERVER",  # in_service_name = "", #in_cluster      = "",
+                    in_folder_type      = "FROM_SERVICE_DEFINITION",  # EXISTING #in_folder       = "",
+                    in_startupType      = "STARTED",
+                    in_override         = "OVERRIDE_DEFINITION",
+                    in_my_contents      = "NO_SHARE_ONLINE",
+                    in_public           = "PRIVATE",
+                    in_organization     = "NO_SHARE_ORGANIZATION",  # in_groups       = ""
                 )
 
             del UploadServiceDefinition
@@ -1035,7 +1048,7 @@ def create_image_services(project_gdb=""):
         traceback.print_exc()
 
 
-def create_maps(project_gdb=""):
+def create_thumbnails(project_folder=""):
     try:
         # Import
         from arcpy import metadata as md
@@ -1043,30 +1056,18 @@ def create_maps(project_gdb=""):
 
         arcpy.env.overwriteOutput = True
         arcpy.env.parallelProcessingFactor = "100%"
-        arcpy.SetLogMetadata(True)
-        arcpy.SetSeverityLevel(2)
-        arcpy.SetMessageLevels(
-            ["NORMAL"]
-        )  # NORMAL, COMMANDSYNTAX, DIAGNOSTICS, PROJECTIONTRANSFORMATION
 
-        ##        # Map Cleanup
-        ##        MapCleanup = False
-        ##        if MapCleanup:
-        ##            map_cleanup(base_project_file)
-        ##        del MapCleanup
-
-        base_project_folder = rf"{os.path.dirname(base_project_file)}"  # noqa: F821
-        base_project_file = rf"{base_project_folder}\DisMAP.aprx"
-        project_folder = rf"{base_project_folder}\{project}"  # noqa: F821
-        project_gdb = rf"{project_folder}\{project}.gdb"  # noqa: F821
-        metadata_folder = rf"{project_folder}\Export Metadata"
-        scratch_folder = rf"{project_folder}\Scratch"
+        home_folder      = os.path.dirname(project_folder)
+        home_folder_file = os.path.join(home_folder, "DisMAP.aprx")
+        project_name     = os.path.basename(project_folder)
+        project_gdb      = os.path.join(project_folder, f"{project_name}.gdb")
+        metadata_folder  = os.path.join(project_folder, "Metadata_Export")
+        scratch_folder   = os.path.join(project_folder, "Scratch")
 
         arcpy.env.workspace = project_gdb
         arcpy.env.scratchWorkspace = os.path.join(scratch_folder, "scratch.gdb")
 
-        aprx = arcpy.mp.ArcGISProject(base_project_file)
-        home_folder = aprx.homeFolder
+        aprx = arcpy.mp.ArcGISProject(home_folder_file)
 
         # arcpy.AddMessage(f"\n{'-' * 90}\n")
 
@@ -1087,9 +1088,11 @@ def create_maps(project_gdb=""):
             arcpy.AddMessage(dataset_path)
             dataset_name = os.path.basename(dataset_path)
             data_type = arcpy.Describe(dataset_path).dataType
+            arcpy.AddMessage(f"Dataset Name: {dataset_name}")
+            arcpy.AddMessage(f"\tData Type: {data_type}")
+
             if data_type == "Table":
-                # arcpy.AddMessage(f"Dataset Name: {dataset_name}")
-                # arcpy.AddMessage(f"\tData Type: {data_type}")
+
 
                 if "IDW" in dataset_name:
                     arcpy.AddMessage(f"Dataset Name: {dataset_name}")
@@ -1202,7 +1205,7 @@ def create_maps(project_gdb=""):
         del aprx
 
         # Declared Variables set in function
-        del base_project_folder, metadata_folder
+        del metadata_folder
         del project_folder, scratch_folder
         del metadata_dictionary
 
@@ -1270,10 +1273,10 @@ def script_tool(project_folder=""):
         #    update_metadata_from_published_md(project_folder)
         # del UpdateMetadataFromPublishedMd
 
-        CreateMaps = False
-        if CreateMaps:
-            create_maps(project_folder)
-        del CreateMaps
+##        CreateThumbnails = False
+##        if CreateThumbnails:
+##            create_thumbnails(project_folder)
+##        del CreateThumbnails
 
     ##            CreateBasicTemplateXMLFiles = False
     ##            if CreateBasicTemplateXMLFiles:

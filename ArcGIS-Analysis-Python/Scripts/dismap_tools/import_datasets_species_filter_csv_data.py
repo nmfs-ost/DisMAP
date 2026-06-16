@@ -78,6 +78,11 @@ def worker(project_gdb="", csv_file=""):
         import pandas as pd
         import numpy as np
         import warnings
+        import shutil
+        from reportlab.lib.pagesizes import letter  # noqa: F401
+        from reportlab.platypus import SimpleDocTemplate, Paragraph  # noqa: F401
+        from reportlab.lib.styles import getSampleStyleSheet  # noqa: F401
+        import webbrowser
 
         from lxml import etree
         from  io import StringIO
@@ -206,7 +211,7 @@ def worker(project_gdb="", csv_file=""):
         xsl_file = rf"{os.path.dirname(project_folder)}\Initial-Data\ArcGIS2InPort.xsl"
 
         # Alter Fields
-        #dismap_tools.alter_fields(csv_data_folder, dataset_path)
+        dismap_tools.alter_fields(csv_data_folder, dataset_path)
 
         version_code = dismap_tools.date_code(project_name)
 
@@ -214,6 +219,11 @@ def worker(project_gdb="", csv_file=""):
 
         # print(contacts)
         etree.parse(contacts, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(contacts, pretty_print=True, xml_declaration=True, encoding="UTF-8")
+
+        # Copy a file to a new file or into a directory
+        dismap_logo = os.path.join(home_folder, "NOAA DisMAP 2026 Final [Logo].png")
+        table_thumbnail = os.path.join(home_folder, "table_thumbnail.png")
+        shutil.copy(dismap_logo, table_thumbnail)
 
         # Load Metadata
         contacts_md = md.Metadata(contacts)
@@ -223,15 +233,21 @@ def worker(project_gdb="", csv_file=""):
         dataset_md.save()
         dataset_md.synchronize("ALWAYS")
         dataset_md.save()
+        #dataset_md.thumbnailUri = table_thumbnail
+        #dataset_md.save()
+        #print(dataset_md.thumbnailUri)
         del contacts_md
+        del dataset_md
 
         # Import Metadata
         dismap_tools.import_metadata(csv_data_folder=csv_data_folder, dataset=dataset_path)
 
-        #dataset_md.importMetadata(rf"{os.path.join(csv_data_folder, table_name)}.xml", "ARCGIS_METADATA")
-        #dataset_md.save()
-        dataset_md.synchronize("ALWAYS")
-        dataset_md.save()
+##        #dataset_md.importMetadata(rf"{os.path.join(csv_data_folder, table_name)}.xml", "ARCGIS_METADATA")
+##        #dataset_md.save()
+##        dataset_md.synchronize("ALWAYS")
+##        dataset_md.save()
+
+        dataset_md  = md.Metadata(dataset_path)
 
         parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True)
         tree = etree.parse(StringIO(dataset_md.xml), parser=parser)
@@ -248,16 +264,15 @@ def worker(project_gdb="", csv_file=""):
         root.find(".//enttypl").text = res_title if " Table " in res_title else res_title[:-9] + " Table " + version_code
         root.find(".//enttypl").attrib["Sync"] = "FALSE"
 
-        print("*" * 100 + "\n")
+        print("*" * 75 + "\n")
 
         #print(res_title[-8:] if " Table " in res_title else res_title[:-9] + " Table " + version_code)
 
         print(root.find("./dataIdInfo/idCitation/resTitle").text)
         print(root.find(".//enttypl").text)
-        print("\n" + "*" * 100)
+        print("\n" + "*" * 75)
 
         del res_title
-
 
         etree.indent(root, space="\t")
         dataset_md.xml = etree.tostring(
@@ -273,10 +288,6 @@ def worker(project_gdb="", csv_file=""):
         del old_item_name, new_item_name
         del version_code
         del root, tree, parser
-
-
-
-
 
 
         json_path = os.path.join(csv_data_folder, "root_dict.json")
@@ -321,6 +332,7 @@ def worker(project_gdb="", csv_file=""):
         xml_file = os.path.join(arcgis_metadata, f"{os.path.basename(dataset_path)}.xml")
         dataset_md.saveAsXML(xml_file, "REMOVE_ALL_SENSITIVE_INFO")
         etree.parse(xml_file, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(xml_file, pretty_print=True, xml_declaration=True, encoding="UTF-8")
+        webbrowser.open(xml_file)
         del xml_file
 
         # Save as InPort Metadata XML
@@ -499,7 +511,7 @@ def script_tool(project_folder=""):
 
         del csv_data_folder
         #
-        UpdateDatecode = True
+        UpdateDatecode = False
         if UpdateDatecode:
             # Update DateCode
             #arcpy.AddMessage(datasets_csv)
