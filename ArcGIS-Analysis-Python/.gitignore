@@ -24,20 +24,26 @@ __pycache__
 __init__.py
 **/__init__.py
 
-# include Scripts folder and its contents
-!Scripts/dismap_tools/*.py
-Scripts/__pycache__/*
-Scripts/dismap_tools/__pycache__/*
+# Exclude all contents of the Scripts folder
+/Scripts/.
+# include Python files in the dismap_tools
+!/Scripts/dismap_tools/*.py
+/Scripts/dismap_tools/*.~py
+#!Scripts/dismap_tools/*.py
+##Scripts/__pycache__/*
+#Scripts/dismap_tools/__pycache__/*
 
 # include README files in root, Scripts, and dismap_tools
 !README.md
-!Scripts/README.md
-!Scripts/dismap_tools/README.md
+#!Scripts/README.md
+#!Scripts/dismap_tools/README.md
+
+# explicitly exclude esri folder under dismap_tools
+#/Scripts/dismap_tools/esri/
+#/Scripts/dismap_tools/XML/
 
 # Notebook folder and its notebooks
 /Notebooks/
-# explicitly exclude esri folder under dismap_tools
-/Scripts/dismap_tools/esri/
 
 # Ignore zip files
 *.zip
