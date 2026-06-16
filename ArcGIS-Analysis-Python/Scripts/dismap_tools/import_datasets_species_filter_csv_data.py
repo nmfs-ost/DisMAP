@@ -6,6 +6,7 @@ Script documentation
                                         arcpy.SetParameterAsText()
 """
 import os
+# type: ignore # Temporarily ignore Pylance messages for development mode
 import sys
 import traceback
 import inspect

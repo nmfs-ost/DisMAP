@@ -26,6 +26,8 @@ __init__.py
 
 # include Scripts folder and its contents
 !Scripts/dismap_tools/*.py
+Scripts/__pycache__/*
+Scripts/dismap_tools/__pycache__/*
 
 # include README files in root, Scripts, and dismap_tools
 !README.md
