@@ -12,15 +12,6 @@ import traceback
 import inspect
 import arcpy
 
-def trace():
-    tb = sys.exc_info()[2]
-    tbinfo = traceback.format_tb(tb)[0]
-    line = tbinfo.split(", ")[1]
-    # filename = sys.path[0] + os.sep + f"{os.path.basename(__file__)}"
-    filename = os.path.basename(__file__)
-    synerror = traceback.print_exc().splitlines()[-1]
-    return line, filename, synerror
-
 def get_encoding_index_col(csv_file):
     try:
         # Imports
@@ -141,7 +132,7 @@ def worker(project_gdb="", csv_file=""):
         # A fix: https://www.youtube.com/watch?v=TTeElATMpoI
         # TLDR: pandas are Jedi; numpy are the hutts; and python is the galatic empire
         #encoding, index_column = dismap_tools.get_encoding_index_col(csv_file)
-        encoding, index_column = get_encoding_index_col(csv_file)
+        encoding, index_column = get_encoding_index_col(csv_file) # pyright: ignore[reportGeneralTypeIssues]
         with warnings.catch_warnings():
             warnings.simplefilter(action='ignore', category=FutureWarning)
             # DataFrame
@@ -219,7 +210,7 @@ def worker(project_gdb="", csv_file=""):
         contacts = rf"{home_folder}\Initial-Data\DisMAP_Contacts_{version_code}.xml"
 
         # print(contacts)
-        etree.parse(contacts, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(contacts, pretty_print=True, xml_declaration=True, encoding="UTF-8")
+        etree.parse(contacts, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(contacts, pretty_print=True, xml_declaration=True, encoding="UTF-8") # pyright: ignore[reportAttributeAccessIssue]
 
         # Copy a file to a new file or into a directory
         dismap_logo = os.path.join(home_folder, "NOAA DisMAP 2026 Final [Logo].png")
@@ -250,8 +241,8 @@ def worker(project_gdb="", csv_file=""):
 
         dataset_md  = md.Metadata(dataset_path)
 
-        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True)
-        tree = etree.parse(StringIO(dataset_md.xml), parser=parser)
+        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True) # pyright: ignore[reportAttributeAccessIssue]
+        tree = etree.parse(StringIO(dataset_md.xml), parser=parser) # pyright: ignore[reportAttributeAccessIssue]
         root = tree.getroot()
 
         old_linkage = root.find("./distInfo/distTranOps/onLineSrc/linkage").text
@@ -275,8 +266,8 @@ def worker(project_gdb="", csv_file=""):
 
         del res_title
 
-        etree.indent(root, space="\t")
-        dataset_md.xml = etree.tostring(
+        etree.indent(root, space="\t") # pyright: ignore[reportAttributeAccessIssue]
+        dataset_md.xml = etree.tostring( # pyright: ignore[reportAttributeAccessIssue]
             tree,
             encoding="UTF-8",
             method="xml",
@@ -305,9 +296,9 @@ def worker(project_gdb="", csv_file=""):
         ##                     "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
         ##                     "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
 
-        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True)
+        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True) # pyright: ignore[reportAttributeAccessIssue]
 
-        tree = etree.parse(StringIO(dataset_md.xml), parser=parser)  # To parse from a string, use the fromstring() function instead.
+        tree = etree.parse(StringIO(dataset_md.xml), parser=parser)  # pyright: ignore[reportAttributeAccessIssue] # To parse from a string, use the fromstring() function instead.
 
         del parser
 
@@ -316,8 +307,8 @@ def worker(project_gdb="", csv_file=""):
             child[:] = sorted(child, key=lambda x: root_dict[x.tag])
             del child
 
-        etree.indent(root, space="\t")
-        dataset_md.xml = etree.tostring(
+        etree.indent(root, space="\t") # pyright: ignore[reportAttributeAccessIssue]
+        dataset_md.xml = etree.tostring( # pyright: ignore[reportAttributeAccessIssue]
             tree,
             encoding="UTF-8",
             method="xml",
@@ -332,14 +323,14 @@ def worker(project_gdb="", csv_file=""):
         # Save as ArcGIS Metadata XML
         xml_file = os.path.join(arcgis_metadata, f"{os.path.basename(dataset_path)}.xml")
         dataset_md.saveAsXML(xml_file, "REMOVE_ALL_SENSITIVE_INFO")
-        etree.parse(xml_file, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(xml_file, pretty_print=True, xml_declaration=True, encoding="UTF-8")
+        etree.parse(xml_file, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(xml_file, pretty_print=True, xml_declaration=True, encoding="UTF-8") # pyright: ignore[reportAttributeAccessIssue]
         webbrowser.open(xml_file)
         del xml_file
 
         # Save as InPort Metadata XML
         xml_file = os.path.join(inport_metadata, f"{os.path.basename(dataset_path)}.xml")
         dataset_md.saveAsUsingCustomXSLT(outputPath = xml_file, customStylesheetPath=xsl_file)
-        etree.parse(xml_file, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(xml_file, pretty_print=True, xml_declaration=True, encoding="UTF-8")
+        etree.parse(xml_file, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(xml_file, pretty_print=True, xml_declaration=True, encoding="UTF-8") # pyright: ignore[reportAttributeAccessIssue]
         del xml_file
 
         del dataset_md
@@ -520,7 +511,7 @@ def script_tool(project_folder=""):
             update_datecode(csv_file=datasets_csv, project_name=project_name)
         del UpdateDatecode
         #
-        DatasetsCSVFile = True
+        DatasetsCSVFile = False
         if DatasetsCSVFile:
             worker(project_gdb=project_gdb, csv_file=datasets_csv)
         del DatasetsCSVFile
@@ -530,22 +521,22 @@ def script_tool(project_folder=""):
             worker(project_gdb=project_gdb, csv_file=species_filter_csv)
         del SpeciesFilterCSVFile
         #
-        DisMAPSurveyInfoFile = True
+        DisMAPSurveyInfoFile = False
         if DisMAPSurveyInfoFile:
             worker(project_gdb=project_gdb, csv_file=survey_metadata_csv)
         del DisMAPSurveyInfoFile
         #
-        SpeciesPersistenceIndicatorPercentileBinFile = True
+        SpeciesPersistenceIndicatorPercentileBinFile = False
         if SpeciesPersistenceIndicatorPercentileBinFile:
             worker(project_gdb=project_gdb, csv_file=SpeciesPersistenceIndicatorPercentileBin)
         del SpeciesPersistenceIndicatorPercentileBinFile
         #
-        SpeciesPersistenceIndicatorTrendFile = True
+        SpeciesPersistenceIndicatorTrendFile = False
         if SpeciesPersistenceIndicatorTrendFile:
             worker(project_gdb=project_gdb, csv_file=SpeciesPersistenceIndicatorTrend)
         del SpeciesPersistenceIndicatorTrendFile
         #
-        SpatialGroup_SpeciesPersistenceIndicatorFile = True
+        SpatialGroup_SpeciesPersistenceIndicatorFile = False
         if SpatialGroup_SpeciesPersistenceIndicatorFile:
             worker(project_gdb=project_gdb, csv_file=SpatialGroup_SpeciesPersistenceIndicator)
         del SpatialGroup_SpeciesPersistenceIndicatorFile
