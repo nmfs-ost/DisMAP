@@ -417,7 +417,7 @@ def script_tool(project_gdb=""):
 
         # Test if passed workspace exists, if not sys.exit()
         if not arcpy.Exists(project_gdb):
-            sys.exit()(f"{os.path.basename(project_gdb)} is missing!!")
+            sys.exit(f"{os.path.basename(project_gdb)} is missing!!")
         else:
             pass
 
