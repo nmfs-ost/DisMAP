@@ -9,28 +9,33 @@
 # Copyright:   (c) john.f.kennedy 2024
 # Licence:     <your licence>
 # -------------------------------------------------------------------------------
-import os, sys  # built-ins first
-import traceback
 import importlib
 import inspect
+import os  # built-ins first
+import sys
+import traceback
 
 import arcpy  # third-parties second
+
 
 def main(project_gdb=""):
     try:
         from time import gmtime, localtime, strftime, time
+
         # Set a start time so that we can see how log things take
         start_time = time()
         print(f"{'-' * 80}")
         print(f"Python Script:  {os.path.basename(__file__)}")
-        print(f"Location:       ..\Documents\ArcGIS\Projects\..\{os.path.basename(os.path.dirname(__file__))}\{os.path.basename(__file__)}")
+        print(
+            f"Location:       ..\Documents\ArcGIS\Projects\..\{os.path.basename(os.path.dirname(__file__))}\{os.path.basename(__file__)}"
+        )
         print(f"Python Version: {sys.version}")
         print(f"Environment:    {os.path.basename(sys.exec_prefix)}")
         print(f"{'-' * 80}\n")
 
         # Set varaibales
-        project_folder      = os.path.dirname(project_gdb)
-        project_name        = os.path.basename(project_folder)
+        project_folder = os.path.dirname(project_gdb)
+        project_name = os.path.basename(project_folder)
         base_project_folder = os.path.dirname(project_folder)
 
         #
@@ -44,11 +49,12 @@ def main(project_gdb=""):
         DisMapProjectSetup = False
         if DisMapProjectSetup:
             import dev_dismap_project_setup
+
             base_project_file = rf"{base_project_folder}\DisMAP.aprx"
             dev_dismap_project_setup.project_folders(base_project_file, project_name)
             # Declared variables
             del base_project_file
-            #Imports
+            # Imports
             del dev_dismap_project_setup
         else:
             pass
@@ -61,22 +67,35 @@ def main(project_gdb=""):
         if ZipAndUnzipCsvData:
             # Imports
             import dev_zip_and_unzip_csv_data
+
             # If "project" is the same, then an archieve file is created.
             # If different, then the archieve is created and upzipped in the new
             # location
             # In Data Path
-            in_data_path  = rf"{project_folder}\CSV Data"
+            in_data_path = rf"{project_folder}\CSV Data"
             out_data_path = rf"{project_folder}\CSV Data"
-            selected_files = ["AI_IDW.csv", "Datasets.csv", "EBS_IDW.csv",
-                              "ENBS_IDW.csv", "GMEX_IDW.csv",
-                              "GOA_IDW.csv", "HI_IDW.csv", "NBS_IDW.csv",
-                              "NEUS_FAL_IDW.csv", "NEUS_SPR_IDW.csv",
-                              "SEUS_FAL_IDW.csv", "SEUS_SPR_IDW.csv",
-                              "SEUS_SUM_IDW.csv", "Species_Filter.csv",
-                              "WC_ANN_IDW.csv", "WC_GLMME.csv",
-                              "WC_TRI_IDW.csv", "field_definitions.json",
-                              "metadata_dictionary.json", "table_definitions.json"
-                             ]
+            selected_files = [
+                "AI_IDW.csv",
+                "Datasets.csv",
+                "EBS_IDW.csv",
+                "ENBS_IDW.csv",
+                "GMEX_IDW.csv",
+                "GOA_IDW.csv",
+                "HI_IDW.csv",
+                "NBS_IDW.csv",
+                "NEUS_FAL_IDW.csv",
+                "NEUS_SPR_IDW.csv",
+                "SEUS_FAL_IDW.csv",
+                "SEUS_SPR_IDW.csv",
+                "SEUS_SUM_IDW.csv",
+                "Species_Filter.csv",
+                "WC_ANN_IDW.csv",
+                "WC_GLMME.csv",
+                "WC_TRI_IDW.csv",
+                "field_definitions.json",
+                "metadata_dictionary.json",
+                "table_definitions.json",
+            ]
             selected_files = ";".join(selected_files)
             dev_zip_and_unzip_csv_data.main(in_data_path, out_data_path, selected_files)
             # Declared variables
@@ -91,30 +110,43 @@ def main(project_gdb=""):
         if ZipAndUnzipShapefileData:
             # Imports
             import dev_zip_and_unzip_shapefile_data
+
             # If "project_name" is the same, then an archieve file is created.
             # If different, then the archieve is created and upzipped in the new
             # location
-            in_data_path  = rf"{project_folder}\Dataset_Shapefiles"
+            in_data_path = rf"{project_folder}\Dataset_Shapefiles"
             out_data_path = rf"{project_folder}\Dataset_Shapefiles"
-            selected_files = ['AI_IDW_Region.shp', 'EBS_IDW_Region.shp',
-                              'ENBS_IDW_Region.shp', 'GMEX_IDW_Region.shp',
-                              'GOA_IDW_Region.shp', 'HI_IDW_Region.shp',
-                              'NBS_IDW_Region.shp', 'NEUS_FAL_IDW_Region.shp',
-                              'NEUS_SPR_IDW_Region.shp', 'SEUS_FAL_IDW_Region.shp',
-                              'SEUS_SPR_IDW_Region.shp', 'SEUS_SUM_IDW_Region.shp',
-                              'WC_ANN_IDW_Region.shp', 'WC_GFDL_Region.shp',
-                              'WC_GLMME_Region.shp', 'WC_TRI_IDW_Region.shp',]
+            selected_files = [
+                "AI_IDW_Region.shp",
+                "EBS_IDW_Region.shp",
+                "ENBS_IDW_Region.shp",
+                "GMEX_IDW_Region.shp",
+                "GOA_IDW_Region.shp",
+                "HI_IDW_Region.shp",
+                "NBS_IDW_Region.shp",
+                "NEUS_FAL_IDW_Region.shp",
+                "NEUS_SPR_IDW_Region.shp",
+                "SEUS_FAL_IDW_Region.shp",
+                "SEUS_SPR_IDW_Region.shp",
+                "SEUS_SUM_IDW_Region.shp",
+                "WC_ANN_IDW_Region.shp",
+                "WC_GFDL_Region.shp",
+                "WC_GLMME_Region.shp",
+                "WC_TRI_IDW_Region.shp",
+            ]
             selected_files = ";".join(selected_files)
-            dev_zip_and_unzip_shapefile_data.main(in_data_path, out_data_path, selected_files)
+            dev_zip_and_unzip_shapefile_data.main(
+                in_data_path, out_data_path, selected_files
+            )
             # Declared variables
             del in_data_path, out_data_path, selected_files
             # Imports
             del dev_zip_and_unzip_shapefile_data
         del ZipAndUnzipShapefileData
 
-    # ###--->>>
+        # ###--->>>
         # Write script that checks CSV file headers and updates as necessary
-    # ###--->>>
+        # ###--->>>
         # ##########################################################################
         # Step 3 - Create base bathymetry datasets in project folder
         # ##########################################################################
@@ -122,7 +154,10 @@ def main(project_gdb=""):
         CreateBaseBathymetry = False
         if CreateBaseBathymetry:
             # Imports
-            from dev_create_base_bathymetry import create_alasaka_bathymetry, create_hawaii_bathymetry, gebco_bathymetry
+            from dev_create_base_bathymetry import (create_alasaka_bathymetry,
+                                                    create_hawaii_bathymetry,
+                                                    gebco_bathymetry)
+
             # Process base Alasak bathymetry
             create_alasaka_bathymetry(project_gdb)
             # Process base Hawaii bathymetry
@@ -142,10 +177,13 @@ def main(project_gdb=""):
         ImportDatasetsSpeciesFilterCsvData = False
         if ImportDatasetsSpeciesFilterCsvData:
             # Imports
-            from dev_import_datasets_species_filter_csv_data import update_datecode, worker
-            from dev_create_table_and_field_definitions_json import generate_data_dictionary
-            datasets_csv        = rf"{project_folder}\CSV_Data\Datasets.csv"
-            species_filter_csv  = rf"{project_folder}\CSV_Data\Species_Filter.csv"
+            from dev_create_table_and_field_definitions_json import \
+                generate_data_dictionary
+            from dev_import_datasets_species_filter_csv_data import (
+                update_datecode, worker)
+
+            datasets_csv = rf"{project_folder}\CSV_Data\Datasets.csv"
+            species_filter_csv = rf"{project_folder}\CSV_Data\Species_Filter.csv"
             survey_metadata_csv = rf"{project_folder}\CSV_Data\DisMAP_Survey_Info.csv"
             # Update DateCode
             update_datecode(csv_file=datasets_csv, project_name=project_name)
@@ -171,9 +209,14 @@ def main(project_gdb=""):
         if CreateRegionsFromShapefiles:
             # Imports
             from dev_create_regions_from_shapefiles_director import director
+
             Test = False
             if Test:
-                director(project_gdb=project_gdb, Sequential=True, table_names=["WC_TRI_IDW", "AI_IDW"])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=True,
+                    table_names=["WC_TRI_IDW", "AI_IDW"],
+                )
             elif not Test:
                 director(project_gdb=project_gdb, Sequential=False, table_names=[])
             else:
@@ -191,14 +234,45 @@ def main(project_gdb=""):
         CreateRegionFishnets = False
         if CreateRegionFishnets:
             from dev_create_region_fishnets_director import director
+
             Test = False
             if Test:
-                director(project_gdb=project_gdb, Sequential=True, table_names=["WC_TRI_IDW", "AI_IDW"])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=True,
+                    table_names=["WC_TRI_IDW", "AI_IDW"],
+                )
             elif not Test:
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NBS_IDW", "ENBS_IDW", "HI_IDW", "SEUS_FAL_IDW", "SEUS_SPR_IDW", "SEUS_SUM_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["WC_TRI_IDW", "GMEX_IDW", "AI_IDW", "GOA_IDW", "WC_ANN_IDW", "NEUS_FAL_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NEUS_SPR_IDW", "EBS_IDW"])
-                #director(project_gdb=project_gdb, Sequential=False, table_names=[])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "NBS_IDW",
+                        "ENBS_IDW",
+                        "HI_IDW",
+                        "SEUS_FAL_IDW",
+                        "SEUS_SPR_IDW",
+                        "SEUS_SUM_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "WC_TRI_IDW",
+                        "GMEX_IDW",
+                        "AI_IDW",
+                        "GOA_IDW",
+                        "WC_ANN_IDW",
+                        "NEUS_FAL_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=["NEUS_SPR_IDW", "EBS_IDW"],
+                )
+                # director(project_gdb=project_gdb, Sequential=False, table_names=[])
             else:
                 pass
             del Test
@@ -215,13 +289,44 @@ def main(project_gdb=""):
         if CreateRegionBathymetry:
             # Imports
             from dev_create_region_bathymetry_director import director
+
             Test = False
             if Test:
-                director(project_gdb=project_gdb, Sequential=True, table_names=["WC_TRI_IDW", "AI_IDW"])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=True,
+                    table_names=["WC_TRI_IDW", "AI_IDW"],
+                )
             elif not Test:
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NBS_IDW", "ENBS_IDW", "HI_IDW", "SEUS_FAL_IDW", "SEUS_SPR_IDW", "SEUS_SUM_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["WC_TRI_IDW", "GMEX_IDW", "AI_IDW", "GOA_IDW", "WC_ANN_IDW", "NEUS_FAL_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NEUS_SPR_IDW", "EBS_IDW"])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "NBS_IDW",
+                        "ENBS_IDW",
+                        "HI_IDW",
+                        "SEUS_FAL_IDW",
+                        "SEUS_SPR_IDW",
+                        "SEUS_SUM_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "WC_TRI_IDW",
+                        "GMEX_IDW",
+                        "AI_IDW",
+                        "GOA_IDW",
+                        "WC_ANN_IDW",
+                        "NEUS_FAL_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=["NEUS_SPR_IDW", "EBS_IDW"],
+                )
             else:
                 pass
             del Test
@@ -241,12 +346,46 @@ def main(project_gdb=""):
 
             Test = False
             if Test:
-                director(project_gdb=project_gdb, Sequential=True, table_names=["WC_TRI_IDW", "AI_IDW"])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=True,
+                    table_names=["WC_TRI_IDW", "AI_IDW"],
+                )
             elif not Test:
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NBS_IDW", "ENBS_IDW", "HI_IDW", "SEUS_FAL_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["SEUS_SPR_IDW", "SEUS_SUM_IDW", "WC_TRI_IDW", "GMEX_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["AI_IDW", "GOA_IDW", "WC_ANN_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NEUS_FAL_IDW", "NEUS_SPR_IDW", "EBS_IDW"])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "NBS_IDW",
+                        "ENBS_IDW",
+                        "HI_IDW",
+                        "SEUS_FAL_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "SEUS_SPR_IDW",
+                        "SEUS_SUM_IDW",
+                        "WC_TRI_IDW",
+                        "GMEX_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "AI_IDW",
+                        "GOA_IDW",
+                        "WC_ANN_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=["NEUS_FAL_IDW", "NEUS_SPR_IDW", "EBS_IDW"],
+                )
             else:
                 pass
             del Test
@@ -263,12 +402,19 @@ def main(project_gdb=""):
         CreateSpeciesYearImageNameTable = False
         if CreateSpeciesYearImageNameTable:
             # Imports
-            from dev_create_species_year_image_name_table_director import director, process_image_name_tables
+            from dev_create_species_year_image_name_table_director import (
+                director, process_image_name_tables)
 
             Test = False
             if Test:
                 # Debug
-                director(project_gdb=project_gdb, Sequential=False, table_names=["GMEX_IDW",])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "GMEX_IDW",
+                    ],
+                )
                 # Debug
             elif not Test:
                 director(project_gdb=project_gdb, Sequential=False, table_names=[])
@@ -276,7 +422,7 @@ def main(project_gdb=""):
                 pass
             del Test
             # Combine Image Name Tables
-            #process_image_name_tables(project_gdb=project_gdb, project=project_name)
+            # process_image_name_tables(project_gdb=project_gdb, project=project_name)
 
             # Declared variables
             # Imports
@@ -296,14 +442,59 @@ def main(project_gdb=""):
             Test = False
             if Test:
                 # Debug
-                director(project_gdb=project_gdb, Sequential=False, table_names=["GMEX_IDW",])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "GMEX_IDW",
+                    ],
+                )
                 # Debug
             elif not Test:
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NBS_IDW", "ENBS_IDW", "HI_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["SEUS_FAL_IDW", "SEUS_SPR_IDW", "SEUS_SUM_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["WC_TRI_IDW", "AI_IDW", "GMEX_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["GOA_IDW", "WC_ANN_IDW", "NEUS_FAL_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NEUS_SPR_IDW", "EBS_IDW",])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "NBS_IDW",
+                        "ENBS_IDW",
+                        "HI_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "SEUS_FAL_IDW",
+                        "SEUS_SPR_IDW",
+                        "SEUS_SUM_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "WC_TRI_IDW",
+                        "AI_IDW",
+                        "GMEX_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "GOA_IDW",
+                        "WC_ANN_IDW",
+                        "NEUS_FAL_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "NEUS_SPR_IDW",
+                        "EBS_IDW",
+                    ],
+                )
             else:
                 pass
             del Test
@@ -320,27 +511,83 @@ def main(project_gdb=""):
         CreateIndicatorsTable = False
         if CreateIndicatorsTable:
             # Imports
-            from dev_create_indicators_table_director import director, process_indicator_tables
+            from dev_create_indicators_table_director import (
+                director, process_indicator_tables)
 
             Test = False
             if Test:
                 # Debug
-                director(project_gdb=project_gdb, Sequential=False, table_names=["GMEX_IDW",])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "GMEX_IDW",
+                    ],
+                )
                 # Debug
             elif not Test:
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NBS_IDW", "ENBS_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["HI_IDW", "SEUS_FAL_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["SEUS_SPR_IDW", "SEUS_SUM_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["WC_TRI_IDW", "GMEX_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["AI_IDW", "GOA_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["WC_ANN_IDW", "NEUS_FAL_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NEUS_SPR_IDW", "EBS_IDW",])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "NBS_IDW",
+                        "ENBS_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "HI_IDW",
+                        "SEUS_FAL_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "SEUS_SPR_IDW",
+                        "SEUS_SUM_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "WC_TRI_IDW",
+                        "GMEX_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "AI_IDW",
+                        "GOA_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "WC_ANN_IDW",
+                        "NEUS_FAL_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "NEUS_SPR_IDW",
+                        "EBS_IDW",
+                    ],
+                )
 
                 # Combine Indicator Tables
             else:
                 pass
             del Test
-            #process_indicator_tables(project_gdb=project_gdb, project=project)
+            # process_indicator_tables(project_gdb=project_gdb, project=project)
             # Declared variables
             # Imports
             del director, process_indicator_tables
@@ -360,15 +607,70 @@ def main(project_gdb=""):
 
             Test = False
             if Test:
-                director(project_gdb=project_gdb, Sequential=False, table_names=["GMEX_IDW",])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "GMEX_IDW",
+                    ],
+                )
             elif not Test:
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NBS_IDW", "ENBS_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["HI_IDW", "SEUS_FAL_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["SEUS_SPR_IDW", "SEUS_SUM_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["WC_TRI_IDW", "GMEX_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["AI_IDW", "GOA_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["WC_ANN_IDW", "NEUS_FAL_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NEUS_SPR_IDW", "EBS_IDW",])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "NBS_IDW",
+                        "ENBS_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "HI_IDW",
+                        "SEUS_FAL_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "SEUS_SPR_IDW",
+                        "SEUS_SUM_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "WC_TRI_IDW",
+                        "GMEX_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "AI_IDW",
+                        "GOA_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "WC_ANN_IDW",
+                        "NEUS_FAL_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "NEUS_SPR_IDW",
+                        "EBS_IDW",
+                    ],
+                )
             else:
                 pass
             del Test
@@ -388,15 +690,70 @@ def main(project_gdb=""):
 
             Test = False
             if Test:
-                director(project_gdb=project_gdb, Sequential=False, table_names=["GMEX_IDW",])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "GMEX_IDW",
+                    ],
+                )
             elif not Test:
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NBS_IDW", "ENBS_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["HI_IDW", "SEUS_FAL_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["SEUS_SPR_IDW", "SEUS_SUM_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["WC_TRI_IDW", "GMEX_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["AI_IDW", "GOA_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["WC_ANN_IDW", "NEUS_FAL_IDW",])
-                director(project_gdb=project_gdb, Sequential=False, table_names=["NEUS_SPR_IDW", "EBS_IDW",])
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "NBS_IDW",
+                        "ENBS_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "HI_IDW",
+                        "SEUS_FAL_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "SEUS_SPR_IDW",
+                        "SEUS_SUM_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "WC_TRI_IDW",
+                        "GMEX_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "AI_IDW",
+                        "GOA_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "WC_ANN_IDW",
+                        "NEUS_FAL_IDW",
+                    ],
+                )
+                director(
+                    project_gdb=project_gdb,
+                    Sequential=False,
+                    table_names=[
+                        "NEUS_SPR_IDW",
+                        "EBS_IDW",
+                    ],
+                )
             else:
                 pass
             del Test
@@ -417,10 +774,14 @@ def main(project_gdb=""):
 
         # Elapsed time
         end_time = time()
-        elapse_time =  end_time - start_time
+        elapse_time = end_time - start_time
         print(f"\n{'-' * 80}")
-        print(f"Python script: {os.path.basename(__file__)}\nCompleted: {strftime('%a %b %d %I:%M %p', localtime())}")
-        print(u"Elapsed Time {0} (H:M:S)".format(strftime("%H:%M:%S", gmtime(elapse_time))))
+        print(
+            f"Python script: {os.path.basename(__file__)}\nCompleted: {strftime('%a %b %d %I:%M %p', localtime())}"
+        )
+        print(
+            "Elapsed Time {0} (H:M:S)".format(strftime("%H:%M:%S", gmtime(elapse_time)))
+        )
         print(f"{'-' * 80}")
         del elapse_time, end_time, start_time
         del gmtime, localtime, strftime, time
@@ -429,26 +790,31 @@ def main(project_gdb=""):
         raise SystemExit
     else:
         # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith('__')]
-        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"); del rk
+        rk = [key for key in locals().keys() if not key.startswith("__")]
+        if rk:
+            print(
+                f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
+            )
+            del rk
         return True
     finally:
         pass
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     try:
         # Append the location of this scrip to the System Path
         sys.path.append(os.path.dirname(os.path.dirname(__file__)))
         # Imports
         base_project_folder = rf"{os.path.dirname(os.path.dirname(__file__))}"
-        #project = "May 1 2024"
-        #project_name = "July 1 2024"
-        #project_name = "December 1 2024"
-        #project_name = "June 1 2025"
-        #for project_name in ["June 1 2025"]:
+        # project = "May 1 2024"
+        # project_name = "July 1 2024"
+        # project_name = "December 1 2024"
+        # project_name = "June 1 2025"
+        # for project_name in ["June 1 2025"]:
         for project_name in ["December 1 2024", "June 1 2025"]:
             project_folder = rf"{base_project_folder}"
-            project_gdb    = rf"{project_folder}\{project_name}\{project_name}.gdb"
+            project_gdb = rf"{project_folder}\{project_name}\{project_name}.gdb"
             main(project_gdb=project_gdb)
             del project_gdb, project_folder, project_name
         # Decated Variables
@@ -462,3 +828,4 @@ if __name__ == '__main__':
         pass
     finally:
         pass
+# This is an autogenerated comment.

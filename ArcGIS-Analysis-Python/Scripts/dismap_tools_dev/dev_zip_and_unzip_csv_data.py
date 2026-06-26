@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Name:        zip_and_unzip_csv_data
 # Purpose:
 #
@@ -8,13 +8,15 @@
 # Created:     09/03/2024
 # Copyright:   (c) john.f.kennedy 2024
 # Licence:     <your licence>
-#-------------------------------------------------------------------------------
-import os, sys # built-ins first
-import traceback
+# -------------------------------------------------------------------------------
 import importlib
 import inspect
+import os  # built-ins first
+import sys
+import traceback
 
-import arcpy # third-parties second
+import arcpy  # third-parties second
+
 
 def zip_data(source_folder, selected_files, out_zip_file):
     try:
@@ -50,11 +52,17 @@ def zip_data(source_folder, selected_files, out_zip_file):
         traceback.print_exc()
     else:
         # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith('__')]
-        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"); del rk
+        rk = [key for key in locals().keys() if not key.startswith("__")]
+        if rk:
+            print(
+                f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
+            )
+            del rk
         return __results
     finally:
-        if "__results" in locals().keys(): del __results
+        if "__results" in locals().keys():
+            del __results
+
 
 def un_zip_data(source_zip_file, out_data_path):
     try:
@@ -69,7 +77,7 @@ def un_zip_data(source_zip_file, out_data_path):
 
         with ZipFile(source_zip_file, mode="r") as archive:
             for file in archive.namelist():
-                #if file.endswith(".csv"):
+                # if file.endswith(".csv"):
                 #   archive.extract(file, ".")
                 archive.extract(file, ".")
                 del file
@@ -90,20 +98,29 @@ def un_zip_data(source_zip_file, out_data_path):
         traceback.print_exc()
     else:
         # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith('__')]
-        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"); del rk
+        rk = [key for key in locals().keys() if not key.startswith("__")]
+        if rk:
+            print(
+                f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
+            )
+            del rk
         return __results
     finally:
-        if "__results" in locals().keys(): del __results
+        if "__results" in locals().keys():
+            del __results
+
 
 def main(in_data_path, out_data_path, selected_files):
     try:
         from time import gmtime, localtime, strftime, time
+
         # Set a start time so that we can see how log things take
         start_time = time()
         print(f"{'-' * 80}")
         print(f"Python Script:  {os.path.basename(__file__)}")
-        print(f"Location:       ..\Documents\ArcGIS\Projects\..\{os.path.basename(os.path.dirname(__file__))}\{os.path.basename(__file__)}")
+        print(
+            f"Location:       ..\Documents\ArcGIS\Projects\..\{os.path.basename(os.path.dirname(__file__))}\{os.path.basename(__file__)}"
+        )
         print(f"Python Version: {sys.version}")
         print(f"Environment:    {os.path.basename(sys.exec_prefix)}")
         print(f"{'-' * 80}\n")
@@ -135,11 +152,15 @@ def main(in_data_path, out_data_path, selected_files):
 
         # Elapsed time
         end_time = time()
-        elapse_time =  end_time - start_time
+        elapse_time = end_time - start_time
 
         print(f"\n{'-' * 80}")
-        print(f"Python script: {os.path.basename(__file__)}\nCompleted: {strftime('%a %b %d %I:%M %p', localtime())}")
-        print(u"Elapsed Time {0} (H:M:S)".format(strftime("%H:%M:%S", gmtime(elapse_time))))
+        print(
+            f"Python script: {os.path.basename(__file__)}\nCompleted: {strftime('%a %b %d %I:%M %p', localtime())}"
+        )
+        print(
+            "Elapsed Time {0} (H:M:S)".format(strftime("%H:%M:%S", gmtime(elapse_time)))
+        )
         print(f"{'-' * 80}")
         del elapse_time, end_time, start_time
         del gmtime, localtime, strftime, time
@@ -150,44 +171,64 @@ def main(in_data_path, out_data_path, selected_files):
         traceback.print_exc()
     else:
         # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith('__')]
-        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"); del rk
+        rk = [key for key in locals().keys() if not key.startswith("__")]
+        if rk:
+            print(
+                f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
+            )
+            del rk
         return True
     finally:
         pass
 
+
 if __name__ == "__main__":
     try:
         # Append the location of this scrip to the System Path
-        #sys.path.append(os.path.dirname(__file__))
+        # sys.path.append(os.path.dirname(__file__))
         sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
         # Imports
         import dev_zip_and_unzip_csv_data
+
         importlib.reload(dev_zip_and_unzip_csv_data)
 
         base_project_folder = rf"{os.path.dirname(os.path.dirname(__file__))}"
 
-        #in_project = "July 1 2024"
+        # in_project = "July 1 2024"
         in_project = "December 1 2024"
         in_data_path = rf"{base_project_folder}\{in_project}\CSV Data"
         del in_project
 
-        #out_project = "December 1 2024"
+        # out_project = "December 1 2024"
         out_project = "June 1 2025"
         out_data_path = rf"{base_project_folder}\{out_project}\CSV Data"
         del out_project
 
-        selected_files = ["AI_IDW.csv",   "Datasets.csv", "DisMAP_Survey_Info.csv",
-                          "EBS_IDW.csv",  "ENBS_IDW.csv", "field_definitions.json",
-                          "GMEX_IDW.csv", "GOA_IDW.csv",  "HI_IDW.csv",
-                          "metadata_dictionary.json", "NBS_IDW.csv",
-                          "NEUS_FAL_IDW.csv", "NEUS_SPR_IDW.csv",
-                          "SEUS_FAL_IDW.csv", "SEUS_SPR_IDW.csv",
-                          "SEUS_SUM_IDW.csv", "Species_Filter.csv",
-                          "table_definitions.json", "WC_ANN_IDW.csv",
-                          "WC_GFDL.csv", "WC_GLMME.csv", "WC_TRI_IDW.csv",
-                         ]
+        selected_files = [
+            "AI_IDW.csv",
+            "Datasets.csv",
+            "DisMAP_Survey_Info.csv",
+            "EBS_IDW.csv",
+            "ENBS_IDW.csv",
+            "field_definitions.json",
+            "GMEX_IDW.csv",
+            "GOA_IDW.csv",
+            "HI_IDW.csv",
+            "metadata_dictionary.json",
+            "NBS_IDW.csv",
+            "NEUS_FAL_IDW.csv",
+            "NEUS_SPR_IDW.csv",
+            "SEUS_FAL_IDW.csv",
+            "SEUS_SPR_IDW.csv",
+            "SEUS_SUM_IDW.csv",
+            "Species_Filter.csv",
+            "table_definitions.json",
+            "WC_ANN_IDW.csv",
+            "WC_GFDL.csv",
+            "WC_GLMME.csv",
+            "WC_TRI_IDW.csv",
+        ]
 
         selected_files = ";".join(selected_files)
 
@@ -205,3 +246,5 @@ if __name__ == "__main__":
         pass
     finally:
         pass
+
+# This is an autogenerated comment.

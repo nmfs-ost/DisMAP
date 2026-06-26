@@ -2457,13 +2457,13 @@ def main(project=""):
 
         try:
 
-            CreateBasicTemplateXMLFiles = False
+            CreateBasicTemplateXMLFiles = True
             if CreateBasicTemplateXMLFiles:
                 result = create_basic_template_xml_files(base_project_file, project)
                 results.extend(result); del result
             del CreateBasicTemplateXMLFiles
 
-            ImportBasicTemplateXmlFiles = False
+            ImportBasicTemplateXmlFiles = True
             if ImportBasicTemplateXmlFiles:
                 result = import_basic_template_xml_files(base_project_file, project)
                 results.extend(result); del result
@@ -2533,7 +2533,8 @@ if __name__ == "__main__":
 
         #project = "May 1 2024"
         #project = "July 1 2024"
-        project = "December 1 2024"
+        #project = "December 1 2024"
+        project = "April 1 2023"
 
         # Tested on 8/1/2024 -- PASSED
         main(project=project)

@@ -15,20 +15,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
+import inspect
 # Python Built-in's modules are loaded first
-import os, sys
-import traceback, inspect
+import os
+import sys
+import traceback
+
 
 def export_metadata(project_gdb="", metadata_workspace=""):
     try:
         # Imports
         # Third-party modules are loaded second
         import arcpy
-        from arcpy import metadata as md
         import dev_create_folders
-
+        from arcpy import metadata as md
         # Project modules
-        from src.project_tools import pretty_format_xml_file
+        from Scripts.project_tools import pretty_format_xml_file
 
         # Use all of the cores on the machine
         arcpy.env.parallelProcessingFactor = "100%"
@@ -37,7 +40,7 @@ def export_metadata(project_gdb="", metadata_workspace=""):
         # Define variables
         project_folder = os.path.dirname(project_gdb)
         scratch_folder = rf"{project_folder}\Scratch"
-        scratch_gdb    = rf"{scratch_folder}\scratch.gdb"
+        scratch_gdb = rf"{scratch_folder}\scratch.gdb"
 
         # Set the workspace environment to local file geodatabase
         arcpy.env.workspace = project_gdb
@@ -60,7 +63,9 @@ def export_metadata(project_gdb="", metadata_workspace=""):
 
             fc_path = rf"{project_gdb}\{fc}"
 
-            export_xml_metadata_path = rf"{project_folder}\{metadata_workspace}\{fc}.xml"
+            export_xml_metadata_path = (
+                rf"{project_folder}\{metadata_workspace}\{fc}.xml"
+            )
 
             dataset_md = md.Metadata(fc_path)
             dataset_md.synchronize("ALWAYS")
@@ -68,7 +73,7 @@ def export_metadata(project_gdb="", metadata_workspace=""):
             dataset_md.save()
             dataset_md.reload()
             dataset_md.saveAsXML(export_xml_metadata_path, "REMOVE_ALL_SENSITIVE_INFO")
-            #if dataset_md.thumbnailUri:
+            # if dataset_md.thumbnailUri:
             #    arcpy.management.Copy(dataset_md.thumbnailUri, rf"{metadata_workspace}\{fc} Thumbnail.jpg")
             #    arcpy.management.Copy(dataset_md.thumbnailUri, rf"{metadata_workspace}\{fc} Browse Graphic.jpg")
 
@@ -77,7 +82,7 @@ def export_metadata(project_gdb="", metadata_workspace=""):
             if os.path.isfile(export_xml_metadata_path):
                 pretty_format_xml_file(export_xml_metadata_path)
             else:
-                print(F"Problem with '{os.path.basename(export_xml_metadata_path)}'")
+                print(f"Problem with '{os.path.basename(export_xml_metadata_path)}'")
 
             del export_xml_metadata_path
             del fc, fc_path
@@ -100,21 +105,29 @@ def export_metadata(project_gdb="", metadata_workspace=""):
         # Imports
         del arcpy
         # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith('__')]
-        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"); del rk
+        rk = [key for key in locals().keys() if not key.startswith("__")]
+        if rk:
+            print(
+                f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
+            )
+            del rk
         return True
     finally:
         pass
 
+
 def main(project_gdb="", metadata_workspace=""):
     try:
         from time import gmtime, localtime, strftime, time
+
         # Set a start time so that we can see how log things take
         start_time = time()
         print(f"{'-' * 80}")
         print(f"Python Script:  {os.path.basename(__file__)}")
         print(f"Location:       {os.path.dirname(__file__)}")
-        print(f"Python Version: {sys.version} Environment: {os.path.basename(sys.exec_prefix)}")
+        print(
+            f"Python Version: {sys.version} Environment: {os.path.basename(sys.exec_prefix)}"
+        )
         print(f"{'-' * 80}\n")
 
         export_metadata(project_gdb=project_gdb, metadata_workspace=metadata_workspace)
@@ -126,10 +139,14 @@ def main(project_gdb="", metadata_workspace=""):
 
         # Elapsed time
         end_time = time()
-        elapse_time =  end_time - start_time
+        elapse_time = end_time - start_time
         print(f"\n{'-' * 80}")
-        print(f"Python script: {os.path.basename(__file__)} successfully completed {strftime('%a %b %d %I:%M %p', localtime())}")
-        print(u"Elapsed Time {0} (H:M:S)".format(strftime("%H:%M:%S", gmtime(elapse_time))))
+        print(
+            f"Python script: {os.path.basename(__file__)} successfully completed {strftime('%a %b %d %I:%M %p', localtime())}"
+        )
+        print(
+            "Elapsed Time {0} (H:M:S)".format(strftime("%H:%M:%S", gmtime(elapse_time)))
+        )
         print(f"{'-' * 80}")
         del elapse_time, end_time, start_time
         del gmtime, localtime, strftime, time
@@ -138,31 +155,36 @@ def main(project_gdb="", metadata_workspace=""):
         traceback.print_exc()
     else:
         # While in development, leave here. For test, move to finally
-        rk = [key for key in locals().keys() if not key.startswith('__')]
-        if rk: print(f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"); del rk
+        rk = [key for key in locals().keys() if not key.startswith("__")]
+        if rk:
+            print(
+                f"WARNING!! Remaining Keys in the '{inspect.stack()[0][3]}' function at line number {inspect.stack()[0][2]}\n\t##--> '{', '.join(rk)}' <--##"
+            )
+            del rk
         return True
     finally:
         pass
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     try:
         # Imports
         from datetime import date
 
         # Append the location of this scrip to the System Path
-        #sys.path.append(os.path.dirname(__file__))
+        # sys.path.append(os.path.dirname(__file__))
         sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
         today = date.today()
         date_string = today.strftime("%Y-%m-%d")
 
-        project_folder  = rf"{os.path.dirname(os.path.dirname(__file__))}"
-        project_name    = "National Mapper"
-        #project_name    = "NMFS_ESA_Range"
-        project_gdb     = rf"{project_folder}\{project_name}.gdb"
+        project_folder = rf"{os.path.dirname(os.path.dirname(__file__))}"
+        project_name = "National Mapper"
+        # project_name    = "NMFS_ESA_Range"
+        project_gdb = rf"{project_folder}\{project_name}.gdb"
         metadata_workspace = f"Export"
-        #metadata_workspace = f"Export {date_string}"
-        #metadata_workspace = f"Export 2025-01-27"
+        # metadata_workspace = f"Export {date_string}"
+        # metadata_workspace = f"Export 2025-01-27"
 
         main(project_gdb=project_gdb, metadata_workspace=metadata_workspace)
 
@@ -178,3 +200,4 @@ if __name__ == '__main__':
         pass
     finally:
         pass
+# This is an autogenerated comment.

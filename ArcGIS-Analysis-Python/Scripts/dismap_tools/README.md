@@ -4,6 +4,7 @@
 ### Table of contents ###
 
 > - [*Purpose*](#purpose)
+> - [*DisMAP Processing Steps*](#dismap-processing-steps)
 > - [*DisMAP ArcGIS Python Processing Setup*](#dismap-arcigs-python-processing-setup)
 >   - [Zip and Unzip CSV Data](#zip-and-unzip-csv-data)
 >   - [Zip and Unzip Shapefile Data](#zip-and-unzip-shapefile-data)
@@ -31,6 +32,51 @@
 
 ### *Purpose*
 These Python scripts were developed for the DisMAP ArcGIS Python Processing phase of the project. In general the scripts listed below are ran in the order they are presented in a Python IDE such as [*Pyscripter*](https://sourceforge.net/projects/pyscripter/).
+
+# DisMAP Processing Steps
+- ### Step 1 create a folder for this project
+
+- ### Step 2 create an ArcGIS Pro project, call it DisMAP, and save in the folder above
+
+- ### Step 3 create three folders: Bathymetry, Dataset Shapefiles, and Initial Data, or use the python script dismap_base_project.py script
+
+- ### Step 4 place the contents of the Bathemetry zip file into the "Bathemetry folder"
+
+- ### Step 5 place the contents of the CSV zip file intp the "Initial Data" folder
+
+- ### Step 6 place the contents of the Dataset Shapefiles.zip file into the Dataset Shapefiles folder
+
+- ### Step 7 Update the create_base_bathymetry.py file by changing the project_folder variable to the base project folder created above
+
+- ### Step 8 Update the dismap_version_project_setup.py file by changing the new_project_folder variable to a version date, like "February 1 2026". Then run the script
+
+- ### Step 9 Update the create_data_dictionary_json_files.py file by changing the project_gdb variable to a version date, like "February 1 2026". Then run the script
+
+- ### Step 10 Update the create_metadata_json_files.py file by changing the project_folder variable to a version date, like "February 1 2026". Then run the script
+
+- ### Step 11 Update the import_datasets_species_filter_csv_data.py file by changing the project_gdb variable to a version date, like "February 1 2026". Then run the script
+
+- ### Step 12 Copy the contents from the folder "Dataset Shapefiles" to the version project folder "Dataset_Shapefiles"
+
+- ### Step 13 Update the create_regions_from_shapefiles_director.py file by changing the project_gdb variable to a version date, like "February 1 2026". Then run the script
+
+- ### Step 14 Update the create_region_fishnets_director.py file by changing the project_gdb variable to a version date, like "February 1 2026". Then run the script
+
+- ### Step 15 Update the create_region_bathymetry_director.py file by changing the project_gdb variable by updating the version folder. For example: from "Project Folder\August 1 2025\August 1 2025.gdb" to "Project Folder\February 1 2026\February 1 2026.gdb". Then run the script
+
+- ### Step 16 Update the create_species_year_image_name_table_director.py file by changing the project_gdb variable by updating the version folder. For example: from "Project Folder\August 1 025\August 1 2025.gdb" to "Project Folder\February 1 2026\February 1 2026.gdb". Then run the script
+
+- ### Step 17 Update the create_region_sample_locations_director.py file by changing the project_gdb variable by updating the version folder. For example: from "Project Folder\August 1 025\August 1 2025.gdb" to "Project Folder\February 1 2026\February 1 2026.gdb". Then run the script
+- 
+- ### Step 18 Update the create_rasters_director.py file by changing the project_gdb variable by updating the version folder. For example: from "Project Folder\August 1 025\August 1 2025.gdb" to "Project Folder\February 1 2026\February 1 2026.gdb". Then run the script
+
+- ### Step 19 Update the create_species_richness_rasters_director.py file by changing the project_gdb variable by updating the version folder. For example: from "Project Folder\August 1 025\August 1 2025.gdb" to "Project Folder\February 1 2026\February 1 2026.gdb". Then run the script
+
+- ### Step 20 Update the create_mosaics_director.py file by changing the project_gdb variable by updating the version folder. For example: from "Project Folder\August 1 025\August 1 2025.gdb" to "Project Folder\February 1 2026\February 1 2026.gdb". Then run the script
+
+- ### Step 21 Update the create_indicators_table_director.py file by changing the project_gdb variable by updating the version folder. For example: from "Project Folder\August 1 025\August 1 2025.gdb" to "Project Folder\February 1 2026\February 1 2026.gdb". Then run the script
+
+- ### Step 22  Update the publish_to_portal_director.py file by changing the project_gdb variable by updating the version folder. For example: from "Project Folder\August 1 025\August 1 2025.gdb" to "Project Folder\February 1 2026\February 1 2026.gdb". Then run the script
 
 ### *DisMAP ArcGIS Python Processing Project Setup*
 - #### Zip and Unzip CSV Data
