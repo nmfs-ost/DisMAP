@@ -133,20 +133,26 @@ def print_xml_file(xml_file="", sort=False):
         tree = etree.parse( # pyright: ignore[reportAttributeAccessIssue]
             xml_file, parser=parser
         )
-        if sort:
-            root = tree.getroot()
-            for child in root.xpath("."):
-                child[:] = sorted(child, key=lambda x: root_dict[x.tag])
-        etree.indent(tree, space="   ") # pyright: ignore[reportAttributeAccessIssue]
-        arcpy.AddMessage(
-            etree.tostring( # pyright: ignore[reportAttributeAccessIssue]
-                tree,
-                encoding="UTF-8",
-                method="xml",
-                xml_declaration=True,
-                pretty_print=True,
-            ).decode()
+
+        etree.indent(tree, space="    ") # pyright: ignore[reportAttributeAccessIssue]
+        tree.write(
+            xml_file,
+            encoding="UTF-8",
+            method="xml",
+            xml_declaration=True,
+            pretty_print=True,
         )
+
+##        etree.indent(tree, space="   ") # pyright: ignore[reportAttributeAccessIssue]
+##        arcpy.AddMessage(
+##            etree.tostring( # pyright: ignore[reportAttributeAccessIssue]
+##                tree,
+##                encoding="UTF-8",
+##                method="xml",
+##                xml_declaration=True,
+##                pretty_print=True,
+##            ).decode()
+##        )
     except KeyboardInterrupt:
         sys.exit()
     except arcpy.ExecuteWarning:

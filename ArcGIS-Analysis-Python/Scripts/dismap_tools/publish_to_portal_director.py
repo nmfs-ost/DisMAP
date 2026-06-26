@@ -83,6 +83,7 @@ def create_feature_class_layers(project_folder=""):
         del scratch_folder, scratch_workspace
 
         arcpy.AddMessage("Loading the Dataset Title Dictionary. Please wait")
+
         datasets_dict = dataset_title_dict(project_gdb)
 
         datasets = []
@@ -399,6 +400,7 @@ def create_feature_class_layers(project_folder=""):
 def create_feature_class_services(project_folder=""):
     try:
         # Import
+        from lxml import etree
         from arcpy import metadata as md
         from dismap_tools import dataset_title_dict
 
@@ -447,6 +449,25 @@ def create_feature_class_services(project_folder=""):
 
             layer_file = arcpy.mp.LayerFile(feature_class_layer_file)
 
+            # Loop through layers inside the layer file (usually contains one main layer)
+            for lyr in layer_file.listLayers():
+                if lyr.isFeatureLayer or lyr.isRasterLayer:
+                    # Access the CIM definition (Use 'V3' for ArcGIS Pro 3.x)
+                    lyr_cim = lyr.getDefinition('V3')
+
+                    # Explicitly assign the static unique ID
+                    new_id = 0
+                    #lyr_cim.serviceLayerID = new_id
+                    lyr_cim.serviceLayerID = new_id
+
+                    # Push the modified CIM back to the layer
+                    lyr.setDefinition(lyr_cim)
+
+                    print(f"Assigned ID {new_id} to layer: {lyr.name}")
+
+            # Save the modifications back to the file
+            layer_file.save()
+
             del feature_class_layer_file
 
             # aprx.listBasemaps() to get a list of available basemaps
@@ -493,17 +514,12 @@ def create_feature_class_services(project_folder=""):
 
             current_map = aprx.listMaps(feature_service_title)[0]
 
-            in_md = md.Metadata(os.path.join(project_gdb, dataset))
-            # print(current_map.metadata.title)
-            current_map.metadata.copy(in_md)
-            current_map.metadata.save()
-            print(current_map.metadata.title)
-            print(current_map.metadata.thumbnailUri)
-            print(in_md.thumbnailUri)
-            aprx.save()
-            del in_md
+            map_cim = current_map.getDefinition('V3')
+            map_cim.useServiceLayerIDs = True
+            current_map.setDefinition(map_cim)
 
             current_map.addLayer(layer_file)
+
             aprx.save()
 
             del layer_file
@@ -518,13 +534,19 @@ def create_feature_class_services(project_folder=""):
             else:
                 arcpy.AddWarning("Something wrong")
 
-            in_md = md.Metadata(os.path.join(project_gdb, dataset))
-            #print(lyr.dataSource)
-            #print(lyr.metadata.thumbnailUri)
+            lyr_md = md.Metadata(lyr)
+            print(lyr.dataSource)
+            print(lyr_md.title)
             #lyr.metadata.copy(in_md)
             #lyr.metadata.save()
+            #aprx.save()
+            current_map_md = md.Metadata(current_map)
+            current_map_md.copy(lyr_md)
+            current_map_md.save()
             aprx.save()
-            del in_md
+
+            del current_map_md
+            del lyr_md
 
             arcpy.AddMessage("\tGet Web Layer Sharing Draft")
             # Get Web Layer Sharing Draft
@@ -540,13 +562,13 @@ def create_feature_class_services(project_folder=""):
             )
             del server_type
 
-            sddraft.allowExporting              = False
+            sddraft.allowExporting              = True
             sddraft.allowUpdateWithoutMValues   = True   # Default
             sddraft.approvePublicDataCollection = False
-            sddraft.checkUniqueIDAssignment     = False
-            sddraft.credits                     = lyr.metadata.credits
-            sddraft.description                 = lyr.metadata.description
-            #sddraft.featureCapabilities
+            sddraft.checkUniqueIDAssignment     = True
+            # sddraft.credits                     = lyr.metadata.credits
+            # sddraft.description                 = lyr.metadata.description
+            sddraft.featureCapabilities         = "Query,Extract"
             sddraft.maxRecordCount              = 10000
             sddraft.offline                     = False
             sddraft.offlineTarget               = None
@@ -559,8 +581,8 @@ def create_feature_class_services(project_folder=""):
             # sddraft.sharing.sharingLevel
             # sddraft.summary                  = lyr.metadata.summary
             # sddraft.tags                     = lyr.metadata.tags
-            # sddraft.timezone.ID
-            # sddraft.timezone.DaylightSavingTime
+            sddraft.timezone.ID                = "UTC"
+            sddraft.timezone.DaylightSavingTime = True
             # sddraft.timezone.preferredTimezoneID
             # sddraft.timezone.preferredTimezoneIDDaylightSavingTime
             # sddraft.useCIMSymbols
@@ -589,8 +611,8 @@ def create_feature_class_services(project_folder=""):
             arcpy.AddMessage(f"\t\tSharing Levek:                       {sddraft.sharing.sharingLevel}")
             arcpy.AddMessage(f"\t\tSummary:                             {sddraft.summary}")
             arcpy.AddMessage(f"\t\tTags:                                {sddraft.tags}")
-            #arcpy.AddMessage(f"\t\tTimezone ID:                         {sddraft.timezone.ID}")
-            #arcpy.AddMessage(f"\t\tTimezone Daylight Saving Time:       {sddraft.timezone.DaylightSavingTime}")
+            arcpy.AddMessage(f"\t\tTimezone ID:                         {sddraft.timezone.ID}")
+            arcpy.AddMessage(f"\t\tTimezone Daylight Saving Time:       {sddraft.timezone.DaylightSavingTime}")
             #arcpy.AddMessage(f"\t\tPreferred Timezone ID:                   {sddraft.timezone.preferredTimezoneID}")
             #arcpy.AddMessage(f"\t\tPreferred Timezone Daylight Saving Time: {sddraft.timezone.preferredTimezoneID}")
             arcpy.AddMessage(f"\t\tUse CIM Symbols:                         {sddraft.useCIMSymbols}")
@@ -603,6 +625,11 @@ def create_feature_class_services(project_folder=""):
             sd_draft = os.path.join(project_folder, f"Publish\\{feature_service}.sddraft")
 
             sddraft.exportToSDDraft(sd_draft)
+
+
+            #tree = etree.parse(r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\ArcGIS-Analysis-Python\June-1-2026\Publish\Species_Filter_20260601.sddraft", parser=parser)
+
+            etree.parse(sd_draft, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(sd_draft, pretty_print=True, xml_declaration=True, encoding="UTF-8")
 
             del sddraft
 
@@ -1253,12 +1280,12 @@ def script_tool(project_folder=""):
         )
         arcpy.AddMessage(f"{'-' * 80}\n")
 
-        CreateFeatureClassLayers = True
+        CreateFeatureClassLayers = False
         if CreateFeatureClassLayers:
             create_feature_class_layers(project_folder)
         del CreateFeatureClassLayers
 
-        CreateFeaturClasseServices = False
+        CreateFeaturClasseServices = True
         if CreateFeaturClasseServices:
             create_feature_class_services(project_folder)
         del CreateFeaturClasseServices
