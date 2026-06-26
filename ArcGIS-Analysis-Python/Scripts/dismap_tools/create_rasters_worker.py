@@ -225,7 +225,7 @@ def worker(region_gdb=""):
             #print(f"Species = '{species}' AND Year = {year}")
             arcpy.management.SelectLayerByAttribute( in_layer_or_view = sample_locations_path_layer,
                                                      selection_type = "NEW_SELECTION",
-                                                     where_clause = f"Species = '{species}' And Year = '{year}'",
+                                                     where_clause = f"Species = '{species}' And Year = {year}",
                                                      invert_where_clause=None
                                                     )
 
