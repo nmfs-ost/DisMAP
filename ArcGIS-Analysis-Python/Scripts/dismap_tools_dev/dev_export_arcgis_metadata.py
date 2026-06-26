@@ -31,7 +31,7 @@ def export_metadata(project_gdb="", metadata_workspace=""):
         import dev_create_folders
         from arcpy import metadata as md
         # Project modules
-        from src.project_tools import pretty_format_xml_file
+        from Scripts.project_tools import pretty_format_xml_file
 
         # Use all of the cores on the machine
         arcpy.env.parallelProcessingFactor = "100%"
