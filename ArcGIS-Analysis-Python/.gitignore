@@ -1,56 +1,10 @@
 # Global ignore: everything
 *
 
-# allow directories so we can whitelist specific content
-!*/
-
-# Remove selected directories
-.ipynb_checkpoints
-**/.ipynb_checkpoints
-.backups
-__pycache__
-**/__pycache__
-
-# include python files anywhere
-#!*.py
-#!*.pyt
-#!**/*.py
-#!**/*.pyt
-
-# still ignore py backup variants
-*.~py
-**/*.~py
-# ignore Python init files globally
-__init__.py
-**/__init__.py
-
-# Exclude all contents of the Scripts folder
-/Scripts/.
-# include Python files in the dismap_tools
-!/Scripts/dismap_tools/*.py
-/Scripts/dismap_tools/*.~py
-#!Scripts/dismap_tools/*.py
-##Scripts/__pycache__/*
-#Scripts/dismap_tools/__pycache__/*
-
 # include README files in root, Scripts, and dismap_tools
 !README.md
-#!Scripts/README.md
-#!Scripts/dismap_tools/README.md
-
-# explicitly exclude esri folder under dismap_tools
-#/Scripts/dismap_tools/esri/
-#/Scripts/dismap_tools/XML/
-
-# Notebook folder and its notebooks
-/Notebooks/
-
-# Ignore zip files
-*.zip
-**/*.zip
-
-# Ignore CSV files
-*.csv
-**/*.csv
-
-# End of File (EOF)
+!Scripts/README.md
+!Scripts/dismap_tools/README.md
+!Scripts/dismap_tools/*.py
+!Scripts/dismap_tools/*.pyt
+Scripts/dismap_tools/__init__.py
