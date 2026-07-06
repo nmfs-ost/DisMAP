@@ -3,7 +3,11 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0 # Use the latest version
     hooks:
+<<<<<<< HEAD
+#      - id: trailing-whitespace
+=======
       - id: trailing-whitespace
+>>>>>>> Python-Processing
 #      - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files

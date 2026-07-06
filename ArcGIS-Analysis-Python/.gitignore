@@ -1,5 +1,5 @@
 # Global ignore: everything
-*
+.
 
 # include Scripts folder and its contents
 !/Scripts/dismap_tools/*.py

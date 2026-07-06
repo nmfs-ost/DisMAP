@@ -1,3 +1,5 @@
 # Ignore all
 .
 .getignore
+
+!/ArcGIS-Analysis-Python/*
