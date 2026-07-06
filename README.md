@@ -1,4 +1,4 @@
-# [The Distribution Mapping and Analysis Portal (DisMAP)](https://github.com/nmfs-fish-tools/DisMAP) 
+# [The Distribution Mapping and Analysis Portal (DisMAP)](https://github.com/nmfs-fish-tools/DisMAP)
 
 > This code is always in development. Find code used for various reports in the code [releases](https://github.com/nmfs-fish-tools/DisMAP/releases).
 
@@ -7,14 +7,37 @@ The NOAA Fisheries Distribution Mapping and Analysis Portal (DisMAP) provides ea
   * Center of biomass
   * Range limits
 
-This repository provides the data processing and analysis code used to develop the spatial distribution and indicators presented in the portal. For more information and to launch the portal visit: https://apps-st.fisheries.noaa.gov/dismap/index.html. 
+This repository provides the data processing and analysis code used to develop the spatial distribution and indicators presented in the portal. For more information and to launch the portal visit: https://apps-st.fisheries.noaa.gov/dismap/index.html.
 
 Explanation of Folders:
 1. data_processing_rcode
 This folder holds all the R scripts needed to download and process the regional bottom trawl survey data. Opening up the DisMAP_Project Rproject file will open all necessary Rscripts to run the analysis and set up the appropriate directory structure. You will need to follow the instructions in each of the "download_x.R" scripts for each to download or obtain from a regional POC the raw survey data. Once the data is downloaded and in the "data" folder, you may run the Compile_Dismap_Current.R script to process and clean the data. After running Compile_Dismap_Current.R, run the create_data_for_map_generation.R to get the data in the needed file format for use in the Python script and generte the interpolated biomass and indicators (as described below)
 
 2. ArcGIS Analysis - Python
-This folder houses the scripts for generating the interpolated biomass and calculating the distribution indicators (latitude, depth, range limits, etc). 
+This folder houses the scripts for generating the interpolated biomass and calculating the distribution indicators (latitude, depth, range limits, etc).
+
+## Utility Scripts
+
+This repository includes utility scripts to help with data management and preparation.
+
+### `rename_spaces_to_hyphens.py`
+
+A utility script is provided to rename files and folders by replacing spaces with hyphens. This can be useful for ensuring file path compatibility with certain tools or shell environments that may not handle spaces well.
+
+-   **Location:** `ArcGIS-Analysis-Python/src/dismap_tools/rename_spaces_to_hyphens.py`
+-   **Purpose:** Recursively finds and renames files and directories under a specified path, replacing spaces in their names with hyphens (`-`).
+
+**Usage**
+
+Run the script from your command line, providing the path to the directory you want to process. To see which files and folders would be renamed without actually performing the rename operation, use the `--dry-run` flag. This is recommended before running the script for the first time.
+
+```bash
+# Perform a dry run to preview changes
+python ArcGIS-Analysis-Python/src/dismap_tools/rename_spaces_to_hyphens.py --dry-run "C:\path\to\your\data folder"
+
+# Execute the renaming process
+python ArcGIS-Analysis-Python/src/dismap_tools/rename_spaces_to_hyphens.py "C:\path\to\your\data folder"
+```
 
 ## Suggestions and Comments
 
@@ -56,4 +79,3 @@ works of the Software outside of the United States.
 [U.S. Department of Commerce](https://www.commerce.gov/) \| [National
 Oceanographic and Atmospheric Administration](https://www.noaa.gov) \|
 [NOAA Fisheries](https://www.fisheries.noaa.gov/)
-
