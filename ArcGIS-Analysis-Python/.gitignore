@@ -1,10 +1,10 @@
 # Global ignore: everything
-#*
+.
 
 # include README files in root, Scripts, and dismap_tools
-#!README.md
-#!Scripts/README.md
-#!Scripts/dismap_tools/README.md
-#!Scripts/dismap_tools/*.py
-#!Scripts/dismap_tools/*.pyt
-#Scripts/dismap_tools/__init__.py
+!README.md
+!Scripts/README.md
+!Scripts/dismap_tools/README.md
+!Scripts/dismap_tools/*.py
+!Scripts/dismap_tools/*.pyt
+Scripts/dismap_tools/__init__.py
