@@ -17,19 +17,6 @@ import traceback
 
 import arcpy  # third-parties second
 
-
-def trace():
-    import sys  # noqa: E401
-    import traceback
-
-    tb = sys.exc_info()[2]
-    tbinfo = traceback.format_tb(tb)[0]
-    line = tbinfo.split(", ")[1]
-    filename = sys.path[0] + os.sep + "test.py"
-    synerror = traceback.print_exc().splitlines()[-1]
-    return line, filename, synerror
-
-
 def parse_xml_file_format_and_save(csv_data_folder="", xml_file="", sort=False):
     try:
 
@@ -55,8 +42,8 @@ def parse_xml_file_format_and_save(csv_data_folder="", xml_file="", sort=False):
 
         from lxml import etree
 
-        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True)
-        tree = etree.parse(
+        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True) # pyright: ignore[reportAttributeAccessIssue]
+        tree = etree.parse( # pyright: ignore[reportAttributeAccessIssue]
             xml_file, parser=parser
         )  # To parse from a string, use the fromstring() function instead.
         del parser
@@ -68,7 +55,7 @@ def parse_xml_file_format_and_save(csv_data_folder="", xml_file="", sort=False):
                 del child
             del root
         del sort
-        etree.indent(tree, space="    ")
+        etree.indent(tree, space="    ") # pyright: ignore[reportAttributeAccessIssue]
         tree.write(
             xml_file,
             encoding="UTF-8",
@@ -142,24 +129,30 @@ def print_xml_file(xml_file="", sort=False):
 
         from lxml import etree
 
-        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True)
-        tree = etree.parse(
+        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True) # pyright: ignore[reportAttributeAccessIssue]
+        tree = etree.parse( # pyright: ignore[reportAttributeAccessIssue]
             xml_file, parser=parser
         )
-        if sort:
-            root = tree.getroot()
-            for child in root.xpath("."):
-                child[:] = sorted(child, key=lambda x: root_dict[x.tag])
-        etree.indent(tree, space="   ")
-        arcpy.AddMessage(
-            etree.tostring(
-                tree,
-                encoding="UTF-8",
-                method="xml",
-                xml_declaration=True,
-                pretty_print=True,
-            ).decode()
+
+        etree.indent(tree, space="    ") # pyright: ignore[reportAttributeAccessIssue]
+        tree.write(
+            xml_file,
+            encoding="UTF-8",
+            method="xml",
+            xml_declaration=True,
+            pretty_print=True,
         )
+
+##        etree.indent(tree, space="   ") # pyright: ignore[reportAttributeAccessIssue]
+##        arcpy.AddMessage(
+##            etree.tostring( # pyright: ignore[reportAttributeAccessIssue]
+##                tree,
+##                encoding="UTF-8",
+##                method="xml",
+##                xml_declaration=True,
+##                pretty_print=True,
+##            ).decode()
+##        )
     except KeyboardInterrupt:
         sys.exit()
     except arcpy.ExecuteWarning:
@@ -1967,11 +1960,6 @@ def export_metadata(csv_data_folder="", in_table=""):
         arcpy.AddError(arcpy.GetMessages(2))
         traceback.print_exc()
         sys.exit()
-    else:
-        return __results
-    finally:
-        if "__results" in locals().keys():
-            del __results
 
 
 def field_definitions(csv_data_folder="", field=""):

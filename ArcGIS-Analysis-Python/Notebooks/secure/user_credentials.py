@@ -1,5 +1,5 @@
 def main():
-    credentials = {"username": "", "password": ""}
+    credentials={"username" : "", "password" : ""}
     return credentials
 
 

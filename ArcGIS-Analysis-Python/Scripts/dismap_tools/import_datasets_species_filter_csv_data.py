@@ -6,19 +6,11 @@ Script documentation
                                         arcpy.SetParameterAsText()
 """
 import os
+# type: ignore # Temporarily ignore Pylance messages for development mode
 import sys
 import traceback
 import inspect
 import arcpy
-
-def trace():
-    tb = sys.exc_info()[2]
-    tbinfo = traceback.format_tb(tb)[0]
-    line = tbinfo.split(", ")[1]
-    # filename = sys.path[0] + os.sep + f"{os.path.basename(__file__)}"
-    filename = os.path.basename(__file__)
-    synerror = traceback.print_exc().splitlines()[-1]
-    return line, filename, synerror
 
 def get_encoding_index_col(csv_file):
     try:
@@ -78,11 +70,11 @@ def worker(project_gdb="", csv_file=""):
         import pandas as pd
         import numpy as np
         import warnings
-        import shutil
-        from reportlab.lib.pagesizes import letter  # noqa: F401
-        from reportlab.platypus import SimpleDocTemplate, Paragraph  # noqa: F401
-        from reportlab.lib.styles import getSampleStyleSheet  # noqa: F401
-        import webbrowser
+        #import shutil
+        #from reportlab.lib.pagesizes import letter  # noqa: F401
+        #from reportlab.platypus import SimpleDocTemplate, Paragraph  # noqa: F401
+        #from reportlab.lib.styles import getSampleStyleSheet  # noqa: F401
+        #import webbrowser
 
         from lxml import etree
         from  io import StringIO
@@ -108,7 +100,7 @@ def worker(project_gdb="", csv_file=""):
         home_folder       = rf"{os.path.dirname(project_folder)}"
 
         arcgis_metadata   = rf"{project_folder}\Metadata_ArcGIS"
-        inport_metadata   = rf"{project_folder}\Metadata_InPort"
+        # inport_metadata   = rf"{project_folder}\Metadata_InPort"
 
         # Set basic workkpace variables
         arcpy.env.workspace                = project_gdb
@@ -140,7 +132,7 @@ def worker(project_gdb="", csv_file=""):
         # A fix: https://www.youtube.com/watch?v=TTeElATMpoI
         # TLDR: pandas are Jedi; numpy are the hutts; and python is the galatic empire
         #encoding, index_column = dismap_tools.get_encoding_index_col(csv_file)
-        encoding, index_column = get_encoding_index_col(csv_file)
+        encoding, index_column = get_encoding_index_col(csv_file) # pyright: ignore[reportGeneralTypeIssues]
         with warnings.catch_warnings():
             warnings.simplefilter(action='ignore', category=FutureWarning)
             # DataFrame
@@ -208,8 +200,6 @@ def worker(project_gdb="", csv_file=""):
         arcpy.management.Delete(tmp_table)
         del tmp_table
 
-        xsl_file = rf"{os.path.dirname(project_folder)}\Initial-Data\ArcGIS2InPort.xsl"
-
         # Alter Fields
         dismap_tools.alter_fields(csv_data_folder, dataset_path)
 
@@ -218,26 +208,35 @@ def worker(project_gdb="", csv_file=""):
         contacts = rf"{home_folder}\Initial-Data\DisMAP_Contacts_{version_code}.xml"
 
         # print(contacts)
-        etree.parse(contacts, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(contacts, pretty_print=True, xml_declaration=True, encoding="UTF-8")
+        etree.parse(contacts, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(contacts, pretty_print=True, xml_declaration=True, encoding="UTF-8") # pyright: ignore[reportAttributeAccessIssue]
 
         # Copy a file to a new file or into a directory
-        dismap_logo = os.path.join(home_folder, "NOAA DisMAP 2026 Final [Logo].png")
-        table_thumbnail = os.path.join(home_folder, "table_thumbnail.png")
-        shutil.copy(dismap_logo, table_thumbnail)
+        #dismap_logo = os.path.join(home_folder, "NOAA DisMAP 2026 Final [Logo].png")
+        #table_thumbnail = os.path.join(home_folder, "table_thumbnail.png")
+        #shutil.copy(dismap_logo, table_thumbnail)
+
+        xml_file = os.path.join(arcgis_metadata, f"{os.path.basename(dataset_path)}.xml")
 
         # Load Metadata
-        contacts_md = md.Metadata(contacts)
+        #contacts_md = md.Metadata(contacts)
         dataset_md  = md.Metadata(dataset_path)
-        #dataset_md.importMetadata(contacts, "ARCGIS_METADATA")
-        dataset_md.copy(contacts_md)
+        dataset_md.save()
+        dataset_md.synchronize("ALWAYS")
+        dataset_md.save()
+        if not arcpy.Exists(xml_file):
+            dataset_md.importMetadata(contacts, "ARCGIS_METADATA")
+        else:
+            dataset_md.importMetadata(xml_file, "ARCGIS_METADATA")
+        #dataset_md.copy(contacts_md)
         dataset_md.save()
         dataset_md.synchronize("ALWAYS")
         dataset_md.save()
         #dataset_md.thumbnailUri = table_thumbnail
         #dataset_md.save()
         #print(dataset_md.thumbnailUri)
-        del contacts_md
+        #del contacts_md
         del dataset_md
+        del xml_file
 
         # Import Metadata
         dismap_tools.import_metadata(csv_data_folder=csv_data_folder, dataset=dataset_path)
@@ -249,8 +248,8 @@ def worker(project_gdb="", csv_file=""):
 
         dataset_md  = md.Metadata(dataset_path)
 
-        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True)
-        tree = etree.parse(StringIO(dataset_md.xml), parser=parser)
+        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True) # pyright: ignore[reportAttributeAccessIssue]
+        tree = etree.parse(StringIO(dataset_md.xml), parser=parser) # pyright: ignore[reportAttributeAccessIssue]
         root = tree.getroot()
 
         old_linkage = root.find("./distInfo/distTranOps/onLineSrc/linkage").text
@@ -274,8 +273,8 @@ def worker(project_gdb="", csv_file=""):
 
         del res_title
 
-        etree.indent(root, space="\t")
-        dataset_md.xml = etree.tostring(
+        etree.indent(root, space="\t") # pyright: ignore[reportAttributeAccessIssue]
+        dataset_md.xml = etree.tostring( # pyright: ignore[reportAttributeAccessIssue]
             tree,
             encoding="UTF-8",
             method="xml",
@@ -288,7 +287,6 @@ def worker(project_gdb="", csv_file=""):
         del old_item_name, new_item_name
         del version_code
         del root, tree, parser
-
 
         json_path = os.path.join(csv_data_folder, "root_dict.json")
 
@@ -304,9 +302,9 @@ def worker(project_gdb="", csv_file=""):
         ##                     "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
         ##                     "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
 
-        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True)
+        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True) # pyright: ignore[reportAttributeAccessIssue]
 
-        tree = etree.parse(StringIO(dataset_md.xml), parser=parser)  # To parse from a string, use the fromstring() function instead.
+        tree = etree.parse(StringIO(dataset_md.xml), parser=parser)  # pyright: ignore[reportAttributeAccessIssue] # To parse from a string, use the fromstring() function instead.
 
         del parser
 
@@ -315,8 +313,8 @@ def worker(project_gdb="", csv_file=""):
             child[:] = sorted(child, key=lambda x: root_dict[x.tag])
             del child
 
-        etree.indent(root, space="\t")
-        dataset_md.xml = etree.tostring(
+        etree.indent(root, space="\t") # pyright: ignore[reportAttributeAccessIssue]
+        dataset_md.xml = etree.tostring( # pyright: ignore[reportAttributeAccessIssue]
             tree,
             encoding="UTF-8",
             method="xml",
@@ -329,23 +327,26 @@ def worker(project_gdb="", csv_file=""):
         dataset_md.save()
 
         # Save as ArcGIS Metadata XML
-        xml_file = os.path.join(arcgis_metadata, f"{os.path.basename(dataset_path)}.xml")
-        dataset_md.saveAsXML(xml_file, "REMOVE_ALL_SENSITIVE_INFO")
-        etree.parse(xml_file, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(xml_file, pretty_print=True, xml_declaration=True, encoding="UTF-8")
-        webbrowser.open(xml_file)
-        del xml_file
+        #xml_file = os.path.join(arcgis_metadata, f"{os.path.basename(dataset_path)}.xml")
+        #dataset_md.saveAsXML(xml_file, "REMOVE_ALL_SENSITIVE_INFO")
+        #etree.parse(xml_file, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(xml_file, pretty_print=True, xml_declaration=True, encoding="UTF-8") # pyright: ignore[reportAttributeAccessIssue]
+        #webbrowser.open(xml_file)
+        #del xml_file
+
+        # Save as ArcGIS Metadata HTML
+        # html_file = os.path.join(arcgis_metadata, f"{os.path.basename(dataset_path)}.html")
+        # xslt_file = os.path.join(os.path.expanduser('~'), "AppData\\Local\\Programs\\ArcGIS\\Pro\\Resources\\Metadata\\Stylesheets\\ArcGIS_Imports\\htmlHeaderPro.xslt")
+        # dataset_md.saveAsUsingCustomXSLT(outputPath = html_file, customStylesheetPath = xslt_file)
+        # del xslt_file, html_file
 
         # Save as InPort Metadata XML
-        xml_file = os.path.join(inport_metadata, f"{os.path.basename(dataset_path)}.xml")
-        dataset_md.saveAsUsingCustomXSLT(outputPath = xml_file, customStylesheetPath=xsl_file)
-        etree.parse(xml_file, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(xml_file, pretty_print=True, xml_declaration=True, encoding="UTF-8")
-        del xml_file
+        #xml_file = os.path.join(inport_metadata, f"{os.path.basename(dataset_path)}.xml")
+        #xsl_file = rf"{os.path.dirname(project_folder)}\Initial-Data\ArcGIS2InPort.xsl"
+        #dataset_md.saveAsUsingCustomXSLT(outputPath = xml_file, customStylesheetPath = xsl_file)
+        #etree.parse(xml_file, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(xml_file, pretty_print=True, xml_declaration=True, encoding="UTF-8") # pyright: ignore[reportAttributeAccessIssue]
+        #del xml_file
 
         del dataset_md
-
-        print(f"Compacting the {os.path.basename(project_gdb)} GDB")
-        arcpy.management.Compact(project_gdb)
-        print("\t"+arcpy.GetMessages().replace("\n", "\n\t"))
 
         # Basic variables
         del dataset_path
@@ -466,6 +467,193 @@ def update_datecode(csv_file="", project_name=""):
         # print("\nScript finished successfully.")
         return True
 
+def metadata_arcgis_worker(project_gdb="", csv_file=""):
+    try:
+        # Imports
+        #import shutil
+
+        from lxml import etree
+        from  io import StringIO
+        import json
+
+        from arcpy import metadata as md
+        import dismap_tools
+
+        # Set basic workkpace variables
+        table_name        = os.path.basename(csv_file).replace(".csv", "")
+        dataset_path      = os.path.join(project_gdb, table_name)
+        csv_data_folder   = os.path.dirname(csv_file)
+        project_folder    = os.path.dirname(project_gdb)
+        scratch_workspace = os.path.join(project_folder, "Scratch\\scratch.gdb")
+        project_name      = rf"{os.path.basename(project_folder)}"
+        #home_folder       = rf"{os.path.dirname(project_folder)}"
+
+        arcgis_metadata   = rf"{project_folder}\Metadata_ArcGIS"
+        inport_metadata   = rf"{project_folder}\Metadata_InPort"
+
+        # Set basic workkpace variables
+        arcpy.env.workspace                = project_gdb
+        arcpy.env.scratchWorkspace         = r"Scratch\\scratch.gdb"
+        arcpy.env.overwriteOutput          = True
+        arcpy.env.parallelProcessingFactor = "100%"
+        # print(table_name)
+        # print(csv_data_folder)
+
+
+        # Load Metadata
+        dataset_md  = md.Metadata(dataset_path)
+
+        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True) # pyright: ignore[reportAttributeAccessIssue]
+        tree = etree.parse(StringIO(dataset_md.xml), parser=parser) # pyright: ignore[reportAttributeAccessIssue]
+        root = tree.getroot()
+
+        print("*" * 75 + "\n")
+
+        create_date = root.xpath("/metadata/Esri/CreaDate")
+
+        if len(create_date) > 1:
+            for i in range(1, len(create_date)):
+                create_date[i].getparent().remove(create_date[i])
+
+        if len(create_date) == 1:
+            print(f"Create Date exists: {create_date[0].text}")
+            create_date[0].text = dismap_tools.date_code(project_name)
+
+        elif len(create_date) == 0:
+            print("Create Date does not exists")
+            esri = root.xpath("/metadata/Esri")[0]
+            _create_date = etree.SubElement(esri, "CreaDate")
+            _create_date.text = dismap_tools.date_code(project_name)
+            del esri, _create_date
+        else:
+            pass
+        del create_date
+
+        create_time = root.xpath("/metadata/Esri/CreaTime")
+
+        if len(create_time) > 1:
+            for i in range(1, len(create_time)):
+                create_time[i].getparent().remove(create_time[i])
+
+        if len(create_time) == 1:
+            print(f"Create Time exists: {create_time[0].text}")
+            create_time[0].text = "00000000"
+
+        elif len(create_time) == 0:
+            print("Create Time does not exists")
+            esri = root.xpath("/metadata/Esri")[0]
+            _create_time = etree.SubElement(esri, "CreaTime")
+            _create_time.text = "00000000"
+            del esri, _create_time
+        else:
+            pass
+        del create_time
+
+        print("\n" + "*" * 75)
+
+        etree.indent(root, space="\t") # pyright: ignore[reportAttributeAccessIssue]
+        dataset_md.xml = etree.tostring( # pyright: ignore[reportAttributeAccessIssue]
+            tree,
+            encoding="UTF-8",
+            method="xml",
+            xml_declaration=True,
+            pretty_print=True,
+        )
+
+        del tree, root
+
+        dataset_md.save()
+
+        json_path = os.path.join(csv_data_folder, "root_dict.json")
+
+        with open(json_path, "r", encoding='utf-8') as json_file:
+            root_dict = json.load(json_file)
+
+        del json_file, json_path
+
+        #        root_dict = {"Esri"       :  0, "dataIdInfo" :  1, "mdChar"      :  2,
+        #                     "mdContact"  :  3, "mdDateSt"   :  4, "mdFileID"    :  5,
+        #                     "mdLang"     :  6, "mdMaint"    :  7, "mdHrLv"      :  8,
+        #                     "mdHrLvName" :  9, "refSysInfo" : 10, "spatRepInfo" : 11,
+        #                     "spdoinfo"   : 12, "dqInfo"     : 13, "distInfo"    : 14,
+        #                     "eainfo"     : 15, "contInfo"   : 16, "spref"       : 17,
+        #                     "spatRepInfo" : 18, "dataSetFn" : 19, "Binary"      : 100,}
+
+        parser = etree.XMLParser(encoding="UTF-8", remove_blank_text=True) # pyright: ignore[reportAttributeAccessIssue]
+
+        tree = etree.parse(StringIO(dataset_md.xml), parser=parser)  # pyright: ignore[reportAttributeAccessIssue] # To parse from a string, use the fromstring() function instead.
+
+        del parser
+
+        root = tree.getroot()
+        for child in root.xpath("."):
+            child[:] = sorted(child, key=lambda x: root_dict[x.tag])
+            del child
+
+        etree.indent(root, space="\t") # pyright: ignore[reportAttributeAccessIssue]
+        dataset_md.xml = etree.tostring( # pyright: ignore[reportAttributeAccessIssue]
+            tree,
+            encoding="UTF-8",
+            method="xml",
+            xml_declaration=True,
+            pretty_print=True,
+        )
+
+        del root
+
+        dataset_md.save()
+
+        # Save as ArcGIS Metadata XML
+        xml_file = os.path.join(arcgis_metadata, f"{os.path.basename(dataset_path)}.xml")
+        #dataset_md.saveAsXML(xml_file, "REMOVE_ALL_SENSITIVE_INFO")
+        dataset_md.saveAsXML(xml_file)
+        etree.parse(xml_file, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(xml_file, pretty_print=True, xml_declaration=True, encoding="UTF-8") # pyright: ignore[reportAttributeAccessIssue]
+        #webbrowser.open(xml_file)
+        del xml_file
+
+        # Save as ArcGIS Metadata HTML
+        # html_file = os.path.join(arcgis_metadata, f"{os.path.basename(dataset_path)}_2.xml")
+        # xslt_file = os.path.join(os.path.expanduser('~'), "AppData\\Local\\Programs\\ArcGIS\\Pro\\Resources\\Metadata\\Stylesheets\\ArcGIS_Imports\\htmlHeaderPro.xslt")
+        # dataset_md.saveAsUsingCustomXSLT(outputPath = html_file, customStylesheetPath = xslt_file)
+        # del xslt_file, html_file
+
+        # Save as InPort Metadata XML
+        xml_file = os.path.join(inport_metadata, f"{os.path.basename(dataset_path)}.xml")
+        xsl_file = rf"{os.path.dirname(project_folder)}\Initial-Data\ArcGIS2InPort.xsl"
+        dataset_md.saveAsUsingCustomXSLT(outputPath = xml_file, customStylesheetPath = xsl_file)
+        etree.parse(xml_file, parser=etree.XMLParser(encoding='UTF-8', remove_blank_text=True)).write(xml_file, pretty_print=True, xml_declaration=True, encoding="UTF-8") # pyright: ignore[reportAttributeAccessIssue]
+        del xml_file
+
+        del dataset_md
+
+        # Basic variables
+        del dataset_path
+        del table_name, project_folder, scratch_workspace, csv_data_folder
+
+        # Function parameters
+        del project_gdb, csv_file
+
+    except arcpy.ExecuteWarning:
+        arcpy.AddWarning(
+            f"ArcPy Execute Warning in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(1)}"
+        )
+    except arcpy.ExecuteError:
+        arcpy.AddError(
+            f"ArcPy Execute Error in '{inspect.stack()[0][3]}':\n{arcpy.GetMessages(2)}"
+        )
+        arcpy.AddError(f"Traceback:\n{traceback.print_exc()}")
+    except SystemExit:
+        # This is not an error, so we allow the script to exit.
+        pass
+    except Exception as e:
+        arcpy.AddError(
+            f"An unexpected error occurred in '{inspect.stack()[0][3]}': {e}"
+        )
+        arcpy.AddError("Traceback:\n")
+        traceback.print_exc()
+    else:
+        return True
+
 
 def script_tool(project_folder=""):
     """Script code goes below"""
@@ -477,6 +665,9 @@ def script_tool(project_folder=""):
         from arcpy import metadata as md
 
         import dismap_tools
+
+        #xml_file = r"C:\Users\john.f.kennedy\Documents\ArcGIS\Projects\DisMAP\ArcGIS-Analysis-Python\Initial-Data\DisMAP_Contacts_20260601.xml"
+        #dismap_tools.print_xml_file(xml_file)
 
         arcpy.AddMessage(f"{'-' * 80}")
         arcpy.AddMessage(f"Python Script:  {os.path.basename(__file__)}")
@@ -521,6 +712,7 @@ def script_tool(project_folder=""):
         #
         DatasetsCSVFile = True
         if DatasetsCSVFile:
+            # Worker: creates table, loads data, imports metadata, and then saves an XML
             worker(project_gdb=project_gdb, csv_file=datasets_csv)
         del DatasetsCSVFile
         #
@@ -531,23 +723,38 @@ def script_tool(project_folder=""):
         #
         DisMAPSurveyInfoFile = True
         if DisMAPSurveyInfoFile:
+            # Worker: creates table, loads data, imports metadata, and then saves an XML
             worker(project_gdb=project_gdb, csv_file=survey_metadata_csv)
         del DisMAPSurveyInfoFile
         #
-        SpeciesPersistenceIndicatorPercentileBinFile = True
+        SpeciesPersistenceIndicatorPercentileBinFile = False
         if SpeciesPersistenceIndicatorPercentileBinFile:
+            # Worker: creates table, loads data, imports metadata, and then saves an XML
             worker(project_gdb=project_gdb, csv_file=SpeciesPersistenceIndicatorPercentileBin)
         del SpeciesPersistenceIndicatorPercentileBinFile
         #
-        SpeciesPersistenceIndicatorTrendFile = True
+        SpeciesPersistenceIndicatorTrendFile = False
         if SpeciesPersistenceIndicatorTrendFile:
+            # Worker: creates table, loads data, imports metadata, and then saves an XML
             worker(project_gdb=project_gdb, csv_file=SpeciesPersistenceIndicatorTrend)
         del SpeciesPersistenceIndicatorTrendFile
         #
-        SpatialGroup_SpeciesPersistenceIndicatorFile = True
+        SpatialGroup_SpeciesPersistenceIndicatorFile = False
         if SpatialGroup_SpeciesPersistenceIndicatorFile:
+            # Worker: creates table, loads data, imports metadata, and then saves an XML
             worker(project_gdb=project_gdb, csv_file=SpatialGroup_SpeciesPersistenceIndicator)
         del SpatialGroup_SpeciesPersistenceIndicatorFile
+
+        # Export Meatadata
+        metadata_arcgis_worker(project_gdb = project_gdb, csv_file = species_filter_csv)
+        metadata_arcgis_worker(project_gdb = project_gdb, csv_file = survey_metadata_csv)
+        metadata_arcgis_worker(project_gdb = project_gdb, csv_file = SpeciesPersistenceIndicatorPercentileBin)
+        metadata_arcgis_worker(project_gdb = project_gdb, csv_file = SpeciesPersistenceIndicatorTrend)
+        metadata_arcgis_worker(project_gdb = project_gdb, csv_file = SpatialGroup_SpeciesPersistenceIndicator)
+
+        #print(f"Compacting the {os.path.basename(project_gdb)} GDB")
+        arcpy.management.Compact(project_gdb)
+        #print("\t"+arcpy.GetMessages().replace("\n", "\n\t"))
 
         # # # # # #
         # Declared Varaiables
