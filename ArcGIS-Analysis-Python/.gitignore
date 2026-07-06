@@ -1,11 +1,21 @@
 # Global ignore: everything
+<<<<<<< HEAD
 *
 
 # include Scripts folder and its contents
 !/Scripts/dismap_tools/*.py
 !/Scripts/dismap_tools/*.pyt
+=======
+.
+>>>>>>> a33021032c4ed2b22ab6a8cf062920580df6bd77
 
 # include README files in root, Scripts, and dismap_tools
 !README.md
 !Scripts/README.md
 !Scripts/dismap_tools/README.md
+<<<<<<< HEAD
+=======
+!Scripts/dismap_tools/*.py
+!Scripts/dismap_tools/*.pyt
+Scripts/dismap_tools/__init__.py
+>>>>>>> a33021032c4ed2b22ab6a8cf062920580df6bd77
