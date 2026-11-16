@@ -508,6 +508,12 @@ if (HQ_DATA_ONLY == TRUE){
     filter(stratum %in% test$stratum) %>%
     filter(year != 2001)
 
+  #add back in 2025 data
+  goa_2025<- goa %>%
+    filter(year == 2025)
+
+  goa_fltr<-rbind(goa_fltr, goa_2025)
+
   p3 <-  goa_fltr %>%
     select(stratum, year) %>%
     ggplot(aes(x = as.factor(stratum), y = as.factor(year)))   +

@@ -1,7 +1,7 @@
 ####Introduction ####
 #title: 'Species Persistence: Data Processing and Visualization'
 # author: "NOAA Fisheries' Office of Science and Technology"
-# date: "2026-3-6"
+# date: "2026-5-28"
 # The goals for this analysis are four-fold:
 #
 #   * Visualize changes in observed biomass for a particular species, from year to year
@@ -15,11 +15,14 @@
 # * Measure overall prevalence pattern of a particular species, across all survey years
 # * Categorize trend as:
     # + Persistently Present,
-    # + Established,
-    # + Potentially Emerging,
-    # + Potentially Disappearing,
-    # + Disappeared,
-    # + Sporadic
+    # + Persistently Absent,
+    # + Stabilized Presence,
+    # + Stabilized Absence,
+    # + Re-emergence,
+    # + Newly Emerging,
+    # + Disappearing,
+    # + Sporadic - Primarily Absent,
+    # + Sporadic - Primarily Present
 
 #### Load Packages ####
 library(here)
@@ -260,12 +263,15 @@ data_trend_wtcpue <- data_trend_wtcpue %>%
 #### Trend Categorization ####
 ##Category definitions
 # Persistently Present:	High occupancy throughout, with no major gaps in the recent window.
-# Absent:	Never/rarely detected.
-# Emerged:	Was historically absent/rare, followed by a clear, sustained "break" into consistent presence.
-# Disappeared:	Was historically common, followed by a sustained absence.
-# Potentially Emerging:	A recent "spike" in detections after a period of absence, but not yet sustained enough to be "Emerged."
-# Potentially Disappearing:	A recent "drop" in detections. Still present in the middle of the series, but missing recently.
-# Sporadic:	Oscillates in and out without a clear directional trend.
+# Persistently Absent:	Never/rarely detected.
+# Sustained Presence: Was historically absent/rare (or recently absent), followed by a clear, sustained "break" into consistent presence.
+# Newly Emerging:	A recent "spike" in detections after a period of absence, but not yet sustained enough to be "Emerged."
+# Re-emerging: currently becoming more present, but has history of disappearing for stretches
+# Stabilzed Absence:	Was historically common, followed by a sustained absence.
+# Disappearing:	A recent "drop" in detections. Still present in the middle of the series, but missing recently.
+# Relapsing disappearance: Species is currently becoming more consistently absent, but has a history of fluctuating blocks of absences and presences
+# Sporadic – Primarily Present:	Species is observed in over half of surveys but observations in surveys are inconsistent, and recent history shows no clear pattern
+# Sporadic – Primarily Absent:	Species is observed in less than half of surveys and observations in surveys are inconsistent, and recent history shows no clear pattern
 
 data_cumm <- data %>%
   select(region, survey, spp, year, common, wtcpue) %>%
@@ -346,108 +352,273 @@ data_ce <- data_ce_stable %>%
 data_cumm_ce <- data_cumm %>%
   left_join(data_ce, by = c("SurveyName", "Species", "Common"))
 
-#add_trend_category function
-add_trend_category <- function(data){
-  data %>%
-    arrange(Region, SurveyName, Species, Common, Year) %>%
-    group_by(Region, SurveyName, Species, Common) %>%
-    group_modify(~{
-      df <- .x
-      n_years <- nrow(df)
-      abs_vec <- as.numeric(df$Absence_Presence)
+# Stock Categorization Using Block Comparison
+#
+#' @param data A data.frame containing columns: Region, SurveyName, Species, Year, Absence_Presence
+#' @return A data.frame with a single `TrendCategory` column broadcasted across all rows per group.
 
-      # 1. Basic Stats
-      percent_present <- mean(abs_vec, na.rm = TRUE)
+add_block_trend_categories <- function(data) {
 
-      # 2. Windowed Stats (First 1/3 vs Last 1/3)
-      third_n <- max(1, floor(n_years / 3))
-      first_third <- abs_vec[1:third_n]
-      last_third  <- abs_vec[(n_years - third_n + 1):n_years]
+  message("Processing data... Executing simplified block comparison strategy.")
 
-      mean_first <- mean(first_third, na.rm = TRUE)
-      mean_last  <- mean(last_third, na.rm = TRUE)
+  data_processed <- data %>%
+    # 1. Sort precisely to ensure the final elements represent the modern era
+    arrange(Region, SurveyName, Species, Year) %>%
+    group_by(Region, SurveyName, Species) %>%
 
-      # 3. Recent Window (Last 5 years)
-      last5_idx <- (max(1, n_years - 4)):n_years
-      recent_5  <- abs_vec[last5_idx]
-      sum_recent_5 <- sum(recent_5, na.rm = TRUE)
+    # 2. Use nest/map or summarize to handle the complex group-level logic safely
+    mutate(
+      TrendCategory = {
+        # Clean the vector for this specific group
+        clean_pres <- Absence_Presence[!is.na(Absence_Presence)]
+        n_total    <- length(clean_pres)
+        p_total    <- sum(clean_pres == 1) / n_total
 
-      # 4. New logic for the last 10 years
-      last10_n <- min(10, n_years)
-      last10_idx <- (n_years - last10_n + 1):n_years
-      recent_10 <- abs_vec[last10_idx]
-      mean_recent_10 <- mean(recent_10, na.rm = TRUE)
+        # Isolate the last 3 years: Calculate the final run properties
+        series_rle      <- rle(clean_pres)
+        last_run_value  <- tail(series_rle$values, 1)
+        last_run_length <- tail(series_rle$lengths, 1)
+        ends_in_3_presences <- (last_run_value == 1 & last_run_length >= 3)
+        ends_in_3_absences <- (last_run_value == 0 & last_run_length >= 3)
 
-      # 3. Recent Window (Last 10 years)
-      last10_idx <- (max(1, n_years - 9)):n_years
-      recent_10  <- abs_vec[last10_idx]
-      sum_recent_10 <- sum(recent_10, na.rm = TRUE)
+        # Apply the classification logic based on time-series length
+        if (n_total >= 10) {
 
-      # 5. Run Length Encoding (Streaks)
-      # Calculates the length of the final 'streak' of 1s or 0s
-      runs <- rle(abs_vec)
-      last_run_val <- tail(runs$values, 1)
-      last_run_len <- tail(runs$lengths, 1)
+          # Isolate the final 5 elements (Modern Block) and the 5 elements prior (Historical Block)
+          last_5_block <- tail(clean_pres, 5)
+          prev_5_block <- head(tail(clean_pres, 10), 5)
 
-      # 5. Logic Hierarchy (Established vs. Trending)
-      trend_category <- case_when(
+          last_5_sum <- sum(last_5_block)
+          prev_5_sum <- sum(prev_5_block)
 
-        # 1. PERSISTENTLY PRESENT
-        # Species that were ALWAYS high (not a new establishment)
-        # and any absences are not a recent streak of 3+ absences
-        percent_present >= 0.85 & !(last_run_val == 0 & last_run_len >= 3)
-        ~"Persistently Present",
+          # Isolate first third, middle third, last third of time series
+          indices      <- seq_along(clean_pres)
+          splits       <- cut(indices, breaks = 3, labels = FALSE)
 
-        # 2, ABSENT / VAGRANT
-        # It was very rarely seen (percent_present <= 0.05)
-        # and if caught the hits aren't a recent streak of presences
-        percent_present <= 0.05 & !(last_run_val == 1 & last_run_len >= 3) ~ "Absent",
+          first_third  <- clean_pres[splits == 1]
+          p_first <- mean(first_third)
+          middle_third <- clean_pres[splits == 2]
+          p_middle <- mean(middle_third)
+          last_third   <- clean_pres[splits == 3]
+          p_last <- mean(last_third)
 
-        # 3. ESTABLISHED / SUSTAINED (Emerged + Stabilized)
-        # Low start/Sporadic start that is now high and consistent
-        #A species that has "stabilized" usually satisfies two conditions:
-        #High recent occupancy: They are present in almost all of the most recent years
-        #Low early occupancy: They were infrequent or absent in the beginning of the time series.
-        (mean_first <= 0.50 & mean_last >= 0.85 & last_run_val == 1 & last_run_len >=5) ~ "Established",
+          # Isolate the Deep History ----
+          # Everything BEFORE the last 10 years
+          historical_series <- head(clean_pres, n_total - 10)
 
-        # 4. POTENTIALLY EMERGING
-        # Trend is upward, caught recently, but not 'solid' yet
-        (mean_first <= 0.50 & mean_first < mean_last & sum_recent_5 >= 4) ~ "Potentially Emerging",
+          # Calculate Run Length Encoding for the historical series
+          hist_rle <- rle(historical_series)
 
-        # 5. DISSAPPEARED / SUSTAINED ABSENCE
-        # high start, but gone now
-        (mean_first >= 0.50 & mean_last <= 0.15 & last_run_val == 0 & last_run_len >=5)
-        ~ "Dissappeared",
+          # --- CHRONOLOGICAL CHECK ---
+          # 1. Find indices where a presence run lasted 4 or more years
+          valid_pres_indices <- which(hist_rle$values == 1 & hist_rle$lengths >= 4)
 
-        # 6. POTENTIALLY DISAPPEARING
-        (mean_first >= 0.50 & mean_first > mean_last & sum_recent_5 <= 1) ~ "Potentially Disappearing",
+          # 2. Check if ANY qualifying presence run is followed later by a >4 year absence run
+          has_valid_reemergence_history <- FALSE
 
-        # 7. SPORADIC
-        TRUE ~ "Sporadic"
-      )
+          if (length(valid_pres_indices) > 0) {
+            # Find the very first time it successfully "emerged"
+            first_emergence_idx <- min(valid_pres_indices)
+            # Look at all RLE runs *after* that first emergence
+            if (first_emergence_idx < length(hist_rle$values)) {
+              subsequent_values <- hist_rle$values[(first_emergence_idx + 1):length(hist_rle$values)]
+              subsequent_lengths <- hist_rle$lengths[(first_emergence_idx + 1):length(hist_rle$lengths)]
+              # Did it disappear for AT LEAST than 4 years (i.e., >= 4 years)?
+              has_valid_reemergence_history <- any(subsequent_values == 0 & subsequent_lengths >= 4)
+            }
+          }
 
-      df$TrendCategory <- trend_category
-      return(df)
-    }) %>%
+          # # 1. Create our two distinct time series
+          # historical_series <- head(clean_pres, n_total - 10) # For finding the anchor
+          # forward_series    <- head(clean_pres, n_total - 5)  # For looking forward
+          #
+          # hist_rle    <- rle(historical_series)
+          # forward_rle <- rle(forward_series)
+          #
+          # # --- CHRONOLOGICAL RE-EMERGENCE CHECK ---
+          # valid_pres_indices <- which(hist_rle$values == 1 & hist_rle$lengths >= 4)
+          # has_valid_reemergence_history <- FALSE
+          #
+          # if (length(valid_pres_indices) > 0) {
+          #   first_emergence_idx <- min(valid_pres_indices)
+          #
+          #   # Calculate exactly how many absolute years into the data this historic run ended
+          #   years_until_end_of_run <- sum(hist_rle$lengths[1:first_emergence_idx])
+          #
+          #   # Find which run index in the FORWARD RLE corresponds to that same absolute year
+          #   forward_run_ends <- cumsum(forward_rle$lengths)
+          #   forward_idx      <- which(forward_run_ends >= years_until_end_of_run)[1]
+          #
+          #   # Look at all forward RLE runs AFTER that matching index
+          #   if (!is.na(forward_idx) && forward_idx < length(forward_rle$values)) {
+          #     subsequent_values  <- forward_rle$values[(forward_idx + 1):length(forward_rle$values)]
+          #     subsequent_lengths <- forward_rle$lengths[(forward_idx + 1):length(forward_rle$lengths)]
+          #
+          #     has_valid_reemergence_history <- any(subsequent_values == 0 & subsequent_lengths >= 4)
+          #   }
+          # }
+
+          # 2. Find where a historic disappearance lasted 4 or more years
+          valid_abs_indices <- which(hist_rle$values == 0 & hist_rle$lengths >= 4)
+          has_valid_redisappearance_history <- FALSE
+
+          if (length(valid_abs_indices) > 0) {
+            first_disappearance_idx <- min(valid_abs_indices)
+            # Look for a temporary >= 4 year recovery AFTER that initial disappearance
+            if (first_disappearance_idx < length(hist_rle$values)) {
+              post_disc_values  <- hist_rle$values[(first_disappearance_idx + 1):length(hist_rle$values)]
+              post_disc_lengths <- hist_rle$lengths[(first_disappearance_idx + 1):length(hist_rle$lengths)]
+              has_valid_redisappearance_history <- any(post_disc_values == 1 & post_disc_lengths >= 4)
+            }
+          }
+
+          # # 1. Find where a historic disappearance lasted 4 or more years in the deep history
+          # valid_abs_indices <- which(hist_rle$values == 0 & hist_rle$lengths >= 4)
+          # has_valid_redisappearance_history <- FALSE
+          #
+          # if (length(valid_abs_indices) > 0) {
+          #   first_disappearance_idx <- min(valid_abs_indices)
+          #
+          #   # Calculate exactly how many absolute years into the data this historic absence run ended
+          #   years_until_end_of_abs_run <- sum(hist_rle$lengths[1:first_disappearance_idx])
+          #
+          #   # Find which run index in the FORWARD RLE corresponds to that same absolute year
+          #   forward_run_ends <- cumsum(forward_rle$lengths)
+          #   forward_idx      <- which(forward_run_ends >= years_until_end_of_abs_run)[1]
+          #
+          #   # Look for a temporary >= 4 year recovery AFTER that initial disappearance, up to the 5-year cutoff
+          #   if (!is.na(forward_idx) && forward_idx < length(forward_rle$values)) {
+          #     post_disc_values  <- forward_rle$values[(forward_idx + 1):length(forward_rle$values)]
+          #     post_disc_lengths <- forward_rle$lengths[(forward_idx + 1):length(forward_rle$lengths)]
+          #
+          #     # Did it reappear (value == 1) for AT LEAST 4 years before the 5-year cutoff?
+          #     has_valid_redisappearance_history <- any(post_disc_values == 1 & post_disc_lengths >= 4)
+          #   }
+          # }
+
+          # Find the maximum consecutive run of 1s (presences) in history
+          presence_runs <- hist_rle$lengths[hist_rle$values == 1]
+          max_pres_run  <- if(length(presence_runs) > 0) max(presence_runs) else 0
+
+          absence_runs <- hist_rle$lengths[hist_rle$values == 0]
+          max_abs_run  <- if(length(absence_runs) > 0) max(absence_runs) else 0
+
+          # ---------------------------------------------
+
+          # Assign Categories based on direct block contrast
+          if (p_total >= 0.75 & p_first >=0.75 & p_middle >=0.75 & p_last >= 0.75 & prev_5_sum >= 3 & !ends_in_3_absences){
+            "Persistently Present"
+          } else if (p_total <= 0.15 & p_first <= 0.15 & p_middle <= 0.15 & p_last <= 0.15 & prev_5_sum <= 2 & !ends_in_3_presences) {
+            "Persistently Absent"
+          } else if (prev_5_sum == 5 & last_5_sum == 5 & !(max_pres_run >= 4 & max_abs_run < 3)) {
+            "Stabilized Presence"
+          } else if (prev_5_sum == 0 & last_5_sum == 0 & !(max_abs_run >= 4 & max_pres_run < 3)) {
+            "Stabilized Absence"
+          } else if (prev_5_sum <= last_5_sum & last_5_sum >= 4) {
+            # SUB-CRITERIA 1: separate re-emergence from new arrival
+            if (has_valid_reemergence_history) {
+              "Re-Emerging"
+            } else if (max_pres_run >= 4 & max_abs_run <= 3 & p_total >= 0.5) {
+              "Sporadic - Primarily Present"
+            } else {
+              "Emerging"
+            }
+
+          } else if (prev_5_sum >= last_5_sum & last_5_sum <= 1) {
+            # SUB-CRITERIA 2
+            if (has_valid_redisappearance_history) {
+              "Relapsing Disappearance"
+            } else if (max_abs_run >= 4 & max_pres_run <= 3 & p_total <= 0.5) {
+              "Transient - Primarily Absent"
+            } else {
+              "Disappearing"
+            }
+
+          } else if (prev_5_sum <=1 & ends_in_3_presences){
+            "Emerging"
+          } else if (prev_5_sum >= 4 & ends_in_3_absences){
+            "Disappearing"
+          } else if (p_total >= 0.5) {
+            "Sporadic - Primarily Present"
+          } else {
+            "Transient - Primarily Absent"
+          }
+
+        } else {
+          # Short time-series fallback branch (n < 10)
+          if (p_total >= 0.80) {
+            "Persistently Present"
+          } else if (p_total <= 0.20) {
+            "Persistently Absent"
+          } else if (ends_in_3_presences){
+            "Emerging"
+          } else if (ends_in_3_absences) {
+            "Dissappearing"
+          } else if (p_total >= 0.5) {
+            "Sporadic - Primarily Present"
+          } else {
+            "Transient - Primarily Absent"
+          }
+        }
+      }
+    ) %>%
     ungroup()
+
+  return(data_processed)
 }
 
 # Usage:
 # This data frame will be used below in the flagging function
-data_for_flag <- add_trend_category(data_cumm_ce) %>%
+data_for_flag <- add_block_trend_categories(data_cumm_ce) %>%
   mutate(Name = paste(Common, SurveyName, sep = "_"))
 
 # This dataframe will be used for vizualization and plotting to validate trends
-data_cat_plot <- add_trend_category(data_cumm_ce) %>%
+data_cat_plot <- add_block_trend_categories(data_cumm_ce) %>%
   mutate(SurveyName = as.character(SurveyName),
          Species = as.character(Species))
 
 # This dataframe will be used for the final data exporting
-data_cat <- add_trend_category(data_cumm_ce) %>%
+data_cat <- add_block_trend_categories(data_cumm_ce) %>%
   select(Region, SurveyName, Species, Common, TrendCategory) %>%
   distinct() %>%
   mutate(SurveyName = as.character(SurveyName),
          Species = as.character(Species))
+
+#### Visualization and Validation ####
+#visualize, check, validate
+#PLOT 1: Validation of Trend Categories
+# 1. Select one representative species for each category
+examples <-  data_cat_plot %>%
+  group_by(TrendCategory) %>%
+  slice_sample(n = 1) %>%
+  pull(Common)
+#examples<- c("Barndoor skate")
+# 2. Filter data for these specific examples
+plot_data <- data_cat_plot %>%
+  filter(Common %in% examples) %>%
+  mutate(Absence_Presence = factor (Absence_Presence, levels = c(0,1)))
+
+# 3. Create the Validation Plot
+ggplot(plot_data, aes(x = Year, y = Common, fill = Absence_Presence)) +
+  geom_tile(color = "white", linewidth = 0.2) + # Adds a small border between tiles
+  facet_wrap(~TrendCategory, scales = "free_y", ncol = 1) + # Group by TrendCategory
+  scale_fill_manual(
+    values = c("0" = "#f8d7da", "1" = "#004085"), # Light red vs Deep blue
+    labels = c("Absent", "Present"),
+    name = "Status"
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Species Trend Validation: Occupancy Barcodes",
+    subtitle = "Visualizing the 'Sustained' vs 'Sporadic' patterns",
+    x = "Year",
+    y = "Species Common Name"
+  ) +
+  theme(
+    strip.text = element_text(face = "bold", size = 10),
+    panel.grid = element_blank(), # Remove grid lines for a cleaner tile look
+    axis.text.y = element_text(size = 8)
+  )
 
 #### Flagging function ####
 #adds a flag for species trends that are under review.
@@ -585,46 +756,10 @@ data_trend_cat<- data_cat %>%
 data_trend_export<-data_trend_cat
 write.csv(data_trend_export, here::here("data_processing_rcode","output","data_clean","SpeciesPersistenceIndicatorTrendCategories.csv"))
 
-#### Visualization and Validation ####
-#visualize, check, validate
-#PLOT 1: Validation of Trend Categories
-# 1. Select one representative species for each category
-examples <-  data_cat_plot %>%
-  group_by(TrendCategory) %>%
-  slice_sample(n = 1) %>%
-  pull(Common)
-
-# 2. Filter data for these specific examples
-plot_data <- data_cat_plot %>%
-  filter(Common %in% examples) %>%
-  mutate(Absence_Presence = factor (Absence_Presence, levels = c(0,1)))
-
-# 3. Create the Validation Plot
-ggplot(plot_data, aes(x = Year, y = Common, fill = Absence_Presence)) +
-  geom_tile(color = "white", linewidth = 0.2) + # Adds a small border between tiles
-  facet_wrap(~TrendCategory, scales = "free_y", ncol = 1) + # Group by TrendCategory
-  scale_fill_manual(
-    values = c("0" = "#f8d7da", "1" = "#004085"), # Light red vs Deep blue
-    labels = c("Absent", "Present"),
-    name = "Status"
-  ) +
-  theme_minimal() +
-  labs(
-    title = "Species Trend Validation: Occupancy Barcodes",
-    subtitle = "Visualizing the 'Sustained' vs 'Sporadic' patterns",
-    x = "Year",
-    y = "Species Common Name"
-  ) +
-  theme(
-    strip.text = element_text(face = "bold", size = 10),
-    panel.grid = element_blank(), # Remove grid lines for a cleaner tile look
-    axis.text.y = element_text(size = 8)
-  )
 
 ####MANAGEMENT COUNCIL JURISDICTION ANALYSIS (for the NEFSC survey data only)####
-#The following script does the same analysis as above, but parses the NE Bottom trawl data out into the two different management council jurisdictions.
+#The following script does the same analysis as above, but parses the NE Bottom trawl data out into the three different management council jurisdictions.
 library(sf)
-library(dplyr)
 
 ####Load spatial polygons ####
 # 1. Load multi-polygon shapefile
@@ -663,6 +798,35 @@ Plot_FMC<- ggplot() +
   geom_point(data = df_NEUS, aes(x=lon, y=lat, color = FishRegion)) +
   theme_minimal() +
   labs(title = "Points Labeled by Fishery Management Council Jurisdiction")
+
+install.packages("maps")
+library(maps)
+
+# 1. Grab US state boundaries and convert them to an 'sf' object
+us_states <- sf::st_as_sf(maps::map("state", plot = FALSE, fill = TRUE))
+
+# 2. Build your updated plot
+Plot_FMC <- ggplot() +
+  # Basemap: Grayscale states
+  geom_sf(data = us_states, fill = "gray95", color = "gray80") +
+
+  # Your original layers
+  geom_sf(data = EC_Councils, aes(fill = FishRegion), alpha = 0.4) +
+  geom_point(data = df_NEUS, aes(x = lon, y = lat, color = FishRegion), size = 2) +
+
+  # Crucial: Zoom the map specifically to the East Coast
+  # (Adjust these coordinates if your data extends further north or south)
+  coord_sf(xlim = c(-82, -65), ylim = c(30, 46), expand = FALSE) +
+
+  theme_minimal() +
+  labs(
+    title = "Points Labeled by Fishery Management Council Jurisdiction",
+    x = "Longitude",
+    y = "Latitude"
+  )
+
+# Display the plot
+print(Plot_FMC)
 
 #### Proportion of total biomass by species in each Council region ####
 data_sum_NEUSregions <- df_NEUS %>%
@@ -760,93 +924,219 @@ data_ce <- data_ce_stable %>%
 data_NE_spatial <- data_sum_All %>%
   left_join(data_ce, by = c("FishRegionsurvey", "spp", "common"))
 
-add_trend_category <- function(data){
-  data %>%
+## Add the Category flags
+add_block_trend_categories <- function(data) {
+
+  message("Processing data... Executing simplified block comparison strategy.")
+
+  data_processed <- data %>%
+    # 1. Sort precisely to ensure the final elements represent the modern era
     arrange(region, FishRegionsurvey, spp, common, year) %>%
     group_by(region, FishRegionsurvey, spp, common) %>%
-    group_modify(~{
-      df <- .x
-      n_years <- nrow(df)
-      abs_vec <- as.numeric(df$Absence_Presence)
 
-      # 1. Basic Stats
-      percent_present <- mean(abs_vec, na.rm = TRUE)
+    # 2. Use nest/map or summarize to handle the complex group-level logic safely
+    mutate(
+      TrendCategory = {
+        # Clean the vector for this specific group
+        clean_pres <- Absence_Presence[!is.na(Absence_Presence)]
+        n_total    <- length(clean_pres)
+        p_total    <- sum(clean_pres == 1) / n_total
 
-      # 2. Windowed Stats (First 1/3 vs Last 1/3)
-      third_n <- max(1, floor(n_years / 3))
-      first_third <- abs_vec[1:third_n]
-      last_third  <- abs_vec[(n_years - third_n + 1):n_years]
+        # Isolate the last 3 years: Calculate the final run properties
+        series_rle      <- rle(clean_pres)
+        last_run_value  <- tail(series_rle$values, 1)
+        last_run_length <- tail(series_rle$lengths, 1)
+        ends_in_3_presences <- (last_run_value == 1 & last_run_length >= 3)
+        ends_in_3_absences <- (last_run_value == 0 & last_run_length >= 3)
 
-      mean_first <- mean(first_third, na.rm = TRUE)
-      mean_last  <- mean(last_third, na.rm = TRUE)
+        # Apply the classification logic based on time-series length
+        if (n_total >= 10) {
 
-      # 3. Recent Window (Last 5 years)
-      last5_idx <- (max(1, n_years - 4)):n_years
-      recent_5  <- abs_vec[last5_idx]
-      sum_recent_5 <- sum(recent_5, na.rm = TRUE)
+          # Isolate the final 5 elements (Modern Block) and the 5 elements prior (Historical Block)
+          last_5_block <- tail(clean_pres, 5)
+          prev_5_block <- head(tail(clean_pres, 10), 5)
 
-      # 4. New logic for the last 10 years
-      last10_n <- min(10, n_years)
-      last10_idx <- (n_years - last10_n + 1):n_years
-      recent_10 <- abs_vec[last10_idx]
-      mean_recent_10 <- mean(recent_10, na.rm = TRUE)
+          last_5_sum <- sum(last_5_block)
+          prev_5_sum <- sum(prev_5_block)
 
-      # 3. Recent Window (Last 10 years)
-      last10_idx <- (max(1, n_years - 9)):n_years
-      recent_10  <- abs_vec[last10_idx]
-      sum_recent_10 <- sum(recent_10, na.rm = TRUE)
+          # Isolate first third, middle third, last third of time series
+          indices      <- seq_along(clean_pres)
+          splits       <- cut(indices, breaks = 3, labels = FALSE)
 
-      # 5. Run Length Encoding (Streaks)
-      # Calculates the length of the final 'streak' of 1s or 0s
-      runs <- rle(abs_vec)
-      last_run_val <- tail(runs$values, 1)
-      last_run_len <- tail(runs$lengths, 1)
+          first_third  <- clean_pres[splits == 1]
+          p_first <- mean(first_third)
+          middle_third <- clean_pres[splits == 2]
+          p_middle <- mean(middle_third)
+          last_third   <- clean_pres[splits == 3]
+          p_last <- mean(last_third)
 
-      # 5. Logic Hierarchy (Established vs. Trending)
-      trend_category <- case_when(
+          # Isolate the Deep History ----
+          # Everything BEFORE the last 10 years
+          historical_series <- head(clean_pres, n_total - 10)
 
-        # 1. PERSISTENTLY PRESENT
-        # Species that were ALWAYS high (not a new establishment)
-        # and any absences are not a recent streak of 3+ absences
-        percent_present >= 0.85 & !(last_run_val == 0 & last_run_len >= 3)
-        ~"Persistently Present",
+          # Calculate Run Length Encoding for the historical series
+          hist_rle <- rle(historical_series)
 
-        # 2, ABSENT / VAGRANT
-        # It was very rarely seen (percent_present <= 0.05)
-        # and if caught the hits aren't a recent streak of presences
-        percent_present <= 0.05 & !(last_run_val == 1 & last_run_len >= 3) ~ "Absent",
+          # --- CHRONOLOGICAL CHECK ---
+          # 1. Find indices where a presence run lasted 4 or more years
+          valid_pres_indices <- which(hist_rle$values == 1 & hist_rle$lengths >= 4)
 
-        # 3. ESTABLISHED / SUSTAINED (Emerged + Stabilized)
-        # Low start/Sporadic start that is now high and consistent
-        #A species that has "stabilized" usually satisfies two conditions:
-        #High recent occupancy: They are present in almost all of the most recent years
-        #Low early occupancy: They were infrequent or absent in the beginning of the time series.
-        (mean_first <= 0.50 & mean_last >= 0.85 & last_run_val == 1 & last_run_len >=5) ~ "Established",
+          # 2. Check if ANY qualifying presence run is followed later by a >4 year absence run
+          has_valid_reemergence_history <- FALSE
 
-        # 4. POTENTIALLY EMERGING
-        # Trend is upward, caught recently, but not 'solid' yet
-        (mean_first <= 0.50 & mean_first < mean_last & sum_recent_5 >= 4) ~ "Potentially Emerging",
+          if (length(valid_pres_indices) > 0) {
+            # Find the very first time it successfully "emerged"
+            first_emergence_idx <- min(valid_pres_indices)
+            # Look at all RLE runs *after* that first emergence
+            if (first_emergence_idx < length(hist_rle$values)) {
+              subsequent_values <- hist_rle$values[(first_emergence_idx + 1):length(hist_rle$values)]
+              subsequent_lengths <- hist_rle$lengths[(first_emergence_idx + 1):length(hist_rle$lengths)]
+              # Did it disappear for AT LEAST than 4 years (i.e., >= 4 years)?
+              has_valid_reemergence_history <- any(subsequent_values == 0 & subsequent_lengths >= 4)
+            }
+          }
 
-        # 5. DISSAPPEARED / SUSTAINED ABSENCE
-        # high start, but gone now
-        (mean_first >= 0.50 & mean_last <= 0.15 & last_run_val == 0 & last_run_len >=5)
-        ~ "Dissappeared",
+          # # 1. Create our two distinct time series
+          # historical_series <- head(clean_pres, n_total - 10) # For finding the anchor
+          # forward_series    <- head(clean_pres, n_total - 5)  # For looking forward
+          #
+          # hist_rle    <- rle(historical_series)
+          # forward_rle <- rle(forward_series)
+          #
+          # # --- CHRONOLOGICAL RE-EMERGENCE CHECK ---
+          # valid_pres_indices <- which(hist_rle$values == 1 & hist_rle$lengths >= 4)
+          # has_valid_reemergence_history <- FALSE
+          #
+          # if (length(valid_pres_indices) > 0) {
+          #   first_emergence_idx <- min(valid_pres_indices)
+          #
+          #   # Calculate exactly how many absolute years into the data this historic run ended
+          #   years_until_end_of_run <- sum(hist_rle$lengths[1:first_emergence_idx])
+          #
+          #   # Find which run index in the FORWARD RLE corresponds to that same absolute year
+          #   forward_run_ends <- cumsum(forward_rle$lengths)
+          #   forward_idx      <- which(forward_run_ends >= years_until_end_of_run)[1]
+          #
+          #   # Look at all forward RLE runs AFTER that matching index
+          #   if (!is.na(forward_idx) && forward_idx < length(forward_rle$values)) {
+          #     subsequent_values  <- forward_rle$values[(forward_idx + 1):length(forward_rle$values)]
+          #     subsequent_lengths <- forward_rle$lengths[(forward_idx + 1):length(forward_rle$lengths)]
+          #
+          #     has_valid_reemergence_history <- any(subsequent_values == 0 & subsequent_lengths >= 4)
+          #   }
+          # }
 
-        # 6. POTENTIALLY DISAPPEARING
-        (mean_first >= 0.50 & mean_first > mean_last & sum_recent_5 <= 1) ~ "Potentially Disappearing",
+          # 2. Find where a historic disappearance lasted 4 or more years
+          valid_abs_indices <- which(hist_rle$values == 0 & hist_rle$lengths >= 4)
+          has_valid_redisappearance_history <- FALSE
 
-        # 7. SPORADIC
-        TRUE ~ "Sporadic"
-      )
+          if (length(valid_abs_indices) > 0) {
+            first_disappearance_idx <- min(valid_abs_indices)
+            # Look for a temporary >= 4 year recovery AFTER that initial disappearance
+            if (first_disappearance_idx < length(hist_rle$values)) {
+              post_disc_values  <- hist_rle$values[(first_disappearance_idx + 1):length(hist_rle$values)]
+              post_disc_lengths <- hist_rle$lengths[(first_disappearance_idx + 1):length(hist_rle$lengths)]
+              has_valid_redisappearance_history <- any(post_disc_values == 1 & post_disc_lengths >= 4)
+            }
+          }
 
-      df$TrendCategory <- trend_category
-      return(df)
-    }) %>%
+          # # 1. Find where a historic disappearance lasted 4 or more years in the deep history
+          # valid_abs_indices <- which(hist_rle$values == 0 & hist_rle$lengths >= 4)
+          # has_valid_redisappearance_history <- FALSE
+          #
+          # if (length(valid_abs_indices) > 0) {
+          #   first_disappearance_idx <- min(valid_abs_indices)
+          #
+          #   # Calculate exactly how many absolute years into the data this historic absence run ended
+          #   years_until_end_of_abs_run <- sum(hist_rle$lengths[1:first_disappearance_idx])
+          #
+          #   # Find which run index in the FORWARD RLE corresponds to that same absolute year
+          #   forward_run_ends <- cumsum(forward_rle$lengths)
+          #   forward_idx      <- which(forward_run_ends >= years_until_end_of_abs_run)[1]
+          #
+          #   # Look for a temporary >= 4 year recovery AFTER that initial disappearance, up to the 5-year cutoff
+          #   if (!is.na(forward_idx) && forward_idx < length(forward_rle$values)) {
+          #     post_disc_values  <- forward_rle$values[(forward_idx + 1):length(forward_rle$values)]
+          #     post_disc_lengths <- forward_rle$lengths[(forward_idx + 1):length(forward_rle$lengths)]
+          #
+          #     # Did it reappear (value == 1) for AT LEAST 4 years before the 5-year cutoff?
+          #     has_valid_redisappearance_history <- any(post_disc_values == 1 & post_disc_lengths >= 4)
+          #   }
+          # }
+
+          # Find the maximum consecutive run of 1s (presences) in history
+          presence_runs <- hist_rle$lengths[hist_rle$values == 1]
+          max_pres_run  <- if(length(presence_runs) > 0) max(presence_runs) else 0
+
+          absence_runs <- hist_rle$lengths[hist_rle$values == 0]
+          max_abs_run  <- if(length(absence_runs) > 0) max(absence_runs) else 0
+
+          # ---------------------------------------------
+
+          # Assign Categories based on direct block contrast
+          if (p_total >= 0.75 & p_first >=0.75 & p_middle >=0.75 & p_last >= 0.75 & prev_5_sum >= 3 & !ends_in_3_absences){
+            "Persistently Present"
+          } else if (p_total <= 0.15 & p_first <= 0.15 & p_middle <= 0.15 & p_last <= 0.15 & prev_5_sum <= 2 & !ends_in_3_presences) {
+            "Persistently Absent"
+          } else if (prev_5_sum == 5 & last_5_sum == 5 & !(max_pres_run >= 4 & max_abs_run < 3)) {
+            "Stabilized Presence"
+          } else if (prev_5_sum == 0 & last_5_sum == 0 & !(max_abs_run >= 4 & max_pres_run < 3)) {
+            "Stabilized Absence"
+          } else if (prev_5_sum <= last_5_sum & last_5_sum >= 4) {
+            # SUB-CRITERIA 1: separate re-emergence from new arrival
+            if (has_valid_reemergence_history) {
+              "Re-Emerging"
+            } else if (max_pres_run >= 4 & max_abs_run <= 3 & p_total >= 0.5) {
+              "Sporadic - Primarily Present"
+            } else {
+              "Emerging"
+            }
+
+          } else if (prev_5_sum >= last_5_sum & last_5_sum <= 1) {
+            # SUB-CRITERIA 2
+            if (has_valid_redisappearance_history) {
+              "Relapsing Disappearance"
+            } else if (max_abs_run >= 4 & max_pres_run <= 3 & p_total <= 0.5) {
+              "Transient - Primarily Absent"
+            } else {
+              "Disappearing"
+            }
+
+          } else if (prev_5_sum <=1 & ends_in_3_presences){
+            "Emerging"
+          } else if (prev_5_sum >= 4 & ends_in_3_absences){
+            "Disappearing"
+          } else if (p_total >= 0.5) {
+            "Sporadic - Primarily Present"
+          } else {
+            "Transient - Primarily Absent"
+          }
+
+        } else {
+          # Short time-series fallback branch (n < 10)
+          if (p_total >= 0.80) {
+            "Persistently Present"
+          } else if (p_total <= 0.20) {
+            "Persistently Absent"
+          } else if (ends_in_3_presences){
+            "Emerging"
+          } else if (ends_in_3_absences) {
+            "Dissappearing"
+          } else if (p_total >= 0.5) {
+            "Sporadic - Primarily Present"
+          } else {
+            "Transient - Primarily Absent"
+          }
+        }
+      }
+    ) %>%
     ungroup()
+
+  return(data_processed)
 }
 
 # Add the trend categories to the dataframe
-data_NE_cat <- add_trend_category(data_NE_spatial) %>%
+data_NE_cat <- add_block_trend_categories(data_NE_spatial) %>%
   select(-col, -ext) %>%
   distinct() %>%
   mutate(FishRegionsurvey = as.character(FishRegionsurvey),
@@ -865,23 +1155,24 @@ data_NE_full<- data_NE_trend %>%
   full_join(data_NE_cat) %>%
   dplyr::rename(Region = region,
                 SurveyName = survey,
-                FMC = FishRegion,
+                SpatialName = FishRegion,
                 Common = common,
                 Species = spp,
                 Year = year,
                 WTCPUE = FMCwtcpue,
                 Prop = prop) %>%
+  mutate(SpatialGroup = "Northeast FMC") %>%
   select(-Totwtcpue, -FishRegionsurvey, -col, -ext)
 
 data_NE_full <- data_NE_full %>%
-    mutate(FMC_new = ifelse(data_NE_full$FMC == "New England", "New England",
-                       ifelse(data_NE_full$FMC == "NEMA", "Mid-Atlantic",
-                              ifelse(data_NE_full$FMC == "South Atlantic", "South Atlantic", NA)))) %>%
-    select(-FMC) %>%
-    dplyr::rename(FMC = FMC_new)
+    mutate(FMC_new = ifelse(data_NE_full$SpatialName == "New England", "New England",
+                       ifelse(data_NE_full$SpatialName == "NEMA", "Mid-Atlantic",
+                              ifelse(data_NE_full$SpatialName == "South Atlantic", "South Atlantic", NA)))) %>%
+    select(-SpatialName) %>%
+    dplyr::rename(SpatialName = FMC_new)
 
 
-write.csv(data_NE_full, here::here("data_processing_rcode","output","data_clean","NEFSC_FMC_SpeciesPersistenceIndicatorTrend.csv"))
+write.csv(data_NE_full, here::here("data_processing_rcode","output","data_clean","SpatialGroup_SpeciesPersistenceIndicator.csv"))
 
 #### Visualizations and Validation ####
 #visualize, check, validate
@@ -931,7 +1222,7 @@ plot_data <- data_NE_full %>%
   filter(SurveyName == "NEFSC Spring Bottom Trawl")
 
 # 2. Create the Plot
-ggplot(plot_data, aes(x = Year, y = paste(FMC, "-", TrendCategory), fill = Absence_Presence)) +
+ggplot(plot_data, aes(x = Year, y = paste(SpatialName, "-", TrendCategory), fill = Absence_Presence)) +
   geom_tile(color = "white", linewidth = 0.1) +
   # Facet by species name, allowing each species to have its own block
   facet_wrap(~Common, ncol = 1, scales = "free_y") +
@@ -967,7 +1258,7 @@ selected_spp <- c("Centropristis striata")
 plot_data_spring <- data_NE_full %>%
   filter(Species %in% selected_spp) %>%
   # Ensure the status is a factor for the discrete color scale
-  mutate(FMC = factor(FMC,
+  mutate(FMC = factor(SpatialName,
                       levels = c("New England", "Mid-Atlantic", "South Atlantic"))) %>%
   filter(SurveyName=="NEFSC Spring Bottom Trawl")
 
@@ -990,7 +1281,7 @@ color_palette <- scale_fill_manual(
   values = c("#275F6E","#3B8EA5","#D1E3F0")) # Example colors: Blue, Dark Blue, Off-White
 
 
-barplot <- ggplot(plot_data_spring, aes(x = Year, y = Prop, fill = FMC)) +
+barplot <- ggplot(plot_data_spring, aes(x = Year, y = Prop, fill = SpatialName)) +
   geom_bar(stat = "identity", position = "stack", width = 1) +
   # Color palette and legend
   color_palette +
